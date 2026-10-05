@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
-  <title>TCG Prototype v0.1</title>
+  <title>TCG Prototype v0.2</title>
     <style>
 :root {
   --bg: #0b0f17;
@@ -133,7 +133,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
   <div class="app-shell">
     <header class="topbar">
       <div>
-        <div class="eyebrow">PROTOTIPO v0.1</div>
+        <div class="eyebrow">PROTOTIPO v0.2</div>
         <h1>Siniestra · Trono · Diestra</h1>
       </div>
       <button id="newGameBtn" class="ghost">Nueva partida</button>
@@ -154,7 +154,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
             <span class="champion-kicker">AZUL</span>
             <strong>Corte Sinistral</strong>
             <span>12 Vida</span>
-            <small>Una vez por ronda, tras revelar, podés tratar tu carta como si estuviera en otra posición.</small>
+            <small>Después de perder un duelo, la próxima carta rival tiene −2 Poder.</small>
           </button>
         </div>
         <div class="setup-actions">
@@ -173,7 +173,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
           <div class="round-status">
             <span id="roundLabel">Ronda 1</span>
             <strong id="duelScore">0 — 0</strong>
-            <span id="turnLabel">Turno 1 de 3</span>
+            <span id="turnLabel">Turno 1 de 3</span><span id="previousRound" class="muted">Anterior —</span>
           </div>
           <div class="champion-status ai-status">
             <span class="label">IA</span>
@@ -219,6 +219,10 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
             <button data-position="trono">Trono</button>
             <button data-position="diestra">Diestra</button>
           </div>
+          <div id="duelFeedback" class="duel-feedback hidden">
+            <div id="duelFeedbackText"></div>
+            <button id="continueDuelBtn" class="primary">Continuar</button>
+          </div>
         </section>
 
         <section class="two-col">
@@ -241,7 +245,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
 
   <dialog id="rulesDialog">
     <div class="dialog-body">
-      <div class="section-head"><h2>Reglas v0.1</h2><button class="icon-btn" data-close="rulesDialog">×</button></div>
+      <div class="section-head"><h2>Reglas v0.2</h2><button class="icon-btn" data-close="rulesDialog">×</button></div>
       <ul>
         <li>18 cartas + 1 campeón. Ambos campeones comienzan con 12 de Vida.</li>
         <li>Robás 3 cartas por ronda. Cada turno jugás 1 carta en Siniestra, Trono o Diestra.</li>
@@ -249,7 +253,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
         <li>Mayor Poder gana el duelo y hace 1 punto de daño al campeón rival. Un empate no hace daño.</li>
         <li>Si después de dos duelos alguien pierde 0–2, decide Quiero / No quiero.</li>
         <li>No quiero termina la ronda. La carta no jugada va al descarte boca abajo, sin revelarse.</li>
-        <li>Las cartas jugadas pasan al Archivo de la posición en la que fueron usadas.</li>
+        <li>Las cartas jugadas pasan al Archivo de la posición en la que fueron usadas. El tablero muestra solo cuántas hay en cada Archivo.</li>
         <li>Al agotarse ambos mazos, gana quien tenga más Vida. Empate de Vida = empate.</li>
       </ul>
     </div>
@@ -290,7 +294,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
   <script>
 const POSITIONS = ["siniestra", "trono", "diestra"];
 const POSITION_LABEL = { siniestra: "Siniestra", trono: "Trono", diestra: "Diestra" };
-const HISTORY_KEY = "tcgPrototypeHistoryV01";
+const HISTORY_KEY = "tcgPrototypeHistoryV02";
 
 const champions = {
   dextral: {
@@ -316,15 +320,15 @@ const cards = {
     { id:"asesor_real", name:"Asesor real", power:2, text:"Tu próxima carta obtiene +2.", effect:"next_buff" }
   ],
   blue: [
-    { id:"protector", name:"Protector", power:5, text:"Si perdiste el duelo anterior, +2.", effect:"lost_previous" },
-    { id:"asesino_sinistral", name:"Asesino sinistral", power:4, text:"Siniestra: la carta rival pierde 2 Poder.", effect:"enemy_debuff" },
-    { id:"criatura_invocada", name:"Criatura invocada", power:7, text:"−2 si ya tenés una carta en tu Archivo de Siniestra.", effect:"archive_siniestra_penalty" },
-    { id:"prodigio", name:"Prodigio", power:3, text:"Su Poder es igual al Poder impreso de la carta rival.", effect:"copy_printed" },
-    { id:"invocador", name:"Invocador", power:2, text:"+2 por cada carta en Siniestra jugada esta ronda.", effect:"siniestra_round_count" },
-    { id:"sabio", name:"Sabio", power:4, text:"Trono: +1 por cada posición distinta que hayas usado esta ronda.", effect:"distinct_positions" },
+    { id:"protector", name:"Protector", power:5, text:"Si perdiste el duelo anterior, +3.", effect:"lost_previous" },
+    { id:"asesino_sinistral", name:"Asesino sinistral", power:4, text:"Siniestra: la carta rival pierde 3 Poder.", effect:"enemy_debuff" },
+    { id:"criatura_invocada", name:"Criatura invocada", power:6, text:"+2 si tu carta anterior fue jugada en Siniestra.", effect:"after_siniestra" },
+    { id:"prodigio", name:"Prodigio", power:3, text:"Poder = Poder impreso rival +2.", effect:"copy_printed" },
+    { id:"invocador", name:"Invocador", power:3, text:"Tu próxima carta obtiene +2.", effect:"next_buff" },
+    { id:"sabio", name:"Sabio", power:5, text:"Si el rival repite posición, +3.", effect:"punish_repeat" },
     { id:"caballero_luciernaga", name:"Caballero luciérnaga", power:6, text:"Si esta es tu tercera carta de la ronda, +2.", effect:"third_card" },
-    { id:"archivista", name:"Archivista", power:1, text:"+1 por cada 2 cartas en tus Archivos.", effect:"archive_total" },
-    { id:"oraculo", name:"Oráculo", power:-1, text:"La próxima carta rival tiene −3 Poder.", effect:"enemy_next_debuff" }
+    { id:"archivista", name:"Archivista", power:2, text:"+1 por cada 2 cartas en tus Archivos.", effect:"archive_total" },
+    { id:"oraculo", name:"Oráculo", power:3, text:"La próxima carta rival tiene −3 Poder.", effect:"enemy_next_debuff" }
   ]
 };
 
@@ -363,7 +367,7 @@ function initGame() {
     id: `game-${Date.now()}`,
     startedAt: new Date().toISOString(), round:1, turn:1, finished:false,
     player: playerTemplate(selectedChampion,false), ai: playerTemplate(aiChampion,true),
-    duelScore:{player:0, ai:0}, logs:[], rounds:[]
+    duelScore:{player:0, ai:0}, logs:[], rounds:[], awaitingContinue:false
   };
   drawRoundHands();
   logEvent(`Comienza la partida: ${state.player.champion.name} vs ${state.ai.champion.name}.`);
@@ -375,18 +379,19 @@ function drawRoundHands() {
     p.hand = p.deck.splice(0, Math.min(3,p.deck.length));
     p.roundPlays=[]; p.duelResults=[]; p.nextBuff=0; p.incomingDebuff=0; p.sinistralUsed=false;
   });
-  state.duelScore={player:0,ai:0}; state.turn=1;
+  state.duelScore={player:0,ai:0}; state.turn=1; state.awaitingContinue=false; if(qs("duelFeedback"))qs("duelFeedback").classList.add("hidden");
 }
 
 function renderAll(){ renderScore(); renderHand(); renderBoards(); renderArchives(); renderLog(); renderHistory(); }
 function renderScore(){
   qs("playerChampionName").textContent=state.player.champion.name;
   qs("aiChampionName").textContent=state.ai.champion.name;
-  qs("playerLife").textContent=state.player.life;
-  qs("aiLife").textContent=state.ai.life;
+  qs("playerLife").textContent=`${state.player.life}/12`;
+  qs("aiLife").textContent=`${state.ai.life}/12`;
   qs("roundLabel").textContent=`Ronda ${state.round}`;
   qs("duelScore").textContent=`${state.duelScore.player} — ${state.duelScore.ai}`;
   qs("turnLabel").textContent=`Turno ${state.turn} de 3`;
+  const prev=state.rounds.at(-1); qs("previousRound").textContent=prev?`Anterior ${prev.score.player}–${prev.score.ai}`:"Anterior —";
 }
 function renderHand(){
   const hand=qs("hand"); hand.innerHTML="";
@@ -416,7 +421,7 @@ function renderArchive(id,p){
   const root=qs(id); root.innerHTML="";
   POSITIONS.forEach(pos=>{
     const arr=p.archives[pos]; const slot=document.createElement("div"); slot.className="archive-slot";
-    slot.innerHTML=`<div class="archive-count">${arr.length}</div><div class="label">${POSITION_LABEL[pos]}</div><div class="archive-names">${arr.map(c=>c.name).join(" · ")||"—"}</div>`;
+    slot.innerHTML=`<div class="archive-count">${arr.length}</div><div class="label">${POSITION_LABEL[pos]}</div>`;
     root.appendChild(slot);
   });
 }
@@ -429,7 +434,7 @@ function renderHistory(){
 }
 
 function playHuman(position){
-  if(state.finished || selectedCardIndex===null || pendingHumanPlay) return;
+  if(state.finished || state.awaitingContinue || selectedCardIndex===null || pendingHumanPlay) return;
   const card=state.player.hand[selectedCardIndex];
   pendingHumanPlay={card, position, handIndex:selectedCardIndex};
   pendingAIPlay=chooseAIPlay();
@@ -441,7 +446,11 @@ function chooseAIPlay(){
   const p=state.ai;
   let best=null;
   p.hand.forEach((card,idx)=>POSITIONS.forEach(pos=>{
-    const score=estimateOwnPower(card,pos,p,state.player)+Math.random()*1.5;
+    let score=estimateOwnPower(card,pos,p,state.player)+Math.random();
+    if(state.turn<3 && ["next_buff","enemy_next_debuff","loss_next_buff"].includes(card.effect)) score+=1.8;
+    if(state.turn<3 && card.effect==="third_card") score-=2;
+    if(card.effect==="archive_total" && totalArchive(p)<4) score-=0.8;
+    if(card.effect==="punish_repeat" && state.player.roundPlays.length && state.player.roundPlays.at(-1).position===pos) score+=1.5;
     if(!best || score>best.score) best={card,position:pos,handIndex:idx,score};
   }));
   return best;
@@ -457,10 +466,10 @@ function estimateOwnPower(card,pos,self,opp){
     case"different_previous_position": if(prev && prev.position!==pos)val+=2; break;
     case"trono_after_diestra": if(pos==="trono" && self.roundPlays.some(x=>x.position==="diestra"))val+=2; break;
     case"needs_diestra": if(pos!=="diestra")val-=2; break;
-    case"lost_previous": if(self.duelResults.at(-1)==="loss")val+=2; break;
-    case"archive_siniestra_penalty": if(self.archives.siniestra.length>0)val-=2; break;
-    case"siniestra_round_count": val+=2*(self.roundPlays.filter(x=>x.position==="siniestra").length+(pos==="siniestra"?1:0)); break;
-    case"distinct_positions": if(pos==="trono")val+=new Set([...self.roundPlays.map(x=>x.position),pos]).size; break;
+    case"lost_previous": if(self.duelResults.at(-1)==="loss")val+=3; break;
+    case"after_siniestra": if(prev && prev.position==="siniestra")val+=2; break;
+    case"punish_repeat": if(opp.roundPlays.length && opp.roundPlays.at(-1).position===pos)val+=1.5; break;
+    
     case"third_card": if(state.turn===3)val+=2; break;
     case"archive_total": val+=Math.floor(totalArchive(self)/2); break;
   }
@@ -473,12 +482,8 @@ function resolveRevealFlow(){
   // AI index may shift only in its own hand, safe
   const aiCard=state.ai.hand.splice(pendingAIPlay.handIndex,1)[0]; pendingAIPlay.card=aiCard;
 
-  if(state.player.champion.id==="sinistral" && !state.player.sinistralUsed){
-    openSinistralChoiceForHuman();
-  } else {
-    pendingHumanPlay.virtualPosition=pendingHumanPlay.position;
-    continueAfterHumanSinistral();
-  }
+  pendingHumanPlay.virtualPosition=pendingHumanPlay.position;
+  continueAfterHumanSinistral();
 }
 function openSinistralChoiceForHuman(){
   const dlg=qs("sinistralDialog"), choices=qs("sinistralChoices"); choices.innerHTML="";
@@ -491,14 +496,7 @@ function openSinistralChoiceForHuman(){
   dlg.showModal();
 }
 function continueAfterHumanSinistral(){
-  if(state.ai.champion.id==="sinistral" && !state.ai.sinistralUsed){
-    // AI may use the once-per-round virtual position if it improves its estimated power.
-    const real=pendingAIPlay.position;
-    let bestPos=real, best=estimateOwnPower(pendingAIPlay.card,real,state.ai,state.player);
-    POSITIONS.forEach(pos=>{ const v=estimateOwnPower(pendingAIPlay.card,pos,state.ai,state.player); if(v>best+0.1){best=v;bestPos=pos;} });
-    pendingAIPlay.virtualPosition=bestPos;
-    if(bestPos!==real) state.ai.sinistralUsed=true;
-  } else pendingAIPlay.virtualPosition=pendingAIPlay.position;
+  pendingAIPlay.virtualPosition=pendingAIPlay.position;
   resolveDuel();
 }
 
@@ -517,9 +515,9 @@ function calculatePower(play,self,opp,oppPlay){
     case"different_previous_position": if(prev && prev.position!==play.position){power+=2;notes.push("+2 cambio de posición");} break;
     case"trono_after_diestra": if(pos==="trono" && self.roundPlays.some(x=>x.position==="diestra")){power+=2;notes.push("+2 tras Diestra");} break;
     case"needs_diestra": if(pos!=="diestra"){power-=2;notes.push("−2 fuera de Diestra");} break;
-    case"lost_previous": if(self.duelResults.at(-1)==="loss"){power+=2;notes.push("+2 derrota previa");} break;
-    case"archive_siniestra_penalty": if(self.archives.siniestra.length>0){power-=2;notes.push("−2 Archivo Siniestra");} break;
-    case"copy_printed": power=oppPlay.card.power;notes.push(`copia Poder impreso ${fmtPower(power)}`); break;
+    case"lost_previous": if(self.duelResults.at(-1)==="loss"){power+=3;notes.push("+3 derrota previa");} break;
+    case"after_siniestra": if(prev && prev.position==="siniestra"){power+=2;notes.push("+2 tras Siniestra");} break;
+    case"copy_printed": power=oppPlay.card.power+2;notes.push(`Poder rival +2`); break;
     case"siniestra_round_count": { const n=self.roundPlays.filter(x=>x.position==="siniestra").length+(play.position==="siniestra"?1:0); if(n){power+=2*n;notes.push(`+${2*n} por Siniestra`);} break; }
     case"distinct_positions": if(pos==="trono"){ const n=new Set([...self.roundPlays.map(x=>x.position),play.position]).size; power+=n;notes.push(`+${n} posiciones distintas`);} break;
     case"third_card": if(state.turn===3){power+=2;notes.push("+2 tercera carta");} break;
@@ -534,8 +532,8 @@ function resolveDuel(){
   let ar=calculatePower(ap,state.ai,state.player,hp);
 
   // Current-duel debuff from Asesino Sinistral, based on virtual position.
-  if(hp.card.effect==="enemy_debuff" && hp.virtualPosition==="siniestra"){ ar.power-=2; ar.notes.push("−2 Asesino rival"); }
-  if(ap.card.effect==="enemy_debuff" && ap.virtualPosition==="siniestra"){ hr.power-=2; hr.notes.push("−2 Asesino rival"); }
+  if(hp.card.effect==="enemy_debuff" && hp.virtualPosition==="siniestra"){ ar.power-=3; ar.notes.push("−3 Asesino rival"); }
+  if(ap.card.effect==="enemy_debuff" && ap.virtualPosition==="siniestra"){ hr.power-=3; hr.notes.push("−3 Asesino rival"); }
 
   // consume carried modifiers
   state.player.nextBuff=0; state.ai.nextBuff=0; state.player.incomingDebuff=0; state.ai.incomingDebuff=0;
@@ -559,6 +557,8 @@ function resolveDuel(){
   // champion dextral: winning primes next card
   if(outcome==="player" && state.player.champion.id==="dextral") state.player.nextBuff+=1;
   if(outcome==="ai" && state.ai.champion.id==="dextral") state.ai.nextBuff+=1;
+  if(outcome==="player" && state.ai.champion.id==="sinistral") state.player.incomingDebuff+=2;
+  if(outcome==="ai" && state.player.champion.id==="sinistral") state.ai.incomingDebuff+=2;
 
   const outcomeText=outcome==="draw"?"Empate":outcome==="player"?"Ganás vos":"Gana la IA";
   logEvent(`<strong>Duelo ${state.turn}:</strong> ${hp.card.name} (${fmtPower(hr.power)}) en ${POSITION_LABEL[hp.position]} vs ${ap.card.name} (${fmtPower(ar.power)}) en ${POSITION_LABEL[ap.position]} → <strong>${outcomeText}</strong>.`, {
@@ -568,7 +568,14 @@ function resolveDuel(){
   pendingHumanPlay=null; pendingAIPlay=null;
   renderAll();
   if(checkGameEnd()) return;
-
+  state.awaitingContinue=true;
+  qs("duelFeedbackText").innerHTML=`<strong>${outcomeText}</strong><br>${hp.card.name} <b>${fmtPower(hr.power)}</b> vs ${ap.card.name} <b>${fmtPower(ar.power)}</b>`;
+  qs("duelFeedback").classList.remove("hidden");
+}
+function continueAfterDuel(){
+  if(!state || !state.awaitingContinue)return;
+  state.awaitingContinue=false;
+  qs("duelFeedback").classList.add("hidden");
   if(state.turn===2 && (state.duelScore.player===2 || state.duelScore.ai===2)){
     if(state.duelScore.ai===2) showHumanQuiero(); else handleAIQuiero();
   } else if(state.turn>=3){ endRound("completed"); }
@@ -635,7 +642,7 @@ function logEvent(html,data={}){ const d=new Date(); state.logs.push({html,time:
 function qs(id){ return document.getElementById(id); }
 function getHistory(){ try{return JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");}catch{return [];} }
 function exportCurrent(){
-  if(!state)return; const payload={version:"0.1",exportedAt:new Date().toISOString(),game:state,history:getHistory()};
+  if(!state)return; const payload={version:"0.2",exportedAt:new Date().toISOString(),game:state,history:getHistory()};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`tcg-test-${state.id}.json`; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function showGame(){ qs("setupView").classList.add("hidden"); qs("gameView").classList.remove("hidden"); }
@@ -650,10 +657,28 @@ qs("newGameBtn").onclick=()=>{ if(state && !state.finished && !confirm("¿Abando
 qs("showRulesBtn").onclick=()=>qs("rulesDialog").showModal();
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>qs(b.dataset.close).close());
 document.querySelectorAll(".position-buttons button[data-position]").forEach(b=>b.onclick=()=>playHuman(b.dataset.position));
+qs("continueDuelBtn").onclick=continueAfterDuel;
 qs("quieroBtn").onclick=()=>humanQuiero(true); qs("noQuieroBtn").onclick=()=>humanQuiero(false);
 qs("exportBtn").onclick=exportCurrent; qs("resultExportBtn").onclick=exportCurrent;
 qs("playAgainBtn").onclick=()=>{ qs("resultDialog").close(); showSetup(); };
 qs("clearHistoryBtn").onclick=()=>{ if(confirm("¿Borrar el historial guardado en este navegador?")){localStorage.removeItem(HISTORY_KEY);renderHistory();} };
+const extraStyle=document.createElement("style");
+extraStyle.textContent=`
+.duel-feedback{margin-top:12px;padding:12px;border:1px solid var(--gold);border-radius:14px;background:rgba(224,184,93,.08);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.archive-slot{min-height:48px;text-align:center;padding:6px}
+.archive-count{font-size:26px}
+.archives-wrap{margin-top:0}
+#previousRound{font-size:11px}
+@media(max-width:760px){
+  .board-panel{margin-bottom:8px}
+  .turn-panel{margin-bottom:8px}
+  .duel-feedback{position:sticky;bottom:8px;z-index:5;background:var(--panel)}
+  .archives-wrap{padding:10px 0}
+}`;
+document.head.appendChild(extraStyle);
+const archiveWrap=document.querySelector(".archives-wrap");
+const turnPanel=document.querySelector(".turn-panel");
+if(archiveWrap && turnPanel) turnPanel.after(archiveWrap);
 renderHistory();
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 
