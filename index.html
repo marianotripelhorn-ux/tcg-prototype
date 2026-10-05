@@ -409,7 +409,7 @@ function renderHand(){
   const root=qs("hand");root.innerHTML="";
   state.player.hand.forEach((c,i)=>{const el=document.createElement("button");el.className="card "+state.player.champion.faction+(selectedCardIndex===i?" selected":"");el.innerHTML='<span class="card-copy">'+(i+1)+'</span><div class="card-power">'+fmtPower(c.power)+'</div><div class="card-name">'+c.name+'</div><div class="card-text">'+c.text+'</div>';el.onclick=()=>{selectedCardIndex=i;qs("selectedSummary").textContent=c.name+" · Poder "+fmtPower(c.power);renderHand();};root.appendChild(el);});
 }
-function previewPendingPower(play,self){
+function previewPendingPower(play,self,opp){
   const c=play.card,aff=affinityActive(self,c,play.position),notes=["Base "+c.power];let p=c.power;
   if(self.nextBuff){p+=self.nextBuff;notes.push(...self.nextBuffNotes);}
   if(self.empireanBuff){p+=self.empireanBuff;notes.push("+2 Señor de los Archivos");}
@@ -425,19 +425,19 @@ function previewPendingPower(play,self){
   else if(c.effect==="third4"&&aff&&state.turn===3){p+=4;notes.push("+4 tercer duelo");}
   else if(c.effect==="archive_empty2"&&self.archives[play.position].length===0){p+=2;notes.push("+2 Archivo vacío");}
   else if(c.effect==="archive_two2"&&self.archives[play.position].length>=2){p+=2;notes.push("+2 Archivo con 2+");}
-  else if(c.effect==="opp_archive_more2")notes.push("Depende del Archivo rival");
+  else if(c.effect==="opp_archive_more2"&&opp.archives[play.position].length>self.archives[play.position].length){p+=2;notes.push("+2 Archivo rival mayor");}
   else if(c.effect==="archive_three6"&&self.archives[play.position].length>=3){p+=6;notes.push("+6 Archivo con 3+");}
   else if(c.effect==="trono_archive_three3"&&aff&&self.archives.trono.length>=3){p+=3;notes.push("+3 Trono con 3+");}
   else if(c.effect==="least_archive2"&&self.archives[play.position].length===Math.min(...POSITIONS.map(x=>self.archives[x].length))){p+=2;notes.push("+2 Archivo menos poblado");}
-  else if(c.effect==="opp_archive_capped")notes.push("Depende del Archivo rival");
+  else if(c.effect==="opp_archive_capped"){const n=Math.min(4,opp.archives[play.position].length);p+=n;if(n)notes.push("+"+n+" Archivo rival");}
   else if(c.effect==="clear_archive2x"){const n=self.archives[play.position].length;p+=2*n;notes.push("+"+(2*n)+" Libro de Amaram · vacía este Archivo");}
   if(c.effect==="copy_plus2"&&aff){notes.push("Poder final depende de la carta rival");}
   return {power:p,notes};
 }
-function renderBoards(){renderBoardSide("playerBoard",state.player,pendingHumanPlay);renderBoardSide("aiBoard",state.ai,pendingAIPlay);}
-function renderBoardSide(id,p,pending){
+function renderBoards(){renderBoardSide("playerBoard",state.player,state.ai,pendingHumanPlay);renderBoardSide("aiBoard",state.ai,state.player,pendingAIPlay);}
+function renderBoardSide(id,p,opp,pending){
   const root=qs(id);root.innerHTML="";
-  POSITIONS.forEach(pos=>{const slot=document.createElement("div");slot.className="board-slot"+(pos===p.champion.special?" special-slot":"");p.roundPlays.filter(x=>x.position===pos).forEach(pl=>slot.appendChild(miniCard(pl.card,p.champion.faction,pl.finalPower)));if(pending&&pending.position===pos){const prev=previewPendingPower(pending,p);slot.appendChild(miniCard(pending.card,p.champion.faction,prev.power,true,prev.notes));}const cap=document.createElement("span");cap.className="slot-capacity";cap.textContent=countPosition(p,pos)+(pending&&pending.position===pos?1:0)+"/"+capacity(p,pos);slot.appendChild(cap);root.appendChild(slot);});
+  POSITIONS.forEach(pos=>{const slot=document.createElement("div");slot.className="board-slot"+(pos===p.champion.special?" special-slot":"");p.roundPlays.filter(x=>x.position===pos).forEach(pl=>slot.appendChild(miniCard(pl.card,p.champion.faction,pl.finalPower)));if(pending&&pending.position===pos){const prev=previewPendingPower(pending,p,opp);slot.appendChild(miniCard(pending.card,p.champion.faction,prev.power,true,prev.notes));}const cap=document.createElement("span");cap.className="slot-capacity";cap.textContent=countPosition(p,pos)+(pending&&pending.position===pos?1:0)+"/"+capacity(p,pos);slot.appendChild(cap);root.appendChild(slot);});
 }
 function miniCard(card,faction,power,pending,notes=[]){const el=document.createElement("div");el.className="mini-card "+faction+(pending?" pending":"");el.innerHTML='<div class="power">'+fmtPower(power)+'</div><div class="name">'+card.name+'</div>'+(pending&&notes.length?'<div class="pending-notes">'+notes.join(" · ")+'</div>':"");return el;}
 function renderArchives(){renderArchive("playerArchives",state.player);renderArchive("aiArchives",state.ai);}
@@ -452,7 +452,7 @@ function playHuman(position){
   if(state.initiative==="player"){pendingAIPlay=chooseAIPlay(pendingHumanPlay,false);pendingAIPlay.card=state.ai.hand.splice(pendingAIPlay.handIndex,1)[0];}
   resolveDuel();
 }
-function estimateOwn(card,pos,p){
+function estimateOwn(card,pos,p,opp){
   let v=card.power+p.nextBuff+p.empireanBuff-p.incomingDebuff,aff=affinityActive(p,card,pos);
   if(card.effect==="bonus2"&&aff)v+=2;if(card.effect==="archive_here")v+=p.archives[pos].length;if(card.effect==="won_prev2"&&aff&&p.duelResults.at(-1)==="win")v+=2;
   if(card.effect==="empty_sin5"&&aff&&countPosition(p,"siniestra")===0&&pos!=="siniestra")v+=5;if(card.effect==="trono_before3"&&aff&&countPosition(p,"trono")>0)v+=3;if(card.effect==="diestra_before2"&&aff&&countPosition(p,"diestra")>0)v+=2;
@@ -470,13 +470,13 @@ function estimateOwn(card,pos,p){
 }
 function chooseAIPlay(firstPlay,aiFirst){
   let best=null;
-  state.ai.hand.forEach((card,i)=>legalPositions(state.ai).forEach(pos=>{const play={card,position:pos,handIndex:i};let score;if(aiFirst||!firstPlay)score=estimateOwn(card,pos,state.ai)+Math.random()*.3;else{const powers=calculatePowers(firstPlay,state.player,play,state.ai),mine=powers.b,opp=powers.a;score=(mine>opp?6:mine===opp?2:0)+mine*.1;if(state.turn<3&&["next3","next_affinity_anywhere","enemy_next3"].includes(card.effect)&&powers.bAff)score+=2;if(mine<opp&&card.effect==="loss_next3"&&state.turn<3)score+=2;score+=Math.random()*.2;}if(!best||score>best.score)best={...play,score};}));return best;
+  state.ai.hand.forEach((card,i)=>legalPositions(state.ai).forEach(pos=>{const play={card,position:pos,handIndex:i};let score;if(aiFirst||!firstPlay)score=estimateOwn(card,pos,state.ai,state.player)+Math.random()*.3;else{const powers=calculatePowers(firstPlay,state.player,play,state.ai),mine=powers.b,opp=powers.a;score=(mine>opp?6:mine===opp?2:0)+mine*.1;if(state.turn<3&&["next3","next_affinity_anywhere","enemy_next3"].includes(card.effect)&&powers.bAff)score+=2;if(mine<opp&&card.effect==="loss_next3"&&state.turn<3)score+=2;score+=Math.random()*.2;}if(!best||score>best.score)best={...play,score};}));return best;
 }
 function calculatePowers(aPlay,A,bPlay,B){
   let aAff=affinityActive(A,aPlay.card,aPlay.position),bAff=affinityActive(B,bPlay.card,bPlay.position);const aNotes=["Base "+aPlay.card.power],bNotes=["Base "+bPlay.card.power];
   const aCancel=aPlay.card.effect==="cancel_enemy_affinity"&&aAff,bCancel=bPlay.card.effect==="cancel_enemy_affinity"&&bAff;
   if(bCancel&&aAff){aAff=false;aNotes.push("Habilidad de posición anulada por Sabio");}if(aCancel&&bAff){bAff=false;bNotes.push("Habilidad de posición anulada por Sabio");}
-  function power(play,self,oppPlay,aff,notes){
+  function power(play,self,opp,oppPlay,aff,notes){
     const c=play.card;let p=c.power;if(self.nextBuff){p+=self.nextBuff;notes.push(...self.nextBuffNotes);}if(self.empireanBuff){p+=self.empireanBuff;notes.push("+2 Señor de los Archivos");}if(self.incomingDebuff){p-=self.incomingDebuff;notes.push(...self.incomingNotes);}if(self.nextAffinityAnywhere&&c.affinity&&play.position!==c.affinity)notes.push("Invocador activa "+POSITION_LABEL[c.affinity]);
     if(c.effect==="bonus2"&&aff){p+=2;notes.push("+2 "+POSITION_LABEL[c.affinity]);}
     else if(c.effect==="archive_here"){const n=self.archives[play.position].length;p+=n;if(n)notes.push("+"+n+" Archivo de "+POSITION_LABEL[play.position]);}
@@ -498,7 +498,7 @@ function calculatePowers(aPlay,A,bPlay,B){
     else if(c.effect==="clear_archive2x"){const n=self.archives[play.position].length;p+=2*n;notes.push("+"+(2*n)+" Libro de Amaram");}
     return p;
   }
-  let a=power(aPlay,A,bPlay,aAff,aNotes),b=power(bPlay,B,aPlay,bAff,bNotes);
+  let a=power(aPlay,A,B,bPlay,aAff,aNotes),b=power(bPlay,B,A,aPlay,bAff,bNotes);
   if(aPlay.card.effect==="enemy3"&&aAff){b-=3;bNotes.push("−3 Asesino sinistral");}if(bPlay.card.effect==="enemy3"&&bAff){a-=3;aNotes.push("−3 Asesino sinistral");}
   if(aPlay.card.effect==="lost_prev_enemy3"&&aAff&&A.duelResults.at(-1)==="loss"){b-=3;bNotes.push("−3 Protector");}if(bPlay.card.effect==="lost_prev_enemy3"&&bAff&&B.duelResults.at(-1)==="loss"){a-=3;aNotes.push("−3 Protector");}
   return{a,b,aAff,bAff,aNotes,bNotes};
@@ -523,7 +523,7 @@ function resolveDuel(){
   if(state.turn===2&&(state.duelScore.player===2||state.duelScore.ai===2)){if(state.duelScore.ai===2)qs("quieroDialog").showModal();else handleAIQuiero();return;}if(state.turn===3){endRound("completed");return;}state.turn++;beginTurn();
 }
 function applyPost(self,play,result,opp,aff){if(play.card.effect==="loss_next3"&&result==="loss")addBuff(self,3,"Mensajero extraño");if(play.card.effect==="next3"&&aff)addBuff(self,3,"Asesor real");if(play.card.effect==="next_affinity_anywhere"&&aff)self.nextAffinityAnywhere=true;if(play.card.effect==="enemy_next3"&&aff)addDebuff(opp,3,"Oráculo");}
-function handleAIQuiero(){let best=-99;state.ai.hand.forEach(c=>legalPositions(state.ai).forEach(pos=>best=Math.max(best,estimateOwn(c,pos,state.ai))));const wants=(state.ai.life>1&&best>=4.7)||Math.random()<.15;logEvent("<strong>IA:</strong> "+(wants?"Quiero":"No quiero")+".");if(wants){state.turn=3;beginTurn();}else endRound("ai_no_quiero");}
+function handleAIQuiero(){let best=-99;state.ai.hand.forEach(c=>legalPositions(state.ai).forEach(pos=>best=Math.max(best,estimateOwn(c,pos,state.ai,state.player))));const wants=(state.ai.life>1&&best>=4.7)||Math.random()<.15;logEvent("<strong>IA:</strong> "+(wants?"Quiero":"No quiero")+".");if(wants){state.turn=3;beginTurn();}else endRound("ai_no_quiero");}
 function humanQuiero(choice){qs("quieroDialog").close();logEvent("<strong>Vos:</strong> "+(choice?"Quiero":"No quiero")+".");if(choice){state.turn=3;beginTurn();}else endRound("player_no_quiero");}
 function endRound(reason){
   if(state.player.champion.id==="empireos"&&new Set(state.ai.roundPlays.map(x=>x.position)).size===3)state.player.empireanBuff=2;
