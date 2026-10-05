@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
-  <title>TCG Prototype v0.4</title>
+  <title>TCG Prototype v0.4.1</title>
     <style>
 :root {
   --bg: #0b0f17;
@@ -133,7 +133,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
   <div class="app-shell">
     <header class="topbar">
       <div>
-        <div class="eyebrow">PROTOTIPO v0.4</div>
+        <div class="eyebrow">PROTOTIPO v0.4.1</div>
         <h1>Siniestra · Trono · Diestra</h1>
       </div>
       <button id="newGameBtn" class="ghost">Nueva partida</button>
@@ -374,12 +374,28 @@ function renderHand(){
   const root=qs("hand");root.innerHTML="";
   state.player.hand.forEach((c,i)=>{const el=document.createElement("button");el.className="card "+state.player.champion.faction+(selectedCardIndex===i?" selected":"");el.innerHTML='<span class="card-copy">'+(i+1)+'</span><div class="card-power">'+fmtPower(c.power)+'</div><div class="card-name">'+c.name+'</div><div class="card-text">'+c.text+'</div>';el.onclick=()=>{selectedCardIndex=i;qs("selectedSummary").textContent=c.name+" · Poder "+fmtPower(c.power);renderHand();};root.appendChild(el);});
 }
+function previewPendingPower(play,self){
+  const c=play.card,aff=affinityActive(self,c,play.position),notes=["Base "+c.power];let p=c.power;
+  if(self.nextBuff){p+=self.nextBuff;notes.push(...self.nextBuffNotes);}
+  if(self.incomingDebuff){p-=self.incomingDebuff;notes.push(...self.incomingNotes);}
+  if(c.effect==="bonus2"&&aff){p+=2;notes.push("+2 "+POSITION_LABEL[c.affinity]);}
+  else if(c.effect==="archive_here"){const n=self.archives[play.position].length;p+=n;if(n)notes.push("+"+n+" Archivo de "+POSITION_LABEL[play.position]);}
+  else if(c.effect==="won_prev2"&&aff&&self.duelResults.at(-1)==="win"){p+=2;notes.push("+2 victoria previa");}
+  else if(c.effect==="empty_sin5"&&aff&&countPosition(self,"siniestra")===0&&play.position!=="siniestra"){p+=5;notes.push("+5 Siniestra sin usar");}
+  else if(c.effect==="trono_before3"&&aff&&countPosition(self,"trono")>0){p+=3;notes.push("+3 tras Trono");}
+  else if(c.effect==="diestra_before2"&&aff&&countPosition(self,"diestra")>0){p+=2;notes.push("+2 tras Diestra");}
+  else if(c.effect==="second_special3"&&aff&&countPosition(self,self.champion.special)>0){p+=3;notes.push("+3 segunda "+POSITION_LABEL[self.champion.special]);}
+  else if(c.effect==="invocador_before3"&&aff&&self.roundPlays.some(x=>x.card.effect==="next_affinity_anywhere")){p+=3;notes.push("+3 tras Invocador");}
+  else if(c.effect==="third4"&&aff&&state.turn===3){p+=4;notes.push("+4 tercer duelo");}
+  if(c.effect==="copy_plus2"&&aff){notes.push("Poder final depende de la carta rival");}
+  return {power:p,notes};
+}
 function renderBoards(){renderBoardSide("playerBoard",state.player,pendingHumanPlay);renderBoardSide("aiBoard",state.ai,pendingAIPlay);}
 function renderBoardSide(id,p,pending){
   const root=qs(id);root.innerHTML="";
-  POSITIONS.forEach(pos=>{const slot=document.createElement("div");slot.className="board-slot"+(pos===p.champion.special?" special-slot":"");p.roundPlays.filter(x=>x.position===pos).forEach(pl=>slot.appendChild(miniCard(pl.card,p.champion.faction,pl.finalPower)));if(pending&&pending.position===pos)slot.appendChild(miniCard(pending.card,p.champion.faction,pending.card.power,true));const cap=document.createElement("span");cap.className="slot-capacity";cap.textContent=countPosition(p,pos)+(pending&&pending.position===pos?1:0)+"/"+capacity(p,pos);slot.appendChild(cap);root.appendChild(slot);});
+  POSITIONS.forEach(pos=>{const slot=document.createElement("div");slot.className="board-slot"+(pos===p.champion.special?" special-slot":"");p.roundPlays.filter(x=>x.position===pos).forEach(pl=>slot.appendChild(miniCard(pl.card,p.champion.faction,pl.finalPower)));if(pending&&pending.position===pos){const prev=previewPendingPower(pending,p);slot.appendChild(miniCard(pending.card,p.champion.faction,prev.power,true,prev.notes));}const cap=document.createElement("span");cap.className="slot-capacity";cap.textContent=countPosition(p,pos)+(pending&&pending.position===pos?1:0)+"/"+capacity(p,pos);slot.appendChild(cap);root.appendChild(slot);});
 }
-function miniCard(card,faction,power,pending){const el=document.createElement("div");el.className="mini-card "+faction+(pending?" pending":"");el.innerHTML='<div class="power">'+fmtPower(power)+'</div><div class="name">'+card.name+'</div>';return el;}
+function miniCard(card,faction,power,pending,notes=[]){const el=document.createElement("div");el.className="mini-card "+faction+(pending?" pending":"");el.innerHTML='<div class="power">'+fmtPower(power)+'</div><div class="name">'+card.name+'</div>'+(pending&&notes.length?'<div class="pending-notes">'+notes.join(" · ")+'</div>':"");return el;}
 function renderArchives(){renderArchive("playerArchives",state.player);renderArchive("aiArchives",state.ai);}
 function renderArchive(id,p){const root=qs(id);root.innerHTML="";POSITIONS.forEach(pos=>{const slot=document.createElement("div");slot.className="archive-slot";slot.innerHTML='<div class="archive-count">'+p.archives[pos].length+'</div><div class="label">'+POSITION_LABEL[pos]+'</div>';root.appendChild(slot);});}
 function renderLog(){qs("gameLog").innerHTML=state.logs.slice().reverse().map(l=>'<div class="log-entry">'+l.html+'<div class="sub">'+l.time+'</div></div>').join("");}
@@ -447,7 +463,10 @@ function handleAIQuiero(){let best=-99;state.ai.hand.forEach(c=>legalPositions(s
 function humanQuiero(choice){qs("quieroDialog").close();logEvent("<strong>Vos:</strong> "+(choice?"Quiero":"No quiero")+".");if(choice){state.turn=3;beginTurn();}else endRound("player_no_quiero");}
 function endRound(reason){
   [state.player,state.ai].forEach(p=>{p.roundPlays.forEach(pl=>p.archives[pl.position].push(pl.card));while(p.hand.length)p.discard.push(p.hand.pop());});
-  state.rounds.push({round:state.round,score:{...state.duelScore},reason,playerLife:state.player.life,aiLife:state.ai.life,starter:state.roundStarter});qs("duelFeedbackText").innerHTML="<strong>Fin de ronda "+state.round+": "+state.duelScore.player+"–"+state.duelScore.ai+"</strong>";logEvent("<strong>Fin de ronda "+state.round+".</strong> Resultado "+state.duelScore.player+"–"+state.duelScore.ai+".");
+  state.rounds.push({round:state.round,score:{...state.duelScore},reason,playerLife:state.player.life,aiLife:state.ai.life,starter:state.roundStarter});
+  const foldText=reason==="ai_no_quiero"?" · IA dijo No quiero":reason==="player_no_quiero"?" · No quiero":"";
+  qs("duelFeedbackText").innerHTML="<strong>Fin de ronda "+state.round+": "+state.duelScore.player+"–"+state.duelScore.ai+foldText+"</strong>";
+  logEvent("<strong>Fin de ronda "+state.round+".</strong> Resultado "+state.duelScore.player+"–"+state.duelScore.ai+foldText+".");
   if(state.player.deck.length===0||state.ai.deck.length===0){finishByDeck();return;}state.round++;state.roundStarter=state.roundStarter==="player"?"ai":"player";state.initiative=state.roundStarter;drawRoundHands();beginTurn();
 }
 function finishByDeck(){let w="draw";if(state.player.life>state.ai.life)w="player";else if(state.ai.life>state.player.life)w="ai";finishGame(w,"mazo");}
@@ -455,13 +474,13 @@ function finishGame(winner,reason){if(state.finished)return;state.finished=true;
 function resetSelectionUI(){selectedCardIndex=null;qs("selectedSummary").textContent="Ninguna carta seleccionada";}
 function logEvent(html){const d=new Date();state.logs.push({html,time:d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"})});}
 function getHistory(){try{return JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");}catch{return[];}}
-function exportCurrent(){if(!state)return;const payload={version:"0.4",exportedAt:new Date().toISOString(),game:state,history:getHistory()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="tcg-test-"+state.id+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function exportCurrent(){if(!state)return;const payload={version:"0.4.1",exportedAt:new Date().toISOString(),game:state,history:getHistory()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="tcg-test-"+state.id+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function showGame(){qs("setupView").classList.add("hidden");qs("gameView").classList.remove("hidden");}
 function showSetup(){if(qs("resultDialog").open)qs("resultDialog").close();qs("gameView").classList.add("hidden");qs("setupView").classList.remove("hidden");state=null;selectedChampion=null;document.querySelectorAll(".champion-choice").forEach(x=>x.classList.remove("selected"));qs("startGameBtn").disabled=true;}
 
 document.querySelectorAll(".champion-choice").forEach(btn=>btn.addEventListener("click",()=>{selectedChampion=btn.dataset.champion;document.querySelectorAll(".champion-choice").forEach(x=>x.classList.toggle("selected",x===btn));qs("startGameBtn").disabled=false;}));
 qs("startGameBtn").onclick=initGame;qs("newGameBtn").onclick=()=>{if(state&&!state.finished&&!confirm("¿Abandonar la partida actual?"))return;showSetup();};qs("showRulesBtn").onclick=()=>qs("rulesDialog").showModal();document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>qs(b.dataset.close).close());document.querySelectorAll(".position-buttons button[data-position]").forEach(b=>b.onclick=()=>playHuman(b.dataset.position));qs("quieroBtn").onclick=()=>humanQuiero(true);qs("noQuieroBtn").onclick=()=>humanQuiero(false);qs("exportBtn").onclick=exportCurrent;qs("resultExportBtn").onclick=exportCurrent;qs("playAgainBtn").onclick=()=>{qs("resultDialog").close();showSetup();};qs("clearHistoryBtn").onclick=()=>{if(confirm("¿Borrar el historial guardado en este navegador?")){localStorage.removeItem(HISTORY_KEY);renderHistory();}};
-const extraStyle=document.createElement("style");extraStyle.textContent=".champion-rule{font-size:11px;color:var(--gold);font-weight:800;line-height:1.25}.special-slot{border-style:solid;border-color:rgba(224,184,93,.5);position:relative}.slot-capacity{position:absolute;right:6px;bottom:4px;font-size:9px;color:var(--muted)}.pending{outline:2px dashed var(--gold)}.duel-feedback{margin-top:12px;padding:12px;border:1px solid var(--gold);border-radius:14px;background:rgba(224,184,93,.08)}.feedback-title{margin-bottom:8px}.feedback-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.feedback-grid>div{padding:8px;border:1px solid var(--line);border-radius:10px}.feedback-grid small{display:block;color:var(--muted);margin-top:4px;line-height:1.35}.archive-slot{min-height:48px;text-align:center;padding:6px}.archive-count{font-size:26px}.archives-wrap{margin-top:0}#previousRound{font-size:11px}@media(max-width:760px){.board-panel{margin-bottom:8px}.turn-panel{margin-bottom:8px}.archives-wrap{padding:8px 0}.board-slot{position:relative}.feedback-grid{grid-template-columns:1fr}.champion-rule{font-size:9px}}";document.head.appendChild(extraStyle);const archiveWrap=document.querySelector(".archives-wrap"),turnPanel=document.querySelector(".turn-panel");if(archiveWrap&&turnPanel)turnPanel.after(archiveWrap);renderHistory();if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+const extraStyle=document.createElement("style");extraStyle.textContent=".champion-rule{font-size:11px;color:var(--gold);font-weight:800;line-height:1.25}.special-slot{border-style:solid;border-color:rgba(224,184,93,.5);position:relative}.slot-capacity{position:absolute;right:6px;bottom:4px;font-size:9px;color:var(--muted)}.pending{outline:2px dashed var(--gold)}.pending-notes{font-size:8px;line-height:1.15;color:var(--muted);margin-top:4px}.duel-feedback{margin-top:12px;padding:12px;border:1px solid var(--gold);border-radius:14px;background:rgba(224,184,93,.08)}.feedback-title{margin-bottom:8px}.feedback-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.feedback-grid>div{padding:8px;border:1px solid var(--line);border-radius:10px}.feedback-grid small{display:block;color:var(--muted);margin-top:4px;line-height:1.35}.archive-slot{min-height:48px;text-align:center;padding:6px}.archive-count{font-size:26px}.archives-wrap{margin-top:0}#previousRound{font-size:11px}@media(max-width:760px){.board-panel{margin-bottom:8px}.turn-panel{margin-bottom:8px}.archives-wrap{padding:8px 0}.board-slot{position:relative}.feedback-grid{grid-template-columns:1fr}.champion-rule{font-size:9px}}";document.head.appendChild(extraStyle);const archiveWrap=document.querySelector(".archives-wrap"),turnPanel=document.querySelector(".turn-panel");if(archiveWrap&&turnPanel)turnPanel.after(archiveWrap);renderHistory();if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
 </html>
