@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
-  <title>TCG Prototype v0.7.1</title>
+  <title>TCG Prototype v0.8 LAB</title>
     <style>
 :root {
   --bg: #0b0f17;
@@ -86,11 +86,12 @@ h3 { font-size:14px; color:var(--muted); }
 .turn-head, .section-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
 .selected-summary { color:var(--muted); font-size:12px; text-align:right; }
 .hand { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; margin:14px 0; }
-.card { background:#1b2436; border:2px solid #33405a; border-radius:16px; padding:12px; min-height:190px; cursor:pointer; display:flex; flex-direction:column; gap:8px; position:relative; }
-.card.red { border-color:rgba(217,74,74,.46); background:linear-gradient(180deg, rgba(217,74,74,.09), transparent 42%), #1b2436; }
-.card.blue { border-color:rgba(63,121,216,.46); background:linear-gradient(180deg, rgba(63,121,216,.10), transparent 42%), #1b2436; }
-.card.white { border-color:rgba(220,224,234,.48); background:linear-gradient(180deg, rgba(220,224,234,.08), transparent 42%), #1b2436; }
-.card.saints { border-color:rgba(215,185,104,.52); background:linear-gradient(180deg, rgba(215,185,104,.09), transparent 42%), #1b2436; }
+.card { background:#1b2436; border:2px solid #33405a; border-radius:16px; padding:10px; min-height:240px; cursor:pointer; display:flex; flex-direction:column; gap:8px; position:relative; overflow:hidden; text-align:left; }
+.card-topline{display:flex;justify-content:space-between;gap:6px;align-items:center;position:relative;z-index:2}.faction-mark{font-size:10px;font-weight:900;letter-spacing:.08em}.affinity-badge{font-size:9px;border:1px solid currentColor;border-radius:999px;padding:3px 6px;opacity:.85}.affinity-badge.flexible{opacity:.55}.card-art-placeholder{height:82px;border-radius:10px;border:1px solid rgba(255,255,255,.09);display:grid;place-items:center;background:rgba(0,0,0,.16);overflow:hidden}.card-art-placeholder span{font-size:48px;opacity:.18}.card-main{display:flex;gap:10px;align-items:center}.card-main .card-power{flex:0 0 auto}
+.card.red { border-color:rgba(217,74,74,.62); background:linear-gradient(180deg, rgba(217,74,74,.18), transparent 48%), #1b2436; }.card.red .faction-mark{color:#ff8585}
+.card.blue { border-color:rgba(63,121,216,.62); background:linear-gradient(180deg, rgba(63,121,216,.18), transparent 48%), #1b2436; }.card.blue .faction-mark{color:#8db5ff}
+.card.white { border-color:rgba(220,224,234,.62); background:linear-gradient(180deg, rgba(220,224,234,.16), transparent 48%), #1b2436; }.card.white .faction-mark{color:#f1f3f7}
+.card.saints { border-color:rgba(215,185,104,.68); background:linear-gradient(180deg, rgba(215,185,104,.18), transparent 48%), #1b2436; }.card.saints .faction-mark{color:#e9cf7b}
 .card.selected { outline:3px solid var(--gold); transform:translateY(-2px); }
 .card-name { font-weight:900; font-size:16px; line-height:1.1; }
 .card-power { font-size:42px; font-weight:950; line-height:1; letter-spacing:-.05em; }
@@ -127,7 +128,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
   .round-status { min-width:78px; }
   .round-status strong { font-size:20px; }
   .hand { grid-template-columns:1fr; }
-  .card { min-height:128px; display:grid; grid-template-columns:62px 1fr; grid-template-rows:auto 1fr; align-items:start; }
+  .card { min-height:150px; display:grid; grid-template-columns:64px 1fr; grid-template-rows:auto auto 1fr; align-items:start; }.card-topline{grid-column:1 / -1;width:100%}.card-art-placeholder{grid-column:1;grid-row:2 / span 2;height:72px}.card-main{grid-column:2;grid-row:2}.card-text{grid-column:2;grid-row:3}
   .card-name { grid-column:2; font-size:16px; }
   .card-power { grid-column:1; grid-row:1 / span 2; font-size:44px; }
   .card-text { grid-column:2; margin-top:2px; }
@@ -147,7 +148,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
   <div class="app-shell">
     <header class="topbar">
       <div>
-        <div class="eyebrow">PROTOTIPO v0.7.1</div>
+        <div class="eyebrow">PROTOTIPO v0.8 · LAB</div>
         <h1>Siniestra · Trono · Diestra</h1>
       </div>
       <div class="top-actions"><button id="showCardsBtn" class="ghost">Cartas</button><button id="newGameBtn" class="ghost">Nueva partida</button></div>
@@ -272,9 +273,9 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
 
   <dialog id="rulesDialog">
     <div class="dialog-body">
-      <div class="section-head"><h2>Reglas v0.7.1</h2><button class="icon-btn" data-close="rulesDialog">×</button></div>
+      <div class="section-head"><h2>Reglas v0.8 LAB</h2><button class="icon-btn" data-close="rulesDialog">×</button></div>
       <ul>
-        <li>18 cartas + 1 campeón. Ambos campeones comienzan con 9 de Vida.</li>
+        <li>24 cartas + 1 campeón. Hay 2 copias de cada uno de los 12 diseños. Ambos campeones comienzan con 9 de Vida.</li>
         <li>Robás 3 cartas por ronda. Normalmente solo podés usar cada posición una vez. Algunos campeones pueden romper esta restricción.</li>
         <li>Los turnos son consecutivos: un jugador abre y el otro responde. Quien gana el duelo abre el siguiente; en empate conserva la iniciativa quien abrió. El primer jugador de cada ronda se alterna.</li>
         <li>Mayor Poder gana el duelo y hace 1 punto de daño al campeón rival. Un empate no hace daño.</li>
@@ -282,7 +283,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
         <li>No quiero termina la ronda. La carta no jugada va al descarte boca abajo, sin revelarse.</li>
         <li>Las cartas jugadas pasan al Archivo de la posición en la que fueron usadas. El tablero muestra solo cuántas hay en cada Archivo.</li>
         <li>Si una carta recibe más de una duplicación de Poder base, cada duplicación suma nuevamente su Poder base. Ej.: Poder 5 con dos duplicaciones = 15.</li>
-        <li>Al agotarse ambos mazos, gana quien tenga más Vida. Empate de Vida = empate.</li>
+        <li>Cuando un mazo se agota, se reconstruye y vuelve a mezclarse. En este modo laboratorio la partida solo termina cuando un campeón llega a 0 de Vida.</li>
       </ul>
     </div>
   </dialog>
@@ -301,7 +302,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
   <dialog id="cardListDialog">
     <div class="dialog-body">
       <div class="section-head"><div><div class="eyebrow">REFERENCIA</div><h2>Cartas y campeones</h2></div><button class="icon-btn" data-close="cardListDialog">×</button></div>
-      <p class="muted">Cada mazo usa 2 copias de cada una de sus 9 cartas.</p>
+      <p class="muted">Modo laboratorio: 12 diseños por facción, 2 copias de cada uno.</p>
       <div id="cardListContent" class="card-list-grid catalog-scroll"></div>
     </div>
   </dialog>
@@ -321,7 +322,13 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
   <script>
 const POSITIONS=["siniestra","trono","diestra"];
 const POSITION_LABEL={siniestra:"Siniestra",trono:"Trono",diestra:"Diestra"};
-const HISTORY_KEY="tcgPrototypeHistoryV071";
+const FACTION_META={
+  red:{label:"DEXTRAL",symbol:"◆"},
+  blue:{label:"SINISTRAL",symbol:"◐"},
+  white:{label:"EMPÍREOS",symbol:"◇"},
+  saints:{label:"SANTOS",symbol:"↔"}
+};
+const HISTORY_KEY="tcgPrototypeHistoryV08LAB";
 
 const champions={
   dextral:{id:"dextral",name:"Majestad Dextral",faction:"red",life:9,special:"diestra",text:"Podés jugar hasta 2 cartas en Diestra. Después de ganar un duelo, tu próxima carta obtiene +1 Poder."},
@@ -340,7 +347,10 @@ const cards={
     {id:"mensajero",name:"Mensajero extraño",power:3,affinity:null,text:"Si perdés este duelo, tu próxima carta obtiene +3.",effect:"loss_next3"},
     {id:"guardia_castillo",name:"Guardia del Castillo",power:5,affinity:"trono",text:"Trono: +2 si ya jugaste en Diestra esta ronda.",effect:"diestra_before2"},
     {id:"maestro_armas",name:"Maestro de armas",power:7,affinity:"diestra",text:"Diestra: +3 si ya jugaste otra carta en Diestra esta ronda.",effect:"second_special3"},
-    {id:"asesor_real",name:"Asesor real",power:2,affinity:"trono",text:"Trono: tu próxima carta obtiene +3.",effect:"next3"}
+    {id:"asesor_real",name:"Asesor real",power:2,affinity:"trono",text:"Trono: tu próxima carta obtiene +3.",effect:"next3"},
+    {id:"incendiario",name:"Incendiario",power:3,affinity:null,text:"Después de este duelo, vaciá el Archivo rival de esta posición.",effect:"clear_opp_archive_after"},
+    {id:"abanderado_real",name:"Abanderado real",power:5,affinity:"trono",text:"Trono: si abrís este duelo, +2 Poder.",effect:"opener2"},
+    {id:"ejecutor_real",name:"Ejecutor real",power:5,affinity:null,text:"Si vas ganando la ronda, +2 Poder.",effect:"winning_round2"}
   ],
   blue:[
     {id:"protector",name:"Protector",power:5,affinity:"trono",text:"Trono: si perdiste el duelo anterior, la carta rival pierde 3 Poder.",effect:"lost_prev_enemy3"},
@@ -351,7 +361,10 @@ const cards={
     {id:"sabio",name:"Sabio",power:4,affinity:"trono",text:"Trono: la carta rival no activa su habilidad de posición este duelo.",effect:"cancel_enemy_affinity"},
     {id:"caballero_luciernaga",name:"Caballero luciérnaga",power:6,affinity:"siniestra",text:"Siniestra: si es tu tercera carta de la ronda, +4.",effect:"third4"},
     {id:"archivista",name:"Archivista",power:5,affinity:null,text:"+1 por cada carta en tu Archivo de la posición donde lo jugás.",effect:"archive_here"},
-    {id:"oraculo",name:"Oráculo",power:4,affinity:"siniestra",text:"Siniestra: la próxima carta rival tiene −3 Poder.",effect:"enemy_next3"}
+    {id:"oraculo",name:"Oráculo",power:4,affinity:"siniestra",text:"Siniestra: la próxima carta rival tiene −3 Poder.",effect:"enemy_next3"},
+    {id:"desencantador",name:"Desencantador",power:5,affinity:"trono",text:"Trono: si la carta rival tiene más Poder que su Poder impreso, pierde 2 Poder.",effect:"enemy_boosted_minus2"},
+    {id:"lectora_gestos",name:"Lectora de gestos",power:5,affinity:"siniestra",text:"Siniestra: si la carta rival tiene habilidad de posición, +2 Poder.",effect:"enemy_affinity2"},
+    {id:"tejedor_sombras",name:"Tejedor de sombras",power:4,affinity:"trono",text:"Trono: si el duelo anterior terminó en empate, la carta rival pierde 3 Poder.",effect:"prev_draw_enemy3"}
   ],
   white:[
     {id:"gusano_blanco",name:"Gusano blanco",power:4,affinity:null,text:"Si tu Archivo de esta posición está vacío, +2.",effect:"archive_empty2"},
@@ -362,7 +375,10 @@ const cards={
     {id:"huevo",name:"Huevo sin eclosionar",power:2,affinity:null,text:"Si tu Archivo de esta posición tiene 3 o más cartas, +6.",effect:"archive_three6"},
     {id:"dragon_anciano",name:"Dragón Anciano",power:6,affinity:"trono",text:"Trono: si tu Archivo de Trono tiene 3 o más cartas, +3.",effect:"trono_archive_three3"},
     {id:"forjador_anillos",name:"Forjador de anillos",power:5,affinity:null,text:"Si lo jugás en tu Archivo menos poblado, +2.",effect:"least_archive2"},
-    {id:"escriba_escamado",name:"Escriba escamado",power:4,affinity:null,text:"+1 por cada carta en el Archivo rival de esta posición, máximo +4.",effect:"opp_archive_capped"}
+    {id:"escriba_escamado",name:"Escriba escamado",power:4,affinity:null,text:"+1 por cada carta en el Archivo rival de esta posición, máximo +4.",effect:"opp_archive_capped"},
+    {id:"cronista_draconido",name:"Cronista dracónido",power:4,affinity:null,text:"+1 por cada posición donde tu Archivo tenga más cartas que el rival, máximo +3.",effect:"archive_leads_global"},
+    {id:"memoria_petrificada",name:"Memoria petrificada",power:3,affinity:null,text:"Si tu Archivo de esta posición tiene exactamente 2 cartas, +5 Poder.",effect:"archive_exact2_5"},
+    {id:"cartografo_empireo",name:"Cartógrafo empíreo",power:5,affinity:null,text:"Si tus tres Archivos tienen cantidades distintas, +3 Poder.",effect:"archive_all_diff3"}
   ],
   saints:[
     {id:"santo_bifronte",name:"Santo Bifronte",power:6,affinity:null,text:"Siniestra o Diestra: +1 Poder.",effect:"lateral1"},
@@ -373,7 +389,10 @@ const cards={
     {id:"paso_especular",name:"Paso Especular",power:5,affinity:null,text:"Si tu carta anterior fue jugada en la posición lateral opuesta, +3 Poder.",effect:"opposite_prev3"},
     {id:"procesion_perfecta",name:"Procesión Perfecta",power:5,affinity:null,text:"Duplica su Poder base si en el segundo duelo jugaste en Trono.",effect:"second_trono_double"},
     {id:"reflejo_viviente",name:"Reflejo Viviente",power:6,affinity:null,text:"Si tu oponente jugó en la posición lateral opuesta, +2 Poder.",effect:"opposite_enemy2"},
-    {id:"avatar_simetria",name:"Avatar de Simetría",power:4,affinity:null,text:"Si ambos campeones tienen la misma Vida, duplica su Poder base.",effect:"equal_life_double"}
+    {id:"avatar_simetria",name:"Avatar de Simetría",power:4,affinity:null,text:"Si ambos campeones tienen la misma Vida, duplica su Poder base.",effect:"equal_life_double"},
+    {id:"pendulo",name:"Péndulo",power:4,affinity:null,text:"Si ganaste un duelo y perdiste otro esta ronda, +4 Poder.",effect:"win_loss4"},
+    {id:"santo_gemelo",name:"Santo Gemelo",power:5,affinity:null,text:"Si el duelo anterior terminó en empate, +3 Poder.",effect:"prev_draw3"},
+    {id:"palindromo",name:"Palíndromo",power:5,affinity:null,text:"Si tu primera carta de la ronda fue jugada en la posición lateral opuesta a esta, +3 Poder.",effect:"first_opposite3"}
   ]
 };
 
@@ -382,7 +401,7 @@ function qs(id){return document.getElementById(id);}
 function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function makeDeck(faction){const d=[];cards[faction].forEach(c=>{d.push({...c,uid:c.id+"-a-"+Math.random()});d.push({...c,uid:c.id+"-b-"+Math.random()});});return shuffle(d);}
 function emptyZones(){return{siniestra:[],trono:[],diestra:[]};}
-function playerTemplate(championId,isAI){const champ=champions[championId];return{champion:champ,life:champ.life,deck:makeDeck(champ.faction),hand:[],archives:emptyZones(),discard:[],roundPlays:[],duelResults:[],nextBuff:0,nextBuffNotes:[],incomingDebuff:0,incomingNotes:[],nextPositionBoost:0,bluePassiveUsed:false,empireanBuff:0,nextBaseDouble:false,saintPassiveUsed:false,isAI};}
+function playerTemplate(championId,isAI){const champ=champions[championId];return{champion:champ,life:champ.life,deck:makeDeck(champ.faction),hand:[],archives:emptyZones(),discard:[],roundPlays:[],duelResults:[],nextBuff:0,nextBuffNotes:[],incomingDebuff:0,incomingNotes:[],nextPositionBoost:0,bluePassiveUsed:false,empireanBuff:0,nextBaseDouble:false,saintPassiveUsed:false,cycles:0,isAI};}
 function fmtPower(n){return n>0?"+"+n:String(n);}
 function countPosition(p,pos){return p.roundPlays.filter(x=>x.position===pos).length;}
 function capacity(p,pos){return pos===p.champion.special?2:1;}
@@ -410,7 +429,7 @@ function initGame(){
   drawRoundHands();logEvent("Comienza la partida: "+state.player.champion.name+" vs "+state.ai.champion.name+".");showGame();beginTurn();renderAll();
 }
 function drawRoundHands(){
-  [state.player,state.ai].forEach(p=>{p.hand=p.deck.splice(0,Math.min(3,p.deck.length));p.roundPlays=[];p.duelResults=[];p.nextBuff=0;p.nextBuffNotes=[];p.incomingDebuff=0;p.incomingNotes=[];p.nextPositionBoost=0;p.bluePassiveUsed=false;p.nextBaseDouble=false;p.saintPassiveUsed=false;});
+  [state.player,state.ai].forEach(p=>{if(p.deck.length<3){p.deck=makeDeck(p.champion.faction);p.cycles=(p.cycles||0)+1;}p.hand=p.deck.splice(0,3);p.roundPlays=[];p.duelResults=[];p.nextBuff=0;p.nextBuffNotes=[];p.incomingDebuff=0;p.incomingNotes=[];p.nextPositionBoost=0;p.bluePassiveUsed=false;p.nextBaseDouble=false;p.saintPassiveUsed=false;});
   state.duelScore={player:0,ai:0};state.turn=1;pendingHumanPlay=null;pendingAIPlay=null;selectedCardIndex=null;
 }
 function beginTurn(){
@@ -440,8 +459,8 @@ function renderScore(){
   const prev=state.rounds.at(-1);qs("previousRound").textContent=prev?"Anterior "+prev.score.player+"–"+prev.score.ai:"Anterior —";
 }
 function renderHand(){
-  const root=qs("hand");root.innerHTML="";
-  state.player.hand.forEach((c,i)=>{const el=document.createElement("button");el.className="card "+state.player.champion.faction+(selectedCardIndex===i?" selected":"");el.innerHTML='<span class="card-copy">'+(i+1)+'</span><div class="card-power">'+fmtPower(c.power)+'</div><div class="card-name">'+c.name+'</div><div class="card-text">'+c.text+'</div>';el.onclick=()=>{selectedCardIndex=i;qs("selectedSummary").textContent=c.name+" · Poder "+fmtPower(c.power);renderHand();};root.appendChild(el);});
+  const root=qs("hand");root.innerHTML="";const faction=state.player.champion.faction,meta=FACTION_META[faction];
+  state.player.hand.forEach((c,i)=>{const el=document.createElement("button");el.className="card "+faction+(selectedCardIndex===i?" selected":"");el.draggable=true;const affinity=c.affinity?'<span class="affinity-badge">'+POSITION_LABEL[c.affinity]+'</span>':'<span class="affinity-badge flexible">Flexible</span>';el.innerHTML='<div class="card-topline"><span class="faction-mark">'+meta.symbol+' '+meta.label+'</span>'+affinity+'</div><div class="card-art-placeholder"><span>'+meta.symbol+'</span></div><div class="card-main"><div class="card-power">'+fmtPower(c.power)+'</div><div class="card-name">'+c.name+'</div></div><div class="card-text">'+c.text+'</div>';el.onclick=()=>{selectedCardIndex=i;qs("selectedSummary").textContent=c.name+" · Poder "+fmtPower(c.power);renderHand();};el.addEventListener("dragstart",e=>{selectedCardIndex=i;e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",String(i));qs("selectedSummary").textContent="Arrastrando "+c.name;el.classList.add("dragging");});el.addEventListener("dragend",()=>el.classList.remove("dragging"));root.appendChild(el);});
 }
 function previewPendingPower(play,self,opp){
   const c=play.card,aff=affinityActive(self,c,play.position),notes=["Base "+c.power];const doubleReasons=baseDoubleReasons(self,c,play,aff);let p=c.power*(1+doubleReasons.length);doubleReasons.forEach(reason=>notes.push("+"+c.power+" duplicación · "+reason));
@@ -456,7 +475,7 @@ function previewPendingPower(play,self,opp){
   else if(c.effect==="trono_before3"&&aff&&countPosition(self,"trono")>0){p+=3;notes.push("+3 tras Trono");}
   else if(c.effect==="diestra_before2"&&aff&&countPosition(self,"diestra")>0){p+=2;notes.push("+2 tras Diestra");}
   else if(c.effect==="second_special3"&&aff&&countPosition(self,self.champion.special)>0){p+=3;notes.push("+3 segunda "+POSITION_LABEL[self.champion.special]);}
-  else if(c.effect==="enemy_printed6_2"&&aff){notes.push("Puede ganar +3 contra Poder impreso 6+");}
+  else if(c.effect==="enemy_printed6_2"&&aff){notes.push("Puede ganar +2 contra Poder impreso 6+");}
   else if(c.effect==="third4"&&aff&&state.turn===3){p+=4;notes.push("+4 tercer duelo");}
   else if(c.effect==="archive_empty2"&&self.archives[play.position].length===0){p+=2;notes.push("+2 Archivo vacío");}
   else if(c.effect==="archive_two2"&&self.archives[play.position].length>=2){p+=2;notes.push("+2 Archivo con 2+");}
@@ -472,13 +491,22 @@ function previewPendingPower(play,self,opp){
   else if(c.effect==="axis_lateral2"&&aff&&self.roundPlays.some(x=>x.position==="siniestra"||x.position==="diestra")){p+=2;notes.push("+2 lateral previa");}
   else if(c.effect==="opposite_prev3"&&self.roundPlays.length&&isOppositeLateral(self.roundPlays.at(-1).position,play.position)){p+=3;notes.push("+3 posición opuesta");}
   else if(c.effect==="opposite_enemy2")notes.push("Puede ganar +2 según la posición rival");
+  else if(c.effect==="opener2"&&aff&&state.initiative===(self===state.player?"player":"ai")){p+=2;notes.push("+2 abre el duelo");}
+  else if(c.effect==="winning_round2"){const [own,rival]=roundScoreFor(self);if(own>rival){p+=2;notes.push("+2 vas ganando");}}
+  else if(c.effect==="enemy_affinity2"&&aff)notes.push("Puede ganar +2 si la carta rival tiene habilidad de posición");
+  else if(c.effect==="prev_draw3"&&self.duelResults.at(-1)==="draw"){p+=3;notes.push("+3 empate anterior");}
+  else if(c.effect==="win_loss4"&&self.duelResults.includes("win")&&self.duelResults.includes("loss")){p+=4;notes.push("+4 victoria + derrota");}
+  else if(c.effect==="first_opposite3"&&self.roundPlays.length&&isOppositeLateral(self.roundPlays[0].position,play.position)){p+=3;notes.push("+3 refleja la primera posición");}
+  else if(c.effect==="archive_leads_global"){const n=POSITIONS.filter(x=>self.archives[x].length>opp.archives[x].length).length;p+=n;if(n)notes.push("+"+n+" posiciones de Archivo por delante");}
+  else if(c.effect==="archive_exact2_5"&&self.archives[play.position].length===2){p+=5;notes.push("+5 Archivo exactamente 2");}
+  else if(c.effect==="archive_all_diff3"){const vals=POSITIONS.map(x=>self.archives[x].length);if(new Set(vals).size===3){p+=3;notes.push("+3 Archivos distintos");}}
   if(c.effect==="copy_plus2"&&aff){notes.push("Poder final depende de la carta rival");}
   return {power:p,notes};
 }
 function renderBoards(){renderBoardSide("playerBoard",state.player,state.ai,pendingHumanPlay);renderBoardSide("aiBoard",state.ai,state.player,pendingAIPlay);}
 function renderBoardSide(id,p,opp,pending){
   const root=qs(id);root.innerHTML="";
-  POSITIONS.forEach(pos=>{const slot=document.createElement("div");slot.className="board-slot"+(pos===p.champion.special?" special-slot":"");p.roundPlays.filter(x=>x.position===pos).forEach(pl=>slot.appendChild(miniCard(pl.card,p.champion.faction,pl.finalPower)));if(pending&&pending.position===pos){const prev=previewPendingPower(pending,p,opp);slot.appendChild(miniCard(pending.card,p.champion.faction,prev.power,true,prev.notes));}const cap=document.createElement("span");cap.className="slot-capacity";cap.textContent=countPosition(p,pos)+(pending&&pending.position===pos?1:0)+"/"+capacity(p,pos);slot.appendChild(cap);root.appendChild(slot);});
+  POSITIONS.forEach(pos=>{const slot=document.createElement("div");slot.className="board-slot"+(pos===p.champion.special?" special-slot":"");slot.dataset.position=pos;const archive=document.createElement("span");archive.className="board-archive-count";archive.textContent="Archivo "+p.archives[pos].length;slot.appendChild(archive);p.roundPlays.filter(x=>x.position===pos).forEach(pl=>slot.appendChild(miniCard(pl.card,p.champion.faction,pl.finalPower)));if(pending&&pending.position===pos){const prev=previewPendingPower(pending,p,opp);slot.appendChild(miniCard(pending.card,p.champion.faction,prev.power,true,prev.notes));}const cap=document.createElement("span");cap.className="slot-capacity";cap.textContent=countPosition(p,pos)+(pending&&pending.position===pos?1:0)+"/"+capacity(p,pos);slot.appendChild(cap);if(id==="playerBoard"){slot.addEventListener("dragover",e=>{if(selectedCardIndex!==null&&legalPositions(state.player).includes(pos)){e.preventDefault();e.dataTransfer.dropEffect="move";slot.classList.add("drop-ready");}});slot.addEventListener("dragleave",()=>slot.classList.remove("drop-ready"));slot.addEventListener("drop",e=>{e.preventDefault();slot.classList.remove("drop-ready");if(selectedCardIndex!==null)playHuman(pos);});}root.appendChild(slot);});
 }
 function miniCard(card,faction,power,pending,notes=[]){const el=document.createElement("div");el.className="mini-card "+faction+(pending?" pending":"");el.innerHTML='<div class="power">'+fmtPower(power)+'</div><div class="name">'+card.name+'</div>'+(pending&&notes.length?'<div class="pending-notes">'+notes.join(" · ")+'</div>':"");return el;}
 function renderArchives(){renderArchive("playerArchives",state.player);renderArchive("aiArchives",state.ai);}
@@ -515,6 +543,16 @@ function estimateOwn(card,pos,p,opp){
   if(state.turn<3&&["next3","next_position2","enemy_next3"].includes(card.effect)&&aff)v+=2;
   if(state.turn<3&&card.effect==="loss_next3")v+=1;
   if(card.effect==="mirror_martyr"&&state.turn===2){const [own,rival]=roundScoreFor(p);if(Math.abs(own-rival)===1)v+=2.5;}
+  if(card.effect==="opener2"&&aff&&state.initiative===(p===state.player?"player":"ai"))v+=2;
+  if(card.effect==="winning_round2"){const [own,rival]=roundScoreFor(p);if(own>rival)v+=2;}
+  if(card.effect==="enemy_affinity2"&&aff)v+=1.2;
+  if(card.effect==="prev_draw3"&&p.duelResults.at(-1)==="draw")v+=3;
+  if(card.effect==="win_loss4"&&p.duelResults.includes("win")&&p.duelResults.includes("loss"))v+=4;
+  if(card.effect==="first_opposite3"&&p.roundPlays.length&&isOppositeLateral(p.roundPlays[0].position,pos))v+=3;
+  if(card.effect==="archive_leads_global")v+=POSITIONS.filter(x=>p.archives[x].length>opp.archives[x].length).length;
+  if(card.effect==="archive_exact2_5"&&p.archives[pos].length===2)v+=5;
+  if(card.effect==="archive_all_diff3"&&new Set(POSITIONS.map(x=>p.archives[x].length)).size===3)v+=3;
+  if(card.effect==="clear_opp_archive_after")v+=Math.min(3,opp.archives[pos].length)*.45;
   return v;
 }
 function chooseAIPlay(firstPlay,aiFirst){
@@ -536,7 +574,7 @@ function calculatePowers(aPlay,A,bPlay,B){
     else if(c.effect==="trono_before3"&&aff&&countPosition(self,"trono")>0){p+=3;notes.push("+3 tras Trono");}
     else if(c.effect==="diestra_before2"&&aff&&countPosition(self,"diestra")>0){p+=2;notes.push("+2 tras Diestra");}
     else if(c.effect==="second_special3"&&aff&&countPosition(self,self.champion.special)>0){p+=3;notes.push("+3 segunda Diestra");}
-    else if(c.effect==="enemy_printed6_2"&&aff&&oppPlay.card.power>=6){p+=3;notes.push("+3 rival con Poder impreso 6+");}
+    else if(c.effect==="enemy_printed6_2"&&aff&&oppPlay.card.power>=6){p+=2;notes.push("+2 rival con Poder impreso 6+");}
     else if(c.effect==="copy_plus2"&&aff){p=oppPlay.card.power+2+self.nextBuff+(self.nextPositionBoost&&aff?self.nextPositionBoost:0)-self.incomingDebuff;notes.length=0;notes.push("Poder impreso rival "+oppPlay.card.power,"+2 Prodigio");if(self.nextBuff)notes.push(...self.nextBuffNotes);if(self.nextPositionBoost&&aff)notes.push("+"+self.nextPositionBoost+" Invocador");if(self.incomingDebuff)notes.push(...self.incomingNotes);}
     else if(c.effect==="third4"&&aff&&state.turn===3){p+=4;notes.push("+4 tercer duelo");}
     else if(c.effect==="archive_empty2"&&self.archives[play.position].length===0){p+=2;notes.push("+2 Archivo vacío");}
@@ -553,11 +591,24 @@ function calculatePowers(aPlay,A,bPlay,B){
     else if(c.effect==="axis_lateral2"&&aff&&self.roundPlays.some(x=>x.position==="siniestra"||x.position==="diestra")){p+=2;notes.push("+2 lateral previa");}
     else if(c.effect==="opposite_prev3"&&self.roundPlays.length&&isOppositeLateral(self.roundPlays.at(-1).position,play.position)){p+=3;notes.push("+3 posición opuesta");}
     else if(c.effect==="opposite_enemy2"&&isOppositeLateral(oppPlay.position,play.position)){p+=2;notes.push("+2 posición rival opuesta");}
+    else if(c.effect==="opener2"&&aff&&state.initiative===(self===state.player?"player":"ai")){p+=2;notes.push("+2 abre el duelo");}
+    else if(c.effect==="winning_round2"){const [own,rival]=roundScoreFor(self);if(own>rival){p+=2;notes.push("+2 vas ganando");}}
+    else if(c.effect==="enemy_affinity2"&&aff&&!!oppPlay.card.affinity){p+=2;notes.push("+2 rival con habilidad de posición");}
+    else if(c.effect==="prev_draw3"&&self.duelResults.at(-1)==="draw"){p+=3;notes.push("+3 empate anterior");}
+    else if(c.effect==="win_loss4"&&self.duelResults.includes("win")&&self.duelResults.includes("loss")){p+=4;notes.push("+4 victoria + derrota");}
+    else if(c.effect==="first_opposite3"&&self.roundPlays.length&&isOppositeLateral(self.roundPlays[0].position,play.position)){p+=3;notes.push("+3 refleja la primera posición");}
+    else if(c.effect==="archive_leads_global"){const n=POSITIONS.filter(x=>self.archives[x].length>opp.archives[x].length).length;p+=n;if(n)notes.push("+"+n+" posiciones de Archivo por delante");}
+    else if(c.effect==="archive_exact2_5"&&self.archives[play.position].length===2){p+=5;notes.push("+5 Archivo exactamente 2");}
+    else if(c.effect==="archive_all_diff3"){const vals=POSITIONS.map(x=>self.archives[x].length);if(new Set(vals).size===3){p+=3;notes.push("+3 Archivos distintos");}}
     return p;
   }
   let a=power(aPlay,A,B,bPlay,aAff,aNotes),b=power(bPlay,B,A,aPlay,bAff,bNotes);
   if(aPlay.card.effect==="enemy3"&&aAff){b-=3;bNotes.push("−3 Asesino sinistral");}if(bPlay.card.effect==="enemy3"&&bAff){a-=3;aNotes.push("−3 Asesino sinistral");}
   if(aPlay.card.effect==="lost_prev_enemy3"&&aAff&&A.duelResults.at(-1)==="loss"){b-=3;bNotes.push("−3 Protector");}if(bPlay.card.effect==="lost_prev_enemy3"&&bAff&&B.duelResults.at(-1)==="loss"){a-=3;aNotes.push("−3 Protector");}
+  if(aPlay.card.effect==="enemy_boosted_minus2"&&aAff&&b>bPlay.card.power){b-=2;bNotes.push("−2 Desencantador");}
+  if(bPlay.card.effect==="enemy_boosted_minus2"&&bAff&&a>aPlay.card.power){a-=2;aNotes.push("−2 Desencantador");}
+  if(aPlay.card.effect==="prev_draw_enemy3"&&aAff&&A.duelResults.at(-1)==="draw"){b-=3;bNotes.push("−3 Tejedor de sombras");}
+  if(bPlay.card.effect==="prev_draw_enemy3"&&bAff&&B.duelResults.at(-1)==="draw"){a-=3;aNotes.push("−3 Tejedor de sombras");}
   let aSaint=false,bSaint=false;
   if(A.champion.id==="santo_simetrico"&&!A.saintPassiveUsed&&a===b-1){a+=1;aNotes.push("+1 Santo Simétrico → empate");aSaint=true;}
   else if(B.champion.id==="santo_simetrico"&&!B.saintPassiveUsed&&b===a-1){b+=1;bNotes.push("+1 Santo Simétrico → empate");bSaint=true;}
@@ -575,6 +626,8 @@ function resolveDuel(){
   hp.finalPower=p.a;hp.notes=p.aNotes;ap.finalPower=p.b;ap.notes=p.bNotes;
   if(hp.card.effect==="clear_archive2x")state.player.archives[hp.position]=[];
   if(ap.card.effect==="clear_archive2x")state.ai.archives[ap.position]=[];
+  if(hp.card.effect==="clear_opp_archive_after")state.ai.archives[hp.position]=[];
+  if(ap.card.effect==="clear_opp_archive_after")state.player.archives[ap.position]=[];
   state.player.roundPlays.push(hp);state.ai.roundPlays.push(ap);
   let outcome="draw";if(p.a>p.b){outcome="player";state.duelScore.player++;state.ai.life--;state.player.duelResults.push("win");state.ai.duelResults.push("loss");}else if(p.b>p.a){outcome="ai";state.duelScore.ai++;state.player.life--;state.player.duelResults.push("loss");state.ai.duelResults.push("win");}else{state.player.duelResults.push("draw");state.ai.duelResults.push("draw");}
   applyPost(state.player,hp,outcome==="player"?"win":outcome==="ai"?"loss":"draw",state.ai,p.aAff);applyPost(state.ai,ap,outcome==="ai"?"win":outcome==="player"?"loss":"draw",state.player,p.bAff);
@@ -605,14 +658,13 @@ function endRound(reason){
   const foldText=reason==="ai_no_quiero"?" · IA dijo No quiero":reason==="player_no_quiero"?" · No quiero":"";
   qs("duelFeedbackText").innerHTML="<strong>Fin de ronda "+state.round+": "+state.duelScore.player+"–"+state.duelScore.ai+foldText+"</strong>";
   logEvent("<strong>Fin de ronda "+state.round+".</strong> Resultado "+state.duelScore.player+"–"+state.duelScore.ai+foldText+".");
-  if(state.player.deck.length===0||state.ai.deck.length===0){finishByDeck();return;}state.round++;state.roundStarter=state.roundStarter==="player"?"ai":"player";state.initiative=state.roundStarter;drawRoundHands();beginTurn();
+  state.round++;state.roundStarter=state.roundStarter==="player"?"ai":"player";state.initiative=state.roundStarter;drawRoundHands();beginTurn();
 }
-function finishByDeck(){let w="draw";if(state.player.life>state.ai.life)w="player";else if(state.ai.life>state.player.life)w="ai";finishGame(w,"mazo");}
 function finishGame(winner,reason){if(state.finished)return;state.finished=true;state.endedAt=new Date().toISOString();state.winner=winner;state.endReason=reason;const h=getHistory();h.push({id:state.id,date:state.endedAt,playerChampion:state.player.champion.name,aiChampion:state.ai.champion.name,winner,reason,playerLife:state.player.life,aiLife:state.ai.life,rounds:state.round});localStorage.setItem(HISTORY_KEY,JSON.stringify(h));renderHistory();qs("resultTitle").textContent=winner==="player"?"Ganaste":winner==="ai"?"Ganó la IA":"Empate";qs("resultText").textContent=state.player.life+"–"+state.ai.life+" de Vida · "+state.round+" ronda"+(state.round===1?"":"s")+" · final por "+(reason==="vida"?"Vida":"agotamiento del mazo")+".";qs("resultDialog").showModal();}
 function resetSelectionUI(){selectedCardIndex=null;qs("selectedSummary").textContent="Ninguna carta seleccionada";}
 function logEvent(html){const d=new Date();state.logs.push({html,time:d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"})});}
 function getHistory(){try{return JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");}catch{return[];}}
-function exportCurrent(){if(!state)return;const payload={version:"0.7.1",exportedAt:new Date().toISOString(),game:state,history:getHistory()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="tcg-test-"+state.id+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function exportCurrent(){if(!state)return;const payload={version:"0.8-lab",exportedAt:new Date().toISOString(),game:state,history:getHistory()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="tcg-test-"+state.id+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function showGame(){qs("setupView").classList.add("hidden");qs("gameView").classList.remove("hidden");}
 function showSetup(){if(qs("resultDialog").open)qs("resultDialog").close();qs("gameView").classList.add("hidden");qs("setupView").classList.remove("hidden");state=null;selectedChampion=null;document.querySelectorAll(".champion-choice").forEach(x=>x.classList.remove("selected"));qs("startGameBtn").disabled=true;}
 
@@ -628,7 +680,7 @@ function renderCardList(){
 function openCardList(){renderCardList();qs("cardListDialog").showModal();}
 document.querySelectorAll(".champion-choice").forEach(btn=>btn.addEventListener("click",()=>{selectedChampion=btn.dataset.champion;document.querySelectorAll(".champion-choice").forEach(x=>x.classList.toggle("selected",x===btn));qs("startGameBtn").disabled=false;}));
 qs("startGameBtn").onclick=initGame;qs("newGameBtn").onclick=()=>{if(state&&!state.finished&&!confirm("¿Abandonar la partida actual?"))return;showSetup();};qs("showRulesBtn").onclick=()=>qs("rulesDialog").showModal();qs("showCardsBtn").onclick=openCardList;qs("showCardsSetupBtn").onclick=openCardList;document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>qs(b.dataset.close).close());document.querySelectorAll(".position-buttons button[data-position]").forEach(b=>b.onclick=()=>playHuman(b.dataset.position));qs("quieroBtn").onclick=()=>humanQuiero(true);qs("noQuieroBtn").onclick=()=>humanQuiero(false);qs("exportBtn").onclick=exportCurrent;qs("resultExportBtn").onclick=exportCurrent;qs("playAgainBtn").onclick=()=>{qs("resultDialog").close();showSetup();};qs("clearHistoryBtn").onclick=()=>{if(confirm("¿Borrar el historial guardado en este navegador?")){localStorage.removeItem(HISTORY_KEY);renderHistory();}};
-const extraStyle=document.createElement("style");extraStyle.textContent=".champion-rule{font-size:11px;color:var(--gold);font-weight:800;line-height:1.25}.special-slot{border-style:solid;border-color:rgba(224,184,93,.5);position:relative}.slot-capacity{position:absolute;right:6px;bottom:4px;font-size:9px;color:var(--muted)}.pending{outline:2px dashed var(--gold)}.pending-notes{font-size:8px;line-height:1.15;color:var(--muted);margin-top:4px}.duel-feedback{margin-top:12px;padding:12px;border:1px solid var(--gold);border-radius:14px;background:rgba(224,184,93,.08)}.feedback-title{margin-bottom:8px}.feedback-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.feedback-grid>div{padding:8px;border:1px solid var(--line);border-radius:10px}.feedback-grid small{display:block;color:var(--muted);margin-top:4px;line-height:1.35}.feedback-card{padding:10px;border:1px solid var(--line);border-radius:10px}.power-resolution{display:flex;align-items:center;gap:8px;margin:7px 0}.printed-power{font-size:18px;color:var(--muted);text-decoration:line-through}.arrow{color:var(--muted)}.final-power{font-size:30px;font-weight:950}.modifier-list{display:flex;flex-wrap:wrap;gap:5px}.modifier{font-size:10px;padding:4px 6px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}.modifier.negative{color:#ff9a9a;border-color:rgba(217,74,74,.65);background:rgba(217,74,74,.12)}.modifier.positive{color:#b9d4ff;border-color:rgba(63,121,216,.45)}.archive-slot{min-height:48px;text-align:center;padding:6px}.archive-count{font-size:26px}.archives-wrap{margin-top:0}#previousRound{font-size:11px}@media(max-width:760px){.board-panel{margin-bottom:8px}.turn-panel{margin-bottom:8px}.archives-wrap{padding:8px 0}.board-slot{position:relative}.feedback-grid{grid-template-columns:1fr}.champion-rule{font-size:9px}}";document.head.appendChild(extraStyle);const archiveWrap=document.querySelector(".archives-wrap"),turnPanel=document.querySelector(".turn-panel");if(archiveWrap&&turnPanel)turnPanel.after(archiveWrap);renderHistory();if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+const extraStyle=document.createElement("style");extraStyle.textContent=".champion-rule{font-size:11px;color:var(--gold);font-weight:800;line-height:1.25}.special-slot{border-style:solid;border-color:rgba(224,184,93,.5);position:relative}.slot-capacity{position:absolute;right:6px;bottom:4px;font-size:9px;color:var(--muted)}.pending{outline:2px dashed var(--gold)}.pending-notes{font-size:8px;line-height:1.15;color:var(--muted);margin-top:4px}.duel-feedback{margin-top:12px;padding:12px;border:1px solid var(--gold);border-radius:14px;background:rgba(224,184,93,.08)}.feedback-title{margin-bottom:8px}.feedback-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.feedback-grid>div{padding:8px;border:1px solid var(--line);border-radius:10px}.feedback-grid small{display:block;color:var(--muted);margin-top:4px;line-height:1.35}.feedback-card{padding:10px;border:1px solid var(--line);border-radius:10px}.power-resolution{display:flex;align-items:center;gap:8px;margin:7px 0}.printed-power{font-size:18px;color:var(--muted);text-decoration:line-through}.arrow{color:var(--muted)}.final-power{font-size:30px;font-weight:950}.modifier-list{display:flex;flex-wrap:wrap;gap:5px}.modifier{font-size:10px;padding:4px 6px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}.modifier.negative{color:#ff9a9a;border-color:rgba(217,74,74,.65);background:rgba(217,74,74,.12)}.modifier.positive{color:#b9d4ff;border-color:rgba(63,121,216,.45)}.archive-slot{min-height:48px;text-align:center;padding:6px}.archive-count{font-size:26px}.archives-wrap{margin-top:0}#previousRound{font-size:11px}@media(max-width:760px){.board-panel{margin-bottom:8px}.turn-panel{margin-bottom:8px}.archives-wrap{padding:8px 0}.board-slot{position:relative}.board-archive-count{position:absolute;left:7px;bottom:4px;font-size:9px;color:var(--muted);font-weight:800}.board-slot.drop-ready{border-color:var(--gold);background:rgba(224,184,93,.08)}.card.dragging{opacity:.55}.feedback-grid{grid-template-columns:1fr}.champion-rule{font-size:9px}}";document.head.appendChild(extraStyle);const archiveWrap=document.querySelector(".archives-wrap"),turnPanel=document.querySelector(".turn-panel");if(archiveWrap&&turnPanel)turnPanel.after(archiveWrap);renderHistory();if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
 </html>
