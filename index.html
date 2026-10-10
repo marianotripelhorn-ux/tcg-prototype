@@ -87,7 +87,7 @@ h3 { font-size:14px; color:var(--muted); }
 .selected-summary { color:var(--muted); font-size:12px; text-align:right; }
 .hand { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; margin:14px 0; }
 .card { background:#1b2436; border:2px solid #33405a; border-radius:16px; padding:10px; min-height:240px; cursor:pointer; display:flex; flex-direction:column; gap:8px; position:relative; overflow:hidden; text-align:left; }
-.card-topline{display:flex;justify-content:space-between;gap:6px;align-items:center;position:relative;z-index:2}.faction-mark{font-size:10px;font-weight:900;letter-spacing:.08em}.affinity-badge{font-size:9px;border:1px solid currentColor;border-radius:999px;padding:3px 6px;opacity:.85}.affinity-badge.flexible{opacity:.55}.card-art-placeholder{height:82px;border-radius:10px;border:1px solid rgba(255,255,255,.09);display:grid;place-items:center;background:rgba(0,0,0,.16);overflow:hidden}.card-art-placeholder span{font-size:48px;opacity:.18}.card-main{display:flex;gap:10px;align-items:center}.card-main .card-power{flex:0 0 auto}
+.card-topline{display:flex;justify-content:space-between;gap:6px;align-items:center;position:relative;z-index:2}.faction-mark{font-size:10px;font-weight:900;letter-spacing:.08em}.affinity-badge{font-size:9px;border:1px solid currentColor;border-radius:999px;padding:3px 6px;opacity:.85}.affinity-badge.flexible{opacity:.55}.card-art-placeholder{height:116px;border-radius:10px;border:1px solid rgba(255,255,255,.09);display:grid;place-items:center;background:rgba(0,0,0,.16);overflow:hidden}.card-art-placeholder>span{font-size:48px;opacity:.18}.art-tile{height:100%;aspect-ratio:4/3;background-repeat:no-repeat;background-size:var(--art-size-x) var(--art-size-y);background-position:var(--art-x) var(--art-y);border-radius:8px}.mini-art-shell{height:36px;display:grid;place-items:center;border-radius:6px;background:rgba(0,0,0,.14);overflow:hidden;margin-bottom:4px}.mini-art-shell .art-tile{height:100%}.mini-art-shell .art-placeholder{font-size:15px;opacity:.25}.card-main{display:flex;gap:10px;align-items:center}.card-main .card-power{flex:0 0 auto}
 .card.red { border-color:rgba(217,74,74,.62); background:linear-gradient(180deg, rgba(217,74,74,.18), transparent 48%), #1b2436; }.card.red .faction-mark{color:#ff8585}
 .card.blue { border-color:rgba(63,121,216,.62); background:linear-gradient(180deg, rgba(63,121,216,.18), transparent 48%), #1b2436; }.card.blue .faction-mark{color:#8db5ff}
 .card.white { border-color:rgba(220,224,234,.62); background:linear-gradient(180deg, rgba(220,224,234,.16), transparent 48%), #1b2436; }.card.white .faction-mark{color:#f1f3f7}
@@ -128,7 +128,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
   .round-status { min-width:78px; }
   .round-status strong { font-size:20px; }
   .hand { grid-template-columns:1fr; }
-  .card { min-height:150px; display:grid; grid-template-columns:64px 1fr; grid-template-rows:auto auto 1fr; align-items:start; }.card-topline{grid-column:1 / -1;width:100%}.card-art-placeholder{grid-column:1;grid-row:2 / span 2;height:72px}.card-main{grid-column:2;grid-row:2}.card-text{grid-column:2;grid-row:3}
+  .card { min-height:150px; display:grid; grid-template-columns:64px 1fr; grid-template-rows:auto auto 1fr; align-items:start; }.card-topline{grid-column:1 / -1;width:100%}.card-art-placeholder{grid-column:1;grid-row:2 / span 2;height:84px}.card-main{grid-column:2;grid-row:2}.card-text{grid-column:2;grid-row:3}
   .card-name { grid-column:2; font-size:16px; }
   .card-power { grid-column:1; grid-row:1 / span 2; font-size:44px; }
   .card-text { grid-column:2; margin-top:2px; }
@@ -328,6 +328,34 @@ const FACTION_META={
   white:{label:"EMPÍREOS",symbol:"◇"},
   saints:{label:"SANTOS",symbol:"↔"}
 };
+const ART_SPRITES={
+  red1:"assets/art-red-1.svg",
+  red2:"assets/art-red-2.svg",
+  blue1:"assets/art-blue-1.svg",
+  blue2:"assets/art-blue-2.svg"
+};
+const CARD_ART={
+  invocadagas:["red1",0,0],guardia_dextral:["red1",1,0],caballero_tigre:["red1",2,0],
+  corona_eterea:["red1",0,1],blazewalker:["red1",1,1],mensajero:["red1",2,1],
+  guardia_castillo:["red2",0,0],maestro_armas:["red2",1,0],asesor_real:["red2",2,0],
+  incendiario:["red2",0,1],abanderado_real:["red2",1,1],ejecutor_real:["red2",2,1],
+  protector:["blue1",0,0],asesino_sinistral:["blue1",1,0],criatura_invocada:["blue1",2,0],
+  prodigio:["blue1",0,1],invocador:["blue1",1,1],sabio:["blue1",2,1],
+  caballero_luciernaga:["blue2",0,0],archivista:["blue2",1,0],oraculo:["blue2",2,0],
+  desencantador:["blue2",0,1],lectora_gestos:["blue2",1,1],tejedor_sombras:["blue2",2,1]
+};
+function cardArtTile(card){
+  const a=CARD_ART[card.id];if(!a)return "";
+  const sprite=ART_SPRITES[a[0]];if(!sprite)return "";
+  const x=a[1]*50,y=a[2]*100;
+  return '<div class="art-tile" style="background-image:url(&quot;'+sprite+'&quot;);--art-x:'+x+'%;--art-y:'+y+'%;--art-size-x:300%;--art-size-y:200%"></div>';
+}
+function cardArtMarkup(card,symbol,mini=false){
+  const tile=cardArtTile(card);
+  if(mini)return '<div class="mini-art-shell">'+(tile||'<span class="art-placeholder">'+symbol+'</span>')+'</div>';
+  return '<div class="card-art-placeholder">'+(tile||'<span>'+symbol+'</span>')+'</div>';
+}
+
 const HISTORY_KEY="tcgPrototypeHistoryV08LAB";
 
 const champions={
@@ -460,7 +488,7 @@ function renderScore(){
 }
 function renderHand(){
   const root=qs("hand");root.innerHTML="";const faction=state.player.champion.faction,meta=FACTION_META[faction];
-  state.player.hand.forEach((c,i)=>{const el=document.createElement("button");el.className="card "+faction+(selectedCardIndex===i?" selected":"");el.draggable=true;const affinity=c.affinity?'<span class="affinity-badge">'+POSITION_LABEL[c.affinity]+'</span>':'<span class="affinity-badge flexible">Flexible</span>';el.innerHTML='<div class="card-topline"><span class="faction-mark">'+meta.symbol+' '+meta.label+'</span>'+affinity+'</div><div class="card-art-placeholder"><span>'+meta.symbol+'</span></div><div class="card-main"><div class="card-power">'+fmtPower(c.power)+'</div><div class="card-name">'+c.name+'</div></div><div class="card-text">'+c.text+'</div>';el.onclick=()=>{selectedCardIndex=i;qs("selectedSummary").textContent=c.name+" · Poder "+fmtPower(c.power);renderHand();};el.addEventListener("dragstart",e=>{selectedCardIndex=i;e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",String(i));qs("selectedSummary").textContent="Arrastrando "+c.name;el.classList.add("dragging");});el.addEventListener("dragend",()=>el.classList.remove("dragging"));root.appendChild(el);});
+  state.player.hand.forEach((c,i)=>{const el=document.createElement("button");el.className="card "+faction+(selectedCardIndex===i?" selected":"");el.draggable=true;const affinity=c.affinity?'<span class="affinity-badge">'+POSITION_LABEL[c.affinity]+'</span>':'<span class="affinity-badge flexible">Flexible</span>';el.innerHTML='<div class="card-topline"><span class="faction-mark">'+meta.symbol+' '+meta.label+'</span>'+affinity+'</div>'+cardArtMarkup(c,meta.symbol,false)+'<div class="card-main"><div class="card-power">'+fmtPower(c.power)+'</div><div class="card-name">'+c.name+'</div></div><div class="card-text">'+c.text+'</div>';el.onclick=()=>{selectedCardIndex=i;qs("selectedSummary").textContent=c.name+" · Poder "+fmtPower(c.power);renderHand();};el.addEventListener("dragstart",e=>{selectedCardIndex=i;e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",String(i));qs("selectedSummary").textContent="Arrastrando "+c.name;el.classList.add("dragging");});el.addEventListener("dragend",()=>el.classList.remove("dragging"));root.appendChild(el);});
 }
 function previewPendingPower(play,self,opp){
   const c=play.card,aff=affinityActive(self,c,play.position),notes=["Base "+c.power];const doubleReasons=baseDoubleReasons(self,c,play,aff);let p=c.power*(1+doubleReasons.length);doubleReasons.forEach(reason=>notes.push("+"+c.power+" duplicación · "+reason));
@@ -508,7 +536,7 @@ function renderBoardSide(id,p,opp,pending){
   const root=qs(id);root.innerHTML="";
   POSITIONS.forEach(pos=>{const slot=document.createElement("div");slot.className="board-slot"+(pos===p.champion.special?" special-slot":"");slot.dataset.position=pos;const archive=document.createElement("span");archive.className="board-archive-count";archive.textContent="Archivo "+p.archives[pos].length;slot.appendChild(archive);p.roundPlays.filter(x=>x.position===pos).forEach(pl=>slot.appendChild(miniCard(pl.card,p.champion.faction,pl.finalPower)));if(pending&&pending.position===pos){const prev=previewPendingPower(pending,p,opp);slot.appendChild(miniCard(pending.card,p.champion.faction,prev.power,true,prev.notes));}const cap=document.createElement("span");cap.className="slot-capacity";cap.textContent=countPosition(p,pos)+(pending&&pending.position===pos?1:0)+"/"+capacity(p,pos);slot.appendChild(cap);if(id==="playerBoard"){slot.addEventListener("dragover",e=>{if(selectedCardIndex!==null&&legalPositions(state.player).includes(pos)){e.preventDefault();e.dataTransfer.dropEffect="move";slot.classList.add("drop-ready");}});slot.addEventListener("dragleave",()=>slot.classList.remove("drop-ready"));slot.addEventListener("drop",e=>{e.preventDefault();slot.classList.remove("drop-ready");if(selectedCardIndex!==null)playHuman(pos);});}root.appendChild(slot);});
 }
-function miniCard(card,faction,power,pending,notes=[]){const el=document.createElement("div");el.className="mini-card "+faction+(pending?" pending":"");el.innerHTML='<div class="power">'+fmtPower(power)+'</div><div class="name">'+card.name+'</div>'+(pending&&notes.length?'<div class="pending-notes">'+notes.join(" · ")+'</div>':"");return el;}
+function miniCard(card,faction,power,pending,notes=[]){const el=document.createElement("div");el.className="mini-card "+faction+(pending?" pending":"");const meta=FACTION_META[faction]||{symbol:""};el.innerHTML=cardArtMarkup(card,meta.symbol,true)+'<div class="power">'+fmtPower(power)+'</div><div class="name">'+card.name+'</div>'+(pending&&notes.length?'<div class="pending-notes">'+notes.join(" · ")+'</div>':"");return el;}
 function renderArchives(){renderArchive("playerArchives",state.player);renderArchive("aiArchives",state.ai);}
 function renderArchive(id,p){const root=qs(id);root.innerHTML="";POSITIONS.forEach(pos=>{const slot=document.createElement("div");slot.className="archive-slot";slot.innerHTML='<div class="archive-count">'+p.archives[pos].length+'</div><div class="label">'+POSITION_LABEL[pos]+'</div>';root.appendChild(slot);});}
 function renderLog(){qs("gameLog").innerHTML=state.logs.slice().reverse().map(l=>'<div class="log-entry">'+l.html+'<div class="sub">'+l.time+'</div></div>').join("");}
@@ -674,7 +702,7 @@ function renderCardList(){
   qs("cardListContent").innerHTML=["red","blue","white","saints"].map(f=>{
     const ch=champions[champIds[f]];
     return '<section class="deck-list '+f+'"><h3>'+labels[f]+'</h3><div class="champion-card">'+ch.text+'</div>'+
-      cards[f].map(c=>'<div class="catalog-card"><b>'+fmtPower(c.power)+' · '+c.name+'</b><span>'+c.text+'</span></div>').join("")+'</section>';
+      cards[f].map(c=>'<div class="catalog-card" style="display:grid;grid-template-columns:54px 1fr;gap:9px;align-items:center">'+cardArtMarkup(c,FACTION_META[f].symbol,true)+'<div><b>'+fmtPower(c.power)+' · '+c.name+'</b><span>'+c.text+'</span></div></div>').join("")+'</section>';
   }).join("");
 }
 function openCardList(){renderCardList();qs("cardListDialog").showModal();}
