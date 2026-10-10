@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
-  <title>TCG Prototype v0.6.2</title>
+  <title>TCG Prototype v0.7</title>
     <style>
 :root {
   --bg: #0b0f17;
@@ -147,7 +147,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
   <div class="app-shell">
     <header class="topbar">
       <div>
-        <div class="eyebrow">PROTOTIPO v0.6.2</div>
+        <div class="eyebrow">PROTOTIPO v0.7</div>
         <h1>Siniestra · Trono · Diestra</h1>
       </div>
       <div class="top-actions"><button id="showCardsBtn" class="ghost">Cartas</button><button id="newGameBtn" class="ghost">Nueva partida</button></div>
@@ -272,7 +272,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
 
   <dialog id="rulesDialog">
     <div class="dialog-body">
-      <div class="section-head"><h2>Reglas v0.6.2</h2><button class="icon-btn" data-close="rulesDialog">×</button></div>
+      <div class="section-head"><h2>Reglas v0.7</h2><button class="icon-btn" data-close="rulesDialog">×</button></div>
       <ul>
         <li>18 cartas + 1 campeón. Ambos campeones comienzan con 9 de Vida.</li>
         <li>Robás 3 cartas por ronda. Normalmente solo podés usar cada posición una vez. Algunos campeones pueden romper esta restricción.</li>
@@ -321,7 +321,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
   <script>
 const POSITIONS=["siniestra","trono","diestra"];
 const POSITION_LABEL={siniestra:"Siniestra",trono:"Trono",diestra:"Diestra"};
-const HISTORY_KEY="tcgPrototypeHistoryV062";
+const HISTORY_KEY="tcgPrototypeHistoryV07";
 
 const champions={
   dextral:{id:"dextral",name:"Majestad Dextral",faction:"red",life:9,special:"diestra",text:"Podés jugar hasta 2 cartas en Diestra. Después de ganar un duelo, tu próxima carta obtiene +1 Poder."},
@@ -345,9 +345,9 @@ const cards={
   blue:[
     {id:"protector",name:"Protector",power:5,affinity:"trono",text:"Trono: si perdiste el duelo anterior, la carta rival pierde 3 Poder.",effect:"lost_prev_enemy3"},
     {id:"asesino_sinistral",name:"Asesino sinistral",power:4,affinity:"siniestra",text:"Siniestra: la carta rival pierde 3 Poder.",effect:"enemy3"},
-    {id:"criatura_invocada",name:"Criatura invocada",power:6,affinity:"siniestra",text:"Siniestra: +3 si ya jugaste Invocador esta ronda.",effect:"invocador_before3"},
+    {id:"criatura_invocada",name:"Criatura invocada",power:6,affinity:"siniestra",text:"Siniestra: si la carta rival tiene 7 o más Poder impreso, +3.",effect:"enemy_printed7_3"},
     {id:"prodigio",name:"Prodigio",power:3,affinity:"siniestra",text:"Siniestra: su Poder es igual al Poder impreso rival +2.",effect:"copy_plus2"},
-    {id:"invocador",name:"Invocador",power:3,affinity:"trono",text:"Trono: tu próxima carta activa su habilidad de posición donde la juegues.",effect:"next_affinity_anywhere"},
+    {id:"invocador",name:"Invocador",power:3,affinity:"trono",text:"Trono: si tu próxima carta activa su habilidad de posición, obtiene +2 Poder.",effect:"next_position2"},
     {id:"sabio",name:"Sabio",power:4,affinity:"trono",text:"Trono: la carta rival no activa su habilidad de posición este duelo.",effect:"cancel_enemy_affinity"},
     {id:"caballero_luciernaga",name:"Caballero luciérnaga",power:6,affinity:"siniestra",text:"Siniestra: si es tu tercera carta de la ronda, +4.",effect:"third4"},
     {id:"archivista",name:"Archivista",power:5,affinity:null,text:"+1 por cada carta en tu Archivo de la posición donde lo jugás.",effect:"archive_here"},
@@ -382,12 +382,12 @@ function qs(id){return document.getElementById(id);}
 function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function makeDeck(faction){const d=[];cards[faction].forEach(c=>{d.push({...c,uid:c.id+"-a-"+Math.random()});d.push({...c,uid:c.id+"-b-"+Math.random()});});return shuffle(d);}
 function emptyZones(){return{siniestra:[],trono:[],diestra:[]};}
-function playerTemplate(championId,isAI){const champ=champions[championId];return{champion:champ,life:champ.life,deck:makeDeck(champ.faction),hand:[],archives:emptyZones(),discard:[],roundPlays:[],duelResults:[],nextBuff:0,nextBuffNotes:[],incomingDebuff:0,incomingNotes:[],nextAffinityAnywhere:false,bluePassiveUsed:false,empireanBuff:0,nextBaseDouble:false,saintPassiveUsed:false,isAI};}
+function playerTemplate(championId,isAI){const champ=champions[championId];return{champion:champ,life:champ.life,deck:makeDeck(champ.faction),hand:[],archives:emptyZones(),discard:[],roundPlays:[],duelResults:[],nextBuff:0,nextBuffNotes:[],incomingDebuff:0,incomingNotes:[],nextPositionBoost:0,bluePassiveUsed:false,empireanBuff:0,nextBaseDouble:false,saintPassiveUsed:false,isAI};}
 function fmtPower(n){return n>0?"+"+n:String(n);}
 function countPosition(p,pos){return p.roundPlays.filter(x=>x.position===pos).length;}
 function capacity(p,pos){return pos===p.champion.special?2:1;}
 function legalPositions(p){return POSITIONS.filter(pos=>countPosition(p,pos)<capacity(p,pos));}
-function affinityActive(p,card,pos){return !!card.affinity&&(pos===card.affinity||p.nextAffinityAnywhere);}
+function affinityActive(p,card,pos){return !!card.affinity&&pos===card.affinity;}
 function roundScoreFor(p){return p===state.player?[state.duelScore.player,state.duelScore.ai]:[state.duelScore.ai,state.duelScore.player];}
 function isOppositeLateral(a,b){return (a==="siniestra"&&b==="diestra")||(a==="diestra"&&b==="siniestra");}
 function oppLifeOf(p){return p===state.player?state.ai.life:state.player.life;}
@@ -410,7 +410,7 @@ function initGame(){
   drawRoundHands();logEvent("Comienza la partida: "+state.player.champion.name+" vs "+state.ai.champion.name+".");showGame();beginTurn();renderAll();
 }
 function drawRoundHands(){
-  [state.player,state.ai].forEach(p=>{p.hand=p.deck.splice(0,Math.min(3,p.deck.length));p.roundPlays=[];p.duelResults=[];p.nextBuff=0;p.nextBuffNotes=[];p.incomingDebuff=0;p.incomingNotes=[];p.nextAffinityAnywhere=false;p.bluePassiveUsed=false;p.nextBaseDouble=false;p.saintPassiveUsed=false;});
+  [state.player,state.ai].forEach(p=>{p.hand=p.deck.splice(0,Math.min(3,p.deck.length));p.roundPlays=[];p.duelResults=[];p.nextBuff=0;p.nextBuffNotes=[];p.incomingDebuff=0;p.incomingNotes=[];p.nextPositionBoost=0;p.bluePassiveUsed=false;p.nextBaseDouble=false;p.saintPassiveUsed=false;});
   state.duelScore={player:0,ai:0};state.turn=1;pendingHumanPlay=null;pendingAIPlay=null;selectedCardIndex=null;
 }
 function beginTurn(){
@@ -446,6 +446,7 @@ function renderHand(){
 function previewPendingPower(play,self,opp){
   const c=play.card,aff=affinityActive(self,c,play.position),notes=["Base "+c.power];const doubleReasons=baseDoubleReasons(self,c,play,aff);let p=c.power*(1+doubleReasons.length);doubleReasons.forEach(reason=>notes.push("+"+c.power+" duplicación · "+reason));
   if(self.nextBuff){p+=self.nextBuff;notes.push(...self.nextBuffNotes);}
+  if(self.nextPositionBoost&&aff){p+=self.nextPositionBoost;notes.push("+"+self.nextPositionBoost+" Invocador");}
   if(self.empireanBuff){p+=self.empireanBuff;notes.push("+2 Señor de los Archivos");}
   if(self.incomingDebuff){p-=self.incomingDebuff;notes.push(...self.incomingNotes);}
   if(c.effect==="bonus2"&&aff){p+=2;notes.push("+2 "+POSITION_LABEL[c.affinity]);}
@@ -455,7 +456,7 @@ function previewPendingPower(play,self,opp){
   else if(c.effect==="trono_before3"&&aff&&countPosition(self,"trono")>0){p+=3;notes.push("+3 tras Trono");}
   else if(c.effect==="diestra_before2"&&aff&&countPosition(self,"diestra")>0){p+=2;notes.push("+2 tras Diestra");}
   else if(c.effect==="second_special3"&&aff&&countPosition(self,self.champion.special)>0){p+=3;notes.push("+3 segunda "+POSITION_LABEL[self.champion.special]);}
-  else if(c.effect==="invocador_before3"&&aff&&self.roundPlays.some(x=>x.card.effect==="next_affinity_anywhere")){p+=3;notes.push("+3 tras Invocador");}
+  else if(c.effect==="enemy_printed7_3"&&aff){notes.push("Puede ganar +3 contra Poder impreso 7+");}
   else if(c.effect==="third4"&&aff&&state.turn===3){p+=4;notes.push("+4 tercer duelo");}
   else if(c.effect==="archive_empty2"&&self.archives[play.position].length===0){p+=2;notes.push("+2 Archivo vacío");}
   else if(c.effect==="archive_two2"&&self.archives[play.position].length>=2){p+=2;notes.push("+2 Archivo con 2+");}
@@ -493,10 +494,10 @@ function playHuman(position){
   resolveDuel();
 }
 function estimateOwn(card,pos,p,opp){
-  let aff=affinityActive(p,card,pos),previewPlay={card,position:pos},dbl=baseDoubleReasons(p,card,previewPlay,aff),v=card.power*(1+dbl.length)+p.nextBuff+p.empireanBuff-p.incomingDebuff;
+  let aff=affinityActive(p,card,pos),previewPlay={card,position:pos},dbl=baseDoubleReasons(p,card,previewPlay,aff),v=card.power*(1+dbl.length)+p.nextBuff+(p.nextPositionBoost&&aff?p.nextPositionBoost:0)+p.empireanBuff-p.incomingDebuff;
   if(card.effect==="bonus2"&&aff)v+=2;if(card.effect==="archive_here")v+=p.archives[pos].length;if(card.effect==="won_prev2"&&aff&&p.duelResults.at(-1)==="win")v+=2;
   if(card.effect==="empty_sin5"&&aff&&countPosition(p,"siniestra")===0&&pos!=="siniestra")v+=5;if(card.effect==="trono_before3"&&aff&&countPosition(p,"trono")>0)v+=3;if(card.effect==="diestra_before2"&&aff&&countPosition(p,"diestra")>0)v+=2;
-  if(card.effect==="second_special3"&&aff&&countPosition(p,p.champion.special)>0)v+=3;if(card.effect==="invocador_before3"&&aff&&p.roundPlays.some(x=>x.card.effect==="next_affinity_anywhere"))v+=3;if(card.effect==="copy_plus2"&&aff)v=7+p.nextBuff-p.incomingDebuff;
+  if(card.effect==="second_special3"&&aff&&countPosition(p,p.champion.special)>0)v+=3;if(card.effect==="enemy_printed7_3"&&aff)v+=1.4;if(card.effect==="copy_plus2"&&aff)v=7+p.nextBuff+(p.nextPositionBoost||0)-p.incomingDebuff;
   if(card.effect==="third4"&&aff&&state.turn===3)v+=4;
   if(card.effect==="archive_empty2"&&p.archives[pos].length===0)v+=2;
   if(card.effect==="archive_two2"&&p.archives[pos].length>=2)v+=2;
@@ -511,14 +512,14 @@ function estimateOwn(card,pos,p,opp){
   if(card.effect==="score_tied1"){const [own,rival]=roundScoreFor(p);if(own===rival)v+=1;}
   if(card.effect==="axis_lateral2"&&aff&&p.roundPlays.some(x=>x.position==="siniestra"||x.position==="diestra"))v+=2;
   if(card.effect==="opposite_prev3"&&p.roundPlays.length&&isOppositeLateral(p.roundPlays.at(-1).position,pos))v+=3;
-  if(state.turn<3&&["next3","next_affinity_anywhere","enemy_next3"].includes(card.effect)&&aff)v+=2;
+  if(state.turn<3&&["next3","next_position2","enemy_next3"].includes(card.effect)&&aff)v+=2;
   if(state.turn<3&&card.effect==="loss_next3")v+=1;
   if(card.effect==="mirror_martyr"&&state.turn===2){const [own,rival]=roundScoreFor(p);if(Math.abs(own-rival)===1)v+=2.5;}
   return v;
 }
 function chooseAIPlay(firstPlay,aiFirst){
   let best=null;
-  state.ai.hand.forEach((card,i)=>legalPositions(state.ai).forEach(pos=>{const play={card,position:pos,handIndex:i};let score;if(aiFirst||!firstPlay)score=estimateOwn(card,pos,state.ai,state.player)+Math.random()*.3;else{const powers=calculatePowers(firstPlay,state.player,play,state.ai),mine=powers.b,opp=powers.a;score=(mine>opp?6:mine===opp?2:0)+mine*.1;if(state.turn<3&&["next3","next_affinity_anywhere","enemy_next3"].includes(card.effect)&&powers.bAff)score+=2;if(mine<opp&&card.effect==="loss_next3"&&state.turn<3)score+=2;
+  state.ai.hand.forEach((card,i)=>legalPositions(state.ai).forEach(pos=>{const play={card,position:pos,handIndex:i};let score;if(aiFirst||!firstPlay)score=estimateOwn(card,pos,state.ai,state.player)+Math.random()*.3;else{const powers=calculatePowers(firstPlay,state.player,play,state.ai),mine=powers.b,opp=powers.a;score=(mine>opp?6:mine===opp?2:0)+mine*.1;if(state.turn<3&&["next3","next_position2","enemy_next3"].includes(card.effect)&&powers.bAff)score+=2;if(mine<opp&&card.effect==="loss_next3"&&state.turn<3)score+=2;
       if(card.effect==="mirror_martyr"&&state.turn===2){const [own,rival]=roundScoreFor(state.ai);if((own===1&&rival===0&&mine<opp)||(own===0&&rival===1&&mine>opp))score+=4;}
       score+=Math.random()*.2;}if(!best||score>best.score)best={...play,score};}));return best;
 }
@@ -527,7 +528,7 @@ function calculatePowers(aPlay,A,bPlay,B){
   const aCancel=aPlay.card.effect==="cancel_enemy_affinity"&&aAff,bCancel=bPlay.card.effect==="cancel_enemy_affinity"&&bAff;
   if(bCancel&&aAff){aAff=false;aNotes.push("Habilidad de posición anulada por Sabio");}if(aCancel&&bAff){bAff=false;bNotes.push("Habilidad de posición anulada por Sabio");}
   function power(play,self,opp,oppPlay,aff,notes){
-    const c=play.card;const doubleReasons=baseDoubleReasons(self,c,play,aff);let p=c.power*(1+doubleReasons.length);doubleReasons.forEach(reason=>notes.push("+"+c.power+" duplicación · "+reason));if(self.nextBuff){p+=self.nextBuff;notes.push(...self.nextBuffNotes);}if(self.empireanBuff){p+=self.empireanBuff;notes.push("+2 Señor de los Archivos");}if(self.incomingDebuff){p-=self.incomingDebuff;notes.push(...self.incomingNotes);}if(self.nextAffinityAnywhere&&c.affinity&&play.position!==c.affinity)notes.push("Invocador activa "+POSITION_LABEL[c.affinity]);
+    const c=play.card;const doubleReasons=baseDoubleReasons(self,c,play,aff);let p=c.power*(1+doubleReasons.length);doubleReasons.forEach(reason=>notes.push("+"+c.power+" duplicación · "+reason));if(self.nextBuff){p+=self.nextBuff;notes.push(...self.nextBuffNotes);}if(self.nextPositionBoost&&aff){p+=self.nextPositionBoost;notes.push("+"+self.nextPositionBoost+" Invocador");}if(self.empireanBuff){p+=self.empireanBuff;notes.push("+2 Señor de los Archivos");}if(self.incomingDebuff){p-=self.incomingDebuff;notes.push(...self.incomingNotes);}
     if(c.effect==="bonus2"&&aff){p+=2;notes.push("+2 "+POSITION_LABEL[c.affinity]);}
     else if(c.effect==="archive_here"){const n=self.archives[play.position].length;p+=n;if(n)notes.push("+"+n+" Archivo de "+POSITION_LABEL[play.position]);}
     else if(c.effect==="won_prev2"&&aff&&self.duelResults.at(-1)==="win"){p+=2;notes.push("+2 victoria previa");}
@@ -535,8 +536,8 @@ function calculatePowers(aPlay,A,bPlay,B){
     else if(c.effect==="trono_before3"&&aff&&countPosition(self,"trono")>0){p+=3;notes.push("+3 tras Trono");}
     else if(c.effect==="diestra_before2"&&aff&&countPosition(self,"diestra")>0){p+=2;notes.push("+2 tras Diestra");}
     else if(c.effect==="second_special3"&&aff&&countPosition(self,self.champion.special)>0){p+=3;notes.push("+3 segunda Diestra");}
-    else if(c.effect==="invocador_before3"&&aff&&self.roundPlays.some(x=>x.card.effect==="next_affinity_anywhere")){p+=3;notes.push("+3 tras Invocador");}
-    else if(c.effect==="copy_plus2"&&aff){p=oppPlay.card.power+2+self.nextBuff-self.incomingDebuff;notes.length=0;notes.push("Poder impreso rival "+oppPlay.card.power,"+2 Prodigio");if(self.nextBuff)notes.push(...self.nextBuffNotes);if(self.incomingDebuff)notes.push(...self.incomingNotes);}
+    else if(c.effect==="enemy_printed7_3"&&aff&&oppPlay.card.power>=7){p+=3;notes.push("+3 rival con Poder impreso 7+");}
+    else if(c.effect==="copy_plus2"&&aff){p=oppPlay.card.power+2+self.nextBuff+(self.nextPositionBoost&&aff?self.nextPositionBoost:0)-self.incomingDebuff;notes.length=0;notes.push("Poder impreso rival "+oppPlay.card.power,"+2 Prodigio");if(self.nextBuff)notes.push(...self.nextBuffNotes);if(self.nextPositionBoost&&aff)notes.push("+"+self.nextPositionBoost+" Invocador");if(self.incomingDebuff)notes.push(...self.incomingNotes);}
     else if(c.effect==="third4"&&aff&&state.turn===3){p+=4;notes.push("+4 tercer duelo");}
     else if(c.effect==="archive_empty2"&&self.archives[play.position].length===0){p+=2;notes.push("+2 Archivo vacío");}
     else if(c.effect==="archive_two2"&&self.archives[play.position].length>=2){p+=2;notes.push("+2 Archivo con 2+");}
@@ -562,9 +563,14 @@ function calculatePowers(aPlay,A,bPlay,B){
   else if(B.champion.id==="santo_simetrico"&&!B.saintPassiveUsed&&b===a-1){b+=1;bNotes.push("+1 Santo Simétrico → empate");bSaint=true;}
   return{a,b,aAff,bAff,aNotes,bNotes,aSaint,bSaint};
 }
+function feedbackCard(play,finalPower,notes){
+  const base=play.card.power,changed=finalPower!==base;
+  const rows=notes.slice(1).map(n=>'<span class="modifier '+((n.includes("−")||n.includes("anulada"))?"negative":"positive")+'">'+n+'</span>').join("");
+  return '<div class="feedback-card"><b>'+play.card.name+'</b><div class="power-resolution">'+(changed?'<span class="printed-power">'+fmtPower(base)+'</span><span class="arrow">→</span>':'')+'<span class="final-power">'+fmtPower(finalPower)+'</span></div><div class="modifier-list">'+rows+'</div></div>';
+}
 function resolveDuel(){
   const hp=pendingHumanPlay,ap=pendingAIPlay,p=calculatePowers(hp,state.player,ap,state.ai);
-  [state.player,state.ai].forEach(x=>{x.nextBuff=0;x.nextBuffNotes=[];x.incomingDebuff=0;x.incomingNotes=[];x.nextAffinityAnywhere=false;x.empireanBuff=0;x.nextBaseDouble=false;});
+  [state.player,state.ai].forEach(x=>{x.nextBuff=0;x.nextBuffNotes=[];x.incomingDebuff=0;x.incomingNotes=[];x.nextPositionBoost=0;x.empireanBuff=0;x.nextBaseDouble=false;});
   if(p.aSaint)state.player.saintPassiveUsed=true;if(p.bSaint)state.ai.saintPassiveUsed=true;
   hp.finalPower=p.a;hp.notes=p.aNotes;ap.finalPower=p.b;ap.notes=p.bNotes;
   if(hp.card.effect==="clear_archive2x")state.player.archives[hp.position]=[];
@@ -576,7 +582,7 @@ function resolveDuel(){
   if(outcome==="ai"&&state.player.champion.id==="sinistral"&&!state.player.bluePassiveUsed){addDebuff(state.ai,1,"Corte Sinistral");state.player.bluePassiveUsed=true;}if(outcome==="player"&&state.ai.champion.id==="sinistral"&&!state.ai.bluePassiveUsed){addDebuff(state.player,1,"Corte Sinistral");state.ai.bluePassiveUsed=true;}
   if(outcome==="player")state.initiative="player";else if(outcome==="ai")state.initiative="ai";
   const txt=outcome==="draw"?"Empate":outcome==="player"?"Ganás vos":"Gana la IA";
-  qs("duelFeedbackText").innerHTML='<div class="feedback-title"><strong>'+txt+'</strong></div><div class="feedback-grid"><div><b>'+hp.card.name+' '+fmtPower(p.a)+'</b><small>'+p.aNotes.join(" · ")+'</small></div><div><b>'+ap.card.name+' '+fmtPower(p.b)+'</b><small>'+p.bNotes.join(" · ")+'</small></div></div>';qs("duelFeedback").classList.remove("hidden");
+  qs("duelFeedbackText").innerHTML='<div class="feedback-title"><strong>'+txt+'</strong></div><div class="feedback-grid">'+feedbackCard(hp,p.a,p.aNotes)+feedbackCard(ap,p.b,p.bNotes)+'</div>';qs("duelFeedback").classList.remove("hidden");
   logEvent("<strong>Duelo "+state.turn+":</strong> "+hp.card.name+" ("+fmtPower(p.a)+") en "+POSITION_LABEL[hp.position]+" vs "+ap.card.name+" ("+fmtPower(p.b)+") en "+POSITION_LABEL[ap.position]+" → <strong>"+txt+"</strong>.");
   pendingHumanPlay=null;pendingAIPlay=null;renderAll();
   if(state.player.life<=0||state.ai.life<=0){finishGame(state.player.life>state.ai.life?"player":state.ai.life>state.player.life?"ai":"draw","vida");return;}
@@ -585,7 +591,7 @@ function resolveDuel(){
 function applyPost(self,play,result,opp,aff){
   if(play.card.effect==="loss_next3"&&result==="loss")addBuff(self,3,"Mensajero extraño");
   if(play.card.effect==="next3"&&aff)addBuff(self,3,"Asesor real");
-  if(play.card.effect==="next_affinity_anywhere"&&aff)self.nextAffinityAnywhere=true;
+  if(play.card.effect==="next_position2"&&aff)self.nextPositionBoost=2;
   if(play.card.effect==="enemy_next3"&&aff)addDebuff(opp,3,"Oráculo");
   if(play.card.effect==="mirror_martyr"){const [own,rival]=roundScoreFor(self);if(own===1&&rival===1)self.nextBaseDouble=true;}
 }
@@ -606,7 +612,7 @@ function finishGame(winner,reason){if(state.finished)return;state.finished=true;
 function resetSelectionUI(){selectedCardIndex=null;qs("selectedSummary").textContent="Ninguna carta seleccionada";}
 function logEvent(html){const d=new Date();state.logs.push({html,time:d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"})});}
 function getHistory(){try{return JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");}catch{return[];}}
-function exportCurrent(){if(!state)return;const payload={version:"0.6.2",exportedAt:new Date().toISOString(),game:state,history:getHistory()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="tcg-test-"+state.id+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function exportCurrent(){if(!state)return;const payload={version:"0.7",exportedAt:new Date().toISOString(),game:state,history:getHistory()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="tcg-test-"+state.id+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function showGame(){qs("setupView").classList.add("hidden");qs("gameView").classList.remove("hidden");}
 function showSetup(){if(qs("resultDialog").open)qs("resultDialog").close();qs("gameView").classList.add("hidden");qs("setupView").classList.remove("hidden");state=null;selectedChampion=null;document.querySelectorAll(".champion-choice").forEach(x=>x.classList.remove("selected"));qs("startGameBtn").disabled=true;}
 
@@ -622,7 +628,7 @@ function renderCardList(){
 function openCardList(){renderCardList();qs("cardListDialog").showModal();}
 document.querySelectorAll(".champion-choice").forEach(btn=>btn.addEventListener("click",()=>{selectedChampion=btn.dataset.champion;document.querySelectorAll(".champion-choice").forEach(x=>x.classList.toggle("selected",x===btn));qs("startGameBtn").disabled=false;}));
 qs("startGameBtn").onclick=initGame;qs("newGameBtn").onclick=()=>{if(state&&!state.finished&&!confirm("¿Abandonar la partida actual?"))return;showSetup();};qs("showRulesBtn").onclick=()=>qs("rulesDialog").showModal();qs("showCardsBtn").onclick=openCardList;qs("showCardsSetupBtn").onclick=openCardList;document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>qs(b.dataset.close).close());document.querySelectorAll(".position-buttons button[data-position]").forEach(b=>b.onclick=()=>playHuman(b.dataset.position));qs("quieroBtn").onclick=()=>humanQuiero(true);qs("noQuieroBtn").onclick=()=>humanQuiero(false);qs("exportBtn").onclick=exportCurrent;qs("resultExportBtn").onclick=exportCurrent;qs("playAgainBtn").onclick=()=>{qs("resultDialog").close();showSetup();};qs("clearHistoryBtn").onclick=()=>{if(confirm("¿Borrar el historial guardado en este navegador?")){localStorage.removeItem(HISTORY_KEY);renderHistory();}};
-const extraStyle=document.createElement("style");extraStyle.textContent=".champion-rule{font-size:11px;color:var(--gold);font-weight:800;line-height:1.25}.special-slot{border-style:solid;border-color:rgba(224,184,93,.5);position:relative}.slot-capacity{position:absolute;right:6px;bottom:4px;font-size:9px;color:var(--muted)}.pending{outline:2px dashed var(--gold)}.pending-notes{font-size:8px;line-height:1.15;color:var(--muted);margin-top:4px}.duel-feedback{margin-top:12px;padding:12px;border:1px solid var(--gold);border-radius:14px;background:rgba(224,184,93,.08)}.feedback-title{margin-bottom:8px}.feedback-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.feedback-grid>div{padding:8px;border:1px solid var(--line);border-radius:10px}.feedback-grid small{display:block;color:var(--muted);margin-top:4px;line-height:1.35}.archive-slot{min-height:48px;text-align:center;padding:6px}.archive-count{font-size:26px}.archives-wrap{margin-top:0}#previousRound{font-size:11px}@media(max-width:760px){.board-panel{margin-bottom:8px}.turn-panel{margin-bottom:8px}.archives-wrap{padding:8px 0}.board-slot{position:relative}.feedback-grid{grid-template-columns:1fr}.champion-rule{font-size:9px}}";document.head.appendChild(extraStyle);const archiveWrap=document.querySelector(".archives-wrap"),turnPanel=document.querySelector(".turn-panel");if(archiveWrap&&turnPanel)turnPanel.after(archiveWrap);renderHistory();if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+const extraStyle=document.createElement("style");extraStyle.textContent=".champion-rule{font-size:11px;color:var(--gold);font-weight:800;line-height:1.25}.special-slot{border-style:solid;border-color:rgba(224,184,93,.5);position:relative}.slot-capacity{position:absolute;right:6px;bottom:4px;font-size:9px;color:var(--muted)}.pending{outline:2px dashed var(--gold)}.pending-notes{font-size:8px;line-height:1.15;color:var(--muted);margin-top:4px}.duel-feedback{margin-top:12px;padding:12px;border:1px solid var(--gold);border-radius:14px;background:rgba(224,184,93,.08)}.feedback-title{margin-bottom:8px}.feedback-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.feedback-grid>div{padding:8px;border:1px solid var(--line);border-radius:10px}.feedback-grid small{display:block;color:var(--muted);margin-top:4px;line-height:1.35}.feedback-card{padding:10px;border:1px solid var(--line);border-radius:10px}.power-resolution{display:flex;align-items:center;gap:8px;margin:7px 0}.printed-power{font-size:18px;color:var(--muted);text-decoration:line-through}.arrow{color:var(--muted)}.final-power{font-size:30px;font-weight:950}.modifier-list{display:flex;flex-wrap:wrap;gap:5px}.modifier{font-size:10px;padding:4px 6px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}.modifier.negative{color:#ff9a9a;border-color:rgba(217,74,74,.65);background:rgba(217,74,74,.12)}.modifier.positive{color:#b9d4ff;border-color:rgba(63,121,216,.45)}.archive-slot{min-height:48px;text-align:center;padding:6px}.archive-count{font-size:26px}.archives-wrap{margin-top:0}#previousRound{font-size:11px}@media(max-width:760px){.board-panel{margin-bottom:8px}.turn-panel{margin-bottom:8px}.archives-wrap{padding:8px 0}.board-slot{position:relative}.feedback-grid{grid-template-columns:1fr}.champion-rule{font-size:9px}}";document.head.appendChild(extraStyle);const archiveWrap=document.querySelector(".archives-wrap"),turnPanel=document.querySelector(".turn-panel");if(archiveWrap&&turnPanel)turnPanel.after(archiveWrap);renderHistory();if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
 </html>
