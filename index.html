@@ -534,8 +534,6 @@ function renderArchives(){renderArchive("playerArchives",state.player);renderArc
 function renderArchive(id,p){const root=qs(id);root.innerHTML="";POSITIONS.forEach(pos=>{const slot=document.createElement("div");slot.className="archive-slot";slot.innerHTML='<div class="archive-count">'+p.archives[pos].length+'</div><div class="label">'+POSITION_LABEL[pos]+'</div>';root.appendChild(slot);});}
 function renderLog(){qs("gameLog").innerHTML=state.logs.slice().reverse().map(l=>'<div class="log-entry">'+l.html+'<div class="sub">'+l.time+'</div></div>').join("");}
 function renderHistory(){const h=getHistory(),w=h.filter(x=>x.winner==="player").length,l=h.filter(x=>x.winner==="ai").length,d=h.filter(x=>x.winner==="draw").length;qs("historySummary").innerHTML='<div class="stat"><span>Partidas</span><b>'+h.length+'</b></div><div class="stat"><span>Victorias</span><b>'+w+'</b></div><div class="stat"><span>Derrotas</span><b>'+l+'</b></div><div class="stat"><span>Empates</span><b>'+d+'</b></div>';}
-function renderPositionButtons(){document.querySelectorAll(".position-buttons button[data-position]").forEach(b=>{if(!state)return;const pos=b.dataset.position,used=countPosition(state.player,pos),cap=capacity(state.player,pos);b.disabled=used>=cap;b.textContent=POSITION_LABEL[pos]+" "+used+"/"+cap;});}
-
 function playHuman(position){
   if(!state||state.finished||selectedCardIndex===null||!legalPositions(state.player).includes(position))return;
   const card=state.player.hand.splice(selectedCardIndex,1)[0];pendingHumanPlay={card,position,handIndex:selectedCardIndex};selectedCardIndex=null;renderBoards();
