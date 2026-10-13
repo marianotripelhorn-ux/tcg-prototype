@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
-  <title>TCG Prototype v0.8.3 LAB</title>
+  <title>TCG Prototype v0.8.4 LAB</title>
     <style>
 :root {
   --bg: #0b0f17;
@@ -140,7 +140,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
   <div class="app-shell">
     <header class="topbar">
       <div>
-        <div class="eyebrow">PROTOTIPO v0.8.3 · LAB</div>
+        <div class="eyebrow">PROTOTIPO v0.8.4 · LAB</div>
         <h1>Siniestra · Trono · Diestra</h1>
       </div>
       <div class="top-actions"><button id="showCardsBtn" class="ghost">Cartas</button><button id="newGameBtn" class="ghost">Nueva partida</button></div>
@@ -250,7 +250,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
 
   <dialog id="rulesDialog">
     <div class="dialog-body">
-      <div class="section-head"><h2>Reglas v0.8.3 LAB</h2><button class="icon-btn" data-close="rulesDialog">×</button></div>
+      <div class="section-head"><h2>Reglas v0.8.4 LAB</h2><button class="icon-btn" data-close="rulesDialog">×</button></div>
       <ul>
         <li>24 cartas + 1 campeón. Hay 2 copias de cada uno de los 12 diseños. Ambos campeones comienzan con 9 de Vida.</li>
         <li>Robás 3 cartas por ronda. Normalmente solo podés usar cada posición una vez. Algunos campeones pueden romper esta restricción.</li>
@@ -348,13 +348,13 @@ const cards={
     {id:"guardia_dextral",name:"Guardia Dextral",power:5,affinity:"diestra",text:"Diestra: si es tu primera carta de la ronda o tu carta anterior fue jugada en Diestra, +2 Poder.",effect:"first_or_prev_diestra2"},
     {id:"caballero_tigre",name:"Caballero Tigre",power:6,affinity:"diestra",text:"Diestra: si ganaste el duelo anterior, +2.",effect:"won_prev2"},
     {id:"corona_eterea",name:"Corona Etérea",power:2,affinity:"trono",text:"Trono: +5 si todavía no usaste Siniestra esta ronda.",effect:"empty_sin5"},
-    {id:"blazewalker",name:"Blazewalker",power:4,affinity:"siniestra",text:"Siniestra: +3 si ya jugaste en Trono esta ronda.",effect:"trono_before3"},
-    {id:"mensajero",name:"Mensajero extraño",power:3,affinity:null,text:"Si perdés este duelo, tu próxima carta obtiene +3.",effect:"loss_next3"},
-    {id:"guardia_castillo",name:"Guardia del Castillo",power:5,affinity:"trono",text:"Trono: +2 si ya jugaste en Diestra esta ronda.",effect:"diestra_before2"},
+    {id:"blazewalker",name:"Blazewalker",power:4,affinity:"siniestra",text:"Siniestra: +4 si ya jugaste en Trono esta ronda.",effect:"trono_before4"},
+    {id:"mensajero",name:"Mensajero extraño",power:5,affinity:null,text:"Si perdés este duelo, tu próxima carta obtiene +3.",effect:"loss_next3"},
+    {id:"guardia_castillo",name:"Guardia del Castillo",power:5,affinity:"trono",text:"Trono: +3 si ya jugaste en Diestra esta ronda.",effect:"diestra_before3"},
     {id:"maestro_armas",name:"Maestro de armas",power:7,affinity:"diestra",text:"Diestra: +3 si ya jugaste otra carta en Diestra esta ronda.",effect:"second_special3"},
-    {id:"asesor_real",name:"Asesor real",power:2,affinity:"trono",text:"Trono: tu próxima carta obtiene +3.",effect:"next3"},
-    {id:"incendiario",name:"Incendiario",power:5,affinity:null,text:"Si ganás este duelo, tu próxima carta obtiene +4 Poder.",effect:"win_next4"},
-    {id:"abanderado_real",name:"Abanderado real",power:5,affinity:"trono",text:"Trono: tu próxima carta en Diestra obtiene +2 Poder.",effect:"next_diestra2"},
+    {id:"asesor_real",name:"Asesor real",power:5,affinity:null,text:"Si ya ganaste un duelo esta ronda, tu próxima carta obtiene +3 Poder.",effect:"won_round_next3"},
+    {id:"incendiario",name:"Incendiario",power:5,affinity:null,text:"Si es tu primera carta de la ronda, +3 Poder.",effect:"first_round3"},
+    {id:"abanderado_real",name:"Abanderado real",power:6,affinity:null,text:"Tu próxima carta en Diestra obtiene +2 Poder.",effect:"next_diestra2"},
     {id:"ejecutor_real",name:"Ejecutor real",power:5,affinity:null,text:"Si vas ganando la ronda, +2 Poder.",effect:"winning_round2"}
   ],
   blue:[
@@ -479,8 +479,8 @@ function previewPendingPower(play,self,opp){
   else if(c.effect==="first_or_prev_diestra2"&&aff&&(!self.roundPlays.length||self.roundPlays.at(-1).position==="diestra")){p+=2;notes.push("+2 apertura/continuación en Diestra");}
   else if(c.effect==="won_prev2"&&aff&&self.duelResults.at(-1)==="win"){p+=2;notes.push("+2 victoria previa");}
   else if(c.effect==="empty_sin5"&&aff&&countPosition(self,"siniestra")===0&&play.position!=="siniestra"){p+=5;notes.push("+5 Siniestra sin usar");}
-  else if(c.effect==="trono_before3"&&aff&&countPosition(self,"trono")>0){p+=3;notes.push("+3 tras Trono");}
-  else if(c.effect==="diestra_before2"&&aff&&countPosition(self,"diestra")>0){p+=2;notes.push("+2 tras Diestra");}
+  else if(c.effect==="trono_before4"&&aff&&countPosition(self,"trono")>0){p+=4;notes.push("+4 tras Trono");}
+  else if(c.effect==="diestra_before3"&&aff&&countPosition(self,"diestra")>0){p+=3;notes.push("+3 tras Diestra");}
   else if(c.effect==="second_special3"&&aff&&countPosition(self,self.champion.special)>0){p+=3;notes.push("+3 segunda "+POSITION_LABEL[self.champion.special]);}
   else if(c.effect==="enemy_printed6_2"&&aff){notes.push("Puede ganar +2 contra Poder impreso 6+");}
   else if(c.effect==="third4"&&aff&&state.turn===3){p+=4;notes.push("+4 tercer duelo");}
@@ -498,7 +498,9 @@ function previewPendingPower(play,self,opp){
   else if(c.effect==="axis_lateral2"&&aff&&self.roundPlays.some(x=>x.position==="siniestra"||x.position==="diestra")){p+=2;notes.push("+2 lateral previa");}
   else if(c.effect==="opposite_prev3"&&self.roundPlays.length&&isOppositeLateral(self.roundPlays.at(-1).position,play.position)){p+=3;notes.push("+3 posición opuesta");}
   else if(c.effect==="opposite_enemy2")notes.push("Puede ganar +2 según la posición rival");
-  else if(c.effect==="winning_round2"){const [own,rival]=roundScoreFor(self);if(own>rival){p+=2;notes.push("+2 vas ganando");}}
+  else if(c.effect==="first_round3"&&!self.roundPlays.length){p+=3;notes.push("+3 primera carta de la ronda");}
+  else if(c.effect==="first_round3"&&!self.roundPlays.length){p+=3;notes.push("+3 primera carta de la ronda");}
+    else if(c.effect==="winning_round2"){const [own,rival]=roundScoreFor(self);if(own>rival){p+=2;notes.push("+2 vas ganando");}}
   else if(c.effect==="enemy_affinity2"&&aff)notes.push("Puede ganar +2 si la carta rival tiene habilidad de posición");
   else if(c.effect==="prev_draw3"&&self.duelResults.at(-1)==="draw"){p+=3;notes.push("+3 empate anterior");}
   else if(c.effect==="win_loss4"&&self.duelResults.includes("win")&&self.duelResults.includes("loss")){p+=4;notes.push("+4 victoria + derrota");}
@@ -529,8 +531,8 @@ function estimateOwn(card,pos,p,opp){
   if(card.effect==="first_or_prev_diestra2"&&aff&&(!p.roundPlays.length||p.roundPlays.at(-1).position==="diestra"))v+=2;
   if(card.effect==="won_prev2"&&aff&&p.duelResults.at(-1)==="win")v+=2;
   if(card.effect==="empty_sin5"&&aff&&countPosition(p,"siniestra")===0&&pos!=="siniestra")v+=5;
-  if(card.effect==="trono_before3"&&aff&&countPosition(p,"trono")>0)v+=3;
-  if(card.effect==="diestra_before2"&&aff&&countPosition(p,"diestra")>0)v+=2;
+  if(card.effect==="trono_before4"&&aff&&countPosition(p,"trono")>0)v+=4;
+  if(card.effect==="diestra_before3"&&aff&&countPosition(p,"diestra")>0)v+=3;
   if(card.effect==="second_special3"&&aff&&countPosition(p,p.champion.special)>0)v+=3;
   if(card.effect==="enemy_printed6_2"&&aff)v+=1.0;
   if(card.effect==="copy_plus2"&&aff)v=7+p.nextBuff+(p.nextPositionBoost||0)-p.incomingDebuff;
@@ -548,6 +550,7 @@ function estimateOwn(card,pos,p,opp){
   if(card.effect==="score_tied1"){const [own,rival]=roundScoreFor(p);if(own===rival)v+=1;}
   if(card.effect==="axis_lateral2"&&aff&&p.roundPlays.some(x=>x.position==="siniestra"||x.position==="diestra"))v+=2;
   if(card.effect==="opposite_prev3"&&p.roundPlays.length&&isOppositeLateral(p.roundPlays.at(-1).position,pos))v+=3;
+  if(card.effect==="first_round3"&&!p.roundPlays.length)v+=3;
   if(card.effect==="winning_round2"){const [own,rival]=roundScoreFor(p);if(own>rival)v+=2;}
   if(card.effect==="enemy_affinity2"&&aff)v+=1.2;
   if(card.effect==="prev_draw3"&&p.duelResults.at(-1)==="draw")v+=3;
@@ -562,12 +565,12 @@ function aiSetupScore(card,pos,p,opp,opening){
   if(state.turn>=3)return 0;
   let s=0;
   const remaining=p.hand.filter(c=>c!==card);
-  if(card.effect==="next3"&&affinityActive(p,card,pos))s+=2.3;
+  if(card.effect==="won_round_next3"&&p.duelResults.includes("win"))s+=2.3;
   if(card.effect==="next_position2"&&affinityActive(p,card,pos))s+=1.8;
   if(card.effect==="enemy_next3"&&affinityActive(p,card,pos))s+=1.7;
   if(card.effect==="loss_next3")s+=1.1;
-  if(card.effect==="win_next4")s+=2.4;
-  if(card.effect==="next_diestra2"&&pos==="trono")s+=2.5;
+  if(card.effect==="first_round3"&&!p.roundPlays.length)s+=1.8;
+  if(card.effect==="next_diestra2")s+=2.5;
   if(p.champion.id==="dextral"){
     if(pos==="diestra"&&remaining.some(c=>["guardia_dextral","guardia_castillo","maestro_armas","caballero_tigre"].includes(c.id)))s+=.9;
     if(pos==="trono"&&remaining.some(c=>c.id==="blazewalker"))s+=.6;
@@ -622,8 +625,8 @@ function calculatePowers(aPlay,A,bPlay,B){
     else if(c.effect==="first_or_prev_diestra2"&&aff&&(!self.roundPlays.length||self.roundPlays.at(-1).position==="diestra")){p+=2;notes.push("+2 apertura/continuación en Diestra");}
     else if(c.effect==="won_prev2"&&aff&&self.duelResults.at(-1)==="win"){p+=2;notes.push("+2 victoria previa");}
     else if(c.effect==="empty_sin5"&&aff&&countPosition(self,"siniestra")===0&&play.position!=="siniestra"){p+=5;notes.push("+5 Siniestra sin usar");}
-    else if(c.effect==="trono_before3"&&aff&&countPosition(self,"trono")>0){p+=3;notes.push("+3 tras Trono");}
-    else if(c.effect==="diestra_before2"&&aff&&countPosition(self,"diestra")>0){p+=2;notes.push("+2 tras Diestra");}
+    else if(c.effect==="trono_before4"&&aff&&countPosition(self,"trono")>0){p+=4;notes.push("+4 tras Trono");}
+    else if(c.effect==="diestra_before3"&&aff&&countPosition(self,"diestra")>0){p+=3;notes.push("+3 tras Diestra");}
     else if(c.effect==="second_special3"&&aff&&countPosition(self,self.champion.special)>0){p+=3;notes.push("+3 segunda Diestra");}
     else if(c.effect==="enemy_printed6_2"&&aff&&oppPlay.card.power>=6){p+=2;notes.push("+2 rival con Poder impreso 6+");}
     else if(c.effect==="copy_plus2"&&aff){p=oppPlay.card.power+2+self.nextBuff+(self.nextPositionBoost&&aff?self.nextPositionBoost:0)+(self.nextPositionSpecificBoost&&play.position===self.nextPositionSpecificBoost.position?self.nextPositionSpecificBoost.amount:0)-self.incomingDebuff;notes.length=0;notes.push("Poder impreso rival "+oppPlay.card.power,"+2 Prodigio");if(self.nextBuff)notes.push(...self.nextBuffNotes);if(self.nextPositionBoost&&aff)notes.push("+"+self.nextPositionBoost+" Invocador");if(self.nextPositionSpecificBoost&&play.position===self.nextPositionSpecificBoost.position)notes.push("+"+self.nextPositionSpecificBoost.amount+" "+self.nextPositionSpecificBoost.source);if(self.incomingDebuff)notes.push(...self.incomingNotes);}
@@ -695,10 +698,9 @@ function resolveDuel(){
 }
 function applyPost(self,play,result,opp,aff){
   if(play.card.effect==="loss_next3"&&result==="loss")addBuff(self,3,"Mensajero extraño");
-  if(play.card.effect==="win_next4"&&result==="win")addBuff(self,4,"Incendiario");
-  if(play.card.effect==="next3"&&aff)addBuff(self,3,"Asesor real");
+  if(play.card.effect==="won_round_next3"&&self.duelResults.includes("win"))addBuff(self,3,"Asesor real");
   if(play.card.effect==="next_position2"&&aff)self.nextPositionBoost=2;
-  if(play.card.effect==="next_diestra2"&&aff)self.nextPositionSpecificBoost={position:"diestra",amount:2,source:"Abanderado real"};
+  if(play.card.effect==="next_diestra2")self.nextPositionSpecificBoost={position:"diestra",amount:2,source:"Abanderado real"};
   if(play.card.effect==="enemy_next3"&&aff)addDebuff(opp,3,"Oráculo");
   if(play.card.effect==="mirror_martyr"){const [own,rival]=roundScoreFor(self);if(own===1&&rival===1)self.nextBaseDouble=true;}
 }
@@ -728,7 +730,7 @@ function finishGame(winner,reason){if(state.finished)return;state.finished=true;
 function resetSelectionUI(){selectedCardIndex=null;qs("selectedSummary").textContent="Ninguna carta seleccionada";}
 function logEvent(html){const d=new Date();state.logs.push({html,time:d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"})});}
 function getHistory(){try{return JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");}catch{return[];}}
-function exportCurrent(){if(!state)return;const payload={version:"0.8.3-lab",exportedAt:new Date().toISOString(),game:state,history:getHistory()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="tcg-test-"+state.id+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function exportCurrent(){if(!state)return;const payload={version:"0.8.4-lab",exportedAt:new Date().toISOString(),game:state,history:getHistory()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="tcg-test-"+state.id+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function showGame(){qs("setupView").classList.add("hidden");qs("gameView").classList.remove("hidden");}
 function showSetup(){if(qs("resultDialog").open)qs("resultDialog").close();qs("gameView").classList.add("hidden");qs("setupView").classList.remove("hidden");state=null;selectedChampion=null;document.querySelectorAll(".champion-choice").forEach(x=>x.classList.remove("selected"));qs("startGameBtn").disabled=true;}
 
