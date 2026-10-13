@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
-  <title>TCG Prototype v0.8.5 LAB</title>
+  <title>TCG Prototype v0.8.5.1 LAB</title>
     <style>
 :root {
   --bg: #0b0f17;
@@ -140,7 +140,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
   <div class="app-shell">
     <header class="topbar">
       <div>
-        <div class="eyebrow">PROTOTIPO v0.8.5 · LAB</div>
+        <div class="eyebrow">PROTOTIPO v0.8.5.1 · LAB</div>
         <h1>Siniestra · Trono · Diestra</h1>
       </div>
       <div class="top-actions"><button id="showCardsBtn" class="ghost">Cartas</button><button id="newGameBtn" class="ghost">Nueva partida</button></div>
@@ -250,7 +250,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
 
   <dialog id="rulesDialog">
     <div class="dialog-body">
-      <div class="section-head"><h2>Reglas v0.8.5 LAB</h2><button class="icon-btn" data-close="rulesDialog">×</button></div>
+      <div class="section-head"><h2>Reglas v0.8.5.1 LAB</h2><button class="icon-btn" data-close="rulesDialog">×</button></div>
       <ul>
         <li>24 cartas + 1 campeón. Hay 2 copias de cada uno de los 12 diseños. Ambos campeones comienzan con 9 de Vida.</li>
         <li>Robás 3 cartas por ronda. Normalmente solo podés usar cada posición una vez. Algunos campeones pueden romper esta restricción.</li>
@@ -484,6 +484,7 @@ function previewPendingPower(play,self,opp){
   else if(c.effect==="second_special3"&&aff&&countPosition(self,self.champion.special)>0){p+=3;notes.push("+3 segunda "+POSITION_LABEL[self.champion.special]);}
   else if(c.effect==="enemy_printed6_2"&&aff){notes.push("Puede ganar +2 contra Poder impreso 6+");}
   else if(c.effect==="third4"&&aff&&state.turn===3){p+=4;notes.push("+4 tercer duelo");}
+  else if(c.effect==="archive_here"){const n=self.archives[play.position].length;p+=n;if(n)notes.push("+"+n+" Archivo");}
   else if(c.effect==="archive_empty2"&&self.archives[play.position].length===0){p+=2;notes.push("+2 Archivo vacío");}
   else if(c.effect==="archive_two2"&&self.archives[play.position].length>=2){p+=2;notes.push("+2 Archivo con 2+");}
   else if(c.effect==="opp_archive_more2"&&opp.archives[play.position].length>self.archives[play.position].length){p+=2;notes.push("+2 Archivo rival mayor");}
@@ -536,6 +537,7 @@ function estimateOwn(card,pos,p,opp){
   if(card.effect==="enemy_printed6_2"&&aff)v+=1.0;
   if(card.effect==="copy_plus2"&&aff)v=7+p.nextBuff+(p.nextPositionBoost||0)-p.incomingDebuff;
   if(card.effect==="third4"&&aff&&state.turn===3)v+=4;
+  if(card.effect==="archive_here")v+=p.archives[pos].length;
   if(card.effect==="archive_empty2"&&p.archives[pos].length===0)v+=2;
   if(card.effect==="archive_two2"&&p.archives[pos].length>=2)v+=2;
   if(card.effect==="opp_archive_more2"&&opp.archives[pos].length>p.archives[pos].length)v+=2;
@@ -692,6 +694,7 @@ function calculatePowers(aPlay,A,bPlay,B){
     else if(c.effect==="enemy_printed6_2"&&aff&&oppPlay.card.power>=6){p+=2;notes.push("+2 rival con Poder impreso 6+");}
     else if(c.effect==="copy_plus2"&&aff){p=oppPlay.card.power+2+self.nextBuff+(self.nextPositionBoost&&aff?self.nextPositionBoost:0)+(self.nextPositionSpecificBoost&&play.position===self.nextPositionSpecificBoost.position?self.nextPositionSpecificBoost.amount:0)-self.incomingDebuff;notes.length=0;notes.push("Poder impreso rival "+oppPlay.card.power,"+2 Prodigio");if(self.nextBuff)notes.push(...self.nextBuffNotes);if(self.nextPositionBoost&&aff)notes.push("+"+self.nextPositionBoost+" Invocador");if(self.nextPositionSpecificBoost&&play.position===self.nextPositionSpecificBoost.position)notes.push("+"+self.nextPositionSpecificBoost.amount+" "+self.nextPositionSpecificBoost.source);if(self.incomingDebuff)notes.push(...self.incomingNotes);}
     else if(c.effect==="third4"&&aff&&state.turn===3){p+=4;notes.push("+4 tercer duelo");}
+    else if(c.effect==="archive_here"){const n=self.archives[play.position].length;p+=n;if(n)notes.push("+"+n+" Archivo");}
     else if(c.effect==="archive_empty2"&&self.archives[play.position].length===0){p+=2;notes.push("+2 Archivo vacío");}
     else if(c.effect==="archive_two2"&&self.archives[play.position].length>=2){p+=2;notes.push("+2 Archivo con 2+");}
     else if(c.effect==="opp_archive_more2"&&opp.archives[play.position].length>self.archives[play.position].length){p+=2;notes.push("+2 Archivo rival mayor");}
@@ -798,7 +801,7 @@ function finishGame(winner,reason){if(state.finished)return;state.finished=true;
 function resetSelectionUI(){selectedCardIndex=null;qs("selectedSummary").textContent="Ninguna carta seleccionada";}
 function logEvent(html){const d=new Date();state.logs.push({html,time:d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"})});}
 function getHistory(){try{return JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");}catch{return[];}}
-function exportCurrent(){if(!state)return;const payload={version:"0.8.5-lab",exportedAt:new Date().toISOString(),game:state,history:getHistory()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="tcg-test-"+state.id+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function exportCurrent(){if(!state)return;const payload={version:"0.8.5.1-lab",exportedAt:new Date().toISOString(),game:state,history:getHistory()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="tcg-test-"+state.id+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function showGame(){qs("setupView").classList.add("hidden");qs("gameView").classList.remove("hidden");}
 function showSetup(){if(qs("resultDialog").open)qs("resultDialog").close();qs("gameView").classList.add("hidden");qs("setupView").classList.remove("hidden");state=null;selectedChampion=null;document.querySelectorAll(".champion-choice").forEach(x=>x.classList.remove("selected"));qs("startGameBtn").disabled=true;}
 
