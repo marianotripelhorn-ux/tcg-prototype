@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
-  <title>TCG Prototype v0.8.4.1 LAB</title>
+  <title>TCG Prototype v0.8.5 LAB</title>
     <style>
 :root {
   --bg: #0b0f17;
@@ -140,7 +140,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
   <div class="app-shell">
     <header class="topbar">
       <div>
-        <div class="eyebrow">PROTOTIPO v0.8.4.1 · LAB</div>
+        <div class="eyebrow">PROTOTIPO v0.8.5 · LAB</div>
         <h1>Siniestra · Trono · Diestra</h1>
       </div>
       <div class="top-actions"><button id="showCardsBtn" class="ghost">Cartas</button><button id="newGameBtn" class="ghost">Nueva partida</button></div>
@@ -250,7 +250,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
 
   <dialog id="rulesDialog">
     <div class="dialog-body">
-      <div class="section-head"><h2>Reglas v0.8.4.1 LAB</h2><button class="icon-btn" data-close="rulesDialog">×</button></div>
+      <div class="section-head"><h2>Reglas v0.8.5 LAB</h2><button class="icon-btn" data-close="rulesDialog">×</button></div>
       <ul>
         <li>24 cartas + 1 campeón. Hay 2 copias de cada uno de los 12 diseños. Ambos campeones comienzan con 9 de Vida.</li>
         <li>Robás 3 cartas por ronda. Normalmente solo podés usar cada posición una vez. Algunos campeones pueden romper esta restricción.</li>
@@ -568,17 +568,74 @@ function aiSetupScore(card,pos,p,opp,opening){
   if(card.effect==="next_position2"&&affinityActive(p,card,pos))s+=1.8;
   if(card.effect==="enemy_next3"&&affinityActive(p,card,pos))s+=1.7;
   if(card.effect==="loss_next3")s+=1.1;
-  if(card.effect==="first_round3"&&!p.roundPlays.length)s+=1.8;
-  if(card.effect==="next_diestra2")s+=2.5;
+  if(card.effect==="first_round3"&&!p.roundPlays.length)s+=2.0;
+  if(card.effect==="next_diestra2")s+=2.4;
   if(p.champion.id==="dextral"){
-    if(pos==="diestra"&&remaining.some(c=>["guardia_dextral","guardia_castillo","maestro_armas","caballero_tigre"].includes(c.id)))s+=.9;
-    if(pos==="trono"&&remaining.some(c=>c.id==="blazewalker"))s+=.6;
-    if(card.id==="maestro_armas"&&countPosition(p,"diestra")>0)s+=1.1;
+    if(pos==="diestra"&&remaining.some(c=>["guardia_dextral","guardia_castillo","maestro_armas","caballero_tigre"].includes(c.id)))s+=1.2;
+    if(pos==="trono"&&remaining.some(c=>c.id==="blazewalker"))s+=1.0;
+    if(card.id==="maestro_armas"&&countPosition(p,"diestra")>0)s+=1.2;
   }
   if(p.champion.id==="santo_simetrico"){
     if(card.effect==="mirror_martyr"&&state.turn===2)s+=2.0;
-    if(pos!=="trono"&&remaining.some(c=>["paso_especular","palindromo","custodio_eje"].includes(c.id)))s+=.7;
-    if(card.effect==="prev_draw3"&&p.duelResults.at(-1)==="draw")s+=.7;
+    if(pos!=="trono"&&remaining.some(c=>["paso_especular","palindromo","custodio_eje"].includes(c.id)))s+=.9;
+    if(card.effect==="prev_draw3"&&p.duelResults.at(-1)==="draw")s+=.8;
+  }
+  return s;
+}
+function aiPairSynergy(firstCard,firstPos,nextCard,nextPos,p){
+  let s=0;
+  if(firstCard.effect==="next_diestra2"&&nextPos==="diestra")s+=2.4;
+  if(firstCard.effect==="next_position2"&&nextCard.affinity&&nextPos===nextCard.affinity)s+=2.2;
+  if(firstCard.effect==="enemy_next3")s+=1.7;
+  if(firstCard.effect==="loss_next3")s+=1.5;
+  if(firstCard.effect==="won_round_next3"&&p.duelResults.includes("win"))s+=2.0;
+
+  if(firstPos==="diestra"){
+    if(nextCard.effect==="first_or_prev_diestra2"&&nextPos==="diestra")s+=2.0;
+    if(nextCard.effect==="diestra_before3"&&nextPos==="trono")s+=2.7;
+    if(nextCard.effect==="second_special3"&&nextPos==="diestra")s+=3.1;
+  }
+  if(firstPos==="trono"&&nextCard.effect==="trono_before4"&&nextPos==="siniestra")s+=3.2;
+
+  if(firstPos==="siniestra"&&nextPos==="diestra"||firstPos==="diestra"&&nextPos==="siniestra"){
+    if(nextCard.effect==="opposite_prev3")s+=2.8;
+  }
+  if(nextCard.effect==="axis_lateral2"&&nextPos==="trono"&&(firstPos==="siniestra"||firstPos==="diestra"))s+=2.0;
+  if(nextCard.effect==="first_opposite3"&&isOppositeLateral(firstPos,nextPos))s+=2.5;
+  if(state.turn===1&&nextCard.effect==="second_trono_double"&&nextPos==="trono")s+=1.4;
+
+  return s;
+}
+function aiReserveValue(card,p){
+  let v=0;
+  if(state.turn<3){
+    if(card.effect==="third4")v+=3.0;
+    if(card.effect==="second_special3"&&countPosition(p,p.champion.special)===0)v+=1.8;
+    if(card.effect==="win_loss4")v+=1.7;
+    if(card.effect==="second_trono_double")v+=1.5;
+    if(card.effect==="first_opposite3")v+=1.0;
+    if(card.effect==="prev_draw3"&&p.duelResults.at(-1)!=="draw")v+=.8;
+  }
+  return v;
+}
+function aiHandPlanScore(card,pos,p,opp,opening){
+  if(state.turn>=3||p.hand.length<=1)return 0;
+  const remaining=p.hand.filter(c=>c!==card);
+  let bestNext=0;
+  for(const next of remaining){
+    for(const nextPos of legalPositions(p)){
+      if(nextPos===pos&&capacity(p,pos)<=countPosition(p,pos)+1)continue;
+      let candidate=aiPairSynergy(card,pos,next,nextPos,p);
+      candidate+=Math.max(0,estimateOwn(next,nextPos,p,opp)-5)*.18;
+      bestNext=Math.max(bestNext,candidate);
+    }
+  }
+  let s=bestNext;
+  s-=aiReserveValue(card,p);
+  if(opening&&state.turn===1){
+    const current=estimateOwn(card,pos,p,opp);
+    if(current>=7)s+=.8;
+    if(current<=4)s-=1.0;
   }
   return s;
 }
@@ -586,31 +643,36 @@ function chooseAIPlay(firstPlay,aiFirst){
   let best=null;
   state.ai.hand.forEach((card,i)=>legalPositions(state.ai).forEach(pos=>{
     const play={card,position:pos,handIndex:i};
+    const setup=aiSetupScore(card,pos,state.ai,state.player,aiFirst||!firstPlay);
+    const plan=aiHandPlanScore(card,pos,state.ai,state.player,aiFirst||!firstPlay);
     let score;
     if(aiFirst||!firstPlay){
       const immediate=estimateOwn(card,pos,state.ai,state.player);
-      score=immediate+aiSetupScore(card,pos,state.ai,state.player,true)-card.power*.06;
-      if(state.player.life===1)score+=immediate*.75;
-      score+=Math.random()*.08;
+      score=immediate+setup+plan-card.power*.05;
+      if(state.player.life===1)score+=immediate*.9;
+      if(state.turn===3)score+=immediate*.55;
+      score+=Math.random()*.05;
     }else{
       const powers=calculatePowers(firstPlay,state.player,play,state.ai),mine=powers.b,opp=powers.a;
-      const setup=aiSetupScore(card,pos,state.ai,state.player,false);
       if(mine>opp){
-        score=100+setup-card.power*.35-Math.max(0,mine-opp)*.65;
-        if(state.player.life===1)score+=100;
-        if(state.turn===2)score+=18;
+        score=100+setup+plan-card.power*.28-Math.max(0,mine-opp)*.55;
+        if(state.player.life===1)score+=120;
+        if(state.turn===2)score+=16;
+        if(state.turn===3)score+=22;
       }else if(mine===opp){
-        score=42+setup-card.power*.25;
-        if(state.ai.life===1)score+=35;
+        score=44+setup+plan-card.power*.20;
+        if(state.ai.life===1)score+=45;
+        if(state.turn===3)score+=8;
       }else{
-        score=setup-card.power*.45;
-        if(card.effect==="loss_next3"&&state.turn<3)score+=4;
+        score=setup+plan-card.power*.38;
+        if(card.effect==="loss_next3"&&state.turn<3)score+=5;
         if(card.effect==="mirror_martyr"&&state.turn===2){const [own,rival]=roundScoreFor(state.ai);if(own===1&&rival===0)score+=5;}
-        if(state.ai.life===1)score-=60;
+        if(state.turn===2&&state.duelScore.ai===0&&state.duelScore.player===1)score-=12;
+        if(state.ai.life===1)score-=75;
       }
-      score+=Math.random()*.05;
+      score+=Math.random()*.04;
     }
-    if(!best||score>best.score)best={...play,score};
+    if(!best||score>best.score)best={...play,score,planScore:+plan.toFixed(2)};
   }));
   return best;
 }
@@ -705,13 +767,19 @@ function applyPost(self,play,result,opp,aff){
   if(play.card.effect==="mirror_martyr"){const [own,rival]=roundScoreFor(self);if(own===1&&rival===1)self.nextBaseDouble=true;}
 }
 function handleAIQuiero(){
-  let best=-99;
-  state.ai.hand.forEach(c=>legalPositions(state.ai).forEach(pos=>best=Math.max(best,estimateOwn(c,pos,state.ai,state.player))));
+  let best=-99,worst=99;
+  state.ai.hand.forEach(c=>legalPositions(state.ai).forEach(pos=>{
+    const v=estimateOwn(c,pos,state.ai,state.player);
+    best=Math.max(best,v);worst=Math.min(worst,v);
+  }));
   const expectedRival=5.8+state.player.nextBuff+(state.player.empireanBuff||0)-state.player.incomingDebuff;
-  let wants=best>=expectedRival-.4;
-  if(state.player.life===1&&best>=4.5)wants=true;
-  if(state.ai.life===1)wants=best>=expectedRival+1.0;
-  if(state.ai.life>=4&&best>=6.2)wants=true;
+  const canThreaten=best>=expectedRival-.3;
+  const strongThreat=best>=expectedRival+1.5;
+  let wants=canThreaten;
+  if(state.player.life<=2&&best>=4.5)wants=true;
+  if(state.ai.life===1)wants=strongThreat;
+  if(state.ai.life>=5&&best>=6.5)wants=true;
+  if(state.ai.life<=3&&best<expectedRival)wants=false;
   logEvent("<strong>IA:</strong> "+(wants?"Quiero":"No quiero")+".");
   if(wants){state.turn=3;beginTurn();}else endRound("ai_no_quiero");
 }
@@ -730,7 +798,7 @@ function finishGame(winner,reason){if(state.finished)return;state.finished=true;
 function resetSelectionUI(){selectedCardIndex=null;qs("selectedSummary").textContent="Ninguna carta seleccionada";}
 function logEvent(html){const d=new Date();state.logs.push({html,time:d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"})});}
 function getHistory(){try{return JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");}catch{return[];}}
-function exportCurrent(){if(!state)return;const payload={version:"0.8.4.1-lab",exportedAt:new Date().toISOString(),game:state,history:getHistory()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="tcg-test-"+state.id+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function exportCurrent(){if(!state)return;const payload={version:"0.8.5-lab",exportedAt:new Date().toISOString(),game:state,history:getHistory()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="tcg-test-"+state.id+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function showGame(){qs("setupView").classList.add("hidden");qs("gameView").classList.remove("hidden");}
 function showSetup(){if(qs("resultDialog").open)qs("resultDialog").close();qs("gameView").classList.add("hidden");qs("setupView").classList.remove("hidden");state=null;selectedChampion=null;document.querySelectorAll(".champion-choice").forEach(x=>x.classList.remove("selected"));qs("startGameBtn").disabled=true;}
 
