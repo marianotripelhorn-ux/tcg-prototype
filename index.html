@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
-  <title>TCG Prototype v0.8.4 LAB</title>
+  <title>TCG Prototype v0.8.4.1 LAB</title>
     <style>
 :root {
   --bg: #0b0f17;
@@ -140,7 +140,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
   <div class="app-shell">
     <header class="topbar">
       <div>
-        <div class="eyebrow">PROTOTIPO v0.8.4 · LAB</div>
+        <div class="eyebrow">PROTOTIPO v0.8.4.1 · LAB</div>
         <h1>Siniestra · Trono · Diestra</h1>
       </div>
       <div class="top-actions"><button id="showCardsBtn" class="ghost">Cartas</button><button id="newGameBtn" class="ghost">Nueva partida</button></div>
@@ -250,7 +250,7 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(3px); }
 
   <dialog id="rulesDialog">
     <div class="dialog-body">
-      <div class="section-head"><h2>Reglas v0.8.4 LAB</h2><button class="icon-btn" data-close="rulesDialog">×</button></div>
+      <div class="section-head"><h2>Reglas v0.8.4.1 LAB</h2><button class="icon-btn" data-close="rulesDialog">×</button></div>
       <ul>
         <li>24 cartas + 1 campeón. Hay 2 copias de cada uno de los 12 diseños. Ambos campeones comienzan con 9 de Vida.</li>
         <li>Robás 3 cartas por ronda. Normalmente solo podés usar cada posición una vez. Algunos campeones pueden romper esta restricción.</li>
@@ -499,7 +499,6 @@ function previewPendingPower(play,self,opp){
   else if(c.effect==="opposite_prev3"&&self.roundPlays.length&&isOppositeLateral(self.roundPlays.at(-1).position,play.position)){p+=3;notes.push("+3 posición opuesta");}
   else if(c.effect==="opposite_enemy2")notes.push("Puede ganar +2 según la posición rival");
   else if(c.effect==="first_round3"&&!self.roundPlays.length){p+=3;notes.push("+3 primera carta de la ronda");}
-  else if(c.effect==="first_round3"&&!self.roundPlays.length){p+=3;notes.push("+3 primera carta de la ronda");}
     else if(c.effect==="winning_round2"){const [own,rival]=roundScoreFor(self);if(own>rival){p+=2;notes.push("+2 vas ganando");}}
   else if(c.effect==="enemy_affinity2"&&aff)notes.push("Puede ganar +2 si la carta rival tiene habilidad de posición");
   else if(c.effect==="prev_draw3"&&self.duelResults.at(-1)==="draw"){p+=3;notes.push("+3 empate anterior");}
@@ -645,6 +644,7 @@ function calculatePowers(aPlay,A,bPlay,B){
     else if(c.effect==="axis_lateral2"&&aff&&self.roundPlays.some(x=>x.position==="siniestra"||x.position==="diestra")){p+=2;notes.push("+2 lateral previa");}
     else if(c.effect==="opposite_prev3"&&self.roundPlays.length&&isOppositeLateral(self.roundPlays.at(-1).position,play.position)){p+=3;notes.push("+3 posición opuesta");}
     else if(c.effect==="opposite_enemy2"&&isOppositeLateral(oppPlay.position,play.position)){p+=2;notes.push("+2 posición rival opuesta");}
+    else if(c.effect==="first_round3"&&!self.roundPlays.length){p+=3;notes.push("+3 primera carta de la ronda");}
     else if(c.effect==="winning_round2"){const [own,rival]=roundScoreFor(self);if(own>rival){p+=2;notes.push("+2 vas ganando");}}
     else if(c.effect==="enemy_affinity2"&&aff&&!!oppPlay.card.affinity){p+=2;notes.push("+2 rival con habilidad de posición");}
     else if(c.effect==="prev_draw3"&&self.duelResults.at(-1)==="draw"){p+=3;notes.push("+3 empate anterior");}
@@ -730,7 +730,7 @@ function finishGame(winner,reason){if(state.finished)return;state.finished=true;
 function resetSelectionUI(){selectedCardIndex=null;qs("selectedSummary").textContent="Ninguna carta seleccionada";}
 function logEvent(html){const d=new Date();state.logs.push({html,time:d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"})});}
 function getHistory(){try{return JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");}catch{return[];}}
-function exportCurrent(){if(!state)return;const payload={version:"0.8.4-lab",exportedAt:new Date().toISOString(),game:state,history:getHistory()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="tcg-test-"+state.id+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function exportCurrent(){if(!state)return;const payload={version:"0.8.4.1-lab",exportedAt:new Date().toISOString(),game:state,history:getHistory()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="tcg-test-"+state.id+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function showGame(){qs("setupView").classList.add("hidden");qs("gameView").classList.remove("hidden");}
 function showSetup(){if(qs("resultDialog").open)qs("resultDialog").close();qs("gameView").classList.add("hidden");qs("setupView").classList.remove("hidden");state=null;selectedChampion=null;document.querySelectorAll(".champion-choice").forEach(x=>x.classList.remove("selected"));qs("startGameBtn").disabled=true;}
 
