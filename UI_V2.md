@@ -27,3 +27,21 @@ This branch is the new client foundation. The v0.8.x LAB on `main` remains the b
 Cards use Pointer Events. On drag, a floating card follows the pointer and player slots highlight. Releasing over a player slot plays the card in this interaction prototype. A short tap selects the card and then a tap on the board plays it.
 
 This is deliberately independent from the old LAB DOM so the final online client can evolve without destabilizing rule testing.
+
+
+## Card Studio integration
+
+The supplied Card Studio v0.3.1 backup is now the visual reference for the client. UI v2 stores the stable Studio IDs alongside engine IDs (DEX-001…DEX-012, SIN-001…SIN-012, EMP-001…EMP-012, SAN-001…SAN-012). All 48 current game designs are in the catalog.
+
+The red cards retain art references in the UI prototype. Blue, Empyrean and Saints currently render with intentional no-art placeholder fields. The Saints color theme is temporary/non-canonical.
+
+## Engine extraction
+
+A deterministic engine layer now lives under `src/engine`:
+- Champion definitions
+- Player/game state types
+- Position capacity rules (including Athos and Desartes)
+- Affinity rules (including Vinira)
+- Authoritative duel Power resolution for all current card effects
+
+AI policy, full round transitions, Quiero/No quiero, Archive end-of-round movement and match lifecycle are the next pieces to migrate before UI v2 replaces the LAB as the playable client.
