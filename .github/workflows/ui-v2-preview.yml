@@ -1,4 +1,4 @@
-name: Deploy UI v2 preview
+name: Publish UI v2 preview
 
 on:
   push:
@@ -6,32 +6,24 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
+  contents: write
 
 jobs:
-  deploy-preview:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}ui-v2/
+  publish-preview:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout LAB main
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          path: site
-
-      - name: Checkout UI v2
+      - name: Checkout UI v2 source
         uses: actions/checkout@v4
         with:
           ref: ui-v2
           path: ui-source
+
+      - name: Checkout main site
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: site
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -46,20 +38,22 @@ jobs:
         working-directory: ui-source
         run: npm run build
 
-      - name: Add UI v2 below LAB
+      - name: Copy preview into main
         run: |
           rm -rf site/ui-v2
           mkdir -p site/ui-v2
           cp -R ui-source/dist/. site/ui-v2/
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload combined site
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Commit preview snapshot
+        working-directory: site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ui-v2
+          if git diff --cached --quiet; then
+            echo "No preview changes to publish."
+            exit 0
+          fi
+          git commit -m "Update UI v2 preview"
+          git pull --rebase origin main
+          git push origin HEAD:main
