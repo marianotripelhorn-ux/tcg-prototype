@@ -840,14 +840,17 @@ function handleAIQuiero(){
 }
 function humanQuiero(choice){qs("quieroDialog").close();logEvent("<strong>Vos:</strong> "+(choice?"Quiero":"No quiero")+".");if(choice){state.turn=3;beginTurn();}else endRound("player_no_quiero");}
 function endRound(reason){
-  if(state.player.champion.id==="empireos"&&new Set(state.ai.roundPlays.map(x=>x.position)).size===3)state.player.empireanBuff=2;
-  if(state.ai.champion.id==="empireos"&&new Set(state.player.roundPlays.map(x=>x.position)).size===3)state.ai.empireanBuff=2;
+  const playerEmpireanNext=state.player.champion.id==="empireos"&&new Set(state.ai.roundPlays.map(x=>x.position)).size===3;
+  const aiEmpireanNext=state.ai.champion.id==="empireos"&&new Set(state.player.roundPlays.map(x=>x.position)).size===3;
   [state.player,state.ai].forEach(p=>{p.roundPlays.forEach(pl=>p.archives[pl.position].push(pl.card));while(p.hand.length)p.discard.push(p.hand.pop());});
   state.rounds.push({round:state.round,score:{...state.duelScore},reason,playerLife:state.player.life,aiLife:state.ai.life,starter:state.roundStarter});
   const foldText=reason==="ai_no_quiero"?" · IA dijo No quiero":reason==="player_no_quiero"?" · No quiero":"";
   qs("duelFeedbackText").innerHTML="<strong>Fin de ronda "+state.round+": "+state.duelScore.player+"–"+state.duelScore.ai+foldText+"</strong>";
   logEvent("<strong>Fin de ronda "+state.round+".</strong> Resultado "+state.duelScore.player+"–"+state.duelScore.ai+foldText+".");
-  state.round++;state.roundStarter=state.roundStarter==="player"?"ai":"player";state.initiative=state.roundStarter;drawRoundHands();beginTurn();
+  state.round++;state.roundStarter=state.roundStarter==="player"?"ai":"player";state.initiative=state.roundStarter;drawRoundHands();
+  if(playerEmpireanNext)state.player.empireanBuff=2;
+  if(aiEmpireanNext)state.ai.empireanBuff=2;
+  beginTurn();
 }
 function finishGame(winner,reason){if(state.finished)return;state.finished=true;state.endedAt=new Date().toISOString();state.winner=winner;state.endReason=reason;const h=getHistory();h.push({id:state.id,date:state.endedAt,playerChampion:state.player.champion.name,aiChampion:state.ai.champion.name,winner,reason,playerLife:state.player.life,aiLife:state.ai.life,rounds:state.round});localStorage.setItem(HISTORY_KEY,JSON.stringify(h));renderHistory();qs("resultTitle").textContent=winner==="player"?"Ganaste":winner==="ai"?"Ganó la IA":"Empate";qs("resultText").textContent=state.player.life+"–"+state.ai.life+" de Vida · "+state.round+" ronda"+(state.round===1?"":"s")+" · final por "+(reason==="vida"?"Vida":"agotamiento del mazo")+".";qs("resultDialog").showModal();}
 function resetSelectionUI(){selectedCardIndex=null;qs("selectedSummary").textContent="Ninguna carta seleccionada";}
