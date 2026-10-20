@@ -15,8 +15,8 @@ export const factionLabels: Record<Faction, string> = {
   saints: "Santos"
 };
 
-const r1 = "/assets/art-red-1.svg?v=2";
-const r2 = "/assets/art-red-2.svg?v=2";
+const r1 = "../assets/art-red-1.svg?v=3";
+const r2 = "../assets/art-red-2.svg?v=3";
 
 export const redCards: CardDefinition[] = [
   { id:"caballero_tigre", studioId:"DEX-001", name:"CABALLERO TIGRE", power:6, faction:"red", affinity:"diestra", text:"Diestra: si ganaste el duelo anterior, +2.", effect:"won_prev2", art:{sprite:r1,column:2,row:0} },
