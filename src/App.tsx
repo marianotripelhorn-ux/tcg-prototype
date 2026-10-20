@@ -2,9 +2,10 @@ import { useMemo, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { byId, positionLabels, positions } from "./data";
 import { studioThemes } from "./cardStudio";
+import { createGame } from "./engine/state";
+import { capacity, legalPositions } from "./engine/rules";
+import type { EnginePlay, GameState } from "./engine/types";
 import type { CardDefinition, PlayedCard, Position } from "./types";
-
-type BoardState = Record<Position, PlayedCard[]>;
 
 type DragState = {
   cardId: string;
@@ -16,20 +17,30 @@ type DragState = {
   moved: boolean;
 };
 
-const emptyBoard = (): BoardState => ({
-  siniestra: [],
-  trono: [],
-  diestra: []
-});
+function makePreviewGame(): GameState {
+  const game = createGame("dextral", "athos");
+  game.player.life = 8;
+  game.opponent.life = 6;
+  game.player.hand = [
+    byId("incendiario"),
+    byId("maestro_armas"),
+    byId("guardia_castillo")
+  ];
+  game.player.archives.siniestra = [byId("mensajero"), byId("asesor_real")];
+  game.player.archives.trono = [byId("corona_eterea")];
+  game.player.archives.diestra = [byId("invocadagas"), byId("guardia_dextral"), byId("caballero_tigre")];
 
-const initialOpponent: BoardState = {
-  siniestra: [{ card: byId("guardia_dextral"), finalPower: 7 }],
-  trono: [],
-  diestra: [{ card: byId("abanderado_real"), finalPower: 6 }]
-};
-
-const archivePlayer: Record<Position, number> = { siniestra: 2, trono: 1, diestra: 3 };
-const archiveOpponent: Record<Position, number> = { siniestra: 1, trono: 2, diestra: 2 };
+  game.opponent.archives.siniestra = [byId("mensajero")];
+  game.opponent.archives.trono = [byId("corona_eterea"), byId("asesor_real")];
+  game.opponent.archives.diestra = [byId("invocadagas"), byId("guardia_dextral")];
+  game.opponent.roundPlays = [
+    { card: byId("guardia_dextral"), position: "siniestra", finalPower: 7 },
+    { card: byId("abanderado_real"), position: "diestra", finalPower: 6 }
+  ];
+  game.duelScore = { player: 1, opponent: 0 };
+  game.turn = 2;
+  return game;
+}
 
 function FactionMark({ card }: { card: CardDefinition }) {
   return <span className="faction-mark" aria-label={card.faction} />;
@@ -133,6 +144,7 @@ function Slot({
   cards,
   archive,
   active,
+  capacityValue,
   onTap
 }: {
   side: "player" | "opponent";
@@ -140,6 +152,7 @@ function Slot({
   cards: PlayedCard[];
   archive: number;
   active: boolean;
+  capacityValue: number;
   onTap?: () => void;
 }) {
   return (
@@ -150,6 +163,7 @@ function Slot({
       onClick={side === "player" ? onTap : undefined}
     >
       <span className="archive-count" title="Archivo">{archive}</span>
+      <span className="slot-capacity" title="Capacidad">{cards.length}/{capacityValue}</span>
       <div className="slot-stack">
         {cards.length === 0 ? (
           <div className="slot-empty" />
@@ -164,12 +178,8 @@ function Slot({
 }
 
 export default function App() {
-  const [hand, setHand] = useState<CardDefinition[]>([
-    byId("incendiario"),
-    byId("maestro_armas"),
-    byId("guardia_castillo")
-  ]);
-  const [playerBoard, setPlayerBoard] = useState<BoardState>(emptyBoard);
+  const [game, setGame] = useState<GameState>(makePreviewGame);
+  const hand = game.player.hand;
   const [selected, setSelected] = useState<string | null>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [hoveredPosition, setHoveredPosition] = useState<Position | null>(null);
@@ -181,12 +191,16 @@ export default function App() {
   );
 
   function playCard(cardId: string, position: Position) {
-    const card = hand.find(candidate => candidate.id === cardId);
-    if (!card) return;
-    setHand(current => current.filter(candidate => candidate.id !== cardId));
-    setPlayerBoard(current => ({
+    const card = game.player.hand.find(candidate => candidate.id === cardId);
+    if (!card || !legalPositions(game.player).includes(position)) return;
+    const played: EnginePlay = { card, position, finalPower: card.power };
+    setGame(current => ({
       ...current,
-      [position]: [...current[position], { card, finalPower: card.power }]
+      player: {
+        ...current.player,
+        hand: current.player.hand.filter(candidate => candidate.id !== cardId),
+        roundPlays: [...current.player.roundPlays, played]
+      }
     }));
     setSelected(null);
     setHoveredPosition(null);
@@ -196,7 +210,8 @@ export default function App() {
   function zoneAt(x: number, y: number): Position | null {
     const element = document.elementFromPoint(x, y);
     const zone = element?.closest<HTMLElement>('[data-side="player"][data-position]');
-    return (zone?.dataset.position as Position | undefined) ?? null;
+    const position = (zone?.dataset.position as Position | undefined) ?? null;
+    return position && legalPositions(game.player).includes(position) ? position : null;
   }
 
   function handlePointerDown(event: ReactPointerEvent<HTMLButtonElement>, card: CardDefinition) {
@@ -252,9 +267,9 @@ export default function App() {
       <div className="game-frame">
         <ChampionBar
           side="opponent"
-          name="Athos, Capitán de la Guardia Dextral"
-          life={6}
-          passive="Ganar en Diestra habilita otro espacio."
+          name={game.opponent.champion.name}
+          life={game.opponent.life}
+          passive={game.opponent.champion.text}
         />
 
         <section className="match-strip">
@@ -263,8 +278,8 @@ export default function App() {
             <b>5</b>
           </div>
           <div className="duel-status">
-            <strong>1 — 0</strong>
-            <span>DUELO 2 · VOS ABRÍS</span>
+            <strong>{game.duelScore.player} — {game.duelScore.opponent}</strong>
+            <span>DUELO {game.turn} · VOS ABRÍS</span>
           </div>
           <button className="utility-button" type="button" aria-label="Abrir registro">≡</button>
         </section>
@@ -275,9 +290,10 @@ export default function App() {
               <Slot
                 side="opponent"
                 position={position}
-                cards={initialOpponent[position]}
-                archive={archiveOpponent[position]}
+                cards={game.opponent.roundPlays.filter(play => play.position === position)}
+                archive={game.opponent.archives[position].length}
                 active={false}
+                capacityValue={capacity(game.opponent, position)}
               />
 
               <div className="lane-axis">
@@ -288,9 +304,10 @@ export default function App() {
               <Slot
                 side="player"
                 position={position}
-                cards={playerBoard[position]}
-                archive={archivePlayer[position]}
-                active={hoveredPosition === position || (!!selectedCard && !drag)}
+                cards={game.player.roundPlays.filter(play => play.position === position)}
+                archive={game.player.archives[position].length}
+                active={(hoveredPosition === position || (!!selectedCard && !drag)) && legalPositions(game.player).includes(position)}
+                capacityValue={capacity(game.player, position)}
                 onTap={() => selectedCard && playCard(selectedCard.id, position)}
               />
             </div>
@@ -301,9 +318,9 @@ export default function App() {
 
         <ChampionBar
           side="player"
-          name="Majestad Dextral"
-          life={8}
-          passive="Podés jugar hasta 2 cartas en Diestra."
+          name={game.player.champion.name}
+          life={game.player.life}
+          passive={game.player.champion.text}
         />
 
         <section className="hand-zone" aria-label="Tu mano">
