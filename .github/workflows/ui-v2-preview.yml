@@ -1,0 +1,65 @@
+name: Deploy UI v2 preview
+
+on:
+  push:
+    branches: ["ui-v2"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy-preview:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}ui-v2/
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout LAB main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: site
+
+      - name: Checkout UI v2
+        uses: actions/checkout@v4
+        with:
+          ref: ui-v2
+          path: ui-source
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install UI dependencies
+        working-directory: ui-source
+        run: npm install
+
+      - name: Build UI v2
+        working-directory: ui-source
+        run: npm run build
+
+      - name: Add UI v2 below LAB
+        run: |
+          rm -rf site/ui-v2
+          mkdir -p site/ui-v2
+          cp -R ui-source/dist/. site/ui-v2/
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload combined site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
