@@ -129,7 +129,12 @@ function post(label, id,pos,result,setup,assertion,aff=true) {
 }
 
 // RED — direct power.
-direct("bonus2","invocadagas","diestra",7,null,5,null);
+direct("bonus2","invocadagas","diestra",7,null);
+{
+  const {A,B}=fresh(); const p=play("invocadagas","trono");
+  check("bonus2 off-affinity preview",E.previewPendingPower(p,A,B).power,5);
+  check("bonus2 off-affinity exact",E.calculatePowers(p,A,play("mensajero","trono"),B).a,5);
+}
 direct("first_or_prev_diestra2 first","guardia_dextral","diestra",7,null,5,(A)=>A.roundPlays=[play("mensajero","trono")]);
 direct("won_prev2","caballero_tigre","diestra",8,(A)=>A.duelResults=["win"],6,(A)=>A.duelResults=["loss"]);
 direct("empty_sin5","corona_eterea","trono",7,null,2,(A)=>A.roundPlays=[play("mensajero","siniestra")]);
@@ -187,7 +192,7 @@ direct("archive_exact2_5","memoria_petrificada","trono",8,(A)=>A.archives.trono=
 direct("archive_all_diff3","cartografo_empireo","trono",8,(A)=>{A.archives.siniestra=[];A.archives.trono=filler(1);A.archives.diestra=filler(2);},5,null);
 
 // SAINTS.
-direct("lateral1","santo_bifronte","siniestra",7,null,6,(A,B,s)=>{});
+direct("lateral1","santo_bifronte","siniestra",7,null);
 {
   const {A,B}=fresh(); const p=play("santo_bifronte","trono");
   check("lateral1 Trono preview",E.previewPendingPower(p,A,B).power,6);
