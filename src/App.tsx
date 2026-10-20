@@ -62,6 +62,29 @@ function CardFace({
     "--card-power": theme.power
   } as CSSProperties;
 
+  if (card.faction === "red" && card.art) {
+    return (
+      <article
+        className={[
+          "game-card",
+          "red",
+          "studio-card",
+          compact ? "compact" : "",
+          selected ? "selected" : "",
+          ghost ? "ghost" : "",
+          pending ? "pending-card" : ""
+        ].filter(Boolean).join(" ")}
+        style={themeStyle}
+        aria-label={card.name}
+      >
+        <div className="studio-card-sprite" style={artStyle} />
+        {compact && finalPower !== undefined && (
+          <span className="board-final-power">{finalPower}</span>
+        )}
+      </article>
+    );
+  }
+
   return (
     <article
       className={[
