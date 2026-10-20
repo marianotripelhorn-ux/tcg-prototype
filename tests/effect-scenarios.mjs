@@ -6,7 +6,7 @@ const match = html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/);
 if (!match) throw new Error("Could not extract game script.");
 
 let source = match[1];
-const cut = source.indexOf('document.querySelectorAll(".champion-choice")');
+const cut = source.indexOf("function renderCardList(){");
 if (cut < 0) throw new Error("Could not find safe script cut point.");
 source = source.slice(0, cut);
 
