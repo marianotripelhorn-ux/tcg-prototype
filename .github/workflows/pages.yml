@@ -25,6 +25,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Run effect audit
         run: node tests/effect-audit.mjs
+      - name: Run scenario audit
+        run: node tests/effect-scenarios.mjs
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
