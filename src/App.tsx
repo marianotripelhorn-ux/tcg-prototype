@@ -1,14 +1,15 @@
 import { useMemo, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
-import { byId, positionLabels, positions } from "./data";
+import { positionLabels, positions } from "./data";
 import { studioThemes } from "./cardStudio";
-import { createGame } from "./engine/state";
+import { champions } from "./engine/champions";
+import { answerQuiero, cloneGame, startGame, submitPlayerPlay } from "./engine/game";
 import { capacity, legalPositions } from "./engine/rules";
 import type { EnginePlay, GameState } from "./engine/types";
-import type { CardDefinition, PlayedCard, Position } from "./types";
+import type { CardDefinition, Position } from "./types";
 
 type DragState = {
-  cardId: string;
+  handIndex: number;
   pointerId: number;
   startX: number;
   startY: number;
@@ -16,31 +17,6 @@ type DragState = {
   y: number;
   moved: boolean;
 };
-
-function makePreviewGame(): GameState {
-  const game = createGame("dextral", "athos");
-  game.player.life = 8;
-  game.opponent.life = 6;
-  game.player.hand = [
-    byId("incendiario"),
-    byId("maestro_armas"),
-    byId("guardia_castillo")
-  ];
-  game.player.archives.siniestra = [byId("mensajero"), byId("asesor_real")];
-  game.player.archives.trono = [byId("corona_eterea")];
-  game.player.archives.diestra = [byId("invocadagas"), byId("guardia_dextral"), byId("caballero_tigre")];
-
-  game.opponent.archives.siniestra = [byId("mensajero")];
-  game.opponent.archives.trono = [byId("corona_eterea"), byId("asesor_real")];
-  game.opponent.archives.diestra = [byId("invocadagas"), byId("guardia_dextral")];
-  game.opponent.roundPlays = [
-    { card: byId("guardia_dextral"), position: "siniestra", finalPower: 7 },
-    { card: byId("abanderado_real"), position: "diestra", finalPower: 6 }
-  ];
-  game.duelScore = { player: 1, opponent: 0 };
-  game.turn = 2;
-  return game;
-}
 
 function FactionMark({ card }: { card: CardDefinition }) {
   return <span className="faction-mark" aria-label={card.faction} />;
@@ -60,13 +36,15 @@ function CardFace({
   finalPower,
   compact = false,
   selected = false,
-  ghost = false
+  ghost = false,
+  pending = false
 }: {
   card: CardDefinition;
   finalPower?: number;
   compact?: boolean;
   selected?: boolean;
   ghost?: boolean;
+  pending?: boolean;
 }) {
   const theme = studioThemes[card.faction];
   const artStyle: CSSProperties | undefined = card.art
@@ -91,7 +69,8 @@ function CardFace({
         card.faction,
         compact ? "compact" : "",
         selected ? "selected" : "",
-        ghost ? "ghost" : ""
+        ghost ? "ghost" : "",
+        pending ? "pending-card" : ""
       ].filter(Boolean).join(" ")}
       style={themeStyle}
       aria-label={card.name}
@@ -142,6 +121,7 @@ function Slot({
   side,
   position,
   cards,
+  pendingCard,
   archive,
   active,
   capacityValue,
@@ -149,7 +129,8 @@ function Slot({
 }: {
   side: "player" | "opponent";
   position: Position;
-  cards: PlayedCard[];
+  cards: EnginePlay[];
+  pendingCard?: EnginePlay | null;
   archive: number;
   active: boolean;
   capacityValue: number;
@@ -165,99 +146,185 @@ function Slot({
       <span className="archive-count" title="Archivo">{archive}</span>
       <span className="slot-capacity" title="Capacidad">{cards.length}/{capacityValue}</span>
       <div className="slot-stack">
-        {cards.length === 0 ? (
+        {cards.length === 0 && !pendingCard ? (
           <div className="slot-empty" />
-        ) : cards.map((played, index) => (
-          <div className="played-card" key={played.card.id + index}>
-            <CardFace card={played.card} finalPower={played.finalPower} compact />
-          </div>
-        ))}
+        ) : (
+          <>
+            {cards.map((played, index) => (
+              <div className="played-card" key={played.card.id + index}>
+                <CardFace card={played.card} finalPower={played.finalPower} compact />
+              </div>
+            ))}
+            {pendingCard && (
+              <div className="played-card pending-play">
+                <CardFace card={pendingCard.card} compact pending />
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-export default function App() {
-  const [game, setGame] = useState<GameState>(makePreviewGame);
-  const hand = game.player.hand;
-  const [selected, setSelected] = useState<string | null>(null);
-  const [drag, setDrag] = useState<DragState | null>(null);
-  const [hoveredPosition, setHoveredPosition] = useState<Position | null>(null);
-  const [lastAction, setLastAction] = useState("Arrastrá una carta a una posición.");
+function Setup({
+  playerChampion,
+  opponentChampion,
+  onPlayerChange,
+  onOpponentChange,
+  onStart
+}: {
+  playerChampion: string;
+  opponentChampion: string;
+  onPlayerChange: (value:string)=>void;
+  onOpponentChange: (value:string)=>void;
+  onStart: ()=>void;
+}) {
+  const ids=Object.keys(champions);
+  return (
+    <main className="setup-shell">
+      <section className="setup-card">
+        <div className="setup-kicker">DAGGERLIGHT · ONLINE CLIENT</div>
+        <h1>Partida de prueba</h1>
+        <p>UI v2 usa el motor real, la IA v0.8.7 y el pool actual de 48 cartas.</p>
 
-  const selectedCard = useMemo(
-    () => hand.find(card => card.id === selected) ?? null,
-    [hand, selected]
+        <label>
+          <span>Tu Champion</span>
+          <select value={playerChampion} onChange={event=>onPlayerChange(event.target.value)}>
+            {ids.map(id=><option value={id} key={id}>{champions[id].name}</option>)}
+          </select>
+        </label>
+
+        <label>
+          <span>Rival</span>
+          <select value={opponentChampion} onChange={event=>onOpponentChange(event.target.value)}>
+            <option value="random">Aleatorio</option>
+            {ids.map(id=><option value={id} key={id}>{champions[id].name}</option>)}
+          </select>
+        </label>
+
+        <button className="primary-button" type="button" onClick={onStart}>JUGAR</button>
+        <small>Azul, Empíreos y Santos usan cartas temporales sin arte.</small>
+      </section>
+    </main>
+  );
+}
+
+export default function App() {
+  const championIds=Object.keys(champions);
+  const [playerChampion,setPlayerChampion]=useState("dextral");
+  const [opponentChampion,setOpponentChampion]=useState("random");
+  const [game,setGame]=useState<GameState|null>(null);
+  const [selectedIndex,setSelectedIndex]=useState<number|null>(null);
+  const [drag,setDrag]=useState<DragState|null>(null);
+  const [hoveredPosition,setHoveredPosition]=useState<Position|null>(null);
+
+  const hand=game?.player.hand ?? [];
+  const selectedCard=useMemo(
+    ()=>selectedIndex===null ? null : hand[selectedIndex] ?? null,
+    [hand,selectedIndex]
   );
 
-  function playCard(cardId: string, position: Position) {
-    const card = game.player.hand.find(candidate => candidate.id === cardId);
-    if (!card || !legalPositions(game.player).includes(position)) return;
-    const played: EnginePlay = { card, position, finalPower: card.power };
-    setGame(current => ({
-      ...current,
-      player: {
-        ...current.player,
-        hand: current.player.hand.filter(candidate => candidate.id !== cardId),
-        roundPlays: [...current.player.roundPlays, played]
-      }
-    }));
-    setSelected(null);
+  function beginMatch() {
+    const opponent = opponentChampion==="random"
+      ? championIds.filter(id=>id!==playerChampion)[Math.floor(Math.random()*(championIds.length-1))]
+      : opponentChampion;
+    setGame(startGame(playerChampion,opponent));
+    setSelectedIndex(null);
+    setDrag(null);
     setHoveredPosition(null);
-    setLastAction(`${card.name} → ${positionLabels[position]}`);
   }
 
-  function zoneAt(x: number, y: number): Position | null {
-    const element = document.elementFromPoint(x, y);
-    const zone = element?.closest<HTMLElement>('[data-side="player"][data-position]');
-    const position = (zone?.dataset.position as Position | undefined) ?? null;
+  function playCard(handIndex:number, position:Position) {
+    if (!game || game.phase!=="awaiting_player") return;
+    if (!legalPositions(game.player).includes(position)) return;
+    const next=cloneGame(game);
+    submitPlayerPlay(next,handIndex,position);
+    setGame(next);
+    setSelectedIndex(null);
+    setHoveredPosition(null);
+    setDrag(null);
+  }
+
+  function chooseQuiero(wants:boolean) {
+    if (!game) return;
+    const next=cloneGame(game);
+    answerQuiero(next,wants);
+    setGame(next);
+    setSelectedIndex(null);
+  }
+
+  function zoneAt(x:number,y:number):Position|null {
+    if (!game || game.phase!=="awaiting_player") return null;
+    const element=document.elementFromPoint(x,y);
+    const zone=element?.closest<HTMLElement>('[data-side="player"][data-position]');
+    const position=(zone?.dataset.position as Position|undefined) ?? null;
     return position && legalPositions(game.player).includes(position) ? position : null;
   }
 
-  function handlePointerDown(event: ReactPointerEvent<HTMLButtonElement>, card: CardDefinition) {
+  function handlePointerDown(event:ReactPointerEvent<HTMLButtonElement>, handIndex:number) {
+    if (!game || game.phase!=="awaiting_player") return;
     event.currentTarget.setPointerCapture(event.pointerId);
     setDrag({
-      cardId: card.id,
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY,
-      x: event.clientX,
-      y: event.clientY,
-      moved: false
+      handIndex,
+      pointerId:event.pointerId,
+      startX:event.clientX,
+      startY:event.clientY,
+      x:event.clientX,
+      y:event.clientY,
+      moved:false
     });
   }
 
-  function handlePointerMove(event: ReactPointerEvent<HTMLButtonElement>) {
-    setDrag(current => {
-      if (!current || current.pointerId !== event.pointerId) return current;
-      const distance = Math.hypot(event.clientX - current.startX, event.clientY - current.startY);
-      const moved = current.moved || distance > 8;
+  function handlePointerMove(event:ReactPointerEvent<HTMLButtonElement>) {
+    setDrag(current=>{
+      if (!current || current.pointerId!==event.pointerId) return current;
+      const distance=Math.hypot(event.clientX-current.startX,event.clientY-current.startY);
+      const moved=current.moved || distance>8;
       if (moved) {
         event.preventDefault();
-        setHoveredPosition(zoneAt(event.clientX, event.clientY));
+        setHoveredPosition(zoneAt(event.clientX,event.clientY));
       }
-      return { ...current, x: event.clientX, y: event.clientY, moved };
+      return {...current,x:event.clientX,y:event.clientY,moved};
     });
   }
 
-  function handlePointerUp(event: ReactPointerEvent<HTMLButtonElement>) {
-    const current = drag;
-    if (!current || current.pointerId !== event.pointerId) return;
-
-    const destination = current.moved ? zoneAt(event.clientX, event.clientY) : null;
+  function handlePointerUp(event:ReactPointerEvent<HTMLButtonElement>) {
+    const current=drag;
+    if (!current || current.pointerId!==event.pointerId) return;
+    const destination=current.moved ? zoneAt(event.clientX,event.clientY) : null;
     if (destination) {
-      playCard(current.cardId, destination);
+      playCard(current.handIndex,destination);
     } else if (!current.moved) {
-      setSelected(value => value === current.cardId ? null : current.cardId);
-      setLastAction("Tocá una posición o arrastrá la carta.");
+      setSelectedIndex(value=>value===current.handIndex ? null : current.handIndex);
     }
-
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
     setDrag(null);
     setHoveredPosition(null);
   }
+
+  if (!game) {
+    return (
+      <Setup
+        playerChampion={playerChampion}
+        opponentChampion={opponentChampion}
+        onPlayerChange={setPlayerChampion}
+        onOpponentChange={setOpponentChampion}
+        onStart={beginMatch}
+      />
+    );
+  }
+
+  const legal=game.phase==="awaiting_player" ? legalPositions(game.player) : [];
+  const pendingOpponent=game.pendingOpponentPlay;
+  const latestEvent=game.events.at(-1)?.text ?? "";
+  const turnText=game.phase==="awaiting_quiero"
+    ? "DECISIÓN DE RONDA"
+    : game.phase==="finished"
+      ? "PARTIDA TERMINADA"
+      : `DUELO ${game.turn} · ${game.initiative==="player"?"VOS ABRÍS":"IA ABRE"}`;
 
   return (
     <main className="app-shell">
@@ -275,25 +342,31 @@ export default function App() {
         <section className="match-strip">
           <div>
             <span>RONDA</span>
-            <b>5</b>
+            <b>{game.round}</b>
           </div>
           <div className="duel-status">
             <strong>{game.duelScore.player} — {game.duelScore.opponent}</strong>
-            <span>DUELO {game.turn} · VOS ABRÍS</span>
+            <span>{turnText}</span>
           </div>
-          <button className="utility-button" type="button" aria-label="Abrir registro">≡</button>
+          <button
+            className="utility-button"
+            type="button"
+            aria-label="Nueva partida"
+            onClick={()=>setGame(null)}
+          >×</button>
         </section>
 
         <section className="battlefield" aria-label="Tablero">
-          {positions.map(position => (
+          {positions.map(position=>(
             <div className="lane" key={position}>
               <Slot
                 side="opponent"
                 position={position}
-                cards={game.opponent.roundPlays.filter(play => play.position === position)}
+                cards={game.opponent.roundPlays.filter(play=>play.position===position)}
+                pendingCard={pendingOpponent?.position===position ? pendingOpponent : null}
                 archive={game.opponent.archives[position].length}
                 active={false}
-                capacityValue={capacity(game.opponent, position)}
+                capacityValue={capacity(game.opponent,position)}
               />
 
               <div className="lane-axis">
@@ -304,17 +377,23 @@ export default function App() {
               <Slot
                 side="player"
                 position={position}
-                cards={game.player.roundPlays.filter(play => play.position === position)}
+                cards={game.player.roundPlays.filter(play=>play.position===position)}
                 archive={game.player.archives[position].length}
-                active={(hoveredPosition === position || (!!selectedCard && !drag)) && legalPositions(game.player).includes(position)}
-                capacityValue={capacity(game.player, position)}
-                onTap={() => selectedCard && playCard(selectedCard.id, position)}
+                active={(hoveredPosition===position || (!!selectedCard&&!drag)) && legal.includes(position)}
+                capacityValue={capacity(game.player,position)}
+                onTap={()=>selectedIndex!==null && legal.includes(position) && playCard(selectedIndex,position)}
               />
             </div>
           ))}
         </section>
 
-        <div className="action-line" role="status">{lastAction}</div>
+        <div className="action-line" role="status">
+          {game.lastDuel
+            ? `${latestEvent}`
+            : pendingOpponent
+              ? `IA jugó ${pendingOpponent.card.name} en ${positionLabels[pendingOpponent.position]}. Respondé.`
+              : latestEvent}
+        </div>
 
         <ChampionBar
           side="player"
@@ -329,34 +408,63 @@ export default function App() {
             <small>{hand.length} cartas</small>
           </div>
           <div className="hand">
-            {hand.map(card => (
+            {hand.map((card,index)=>(
               <button
-                className={`hand-card ${selected === card.id ? "is-selected" : ""}`}
+                className={`hand-card ${selectedIndex===index?"is-selected":""}`}
                 type="button"
-                key={card.id}
-                onPointerDown={event => handlePointerDown(event, card)}
+                key={`${card.id}-${index}`}
+                disabled={game.phase!=="awaiting_player"}
+                onPointerDown={event=>handlePointerDown(event,index)}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
-                onPointerCancel={() => {
+                onPointerCancel={()=>{
                   setDrag(null);
                   setHoveredPosition(null);
                 }}
               >
-                <CardFace card={card} selected={selected === card.id} />
+                <CardFace card={card} selected={selectedIndex===index} />
               </button>
             ))}
-            {hand.length === 0 && <div className="empty-hand">Mano vacía · demo de interacción</div>}
+            {hand.length===0 && <div className="empty-hand">Sin cartas disponibles.</div>}
           </div>
         </section>
+
+        {game.phase==="awaiting_quiero" && (
+          <div className="decision-overlay">
+            <div className="decision-card">
+              <span>VAS 0–2</span>
+              <strong>¿Quiero?</strong>
+              <p>Jugá el tercer duelo para intentar rescatar un punto, o cerrá la ronda 0–2.</p>
+              <div>
+                <button className="secondary-button" onClick={()=>chooseQuiero(false)}>NO QUIERO</button>
+                <button className="primary-button" onClick={()=>chooseQuiero(true)}>QUIERO</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {game.phase==="finished" && (
+          <div className="decision-overlay">
+            <div className="decision-card result-card">
+              <span>RESULTADO</span>
+              <strong>{game.winner==="player"?"GANASTE":game.winner==="opponent"?"GANÓ LA IA":"EMPATE"}</strong>
+              <p>{game.player.life}–{game.opponent.life} de Vida · {game.round} ronda{game.round===1?"":"s"}.</p>
+              <div>
+                <button className="secondary-button" onClick={()=>setGame(null)}>CAMBIAR CHAMPIONS</button>
+                <button className="primary-button" onClick={beginMatch}>REVANCHA</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {drag && (() => {
-        const card = hand.find(candidate => candidate.id === drag.cardId);
+        const card=hand[drag.handIndex];
         if (!card || !drag.moved) return null;
         return (
           <div
             className="drag-layer"
-            style={{ transform: `translate3d(${drag.x}px, ${drag.y}px, 0)` }}
+            style={{transform:`translate3d(${drag.x}px, ${drag.y}px, 0)`}}
           >
             <CardFace card={card} ghost />
           </div>
