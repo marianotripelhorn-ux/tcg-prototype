@@ -114,6 +114,63 @@ function CardFace({
   );
 }
 
+function BattleCard({
+  played,
+  active = false,
+  pending = false
+}: {
+  played: EnginePlay;
+  active?: boolean;
+  pending?: boolean;
+}) {
+  const { card } = played;
+  const theme = studioThemes[card.faction];
+  const finalPower = played.finalPower ?? card.power;
+  const delta = finalPower - card.power;
+  const artStyle: CSSProperties | undefined = card.art
+    ? {
+        "--battle-sprite": `url("${card.art.sprite}")`,
+        "--battle-x": `${card.art.column * 50}%`,
+        "--battle-y": `${card.art.row * 100}%`,
+        "--card-crown": theme.crown
+      } as CSSProperties
+    : {
+        "--card-crown": theme.crown
+      } as CSSProperties;
+
+  return (
+    <article
+      className={[
+        "battle-card",
+        card.faction,
+        card.art ? "has-studio-art" : "placeholder-art",
+        active ? "is-current-duel" : "is-past-duel",
+        pending ? "is-pending" : ""
+      ].filter(Boolean).join(" ")}
+      style={artStyle}
+      aria-label={`${card.name}, Poder ${finalPower}`}
+    >
+      {card.art ? (
+        <div className="battle-art-window">
+          <div className="battle-art-source" />
+        </div>
+      ) : (
+        <div className="battle-art-window battle-art-placeholder" />
+      )}
+      <div className="battle-power">
+        <strong>{finalPower}</strong>
+        {delta !== 0 && (
+          <span className={delta > 0 ? "power-up" : "power-down"}>
+            {delta > 0 ? "+" : ""}{delta}
+          </span>
+        )}
+      </div>
+      <div className="battle-name">{card.name}</div>
+      <span className="battle-crown" />
+    </article>
+  );
+}
+
 function ChampionBar({
   side,
   name,
@@ -148,6 +205,7 @@ function Slot({
   archive,
   active,
   capacityValue,
+  activeDuelNumber,
   onTap
 }: {
   side: "player" | "opponent";
@@ -157,6 +215,7 @@ function Slot({
   archive: number;
   active: boolean;
   capacityValue: number;
+  activeDuelNumber: number | null;
   onTap?: () => void;
 }) {
   return (
@@ -175,12 +234,15 @@ function Slot({
           <>
             {cards.map((played, index) => (
               <div className="played-card" key={played.card.id + index}>
-                <CardFace card={played.card} finalPower={played.finalPower} compact />
+                <BattleCard
+                  played={played}
+                  active={activeDuelNumber === index + 1}
+                />
               </div>
             ))}
             {pendingCard && (
               <div className="played-card pending-play">
-                <CardFace card={pendingCard.card} compact pending />
+                <BattleCard played={pendingCard} active pending />
               </div>
             )}
           </>
@@ -239,6 +301,7 @@ export default function App() {
   const [opponentChampion,setOpponentChampion]=useState("random");
   const [game,setGame]=useState<GameState|null>(null);
   const [selectedIndex,setSelectedIndex]=useState<number|null>(null);
+  const [zoomedIndex,setZoomedIndex]=useState<number|null>(null);
   const [drag,setDrag]=useState<DragState|null>(null);
   const [hoveredPosition,setHoveredPosition]=useState<Position|null>(null);
 
@@ -254,6 +317,7 @@ export default function App() {
       : opponentChampion;
     setGame(startGame(playerChampion,opponent));
     setSelectedIndex(null);
+    setZoomedIndex(null);
     setDrag(null);
     setHoveredPosition(null);
   }
@@ -265,6 +329,7 @@ export default function App() {
     submitPlayerPlay(next,handIndex,position);
     setGame(next);
     setSelectedIndex(null);
+    setZoomedIndex(null);
     setHoveredPosition(null);
     setDrag(null);
   }
@@ -319,7 +384,7 @@ export default function App() {
     if (destination) {
       playCard(current.handIndex,destination);
     } else if (!current.moved) {
-      setSelectedIndex(value=>value===current.handIndex ? null : current.handIndex);
+      setZoomedIndex(current.handIndex);
     }
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
@@ -342,6 +407,12 @@ export default function App() {
 
   const legal=game.phase==="awaiting_player" ? legalPositions(game.player) : [];
   const pendingOpponent=game.pendingOpponentPlay;
+  const activeDuelNumber = pendingOpponent
+    ? game.turn
+    : game.lastDuel?.turn === game.turn
+      ? game.turn
+      : null;
+  const zoomedCard = zoomedIndex===null ? null : hand[zoomedIndex] ?? null;
   const latestEvent=game.events.at(-1)?.text ?? "";
   const turnText=game.phase==="awaiting_quiero"
     ? "DECISIÓN DE RONDA"
@@ -390,6 +461,7 @@ export default function App() {
                 archive={game.opponent.archives[position].length}
                 active={false}
                 capacityValue={capacity(game.opponent,position)}
+                activeDuelNumber={activeDuelNumber}
               />
 
               <div className="lane-axis">
@@ -404,6 +476,7 @@ export default function App() {
                 archive={game.player.archives[position].length}
                 active={(hoveredPosition===position || (!!selectedCard&&!drag)) && legal.includes(position)}
                 capacityValue={capacity(game.player,position)}
+                activeDuelNumber={activeDuelNumber}
                 onTap={()=>selectedIndex!==null && legal.includes(position) && playCard(selectedIndex,position)}
               />
             </div>
@@ -451,6 +524,44 @@ export default function App() {
             {hand.length===0 && <div className="empty-hand">Sin cartas disponibles.</div>}
           </div>
         </section>
+
+        {zoomedCard && (
+          <div
+            className="card-zoom-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-label={zoomedCard.name}
+            onClick={()=>setZoomedIndex(null)}
+          >
+            <div className="card-zoom-panel" onClick={event=>event.stopPropagation()}>
+              <button
+                className="zoom-close"
+                type="button"
+                aria-label="Cerrar carta"
+                onClick={()=>setZoomedIndex(null)}
+              >×</button>
+              <div className="zoom-card-frame">
+                <CardFace card={zoomedCard} />
+              </div>
+              <div className="zoom-actions">
+                <div>
+                  <strong>{zoomedCard.name}</strong>
+                  <span>Poder impreso {zoomedCard.power}</span>
+                </div>
+                {game.phase==="awaiting_player" && zoomedIndex!==null && (
+                  <button
+                    className="primary-button"
+                    type="button"
+                    onClick={()=>{
+                      setSelectedIndex(zoomedIndex);
+                      setZoomedIndex(null);
+                    }}
+                  >SELECCIONAR</button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {game.phase==="awaiting_quiero" && (
           <div className="decision-overlay">
