@@ -205,7 +205,7 @@ function Slot({
   archive,
   active,
   capacityValue,
-  activeDuelNumber,
+  activePlay,
   onTap
 }: {
   side: "player" | "opponent";
@@ -215,7 +215,7 @@ function Slot({
   archive: number;
   active: boolean;
   capacityValue: number;
-  activeDuelNumber: number | null;
+  activePlay: EnginePlay | null;
   onTap?: () => void;
 }) {
   return (
@@ -236,7 +236,12 @@ function Slot({
               <div className="played-card" key={played.card.id + index}>
                 <BattleCard
                   played={played}
-                  active={activeDuelNumber === index + 1}
+                  active={
+                    !!activePlay &&
+                    played.position === activePlay.position &&
+                    played.card.id === activePlay.card.id &&
+                    index === cards.length - 1
+                  }
                 />
               </div>
             ))}
@@ -407,11 +412,11 @@ export default function App() {
 
   const legal=game.phase==="awaiting_player" ? legalPositions(game.player) : [];
   const pendingOpponent=game.pendingOpponentPlay;
-  const activeDuelNumber = pendingOpponent
-    ? game.turn
-    : game.lastDuel?.turn === game.turn
-      ? game.turn
-      : null;
+  const activePlayerPlay =
+    game.lastDuel?.turn === game.turn ? game.lastDuel.playerPlay : null;
+  const activeOpponentPlay =
+    pendingOpponent ??
+    (game.lastDuel?.turn === game.turn ? game.lastDuel.opponentPlay : null);
   const zoomedCard = zoomedIndex===null ? null : hand[zoomedIndex] ?? null;
   const latestEvent=game.events.at(-1)?.text ?? "";
   const turnText=game.phase==="awaiting_quiero"
@@ -461,7 +466,7 @@ export default function App() {
                 archive={game.opponent.archives[position].length}
                 active={false}
                 capacityValue={capacity(game.opponent,position)}
-                activeDuelNumber={activeDuelNumber}
+                activePlay={activePlayerPlay}
               />
 
               <div className="lane-axis">
@@ -476,7 +481,7 @@ export default function App() {
                 archive={game.player.archives[position].length}
                 active={(hoveredPosition===position || (!!selectedCard&&!drag)) && legal.includes(position)}
                 capacityValue={capacity(game.player,position)}
-                activeDuelNumber={activeDuelNumber}
+                activePlay={activeOpponentPlay}
                 onTap={()=>selectedIndex!==null && legal.includes(position) && playCard(selectedIndex,position)}
               />
             </div>
