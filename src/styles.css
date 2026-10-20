@@ -260,3 +260,45 @@ button{font:inherit}
   .battlefield{padding-block:7px}
   .lane{grid-template-rows:minmax(90px,1fr) 25px minmax(90px,1fr)}
 }
+
+/* Card Studio-linked visual layer. Values come from the supplied project backup. */
+.game-card{--card-crown:#e10505;--card-divider:#d3b787;--card-rules:#fafafa;--card-title:#fafafa;--card-power:#fafafa}
+.game-card .card-power{color:var(--card-power)}
+.game-card .faction-mark{background:var(--card-crown)}
+.game-card .card-copy strong{color:var(--card-title)}
+.game-card .card-copy strong:after{background:var(--card-divider)}
+.game-card .card-copy p{color:var(--card-rules);font-style:italic}
+.game-card .card-footer{
+  position:absolute;z-index:4;left:7px;right:7px;bottom:3px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:5.5px;color:#eeece7;letter-spacing:.015em
+}
+.game-card .card-footer i{font-style:normal}
+.game-card .card-copy{bottom:13px}
+.game-card.compact .card-footer{display:none}
+.game-card.compact .card-copy{bottom:5px}
+.game-card.blue .card-art.no-art{
+  background:
+    radial-gradient(circle at 42% 34%,rgba(130,116,197,.18),transparent 28%),
+    repeating-linear-gradient(158deg,rgba(130,116,197,.09) 0 2px,transparent 2px 17px),
+    #090b10;
+}
+.game-card.white .card-art.no-art{
+  background:
+    radial-gradient(circle at 53% 30%,rgba(231,229,221,.17),transparent 30%),
+    repeating-linear-gradient(24deg,rgba(231,229,221,.055) 0 1px,transparent 1px 14px),
+    #0b0c0e;
+}
+.game-card.saints .card-art.no-art{
+  background:
+    radial-gradient(circle at 50% 42%,rgba(213,184,97,.16),transparent 29%),
+    linear-gradient(135deg,rgba(213,184,97,.05),transparent 45%),
+    #090a0c;
+}
+.game-card .card-art.no-art:after{
+  content:"";
+  position:absolute;inset:12%;
+  border:1px solid rgba(255,255,255,.025);
+  border-radius:50%;
+  box-shadow:0 0 50px rgba(255,255,255,.02) inset;
+}
