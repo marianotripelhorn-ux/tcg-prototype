@@ -466,7 +466,7 @@ export default function App() {
                 archive={game.opponent.archives[position].length}
                 active={false}
                 capacityValue={capacity(game.opponent,position)}
-                activePlay={activePlayerPlay}
+                activePlay={activeOpponentPlay}
               />
 
               <div className="lane-axis">
@@ -481,7 +481,7 @@ export default function App() {
                 archive={game.player.archives[position].length}
                 active={(hoveredPosition===position || (!!selectedCard&&!drag)) && legal.includes(position)}
                 capacityValue={capacity(game.player,position)}
-                activePlay={activeOpponentPlay}
+                activePlay={activePlayerPlay}
                 onTap={()=>selectedIndex!==null && legal.includes(position) && playCard(selectedIndex,position)}
               />
             </div>
