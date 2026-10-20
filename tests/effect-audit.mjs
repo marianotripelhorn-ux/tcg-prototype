@@ -106,7 +106,12 @@ const guards = [
   ["Majestad no post-win +1", !zones.resolve.includes('addBuff(state.player,1,"Majestad Dextral")')],
   ["Samas post-draw buff", zones.resolve.includes('champion.id==="samas"')],
   ["Corte post-loss debuff", zones.resolve.includes('champion.id==="sinistral"')],
-  ["Empíreos end-round trigger", zones.endRound.includes('champion.id==="empireos"')]
+  ["Empíreos end-round trigger", zones.endRound.includes('champion.id==="empireos"')],
+  ["Empíreos +2 survives round reset",
+    zones.endRound.includes("playerEmpireanNext") &&
+    zones.endRound.indexOf("drawRoundHands();") >= 0 &&
+    zones.endRound.indexOf("if(playerEmpireanNext)state.player.empireanBuff=2;") > zones.endRound.indexOf("drawRoundHands();")
+  ]
 ];
 for (const [name, ok] of guards) if (!ok) errors.push(`Regression guard failed: ${name}`);
 
