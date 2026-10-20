@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { byId, positionLabels, positions } from "./data";
+import { studioThemes } from "./cardStudio";
 import type { CardDefinition, PlayedCard, Position } from "./types";
 
 type BoardState = Record<Position, PlayedCard[]>;
@@ -30,8 +31,8 @@ const initialOpponent: BoardState = {
 const archivePlayer: Record<Position, number> = { siniestra: 2, trono: 1, diestra: 3 };
 const archiveOpponent: Record<Position, number> = { siniestra: 1, trono: 2, diestra: 2 };
 
-function FactionMark() {
-  return <span className="faction-mark" aria-label="Guardia Dextral" />;
+function FactionMark({ card }: { card: CardDefinition }) {
+  return <span className="faction-mark" aria-label={card.faction} />;
 }
 
 function TraitMark({ trait }: { trait?: string }) {
@@ -56,6 +57,7 @@ function CardFace({
   selected?: boolean;
   ghost?: boolean;
 }) {
+  const theme = studioThemes[card.faction];
   const artStyle: CSSProperties | undefined = card.art
     ? {
         backgroundImage: `url("${card.art.sprite}")`,
@@ -63,31 +65,38 @@ function CardFace({
         backgroundPosition: `${card.art.column * 50}% ${card.art.row * 100}%`
       }
     : undefined;
+  const themeStyle = {
+    "--card-crown": theme.crown,
+    "--card-divider": theme.divider,
+    "--card-rules": theme.rules,
+    "--card-title": theme.title,
+    "--card-power": theme.power
+  } as CSSProperties;
 
   return (
     <article
       className={[
         "game-card",
+        card.faction,
         compact ? "compact" : "",
         selected ? "selected" : "",
         ghost ? "ghost" : ""
       ].filter(Boolean).join(" ")}
+      style={themeStyle}
       aria-label={card.name}
     >
-      <div className="card-art" style={artStyle} />
+      <div className={`card-art ${card.art ? "" : "no-art"}`} style={artStyle} />
       <div className="card-shade" />
       <div className="card-power">{finalPower ?? card.power}</div>
       <div className="card-symbols">
-        <FactionMark />
+        <FactionMark card={card} />
         <TraitMark trait={card.trait} />
       </div>
       <div className="card-copy">
         <strong>{card.name}</strong>
         {!compact && <p>{card.text}</p>}
       </div>
-      {!compact && card.affinity && (
-        <span className="affinity-line">{positionLabels[card.affinity]}</span>
-      )}
+      {!compact && <span className="card-footer"><i>{card.studioId}</i><i>MT 2026</i></span>}
     </article>
   );
 }
