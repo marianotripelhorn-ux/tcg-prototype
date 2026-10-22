@@ -1,7 +1,7 @@
 import { positionLabels } from "../data";
 import type { DuelResult, Position } from "../types";
 import { aiWantsQuiero, chooseAIPlay } from "./ai";
-import { affinityActive, calculateDuel, legalPositions } from "./rules";
+import { affinityActive, calculateDuel, legalPositions, previewOpeningPower } from "./rules";
 import { createGame, resetRoundPlayer } from "./state";
 import type { EnginePlay, GameState, PlayerState, Side } from "./types";
 
@@ -65,9 +65,14 @@ function beginDuel(state: GameState, rng:()=>number) {
   if (state.initiative === "opponent") {
     const choice = chooseAIPlay(state,null,true,rng);
     const [card] = state.opponent.hand.splice(choice.handIndex!,1);
-    state.pendingOpponentPlay = {...choice,card};
+    const staged: EnginePlay = {...choice,card};
+    const preview = previewOpeningPower(state,staged,state.opponent,state.player);
+    staged.finalPower = preview.power;
+    staged.powerExact = preview.exact;
+    staged.notes = preview.notes;
+    state.pendingOpponentPlay = staged;
     state.events.push({
-      text:`La IA abre con ${card.name} en ${positionLabels[choice.position]}.`,
+      text:`La IA abre con ${card.name} en ${positionLabels[choice.position]}${preview.exact?` · Poder ${preview.power}`:" · Poder pendiente"}.`,
       kind:"info"
     });
   }
