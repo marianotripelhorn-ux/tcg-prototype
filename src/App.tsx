@@ -257,6 +257,7 @@ function Slot({
   onTap?: () => void;
   onInspect: (played:EnginePlay)=>void;
 }) {
+  const focusAlreadyInCards = !!focusPlay && cards.some(played=>samePlay(played,focusPlay));
   return (
     <div
       className={`board-slot ${side} ${active ? "drop-active" : ""}`}
@@ -267,7 +268,7 @@ function Slot({
       <span className="archive-count" title="Archivo">{archive}</span>
       <span className="slot-capacity" title="Capacidad">{cards.length}/{capacityValue}</span>
       <div className="slot-stack">
-        {cards.length === 0 && !pendingCard ? (
+        {cards.length === 0 && !pendingCard && !focusPlay ? (
           <div className="slot-empty" />
         ) : (
           <>
@@ -280,12 +281,12 @@ function Slot({
                 )}
               </div>
             ))}
-            {pendingCard && !samePlay(pendingCard,focusPlay) && (
-              <div className="played-card pending-play">
-                <CurrentBoardCard played={pendingCard} onInspect={onInspect} pending />
+            {focusPlay && !focusAlreadyInCards && (
+              <div className="played-card current-play">
+                <CurrentBoardCard played={focusPlay} onInspect={onInspect} pending={!!pendingCard} />
               </div>
             )}
-            {pendingCard && samePlay(pendingCard,focusPlay) && cards.length===0 && (
+            {pendingCard && !samePlay(pendingCard,focusPlay) && (
               <div className="played-card pending-play">
                 <CurrentBoardCard played={pendingCard} onInspect={onInspect} pending />
               </div>
