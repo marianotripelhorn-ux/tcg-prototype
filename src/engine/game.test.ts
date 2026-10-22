@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { byId } from "../data";
 import { answerQuiero, startGame, submitPlayerPlay } from "./game";
+import { previewOpeningPower } from "./rules";
 
 const fixed = () => 0.314159;
 
@@ -38,6 +39,22 @@ describe("Daggerlight UI v2 engine lifecycle", () => {
     answerQuiero(game,true,fixed);
     expect(game.turn).toBe(3);
     expect(game.phase).toBe("awaiting_player");
+  });
+
+
+  it("shows exact opener Power when the value is already knowable", () => {
+    const game=startGame("dextral","athos",fixed,"player");
+    const play={card:byId("incendiario"),position:"trono" as const};
+    const preview=previewOpeningPower(game,play,game.opponent,game.player);
+    expect(preview.exact).toBe(true);
+    expect(preview.power).toBe(8);
+  });
+
+  it("marks opponent-dependent opener Power as unresolved", () => {
+    const game=startGame("dextral","sinistral",fixed,"player");
+    const play={card:byId("prodigio"),position:"siniestra" as const};
+    const preview=previewOpeningPower(game,play,game.opponent,game.player);
+    expect(preview.exact).toBe(false);
   });
 
   it("carries Señor de los Archivos +2 through the round reset", () => {
