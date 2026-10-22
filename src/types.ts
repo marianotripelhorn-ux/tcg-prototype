@@ -23,6 +23,7 @@ export interface PlayedCard {
   card: CardDefinition;
   position?: Position;
   finalPower?: number;
+  powerExact?: boolean;
   notes?: string[];
 }
 
