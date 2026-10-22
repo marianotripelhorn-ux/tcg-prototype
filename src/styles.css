@@ -638,3 +638,119 @@ button{font:inherit}
   .zoom-card-frame{width:min(82vw,52vh)}
   .zoom-actions{grid-template-columns:1fr auto}
 }
+
+
+/* v0.9.1 active-duel presentation */
+.current-board-card{
+  display:block;
+  width:min(86px,72%);
+  aspect-ratio:649/914;
+  margin:0 auto;
+  padding:0;
+  border:0;
+  background:transparent;
+  cursor:pointer;
+  position:relative;
+  z-index:4;
+  filter:drop-shadow(0 8px 13px rgba(0,0,0,.48));
+}
+.current-board-card .game-card{
+  width:100%;
+  height:100%;
+}
+.current-board-card.pending{
+  animation:currentCardPulse 1.35s ease-in-out infinite;
+}
+@keyframes currentCardPulse{
+  50%{transform:translateY(-3px);filter:drop-shadow(0 12px 18px rgba(0,0,0,.55))}
+}
+
+.live-power-badge{
+  position:absolute;
+  z-index:12;
+  left:5px;
+  bottom:5px;
+  min-width:34px;
+  height:34px;
+  border-radius:9px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  background:rgba(7,8,10,.94);
+  border:1px solid rgba(255,255,255,.72);
+  color:#fff;
+  box-shadow:0 4px 10px rgba(0,0,0,.45);
+}
+.live-power-badge small{
+  font-size:5px;
+  letter-spacing:.08em;
+  line-height:1;
+  color:#a8abb3;
+  font-weight:900;
+}
+.live-power-badge b{
+  font-size:18px;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.live-power-badge.uncertain{
+  border-color:#e0bf69;
+}
+.live-power-badge.uncertain b{color:#e0bf69}
+
+/* Once a duel is over, the compact entry is intentionally historical. */
+.battle-card{
+  appearance:none;
+  text-align:left;
+  cursor:pointer;
+  filter:grayscale(1) brightness(.68);
+  opacity:.72;
+}
+.battle-card:hover,
+.battle-card:focus-visible{
+  opacity:.9;
+  filter:grayscale(.65) brightness(.78);
+}
+.battle-art-source{
+  background-repeat:no-repeat;
+  background-color:#17191e;
+}
+
+/* Inspection is deliberately smaller than the previous near-fullscreen modal. */
+.card-zoom-overlay{
+  background:rgba(3,4,6,.64);
+  backdrop-filter:blur(7px);
+}
+.card-zoom-panel{
+  width:min(62vw,330px);
+  max-height:82dvh;
+  gap:9px;
+}
+.zoom-card-frame{
+  width:min(56vw,285px,52vh);
+}
+.zoom-close{
+  right:-8px;
+  top:-8px;
+  width:32px;
+  height:32px;
+  font-size:20px;
+}
+.zoom-actions{
+  width:min(100%,300px);
+  padding:8px 9px;
+}
+.zoom-actions strong{font-size:11px}
+.zoom-actions span{font-size:9px}
+
+@media(min-width:700px){
+  .current-board-card{width:min(102px,58%)}
+  .zoom-card-frame{width:min(30vw,300px,56vh)}
+  .card-zoom-panel{width:min(36vw,350px)}
+}
+@media(max-width:520px){
+  .current-board-card{width:min(80px,74%)}
+  .card-zoom-panel{width:min(66vw,280px)}
+  .zoom-card-frame{width:min(60vw,245px,50vh)}
+}
