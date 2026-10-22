@@ -64,7 +64,7 @@ function intrinsicPower(
   play: EnginePlay,
   self: PlayerState,
   opponent: PlayerState,
-  opponentPlay: EnginePlay,
+  opponentPlay: EnginePlay | null,
   affinity: boolean,
   notes: string[]
 ) {
@@ -108,9 +108,9 @@ function intrinsicPower(
     power += 3; notes.push("+3 tras Diestra");
   } else if (card.effect === "second_special3" && affinity && countPosition(self, "diestra") > 0) {
     power += 3; notes.push("+3 segunda Diestra");
-  } else if (card.effect === "enemy_printed6_2" && affinity && opponentPlay.card.power >= 6) {
+  } else if (card.effect === "enemy_printed6_2" && affinity && opponentPlay && opponentPlay.card.power >= 6) {
     power += 2; notes.push("+2 rival con Poder impreso 6+");
-  } else if (card.effect === "copy_plus2" && affinity) {
+  } else if (card.effect === "copy_plus2" && affinity && opponentPlay) {
     power = opponentPlay.card.power + 2 + self.nextBuff +
       (self.nextPositionBoost && affinity ? self.nextPositionBoost : 0) +
       (self.nextPositionSpecificBoost && play.position === self.nextPositionSpecificBoost.position ? self.nextPositionSpecificBoost.amount : 0) -
@@ -153,13 +153,13 @@ function intrinsicPower(
     power += 2; notes.push("+2 lateral previa");
   } else if (card.effect === "opposite_prev3" && self.roundPlays.length && isOppositeLateral(self.roundPlays.at(-1)!.position, play.position)) {
     power += 3; notes.push("+3 posición opuesta");
-  } else if (card.effect === "opposite_enemy2" && isOppositeLateral(opponentPlay.position, play.position)) {
+  } else if (card.effect === "opposite_enemy2" && opponentPlay && isOppositeLateral(opponentPlay.position, play.position)) {
     power += 2; notes.push("+2 posición rival opuesta");
   } else if (card.effect === "first_round3" && !self.roundPlays.length) {
     power += 3; notes.push("+3 primera carta de la ronda");
   } else if (card.effect === "winning_round2") {
     const [own, rival] = ownScore(state, self); if (own > rival) { power += 2; notes.push("+2 vas ganando"); }
-  } else if (card.effect === "enemy_affinity2" && affinity && !!opponentPlay.card.affinity) {
+  } else if (card.effect === "enemy_affinity2" && affinity && !!opponentPlay?.card.affinity) {
     power += 2; notes.push("+2 rival con habilidad de posición");
   } else if (card.effect === "prev_draw3" && self.duelResults.at(-1) === "draw") {
     power += 3; notes.push("+3 empate anterior");
@@ -189,6 +189,25 @@ function intrinsicPower(
   }
 
   return power;
+}
+
+export function previewOpeningPower(
+  state: GameState,
+  play: EnginePlay,
+  self: PlayerState,
+  opponent: PlayerState
+) {
+  const affinity = affinityActive(self, play.card, play.position);
+  const notes = [`Base ${play.card.power}`];
+  const opponentDependent = new Set([
+    "enemy_printed6_2",
+    "copy_plus2",
+    "opposite_enemy2",
+    "enemy_affinity2"
+  ]).has(play.card.effect);
+  const power = intrinsicPower(state, play, self, opponent, null, affinity, notes);
+  const exact = !opponentDependent && !(self.champion.id === "santo_simetrico" && !self.saintPassiveUsed);
+  return { power, exact, notes };
 }
 
 export function calculateDuel(
