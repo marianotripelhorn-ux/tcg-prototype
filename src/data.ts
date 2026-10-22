@@ -17,6 +17,8 @@ export const factionLabels: Record<Faction, string> = {
 
 const r1 = "./cards/red/red-cards-1.webp?v=cardstudio-final-1";
 const r2 = "./cards/red/red-cards-2.webp?v=cardstudio-final-1";
+const b1 = "./cards/blue/blue-cards-1.webp?v=game-export-1";
+const b2 = "./cards/blue/blue-cards-2.webp?v=game-export-1";
 
 export const redCards: CardDefinition[] = [
   { id:"caballero_tigre", studioId:"DEX-001", name:"CABALLERO TIGRE", power:6, faction:"red", affinity:"diestra", text:"Diestra: si ganaste el duelo anterior, +2.", effect:"won_prev2", art:{sprite:r1,column:2,row:0} },
@@ -34,18 +36,18 @@ export const redCards: CardDefinition[] = [
 ];
 
 export const blueCards: CardDefinition[] = [
-  {id:"protector",studioId:"SIN-001",name:"PROTECTOR",power:5,faction:"blue",affinity:"trono",text:"Trono: si perdiste el duelo anterior, la carta rival pierde 3 Poder.",effect:"lost_prev_enemy3"},
-  {id:"asesino_sinistral",studioId:"SIN-002",name:"ASESINO SINISTRAL",power:4,faction:"blue",affinity:"siniestra",text:"Siniestra: la carta rival pierde 3 Poder.",effect:"enemy3"},
-  {id:"criatura_invocada",studioId:"SIN-003",name:"CRIATURA INVOCADA",power:6,faction:"blue",affinity:"siniestra",text:"Siniestra: si la carta rival tiene 6 o más Poder impreso, +2.",effect:"enemy_printed6_2"},
-  {id:"prodigio",studioId:"SIN-004",name:"PRODIGIO",power:3,faction:"blue",affinity:"siniestra",text:"Siniestra: su Poder es igual al Poder impreso rival +2.",effect:"copy_plus2"},
-  {id:"invocador",studioId:"SIN-005",name:"INVOCADOR",power:3,faction:"blue",affinity:"trono",text:"Trono: si tu próxima carta activa su habilidad de posición, obtiene +2 Poder.",effect:"next_position2"},
-  {id:"sabio",studioId:"SIN-006",name:"SABIO",power:4,faction:"blue",affinity:"trono",text:"Trono: la carta rival no activa su habilidad de posición este duelo.",effect:"cancel_enemy_affinity"},
-  {id:"caballero_luciernaga",studioId:"SIN-007",name:"CABALLERO LUCIÉRNAGA",power:6,faction:"blue",affinity:"siniestra",text:"Siniestra: si es tu tercera carta de la ronda, +4.",effect:"third4"},
-  {id:"archivista",studioId:"SIN-008",name:"ARCHIVISTA",power:5,faction:"blue",affinity:null,text:"+1 por cada carta en tu Archivo de la posición donde lo jugás.",effect:"archive_here"},
-  {id:"oraculo",studioId:"SIN-009",name:"ORÁCULO",power:4,faction:"blue",affinity:"siniestra",text:"Siniestra: la próxima carta rival tiene −3 Poder.",effect:"enemy_next3"},
-  {id:"desencantador",studioId:"SIN-010",name:"DESENCANTADOR",power:5,faction:"blue",affinity:"trono",text:"Trono: si la carta rival tiene más Poder que su Poder impreso, pierde 2 Poder.",effect:"enemy_boosted_minus2"},
-  {id:"lectora_gestos",studioId:"SIN-011",name:"LECTORA DE GESTOS",power:5,faction:"blue",affinity:"siniestra",text:"Siniestra: si la carta rival tiene habilidad de posición, +2 Poder.",effect:"enemy_affinity2"},
-  {id:"tejedor_sombras",studioId:"SIN-012",name:"TEJEDOR DE SOMBRAS",power:4,faction:"blue",affinity:"trono",text:"Trono: si el duelo anterior terminó en empate, la carta rival pierde 3 Poder.",effect:"prev_draw_enemy3"}
+  {id:"protector",studioId:"SIN-001",name:"PROTECTOR",power:5,faction:"blue",affinity:"trono",text:"Trono: si perdiste el duelo anterior, la carta rival pierde 3 Poder.",effect:"lost_prev_enemy3",art:{sprite:b1,column:0,row:0}},
+  {id:"asesino_sinistral",studioId:"SIN-002",name:"ASESINO SINISTRAL",power:4,faction:"blue",affinity:"siniestra",text:"Siniestra: la carta rival pierde 3 Poder.",effect:"enemy3",art:{sprite:b1,column:1,row:0}},
+  {id:"criatura_invocada",studioId:"SIN-003",name:"CRIATURA INVOCADA",power:6,faction:"blue",affinity:"siniestra",text:"Siniestra: si la carta rival tiene 6 o más Poder impreso, +2.",effect:"enemy_printed6_2",art:{sprite:b1,column:2,row:0}},
+  {id:"prodigio",studioId:"SIN-004",name:"PRODIGIO",power:3,faction:"blue",affinity:"siniestra",text:"Siniestra: su Poder es igual al Poder impreso rival +2.",effect:"copy_plus2",art:{sprite:b1,column:0,row:1}},
+  {id:"invocador",studioId:"SIN-005",name:"INVOCADOR",power:3,faction:"blue",affinity:"trono",text:"Trono: si tu próxima carta activa su habilidad de posición, obtiene +2 Poder.",effect:"next_position2",art:{sprite:b1,column:1,row:1}},
+  {id:"sabio",studioId:"SIN-006",name:"SABIO",power:4,faction:"blue",affinity:"trono",text:"Trono: la carta rival no activa su habilidad de posición este duelo.",effect:"cancel_enemy_affinity",art:{sprite:b1,column:2,row:1}},
+  {id:"caballero_luciernaga",studioId:"SIN-007",name:"CABALLERO LUCIÉRNAGA",power:6,faction:"blue",affinity:"siniestra",text:"Siniestra: si es tu tercera carta de la ronda, +4.",effect:"third4",art:{sprite:b2,column:0,row:0}},
+  {id:"archivista",studioId:"SIN-008",name:"ARCHIVISTA",power:5,faction:"blue",affinity:null,text:"+1 por cada carta en tu Archivo de la posición donde lo jugás.",effect:"archive_here",art:{sprite:b2,column:1,row:0}},
+  {id:"oraculo",studioId:"SIN-009",name:"ORÁCULO",power:4,faction:"blue",affinity:"siniestra",text:"Siniestra: la próxima carta rival tiene −3 Poder.",effect:"enemy_next3",art:{sprite:b2,column:2,row:0}},
+  {id:"desencantador",studioId:"SIN-010",name:"DESENCANTADOR",power:5,faction:"blue",affinity:"trono",text:"Trono: si la carta rival tiene más Poder que su Poder impreso, pierde 2 Poder.",effect:"enemy_boosted_minus2",art:{sprite:b2,column:0,row:1}},
+  {id:"lectora_gestos",studioId:"SIN-011",name:"LECTORA DE GESTOS",power:5,faction:"blue",affinity:"siniestra",text:"Siniestra: si la carta rival tiene habilidad de posición, +2 Poder.",effect:"enemy_affinity2",art:{sprite:b2,column:1,row:1}},
+  {id:"tejedor_sombras",studioId:"SIN-012",name:"TEJEDOR DE SOMBRAS",power:4,faction:"blue",affinity:"trono",text:"Trono: si el duelo anterior terminó en empate, la carta rival pierde 3 Poder.",effect:"prev_draw_enemy3",art:{sprite:b2,column:2,row:1}}
 ];
 
 export const whiteCards: CardDefinition[] = [
