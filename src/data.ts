@@ -17,8 +17,8 @@ export const factionLabels: Record<Faction, string> = {
 
 const r1 = "./cards/red/red-cards-1.webp?v=cardstudio-final-1";
 const r2 = "./cards/red/red-cards-2.webp?v=cardstudio-final-1";
-const b1 = "./cards/blue/blue-cards-1.webp?v=game-export-1";
-const b2 = "./cards/blue/blue-cards-2.webp?v=game-export-1";
+const b1 = "./cards/blue/blue-cards-1.jpg?v=png-source-1";
+const b2 = "./cards/blue/blue-cards-2.jpg?v=png-source-1";
 
 export const redCards: CardDefinition[] = [
   { id:"caballero_tigre", studioId:"DEX-001", name:"CABALLERO TIGRE", power:6, faction:"red", affinity:"diestra", text:"Diestra: si ganaste el duelo anterior, +2.", effect:"won_prev2", art:{sprite:r1,column:2,row:0} },
