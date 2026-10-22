@@ -1,11 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { positionLabels, positions } from "./data";
 import { studioThemes } from "./cardStudio";
 import { champions } from "./engine/champions";
 import { answerQuiero, cloneGame, startGame, submitPlayerPlay } from "./engine/game";
 import { capacity, legalPositions } from "./engine/rules";
-import type { EnginePlay, GameState } from "./engine/types";
+import type { DuelSummary, EnginePlay, GameState } from "./engine/types";
 import type { CardDefinition, Position } from "./types";
 
 type DragState = {
@@ -16,6 +16,14 @@ type DragState = {
   x: number;
   y: number;
   moved: boolean;
+};
+
+type Inspection = {
+  card: CardDefinition;
+  finalPower?: number;
+  powerExact?: boolean;
+  notes?: string[];
+  handIndex?: number;
 };
 
 function FactionMark({ card }: { card: CardDefinition }) {
@@ -31,29 +39,34 @@ function TraitMark({ trait }: { trait?: string }) {
   );
 }
 
+function cardSpriteStyle(card: CardDefinition): CSSProperties | undefined {
+  if (!card.art) return undefined;
+  return {
+    backgroundImage: `url("${card.art.sprite}")`,
+    backgroundSize: "300% 200%",
+    backgroundPosition: `${card.art.column * 50}% ${card.art.row * 100}%`
+  };
+}
+
 function CardFace({
   card,
   finalPower,
-  compact = false,
+  powerExact = true,
   selected = false,
   ghost = false,
-  pending = false
+  pending = false,
+  livePower = false
 }: {
   card: CardDefinition;
   finalPower?: number;
-  compact?: boolean;
+  powerExact?: boolean;
   selected?: boolean;
   ghost?: boolean;
   pending?: boolean;
+  livePower?: boolean;
 }) {
   const theme = studioThemes[card.faction];
-  const artStyle: CSSProperties | undefined = card.art
-    ? {
-        backgroundImage: `url("${card.art.sprite}")`,
-        backgroundSize: "300% 200%",
-        backgroundPosition: `${card.art.column * 50}% ${card.art.row * 100}%`
-      }
-    : undefined;
+  const artStyle = cardSpriteStyle(card);
   const themeStyle = {
     "--card-crown": theme.crown,
     "--card-divider": theme.divider,
@@ -62,14 +75,13 @@ function CardFace({
     "--card-power": theme.power
   } as CSSProperties;
 
-  if (card.faction === "red" && card.art) {
+  if (card.art) {
     return (
       <article
         className={[
           "game-card",
-          "red",
+          card.faction,
           "studio-card",
-          compact ? "compact" : "",
           selected ? "selected" : "",
           ghost ? "ghost" : "",
           pending ? "pending-card" : ""
@@ -78,8 +90,11 @@ function CardFace({
         aria-label={card.name}
       >
         <div className="studio-card-sprite" style={artStyle} />
-        {compact && finalPower !== undefined && (
-          <span className="board-final-power">{finalPower}</span>
+        {livePower && (
+          <span className={`live-power-badge ${powerExact ? "" : "uncertain"}`}>
+            <small>PODER</small>
+            <b>{powerExact ? (finalPower ?? card.power) : "?"}</b>
+          </span>
         )}
       </article>
     );
@@ -90,7 +105,6 @@ function CardFace({
       className={[
         "game-card",
         card.faction,
-        compact ? "compact" : "",
         selected ? "selected" : "",
         ghost ? "ghost" : "",
         pending ? "pending-card" : ""
@@ -98,61 +112,49 @@ function CardFace({
       style={themeStyle}
       aria-label={card.name}
     >
-      <div className={`card-art ${card.art ? "" : "no-art"}`} style={artStyle} />
+      <div className="card-art no-art" />
       <div className="card-shade" />
-      <div className="card-power">{finalPower ?? card.power}</div>
+      <div className="card-power">{powerExact ? (finalPower ?? card.power) : "?"}</div>
       <div className="card-symbols">
         <FactionMark card={card} />
         <TraitMark trait={card.trait} />
       </div>
       <div className="card-copy">
         <strong>{card.name}</strong>
-        {!compact && <p>{card.text}</p>}
+        <p>{card.text}</p>
       </div>
-      {!compact && <span className="card-footer"><i>{card.studioId}</i><i>MT 2026</i></span>}
+      <span className="card-footer"><i>{card.studioId}</i><i>MT 2026</i></span>
     </article>
   );
 }
 
 function BattleCard({
   played,
-  active = false,
-  pending = false
+  onInspect
 }: {
   played: EnginePlay;
-  active?: boolean;
-  pending?: boolean;
+  onInspect: (played:EnginePlay)=>void;
 }) {
   const { card } = played;
   const theme = studioThemes[card.faction];
   const finalPower = played.finalPower ?? card.power;
   const delta = finalPower - card.power;
-  const artStyle: CSSProperties | undefined = card.art
-    ? {
-        "--battle-sprite": `url("${card.art.sprite}")`,
-        "--battle-x": `${card.art.column * 50}%`,
-        "--battle-y": `${card.art.row * 100}%`,
-        "--card-crown": theme.crown
-      } as CSSProperties
-    : {
-        "--card-crown": theme.crown
-      } as CSSProperties;
+  const artStyle = cardSpriteStyle(card);
 
   return (
-    <article
-      className={[
-        "battle-card",
-        card.faction,
-        card.art ? "has-studio-art" : "placeholder-art",
-        active ? "is-current-duel" : "is-past-duel",
-        pending ? "is-pending" : ""
-      ].filter(Boolean).join(" ")}
-      style={artStyle}
-      aria-label={`${card.name}, Poder ${finalPower}`}
+    <button
+      type="button"
+      className={`battle-card ${card.faction} ${card.art ? "has-studio-art" : "placeholder-art"}`}
+      style={{"--card-crown":theme.crown} as CSSProperties}
+      aria-label={`Inspeccionar ${card.name}, Poder ${finalPower}`}
+      onClick={event=>{
+        event.stopPropagation();
+        onInspect(played);
+      }}
     >
       {card.art ? (
         <div className="battle-art-window">
-          <div className="battle-art-source" />
+          <div className="battle-art-source" style={artStyle} />
         </div>
       ) : (
         <div className="battle-art-window battle-art-placeholder" />
@@ -167,7 +169,37 @@ function BattleCard({
       </div>
       <div className="battle-name">{card.name}</div>
       <span className="battle-crown" />
-    </article>
+    </button>
+  );
+}
+
+function CurrentBoardCard({
+  played,
+  onInspect,
+  pending = false
+}: {
+  played: EnginePlay;
+  onInspect: (played:EnginePlay)=>void;
+  pending?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      className={`current-board-card ${pending ? "pending" : ""}`}
+      onClick={event=>{
+        event.stopPropagation();
+        onInspect(played);
+      }}
+      aria-label={`Inspeccionar ${played.card.name}`}
+    >
+      <CardFace
+        card={played.card}
+        finalPower={played.finalPower}
+        powerExact={played.powerExact !== false}
+        pending={pending}
+        livePower
+      />
+    </button>
   );
 }
 
@@ -197,26 +229,33 @@ function ChampionBar({
   );
 }
 
+function samePlay(a:EnginePlay|null|undefined,b:EnginePlay|null|undefined) {
+  if (!a || !b) return false;
+  return a.card.id===b.card.id && a.position===b.position;
+}
+
 function Slot({
   side,
   position,
   cards,
   pendingCard,
+  focusPlay,
   archive,
   active,
   capacityValue,
-  activePlay,
-  onTap
+  onTap,
+  onInspect
 }: {
   side: "player" | "opponent";
   position: Position;
   cards: EnginePlay[];
   pendingCard?: EnginePlay | null;
+  focusPlay?: EnginePlay | null;
   archive: number;
   active: boolean;
   capacityValue: number;
-  activePlay: EnginePlay | null;
   onTap?: () => void;
+  onInspect: (played:EnginePlay)=>void;
 }) {
   return (
     <div
@@ -232,22 +271,23 @@ function Slot({
           <div className="slot-empty" />
         ) : (
           <>
-            {cards.map((played, index) => (
-              <div className="played-card" key={played.card.id + index}>
-                <BattleCard
-                  played={played}
-                  active={
-                    !!activePlay &&
-                    played.position === activePlay.position &&
-                    played.card.id === activePlay.card.id &&
-                    index === cards.length - 1
-                  }
-                />
+            {cards.map((played,index)=>(
+              <div className="played-card" key={`${played.card.id}-${index}`}>
+                {samePlay(played,focusPlay) ? (
+                  <CurrentBoardCard played={played} onInspect={onInspect} />
+                ) : (
+                  <BattleCard played={played} onInspect={onInspect} />
+                )}
               </div>
             ))}
-            {pendingCard && (
+            {pendingCard && !samePlay(pendingCard,focusPlay) && (
               <div className="played-card pending-play">
-                <BattleCard played={pendingCard} active pending />
+                <CurrentBoardCard played={pendingCard} onInspect={onInspect} pending />
+              </div>
+            )}
+            {pendingCard && samePlay(pendingCard,focusPlay) && cards.length===0 && (
+              <div className="played-card pending-play">
+                <CurrentBoardCard played={pendingCard} onInspect={onInspect} pending />
               </div>
             )}
           </>
@@ -294,7 +334,7 @@ function Setup({
         </label>
 
         <button className="primary-button" type="button" onClick={onStart}>JUGAR</button>
-        <small>Azul, Empíreos y Santos usan cartas temporales sin arte.</small>
+        <small>Majestad Dextral y Corte Sinistral usan sus diseños ilustrados. Empíreos y Santos siguen con cartas temporales.</small>
       </section>
     </main>
   );
@@ -306,7 +346,9 @@ export default function App() {
   const [opponentChampion,setOpponentChampion]=useState("random");
   const [game,setGame]=useState<GameState|null>(null);
   const [selectedIndex,setSelectedIndex]=useState<number|null>(null);
-  const [zoomedIndex,setZoomedIndex]=useState<number|null>(null);
+  const [inspection,setInspection]=useState<Inspection|null>(null);
+  const [duelPreview,setDuelPreview]=useState<DuelSummary|null>(null);
+  const previewTimer=useRef<number|null>(null);
   const [drag,setDrag]=useState<DragState|null>(null);
   const [hoveredPosition,setHoveredPosition]=useState<Position|null>(null);
 
@@ -316,27 +358,47 @@ export default function App() {
     [hand,selectedIndex]
   );
 
+  function clearPreviewTimer() {
+    if (previewTimer.current!==null) {
+      window.clearTimeout(previewTimer.current);
+      previewTimer.current=null;
+    }
+  }
+
   function beginMatch() {
+    clearPreviewTimer();
     const opponent = opponentChampion==="random"
       ? championIds.filter(id=>id!==playerChampion)[Math.floor(Math.random()*(championIds.length-1))]
       : opponentChampion;
     setGame(startGame(playerChampion,opponent));
     setSelectedIndex(null);
-    setZoomedIndex(null);
+    setInspection(null);
+    setDuelPreview(null);
     setDrag(null);
     setHoveredPosition(null);
   }
 
+  function showResolvedDuel(duel:DuelSummary|null) {
+    clearPreviewTimer();
+    if (!duel) return;
+    setDuelPreview(duel);
+    previewTimer.current=window.setTimeout(()=>{
+      setDuelPreview(null);
+      previewTimer.current=null;
+    },950);
+  }
+
   function playCard(handIndex:number, position:Position) {
-    if (!game || game.phase!=="awaiting_player") return;
+    if (!game || game.phase!=="awaiting_player" || duelPreview) return;
     if (!legalPositions(game.player).includes(position)) return;
     const next=cloneGame(game);
     submitPlayerPlay(next,handIndex,position);
     setGame(next);
     setSelectedIndex(null);
-    setZoomedIndex(null);
+    setInspection(null);
     setHoveredPosition(null);
     setDrag(null);
+    showResolvedDuel(next.lastDuel);
   }
 
   function chooseQuiero(wants:boolean) {
@@ -347,8 +409,17 @@ export default function App() {
     setSelectedIndex(null);
   }
 
+  function inspectPlay(played:EnginePlay) {
+    setInspection({
+      card:played.card,
+      finalPower:played.finalPower,
+      powerExact:played.powerExact,
+      notes:played.notes
+    });
+  }
+
   function zoneAt(x:number,y:number):Position|null {
-    if (!game || game.phase!=="awaiting_player") return null;
+    if (!game || game.phase!=="awaiting_player" || duelPreview) return null;
     const element=document.elementFromPoint(x,y);
     const zone=element?.closest<HTMLElement>('[data-side="player"][data-position]');
     const position=(zone?.dataset.position as Position|undefined) ?? null;
@@ -356,7 +427,7 @@ export default function App() {
   }
 
   function handlePointerDown(event:ReactPointerEvent<HTMLButtonElement>, handIndex:number) {
-    if (!game || game.phase!=="awaiting_player") return;
+    if (!game || game.phase!=="awaiting_player" || duelPreview) return;
     event.currentTarget.setPointerCapture(event.pointerId);
     setDrag({
       handIndex,
@@ -389,7 +460,8 @@ export default function App() {
     if (destination) {
       playCard(current.handIndex,destination);
     } else if (!current.moved) {
-      setZoomedIndex(current.handIndex);
+      const card=hand[current.handIndex];
+      if (card) setInspection({card,handIndex:current.handIndex,powerExact:true});
     }
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
@@ -410,20 +482,18 @@ export default function App() {
     );
   }
 
-  const legal=game.phase==="awaiting_player" ? legalPositions(game.player) : [];
-  const pendingOpponent=game.pendingOpponentPlay;
-  const activePlayerPlay =
-    game.lastDuel?.turn === game.turn ? game.lastDuel.playerPlay : null;
-  const activeOpponentPlay =
-    pendingOpponent ??
-    (game.lastDuel?.turn === game.turn ? game.lastDuel.opponentPlay : null);
-  const zoomedCard = zoomedIndex===null ? null : hand[zoomedIndex] ?? null;
+  const legal=game.phase==="awaiting_player" && !duelPreview ? legalPositions(game.player) : [];
+  const pendingOpponent=duelPreview ? null : game.pendingOpponentPlay;
+  const focusPlayer=duelPreview?.playerPlay ?? null;
+  const focusOpponent=duelPreview?.opponentPlay ?? pendingOpponent;
   const latestEvent=game.events.at(-1)?.text ?? "";
-  const turnText=game.phase==="awaiting_quiero"
-    ? "DECISIÓN DE RONDA"
-    : game.phase==="finished"
-      ? "PARTIDA TERMINADA"
-      : `DUELO ${game.turn} · ${game.initiative==="player"?"VOS ABRÍS":"IA ABRE"}`;
+  const turnText=duelPreview
+    ? `DUELO ${duelPreview.turn} · RESOLVIENDO`
+    : game.phase==="awaiting_quiero"
+      ? "DECISIÓN DE RONDA"
+      : game.phase==="finished"
+        ? "PARTIDA TERMINADA"
+        : `DUELO ${game.turn} · ${game.initiative==="player"?"VOS ABRÍS":"IA ABRE"}`;
 
   return (
     <main className="app-shell">
@@ -451,7 +521,10 @@ export default function App() {
             className="utility-button"
             type="button"
             aria-label="Nueva partida"
-            onClick={()=>setGame(null)}
+            onClick={()=>{
+              clearPreviewTimer();
+              setGame(null);
+            }}
           >×</button>
         </section>
 
@@ -463,10 +536,11 @@ export default function App() {
                 position={position}
                 cards={game.opponent.roundPlays.filter(play=>play.position===position)}
                 pendingCard={pendingOpponent?.position===position ? pendingOpponent : null}
+                focusPlay={focusOpponent?.position===position ? focusOpponent : null}
                 archive={game.opponent.archives[position].length}
                 active={false}
                 capacityValue={capacity(game.opponent,position)}
-                activePlay={activeOpponentPlay}
+                onInspect={inspectPlay}
               />
 
               <div className="lane-axis">
@@ -478,21 +552,22 @@ export default function App() {
                 side="player"
                 position={position}
                 cards={game.player.roundPlays.filter(play=>play.position===position)}
+                focusPlay={focusPlayer?.position===position ? focusPlayer : null}
                 archive={game.player.archives[position].length}
                 active={(hoveredPosition===position || (!!selectedCard&&!drag)) && legal.includes(position)}
                 capacityValue={capacity(game.player,position)}
-                activePlay={activePlayerPlay}
                 onTap={()=>selectedIndex!==null && legal.includes(position) && playCard(selectedIndex,position)}
+                onInspect={inspectPlay}
               />
             </div>
           ))}
         </section>
 
         <div className="action-line" role="status">
-          {game.lastDuel
-            ? `${latestEvent}`
+          {duelPreview
+            ? `Duelo ${duelPreview.turn}: ${duelPreview.playerPlay.card.name} ${duelPreview.playerPlay.finalPower ?? duelPreview.playerPlay.card.power} — ${duelPreview.opponentPlay.finalPower ?? duelPreview.opponentPlay.card.power} ${duelPreview.opponentPlay.card.name}`
             : pendingOpponent
-              ? `IA jugó ${pendingOpponent.card.name} en ${positionLabels[pendingOpponent.position]}. Respondé.`
+              ? `IA jugó ${pendingOpponent.card.name} en ${positionLabels[pendingOpponent.position]} · Poder ${pendingOpponent.powerExact===false?"?":pendingOpponent.finalPower ?? pendingOpponent.card.power}. Respondé.`
               : latestEvent}
         </div>
 
@@ -514,7 +589,7 @@ export default function App() {
                 className={`hand-card ${selectedIndex===index?"is-selected":""}`}
                 type="button"
                 key={`${card.id}-${index}`}
-                disabled={game.phase!=="awaiting_player"}
+                disabled={game.phase!=="awaiting_player" || !!duelPreview}
                 onPointerDown={event=>handlePointerDown(event,index)}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
@@ -530,36 +605,48 @@ export default function App() {
           </div>
         </section>
 
-        {zoomedCard && (
+        {inspection && (
           <div
             className="card-zoom-overlay"
             role="dialog"
             aria-modal="true"
-            aria-label={zoomedCard.name}
-            onClick={()=>setZoomedIndex(null)}
+            aria-label={inspection.card.name}
+            onClick={()=>setInspection(null)}
           >
             <div className="card-zoom-panel" onClick={event=>event.stopPropagation()}>
               <button
                 className="zoom-close"
                 type="button"
                 aria-label="Cerrar carta"
-                onClick={()=>setZoomedIndex(null)}
+                onClick={()=>setInspection(null)}
               >×</button>
               <div className="zoom-card-frame">
-                <CardFace card={zoomedCard} />
+                <CardFace
+                  card={inspection.card}
+                  finalPower={inspection.finalPower}
+                  powerExact={inspection.powerExact!==false}
+                  livePower={inspection.finalPower!==undefined || inspection.powerExact===false}
+                />
               </div>
               <div className="zoom-actions">
                 <div>
-                  <strong>{zoomedCard.name}</strong>
-                  <span>Poder impreso {zoomedCard.power}</span>
+                  <strong>{inspection.card.name}</strong>
+                  <span>
+                    Poder impreso {inspection.card.power}
+                    {inspection.powerExact===false
+                      ? " · Poder final pendiente"
+                      : inspection.finalPower!==undefined
+                        ? ` · Poder final ${inspection.finalPower}`
+                        : ""}
+                  </span>
                 </div>
-                {game.phase==="awaiting_player" && zoomedIndex!==null && (
+                {game.phase==="awaiting_player" && inspection.handIndex!==undefined && !duelPreview && (
                   <button
                     className="primary-button"
                     type="button"
                     onClick={()=>{
-                      setSelectedIndex(zoomedIndex);
-                      setZoomedIndex(null);
+                      setSelectedIndex(inspection.handIndex!);
+                      setInspection(null);
                     }}
                   >SELECCIONAR</button>
                 )}
@@ -568,7 +655,7 @@ export default function App() {
           </div>
         )}
 
-        {game.phase==="awaiting_quiero" && (
+        {game.phase==="awaiting_quiero" && !duelPreview && (
           <div className="decision-overlay">
             <div className="decision-card">
               <span>VAS 0–2</span>
@@ -582,7 +669,7 @@ export default function App() {
           </div>
         )}
 
-        {game.phase==="finished" && (
+        {game.phase==="finished" && !duelPreview && (
           <div className="decision-overlay">
             <div className="decision-card result-card">
               <span>RESULTADO</span>
