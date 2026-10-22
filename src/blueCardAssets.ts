@@ -1,0 +1,22 @@
+import b100 from "./assets/blue/b1_00.txt?raw";
+import b101 from "./assets/blue/b1_01.txt?raw";
+import b102 from "./assets/blue/b1_02.txt?raw";
+import b103 from "./assets/blue/b1_03.txt?raw";
+import b104 from "./assets/blue/b1_04.txt?raw";
+import b105 from "./assets/blue/b1_05.txt?raw";
+import b106 from "./assets/blue/b1_06.txt?raw";
+import b107 from "./assets/blue/b1_07.txt?raw";
+import b108 from "./assets/blue/b1_08.txt?raw";
+import b200 from "./assets/blue/b2_00.txt?raw";
+import b201 from "./assets/blue/b2_01.txt?raw";
+import b202 from "./assets/blue/b2_02.txt?raw";
+import b203 from "./assets/blue/b2_03.txt?raw";
+import b204 from "./assets/blue/b2_04.txt?raw";
+import b205 from "./assets/blue/b2_05.txt?raw";
+import b206 from "./assets/blue/b2_06.txt?raw";
+import b207 from "./assets/blue/b2_07.txt?raw";
+import b208 from "./assets/blue/b2_08.txt?raw";
+import b209 from "./assets/blue/b2_09.txt?raw";
+
+export const blueCardSprite1 = "data:image/jpeg;base64," + b100 + b101 + b102 + b103 + b104 + b105 + b106 + b107 + b108;
+export const blueCardSprite2 = "data:image/jpeg;base64," + b200 + b201 + b202 + b203 + b204 + b205 + b206 + b207 + b208 + b209;
