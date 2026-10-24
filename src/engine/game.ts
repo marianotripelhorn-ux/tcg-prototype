@@ -21,7 +21,7 @@ function scoreFor(state: GameState, player: PlayerState): [number,number] {
     : [state.duelScore.opponent,state.duelScore.player];
 }
 
-function applyPost(
+export function applyPost(
   state: GameState,
   self: PlayerState,
   play: EnginePlay,
