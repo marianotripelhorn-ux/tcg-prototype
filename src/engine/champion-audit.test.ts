@@ -26,7 +26,7 @@ function controlled(
   state.duelScore={player:0,opponent:0};
   state.initiative="opponent";
   state.player.hand=[byId(playerId)];
-  state.opponent.hand=[];
+  state.opponent.hand=[byId("mensajero"),byId("mensajero"),byId("mensajero")];
   state.player.roundPlays=[];
   state.opponent.roundPlays=[];
   state.player.duelResults=[];
