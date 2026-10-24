@@ -150,7 +150,7 @@ describe("Daggerlight v2 complete effect audit", () => {
   });
 
   describe("Majestad Dextral", () => {
-    directCase("bonus2", "invocadagas","diestra",7,undefined,5,s=>{ s.player.roundPlays=[]; });
+    directCase("bonus2", "invocadagas","diestra",7);
     it("bonus2 requires Diestra affinity", () => {
       const state=fresh();
       const p=play("invocadagas","trono");
