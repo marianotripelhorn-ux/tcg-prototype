@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "audit": "node tests/effect-audit.mjs && node tests/effect-scenarios.mjs",
+    "audit": "vitest run src/engine/effect-audit.test.ts src/engine/champion-audit.test.ts src/engine/core-rules-audit.test.ts",
     "test": "vitest run"
   },
   "dependencies": {
