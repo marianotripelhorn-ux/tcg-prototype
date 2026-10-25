@@ -115,13 +115,14 @@ function intrinsicPower(
   } else if (card.effect === "enemy_printed6_2" && affinity && opponentPlay && opponentPlay.card.power >= 6) {
     power += 2; notes.push("+2 rival con Poder impreso 6+");
   } else if (card.effect === "copy_plus2" && affinity && opponentPlay) {
-    power = opponentPlay.card.power + 2 + self.nextBuff +
+    power = opponentPlay.card.power + 2 + self.nextBuff + self.auguryBuff +
       (self.nextPositionBoost && affinity ? self.nextPositionBoost : 0) +
       (self.nextPositionSpecificBoost && play.position === self.nextPositionSpecificBoost.position ? self.nextPositionSpecificBoost.amount : 0) -
       self.incomingDebuff;
     notes.length = 0;
     notes.push(`Poder impreso rival ${opponentPlay.card.power}`, "+2 Prodigio");
     if (self.nextBuff) notes.push(...self.nextBuffNotes);
+    if (self.auguryBuff) notes.push(`+${self.auguryBuff} Augurio`);
     if (self.nextPositionBoost && affinity) notes.push(`+${self.nextPositionBoost} Invocador`);
     if (self.nextPositionSpecificBoost && play.position === self.nextPositionSpecificBoost.position) {
       notes.push(`+${self.nextPositionSpecificBoost.amount} ${self.nextPositionSpecificBoost.source}`);
