@@ -58,13 +58,13 @@ Status legend: **AUTO** = structurally checked on every deploy. **SCENARIO** = s
 
 | `last_augury_hit2` | Caballero de Marfil | direct | Preview · AI · Resolve | AUTO | Covered |
 | `lower_life2` | Sanadora | direct | Preview · AI · Resolve | AUTO | Covered |
-| `augury_same_position` | Luna Creciente | augury | Observe · Match · Queue +2 | AUTO | Covered |
-| `augury_printed6` | Reveladora | augury | Observe · Match · Queue +2 | AUTO | Covered |
-| `augury_trono` | Iniciada | augury | Observe · Match · Queue +2 | AUTO | Covered |
-| `augury_opposite_lateral` | Luna Nueva | augury | Observe · Match · Queue +2 | AUTO | Covered |
+| `augury_same_position` | Luna Creciente | augury | Observe · Match · Queue +3/+1 | AUTO | Covered |
+| `augury_printed6` | Reveladora | augury | Observe · Match · Queue +3/+1 | AUTO | Covered |
+| `augury_trono` | Iniciada | augury | Observe · Match · Queue +3/+1 | AUTO | Covered |
+| `augury_opposite_lateral` | Luna Nueva | augury | Observe · Match · Queue +3/+1 | AUTO | Covered |
 | `enemy_repeat2` | Guardia Constelada | contextual | Resolve · AI estimate | AUTO | Covered |
-| `augury_repeated_position` | Lucero | augury | Observe · Match · Queue +2 | AUTO | Covered |
-| `augury_enemy_affinity` | Visión Revelada | augury | Observe · Match · Queue +2 | AUTO | Covered |
+| `augury_repeated_position` | Lucero | augury | Observe · Match · Queue +3/+1 | AUTO | Covered |
+| `augury_enemy_affinity` | Visión Revelada | augury | Observe · Match · Queue +3/+1 | AUTO | Covered |
 | `last_augury_miss3` | Curación fallida | direct | Preview · AI · Resolve | AUTO | Covered |
 | `enemy_change2` | Exiliada | contextual | Resolve · AI estimate | AUTO | Covered |
 | `third2` | Daga Lunar | direct | Preview · AI · Resolve | AUTO | Covered |
