@@ -1,5 +1,5 @@
 export type Position = "siniestra" | "trono" | "diestra";
-export type Faction = "red" | "blue" | "white" | "saints";
+export type Faction = "red" | "blue" | "white" | "saints" | "ivory";
 export type DuelResult = "win" | "loss" | "draw";
 
 export interface CardDefinition {
