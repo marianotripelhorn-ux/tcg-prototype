@@ -50,7 +50,7 @@ export function estimateOwn(
   if (card.effect === "diestra_before3" && aff && countPosition(player, "diestra") > 0) value += 3;
   if (card.effect === "second_special3" && aff && countPosition(player, "diestra") > 0) value += 3;
   if (card.effect === "enemy_printed6_2" && aff) value += 1;
-  if (card.effect === "copy_plus2" && aff) value = 7 + player.nextBuff + (player.nextPositionBoost || 0) - player.incomingDebuff;
+  if (card.effect === "copy_plus2" && aff) value = 7 + player.nextBuff + player.auguryBuff + (player.nextPositionBoost || 0) - player.incomingDebuff;
   if (card.effect === "third4" && aff && state.turn === 3) value += 4;
   if (card.effect === "archive_here") value += player.archives[pos].length;
   if (card.effect === "archive_empty2" && player.archives[pos].length === 0) value += 2;
