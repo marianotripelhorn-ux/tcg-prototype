@@ -130,15 +130,19 @@ describe("Daggerlight v2 Champion audit", () => {
     state.player.life=8;
     state.player.auguryHitsSinceHeal=2;
     state.player.auguryHeals=0;
-    state.player.hand=[byId("luna_creciente")];
+    state.player.hand=[byId("iniciada")];
     state.opponent.hand=[byId("mensajero")];
     state.player.roundPlays=[];
-    state.opponent.roundPlays=[];
+    state.opponent.roundPlays=[
+      play("mensajero","siniestra"),
+      play("mensajero","diestra")
+    ];
     state.initiative="player";
     state.phase="awaiting_player";
 
     submitPlayerPlay(state,0,"siniestra",fixed);
 
+    expect(state.lastDuel?.opponentPlay.position).toBe("trono");
     expect(state.lastDuel?.playerPlay.finalPower).toBe(5);
     expect(state.player.lastAuguryResult).toBe("hit");
     expect(state.player.life).toBe(9);
