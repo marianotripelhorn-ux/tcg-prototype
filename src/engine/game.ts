@@ -71,14 +71,16 @@ export function resolveAuguries(
   for (const augury of pending) {
     const hit=auguryMatches(augury,observed,observedPlayer);
     self.lastAuguryResult=hit ? "hit" : "miss";
+    const bonus = hit ? 3 : 1;
     state.events.push({
-      text:`Augurio · ${augury.sourceName}: ${hit ? "acierto" : "fallo"}.`,
+      text:`Augurio · ${augury.sourceName}: ${hit ? "acierto" : "fallo"} · próxima carta +${bonus} Poder.`,
       kind:"info"
     });
-    if (!hit) continue;
-    if (selfAlreadyCommitted) self.auguryQueuedBuff += 2;
-    else self.auguryBuff += 2;
-    self.auguryHitsSinceHeal += 1;
+    // Augury always grants a future bonus, but only hits count for the Prioresa.
+    // A committed card cannot collect its own Augury reward.
+    if (selfAlreadyCommitted) self.auguryQueuedBuff += bonus;
+    else self.auguryBuff += bonus;
+    if (hit) self.auguryHitsSinceHeal += 1;
   }
 }
 
