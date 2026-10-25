@@ -317,7 +317,7 @@ function Setup({
       <section className="setup-card">
         <div className="setup-kicker">DAGGERLIGHT · ONLINE CLIENT</div>
         <h1>Partida de prueba</h1>
-        <p>UI v2 usa el motor real, la IA v0.8.7 y el pool actual de 48 cartas.</p>
+        <p>UI v2 usa el motor real, la IA v0.8.7 y el pool actual de 60 cartas.</p>
 
         <label>
           <span>Tu Champion</span>
@@ -335,7 +335,7 @@ function Setup({
         </label>
 
         <button className="primary-button" type="button" onClick={onStart}>JUGAR</button>
-        <small>Majestad Dextral y Corte Sinistral usan sus diseños ilustrados. Empíreos y Santos siguen con cartas temporales.</small>
+        <small>Majestad Dextral y Corte Sinistral usan diseños ilustrados. Empíreos, Santos y Priorato usan cartas temporales. Augurio observa la próxima carta rival; si acierta, tu próxima carta obtiene +2.</small>
       </section>
     </main>
   );
