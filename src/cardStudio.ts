@@ -39,5 +39,9 @@ export const studioThemes: Record<Faction, StudioTheme> = {
   saints: {
     name:"Santos (TEMP)", crown:"#d5b861", divider:"#d3b787",
     rules:"#e8dfca", power:"#fafafa", title:"#f6f6f8", background:"saints"
+  },
+  ivory: {
+    name:"Priorato de Marfil (TEMP)", crown:"#cbd8e8", divider:"#b9c9de",
+    rules:"#e5eaf1", power:"#fafafa", title:"#f6f6f8", background:"ivory"
   }
 };
