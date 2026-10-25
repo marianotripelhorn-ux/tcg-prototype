@@ -125,4 +125,45 @@ describe("Daggerlight v2 Champion audit", () => {
     expect(state.player.nextBuff).toBe(2);
     expect(state.player.nextBuffNotes).toContain("+2 Samas");
   });
+  it("Prioresa de la Luna Llena heals after every third successful Augury, up to two times", () => {
+    const state=createGame("prioresa_luna_llena","athos",fixed,"player");
+    state.player.life=8;
+    state.player.auguryHitsSinceHeal=2;
+    state.player.auguryHeals=0;
+    state.player.hand=[byId("luna_creciente")];
+    state.opponent.hand=[byId("mensajero")];
+    state.player.roundPlays=[];
+    state.opponent.roundPlays=[];
+    state.initiative="player";
+    state.phase="awaiting_player";
+
+    submitPlayerPlay(state,0,"siniestra",fixed);
+
+    expect(state.lastDuel?.playerPlay.finalPower).toBe(5);
+    expect(state.player.lastAuguryResult).toBe("hit");
+    expect(state.player.life).toBe(9);
+    expect(state.player.auguryHeals).toBe(1);
+    expect(state.player.auguryHitsSinceHeal).toBe(0);
+
+    state.player.life=8;
+    state.player.auguryHeals=2;
+    state.player.auguryHitsSinceHeal=2;
+    state.player.pendingAuguries=[{
+      effect:"augury_trono",
+      sourceCardId:"iniciada",
+      sourceName:"INICIADA",
+      sourcePosition:"siniestra"
+    }];
+    state.player.hand=[byId("sanadora")];
+    state.opponent.hand=[byId("mensajero")];
+    state.pendingOpponentPlay={card:byId("mensajero"),position:"trono"};
+    state.initiative="opponent";
+    state.phase="awaiting_player";
+
+    submitPlayerPlay(state,0,"siniestra",fixed);
+
+    expect(state.player.auguryHeals).toBe(2);
+    expect(state.player.life).toBeLessThanOrEqual(8);
+  });
+
 });
