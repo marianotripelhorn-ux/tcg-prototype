@@ -35,6 +35,7 @@ export function estimateOwn(
   let value =
     card.power * (1 + doubleCount(state, player, card)) +
     player.nextBuff +
+    player.auguryBuff +
     (player.nextPositionBoost && aff ? player.nextPositionBoost : 0) +
     (player.nextPositionSpecificBoost && pos === player.nextPositionSpecificBoost.position
       ? player.nextPositionSpecificBoost.amount : 0) +
@@ -74,6 +75,12 @@ export function estimateOwn(
   if (card.effect === "archive_leads_global") value += positions.filter(p => player.archives[p].length > opponent.archives[p].length).length;
   if (card.effect === "archive_exact2_5" && player.archives[pos].length === 2) value += 5;
   if (card.effect === "archive_all_diff3" && new Set(positions.map(p => player.archives[p].length)).size === 3) value += 3;
+  if (card.effect === "last_augury_hit2" && player.lastAuguryResult === "hit") value += 2;
+  if (card.effect === "lower_life2" && player.life < opponent.life) value += 2;
+  if (card.effect === "last_augury_miss3" && player.lastAuguryResult === "miss") value += 3;
+  if (card.effect === "third2" && state.turn === 3) value += 2;
+  if (card.effect === "enemy_repeat2") value += opponent.roundPlays.length ? 1.1 : 0;
+  if (card.effect === "enemy_change2") value += opponent.roundPlays.length ? 1.1 : 0;
   if (player.champion.id === "vinira" && !player.viniraUsed && card.affinity && pos !== card.affinity && aff) value += 1;
   return value;
 }
@@ -88,6 +95,10 @@ function aiSetupScore(state: GameState, card: CardDefinition, pos: Position, pla
   if (card.effect === "loss_next3") score += 1.1;
   if (card.effect === "first_round3" && !player.roundPlays.length) score += 2.0;
   if (card.effect === "next_diestra2") score += 2.4;
+  if (card.effect.startsWith("augury_")) {
+    score += 1.25;
+    if (player.champion.id === "prioresa_luna_llena" && player.auguryHitsSinceHeal === 2 && player.auguryHeals < 2) score += .65;
+  }
   if (player.champion.id === "dextral" || player.champion.id === "athos") {
     if (pos === "diestra" && remaining.some(c => ["guardia_dextral","guardia_castillo","maestro_armas","caballero_tigre"].includes(c.id))) score += 1.2;
     if (pos === "trono" && remaining.some(c => c.id === "blazewalker")) score += 1.0;
