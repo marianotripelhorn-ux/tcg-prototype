@@ -335,7 +335,7 @@ function Setup({
         </label>
 
         <button className="primary-button" type="button" onClick={onStart}>JUGAR</button>
-        <small>Majestad Dextral y Corte Sinistral usan diseños ilustrados. Empíreos, Santos y Priorato usan cartas temporales. Augurio observa la próxima carta rival; si acierta, tu próxima carta obtiene +2.</small>
+        <small>Majestad Dextral y Corte Sinistral usan diseños ilustrados. Empíreos, Santos y Priorato usan cartas temporales. Augurio observa la próxima carta rival: si acierta, tu próxima carta obtiene +3; si falla, +1.</small>
       </section>
     </main>
   );
