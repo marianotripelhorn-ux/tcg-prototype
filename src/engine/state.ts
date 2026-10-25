@@ -48,6 +48,12 @@ export function createPlayer(championId: string, rng:()=>number=Math.random): Pl
     saintPassiveUsed: false,
     athosDiestraCapacity: 1,
     viniraUsed: false,
+    pendingAuguries: [],
+    auguryBuff: 0,
+    auguryQueuedBuff: 0,
+    lastAuguryResult: null,
+    auguryHitsSinceHeal: 0,
+    auguryHeals: 0,
     cycles: 0
   };
 }
