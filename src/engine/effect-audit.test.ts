@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { allCards, byId } from "../data";
 import type { DuelResult, Position } from "../types";
-import { applyPost, submitPlayerPlay } from "./game";
+import { applyPost, auguryMatches, submitPlayerPlay } from "./game";
 import { calculateDuel, previewOpeningPower } from "./rules";
 import { createGame } from "./state";
-import type { EnginePlay, GameState } from "./types";
+import type { EnginePlay, GameState, PendingAugury } from "./types";
 
 const fixed = () => 0.314159;
 
@@ -15,13 +15,13 @@ const directEffects = [
   "least_archive2","opp_archive_capped","clear_archive2x","lateral1","losing_round2",
   "score_tied1","axis_lateral2","opposite_prev3","first_round3","winning_round2",
   "prev_draw3","win_loss4","first_opposite3","archive_leads_global","archive_exact2_5",
-  "archive_all_diff3"
+  "archive_all_diff3","last_augury_hit2","lower_life2","last_augury_miss3","third2"
 ] as const;
 
 const contextualEffects = [
   "enemy_printed6_2","copy_plus2","enemy_affinity2","opposite_enemy2",
   "enemy3","lost_prev_enemy3","enemy_boosted_minus2","prev_draw_enemy3",
-  "cancel_enemy_affinity"
+  "cancel_enemy_affinity","enemy_repeat2","enemy_change2"
 ] as const;
 
 const futureEffects = [
@@ -30,7 +30,12 @@ const futureEffects = [
 
 const doubleEffects = ["second_trono_double","equal_life_double"] as const;
 
-const auditedEffects = [...directEffects,...contextualEffects,...futureEffects,...doubleEffects];
+const auguryEffects = [
+  "augury_same_position","augury_printed6","augury_trono",
+  "augury_opposite_lateral","augury_repeated_position","augury_enemy_affinity"
+] as const;
+
+const auditedEffects = [...directEffects,...contextualEffects,...futureEffects,...doubleEffects,...auguryEffects];
 
 function fresh(playerChampion="athos", opponentChampion="desartes") {
   const state=createGame(playerChampion,opponentChampion,fixed,"player");
@@ -63,6 +68,12 @@ function fresh(playerChampion="athos", opponentChampion="desartes") {
     p.saintPassiveUsed=false;
     p.athosDiestraCapacity=1;
     p.viniraUsed=false;
+    p.pendingAuguries=[];
+    p.auguryBuff=0;
+    p.auguryQueuedBuff=0;
+    p.lastAuguryResult=null;
+    p.auguryHitsSinceHeal=0;
+    p.auguryHeals=0;
   }
   return state;
 }
@@ -140,11 +151,11 @@ function postCase(
 }
 
 describe("Daggerlight v2 complete effect audit", () => {
-  it("covers exactly the 47 unique effect IDs in the current 48-card pool", () => {
+  it("covers exactly the 59 unique effect IDs in the current 60-card pool", () => {
     const actual=[...new Set(allCards.map(card=>card.effect))].sort();
-    expect(actual).toHaveLength(47);
+    expect(actual).toHaveLength(59);
     expect(actual).toEqual([...auditedEffects].sort());
-    expect(allCards).toHaveLength(48);
+    expect(allCards).toHaveLength(60);
     expect(allCards.filter(card=>card.effect==="archive_here").map(card=>card.id).sort())
       .toEqual(["archivista","bibliotecario"]);
   });
@@ -310,6 +321,79 @@ describe("Daggerlight v2 complete effect audit", () => {
       submitPlayerPlay(state,0,"trono",fixed);
       expect(state.player.archives.trono).toHaveLength(0);
       expect(state.lastDuel?.playerPlay.finalPower).toBe(8);
+    });
+  });
+
+  describe("Priorato de Marfil", () => {
+    directCase("last_augury_hit2","caballero_marfil","trono",8,s=>{
+      s.player.lastAuguryResult="hit";
+    },6,s=>{ s.player.lastAuguryResult="miss"; });
+
+    directCase("lower_life2","sanadora","trono",7,s=>{
+      s.player.life=8; s.opponent.life=9;
+    },5,s=>{ s.player.life=9; s.opponent.life=9; });
+
+    exactCase("enemy_repeat2","guardia_constelada","trono","mensajero","trono",s=>{
+      s.opponent.roundPlays=[play("mensajero","trono")];
+    },8,5);
+    exactCase("enemy_repeat2 negative","guardia_constelada","trono","mensajero","diestra",s=>{
+      s.opponent.roundPlays=[play("mensajero","trono")];
+    },6,5);
+
+    directCase("last_augury_miss3","curacion_fallida","trono",7,s=>{
+      s.player.lastAuguryResult="miss";
+    },4,s=>{ s.player.lastAuguryResult="hit"; });
+
+    exactCase("enemy_change2","exiliada","trono","mensajero","diestra",s=>{
+      s.opponent.roundPlays=[play("mensajero","trono")];
+    },7,5);
+    exactCase("enemy_change2 negative","exiliada","trono","mensajero","trono",s=>{
+      s.opponent.roundPlays=[play("mensajero","trono")];
+    },5,5);
+
+    directCase("third2","daga_lunar","trono",8,s=>{
+      s.turn=3;
+    },6,s=>{ s.turn=2; });
+
+    function augury(effect:string, sourcePosition:Position="siniestra"):PendingAugury {
+      return {effect,sourceCardId:"test",sourceName:"TEST",sourcePosition};
+    }
+
+    it("augury_same_position", () => {
+      const state=fresh();
+      expect(auguryMatches(augury("augury_same_position"),play("mensajero","siniestra"),state.opponent)).toBe(true);
+      expect(auguryMatches(augury("augury_same_position"),play("mensajero","trono"),state.opponent)).toBe(false);
+    });
+
+    it("augury_printed6", () => {
+      const state=fresh();
+      expect(auguryMatches(augury("augury_printed6"),play("caballero_tigre","trono"),state.opponent)).toBe(true);
+      expect(auguryMatches(augury("augury_printed6"),play("mensajero","trono"),state.opponent)).toBe(false);
+    });
+
+    it("augury_trono", () => {
+      const state=fresh();
+      expect(auguryMatches(augury("augury_trono"),play("mensajero","trono"),state.opponent)).toBe(true);
+      expect(auguryMatches(augury("augury_trono"),play("mensajero","diestra"),state.opponent)).toBe(false);
+    });
+
+    it("augury_opposite_lateral", () => {
+      const state=fresh();
+      expect(auguryMatches(augury("augury_opposite_lateral","siniestra"),play("mensajero","diestra"),state.opponent)).toBe(true);
+      expect(auguryMatches(augury("augury_opposite_lateral","siniestra"),play("mensajero","trono"),state.opponent)).toBe(false);
+    });
+
+    it("augury_repeated_position", () => {
+      const state=fresh();
+      state.opponent.roundPlays=[play("mensajero","trono")];
+      expect(auguryMatches(augury("augury_repeated_position"),play("mensajero","trono"),state.opponent)).toBe(true);
+      expect(auguryMatches(augury("augury_repeated_position"),play("mensajero","diestra"),state.opponent)).toBe(false);
+    });
+
+    it("augury_enemy_affinity", () => {
+      const state=fresh();
+      expect(auguryMatches(augury("augury_enemy_affinity"),play("invocadagas","diestra"),state.opponent)).toBe(true);
+      expect(auguryMatches(augury("augury_enemy_affinity"),play("mensajero","trono"),state.opponent)).toBe(false);
     });
   });
 
