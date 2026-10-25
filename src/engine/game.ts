@@ -3,7 +3,7 @@ import type { DuelResult, Position } from "../types";
 import { aiWantsQuiero, chooseAIPlay } from "./ai";
 import { affinityActive, calculateDuel, legalPositions, previewOpeningPower } from "./rules";
 import { createGame, resetRoundPlayer } from "./state";
-import type { EnginePlay, GameState, PlayerState, Side } from "./types";
+import type { EnginePlay, GameState, PendingAugury, PlayerState, Side } from "./types";
 
 function addBuff(player: PlayerState, amount: number, label: string) {
   player.nextBuff += amount;
@@ -13,6 +13,90 @@ function addBuff(player: PlayerState, amount: number, label: string) {
 function addDebuff(player: PlayerState, amount: number, label: string) {
   player.incomingDebuff += amount;
   player.incomingNotes.push(`−${amount} ${label}`);
+}
+
+const AUGURY_EFFECTS = new Set([
+  "augury_same_position",
+  "augury_printed6",
+  "augury_trono",
+  "augury_opposite_lateral",
+  "augury_repeated_position",
+  "augury_enemy_affinity"
+]);
+
+function isOppositeLateral(a: Position, b: Position) {
+  return (a === "siniestra" && b === "diestra") || (a === "diestra" && b === "siniestra");
+}
+
+export function isAuguryEffect(effect: string) {
+  return AUGURY_EFFECTS.has(effect);
+}
+
+export function auguryMatches(
+  augury: PendingAugury,
+  observed: EnginePlay,
+  observedPlayer: PlayerState
+) {
+  if (augury.effect === "augury_same_position") return observed.position === augury.sourcePosition;
+  if (augury.effect === "augury_printed6") return observed.card.power >= 6;
+  if (augury.effect === "augury_trono") return observed.position === "trono";
+  if (augury.effect === "augury_opposite_lateral") return isOppositeLateral(augury.sourcePosition, observed.position);
+  if (augury.effect === "augury_repeated_position") {
+    return observedPlayer.roundPlays.some(play => play.position === observed.position);
+  }
+  if (augury.effect === "augury_enemy_affinity") return !!observed.card.affinity;
+  return false;
+}
+
+function queueAugury(player: PlayerState, play: EnginePlay) {
+  if (!isAuguryEffect(play.card.effect)) return;
+  player.pendingAuguries.push({
+    effect: play.card.effect,
+    sourceCardId: play.card.id,
+    sourceName: play.card.name,
+    sourcePosition: play.position
+  });
+}
+
+export function resolveAuguries(
+  state: GameState,
+  self: PlayerState,
+  observed: EnginePlay,
+  observedPlayer: PlayerState,
+  selfAlreadyCommitted: boolean
+) {
+  if (!self.pendingAuguries.length) return;
+  const pending=[...self.pendingAuguries];
+  self.pendingAuguries=[];
+  for (const augury of pending) {
+    const hit=auguryMatches(augury,observed,observedPlayer);
+    self.lastAuguryResult=hit ? "hit" : "miss";
+    state.events.push({
+      text:`Augurio · ${augury.sourceName}: ${hit ? "acierto" : "fallo"}.`,
+      kind:"info"
+    });
+    if (!hit) continue;
+    if (selfAlreadyCommitted) self.auguryQueuedBuff += 2;
+    else self.auguryBuff += 2;
+    self.auguryHitsSinceHeal += 1;
+  }
+}
+
+function applyPrioryHealing(state: GameState, player: PlayerState) {
+  if (player.champion.id !== "prioresa_luna_llena") return;
+  while (
+    player.auguryHitsSinceHeal >= 3 &&
+    player.auguryHeals < 2 &&
+    player.life < player.champion.life
+  ) {
+    player.auguryHitsSinceHeal -= 3;
+    player.auguryHeals += 1;
+    player.life = Math.min(player.champion.life, player.life + 1);
+    state.events.push({
+      text:`Prioresa de la Luna Llena recupera 1 Vida (${player.auguryHeals}/2).`,
+      kind:"info"
+    });
+  }
 }
 
 function scoreFor(state: GameState, player: PlayerState): [number,number] {
@@ -52,6 +136,8 @@ function consumePreparedState(state: GameState, playerPlay: EnginePlay, opponent
     player.nextPositionBoost = 0;
     player.empireanBuff = 0;
     player.nextBaseDouble = false;
+    player.auguryBuff = player.auguryQueuedBuff;
+    player.auguryQueuedBuff = 0;
   }
   if (playerSpecificUsed) state.player.nextPositionSpecificBoost = null;
   if (opponentSpecificUsed) state.opponent.nextPositionSpecificBoost = null;
@@ -66,6 +152,8 @@ function beginDuel(state: GameState, rng:()=>number) {
     const choice = chooseAIPlay(state,null,true,rng);
     const [card] = state.opponent.hand.splice(choice.handIndex!,1);
     const staged: EnginePlay = {...choice,card};
+    resolveAuguries(state,state.player,staged,state.opponent,false);
+    queueAugury(state.opponent,staged);
     const preview = previewOpeningPower(state,staged,state.opponent,state.player);
     staged.finalPower = preview.power;
     staged.powerExact = preview.exact;
@@ -218,6 +306,9 @@ function resolvePendingDuel(state: GameState, rng:()=>number) {
   if (outcome==="draw"&&state.player.champion.id==="samas") addBuff(state.player,2,"Samas");
   if (outcome==="draw"&&state.opponent.champion.id==="samas") addBuff(state.opponent,2,"Samas");
 
+  applyPrioryHealing(state,state.player);
+  applyPrioryHealing(state,state.opponent);
+
   if (outcome==="player") state.initiative="player";
   else if (outcome==="opponent") state.initiative="opponent";
 
@@ -279,10 +370,21 @@ export function submitPlayerPlay(
   const [chosen]=state.player.hand.splice(handIndex,1);
   state.pendingPlayerPlay={card:chosen,position};
 
+  resolveAuguries(
+    state,
+    state.opponent,
+    state.pendingPlayerPlay,
+    state.player,
+    state.initiative==="opponent"
+  );
+  queueAugury(state.player,state.pendingPlayerPlay);
+
   if (state.initiative==="player") {
     const aiChoice=chooseAIPlay(state,state.pendingPlayerPlay,false,rng);
     const [aiCard]=state.opponent.hand.splice(aiChoice.handIndex!,1);
     state.pendingOpponentPlay={...aiChoice,card:aiCard};
+    resolveAuguries(state,state.player,state.pendingOpponentPlay,state.opponent,true);
+    queueAugury(state.opponent,state.pendingOpponentPlay);
   } else if (!state.pendingOpponentPlay) {
     throw new Error("Opponent initiative requires a staged AI play.");
   }
