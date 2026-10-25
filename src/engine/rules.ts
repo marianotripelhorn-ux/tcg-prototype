@@ -77,6 +77,10 @@ function intrinsicPower(
     power += self.nextBuff;
     notes.push(...self.nextBuffNotes);
   }
+  if (self.auguryBuff) {
+    power += self.auguryBuff;
+    notes.push(`+${self.auguryBuff} Augurio`);
+  }
   if (self.nextPositionBoost && affinity) {
     power += self.nextPositionBoost;
     notes.push(`+${self.nextPositionBoost} Invocador`);
@@ -175,6 +179,18 @@ function intrinsicPower(
   } else if (card.effect === "archive_all_diff3") {
     const values = positions.map(pos => self.archives[pos].length);
     if (new Set(values).size === 3) { power += 3; notes.push("+3 Archivos distintos"); }
+  } else if (card.effect === "last_augury_hit2" && self.lastAuguryResult === "hit") {
+    power += 2; notes.push("+2 último Augurio acertado");
+  } else if (card.effect === "lower_life2" && self.life < opponentLife(state, self)) {
+    power += 2; notes.push("+2 menos Vida");
+  } else if (card.effect === "enemy_repeat2" && opponentPlay && opponent.roundPlays.some(p => p.position === opponentPlay.position)) {
+    power += 2; notes.push("+2 rival repite posición");
+  } else if (card.effect === "last_augury_miss3" && self.lastAuguryResult === "miss") {
+    power += 3; notes.push("+3 último Augurio fallado");
+  } else if (card.effect === "enemy_change2" && opponentPlay && opponent.roundPlays.length && opponent.roundPlays.at(-1)!.position !== opponentPlay.position) {
+    power += 2; notes.push("+2 rival cambia de posición");
+  } else if (card.effect === "third2" && state.turn === 3) {
+    power += 2; notes.push("+2 tercer duelo");
   }
 
   if (
@@ -203,7 +219,9 @@ export function previewOpeningPower(
     "enemy_printed6_2",
     "copy_plus2",
     "opposite_enemy2",
-    "enemy_affinity2"
+    "enemy_affinity2",
+    "enemy_repeat2",
+    "enemy_change2"
   ]).has(play.card.effect);
   const power = intrinsicPower(state, play, self, opponent, null, affinity, notes);
   const exact = !opponentDependent && !(self.champion.id === "santo_simetrico" && !self.saintPassiveUsed);
