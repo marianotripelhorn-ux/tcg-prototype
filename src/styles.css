@@ -295,6 +295,13 @@ button{font:inherit}
     linear-gradient(135deg,rgba(213,184,97,.05),transparent 45%),
     #090a0c;
 }
+.game-card.ivory .card-art.no-art{
+  background:
+    radial-gradient(circle at 52% 28%,rgba(203,216,232,.20),transparent 24%),
+    radial-gradient(circle at 72% 18%,rgba(255,255,255,.10),transparent 13%),
+    repeating-linear-gradient(132deg,rgba(203,216,232,.055) 0 1px,transparent 1px 15px),
+    #090b10;
+}
 .game-card .card-art.no-art:after{
   content:"";
   position:absolute;inset:12%;
