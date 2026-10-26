@@ -1,0 +1,1253 @@
+DAGGERLIGHT TCG — BIBLIA DE JUEGO v0.2
+Actualizada: 25 de octubre de 2026
+Base: Biblia de juego v0.1 + decisiones de diseño + estado verificado del prototipo ui-v2.
+
+CONVENCIÓN DE ESTADO
+- VIGENTE EN PROTOTIPO: existe en el motor actual y se puede probar.
+- EN PLAYTEST: existe, pero su balance o diseño aún puede cambiar.
+- PROPUESTA: dirección de diseño no implementada ni cerrada.
+- PENDIENTE: falta definir o implementar.
+
+RESUMEN DE CAMBIOS DESDE v0.1
+- Mazo inicial actualizado a 24 cartas (12 diseños, dos copias), más Campeón.
+- Incorporados Santos y Priorato de Marfil: cinco facciones, 60 diseños, 9 Champions.
+- Majestad Dextral ya no da +1 luego de ganar: solo permite dos Diestras.
+- Añadida la palabra clave Augurio: acierto +3 / fallo +1 para la próxima carta propia.
+- Nuevo Champion: Prioresa de la Luna Llena; se registran sus cartas y reservas de diseño.
+- Vida es la condición de fin; el prototipo recompone mazos sin terminar por agotamiento.
+- Se describe la auditoría automática del motor y la dirección de deckbuilding multifacción.
+
+──────────────────────────────────────────────────────────────────────
+
+1. Propósito del juego
+
+Juego de cartas competitivo, físico primero, construido alrededor de partidas breves, manos pequeñas y decisiones tácticas visibles.
+
+El núcleo del juego combina:
+
+* planificación del orden de una mano de 3 cartas;
+* posicionamiento entre Siniestra, Trono y Diestra;
+* reacción a la jugada visible del rival;
+* construcción de sinergias dentro de una ronda;
+* desarrollo estratégico entre rondas mediante el Archivo;
+* decisiones de riesgo mediante Quiero / No quiero.
+
+El objetivo es conseguir profundidad estratégica con la menor cantidad posible de reglas, recursos auxiliares, texto y memoria oculta.
+
+Fantasía central
+
+Dos campeones y sus seguidores se enfrentan utilizando distintas formas de poder vinculadas al mundo de la Chirality.
+
+La mecánica debe reforzar la identidad narrativa de cada facción. Las facciones no deberían diferenciarse solamente por estética o valores de Poder, sino por la forma en que interpretan y explotan las mismas reglas fundamentales.
+
+⸻
+
+2. Pilares de diseño
+
+2.1. Tres cartas deben generar un plan
+
+La pregunta principal al recibir una mano debe ser:
+
+¿En qué orden quiero jugar estas tres cartas y dónde quiero jugarlas?
+
+El juego no debe depender de administrar una mano grande ni de calcular numerosas posibilidades futuras.
+
+Tres cartas deben ser suficientes para crear:
+
+* secuencias;
+* sacrificios;
+* respuestas;
+* apuestas;
+* combinaciones;
+* decisiones posicionales.
+
+⸻
+
+2.2. Las posiciones importan, pero nunca impiden jugar
+
+Existen tres posiciones:
+
+* Siniestra
+* Trono
+* Diestra
+
+Normalmente un jugador puede ocupar cada posición una vez durante una ronda.
+
+Una carta nunca debe quedar inutilizable por su afinidad posicional.
+
+Las posiciones determinan dónde una carta funciona mejor, no dónde puede existir.
+
+Una carta que no pueda acceder a su posición óptima debe seguir siendo jugable, aunque pierda parte de su potencial.
+
+⸻
+
+2.3. El orden importa
+
+Las tres cartas de una mano no son intercambiables.
+
+Las habilidades deben fomentar preguntas como:
+
+* ¿Conviene perder este duelo?
+* ¿Necesito jugar esta carta antes que aquella?
+* ¿Quiero guardar mi mejor posición para el tercer duelo?
+* ¿Estoy preparando una bonificación para mi próxima carta?
+* ¿Puedo obligar al rival a responder de determinada manera?
+
+Las habilidades puramente independientes reducen el interés de la mano y deben usarse con moderación.
+
+⸻
+
+2.4. Jugar segundo debe permitir reaccionar
+
+Los duelos son consecutivos, no simultáneos.
+
+Un jugador abre el duelo colocando una carta visible y el rival responde.
+
+Esto permite:
+
+* evaluar si un duelo puede ganarse;
+* decidir sacrificarlo;
+* activar respuestas;
+* planificar los duelos restantes.
+
+El juego debe aprovechar esta información visible.
+
+⸻
+
+2.5. Perder puede ser estratégico
+
+No todos los duelos deben tratarse como problemas que hay que ganar inmediatamente.
+
+Debe ser posible:
+
+* sacrificar un duelo;
+* preparar el siguiente;
+* aceptar una ronda 1–2;
+* utilizar una derrota como condición de activación;
+* conservar una mejor configuración posicional.
+
+Especialmente en facciones adaptativas, una derrota puede formar parte de una jugada correcta.
+
+⸻
+
+3. Estructura fundamental
+
+3.1. Mazo
+
+Estado vigente del prototipo:
+
+* 24 cartas por mazo monofacción.
+* 12 diseños diferentes.
+* 2 copias de cada diseño.
+* 1 Campeón separado del mazo.
+* 9 de Vida iniciales.
+
+Cada ronda se roban tres cartas. No hay maná ni recurso de pago de cartas.
+
+Si al empezar una ronda quedan menos de tres cartas en el mazo, el prototipo forma un nuevo mazo completo de la facción, lo mezcla y reparte. Esto permite continuar hasta que la Vida determine el fin de la partida; no existe victoria por agotamiento en la implementación actual.
+
+El deckbuilding multifacción todavía no está implementado. Su dirección de diseño se registra más adelante como PROPUESTA.
+
+⸻
+
+3.2. Campeón
+
+Cada mazo posee un Campeón.
+
+El Campeón:
+
+* comienza actualmente con 9 de Vida;
+* posee una habilidad propia;
+* puede modificar una regla estructural del mazo;
+* define parte de la identidad estratégica del deck;
+* no necesita que las cartas de su facción hagan referencia a él para funcionar.
+
+Los campeones no necesitan compartir una estructura de habilidad idéntica.
+
+Ejemplo:
+
+Majestad Dextral puede utilizar Diestra dos veces.
+
+Eso no implica que todos los campeones deban otorgar una posición doble.
+
+La asimetría entre campeones es deseable.
+
+⸻
+
+3.3. Ronda
+
+Al comenzar una ronda:
+
+* cada jugador roba 3 cartas;
+* esas son las cartas disponibles para esa ronda;
+* las cartas no utilizadas no se conservan para la ronda siguiente.
+
+Una ronda contiene hasta tres duelos.
+
+⸻
+
+3.4. Duelo
+
+Un jugador abre.
+
+El rival observa la carta y posición elegidas y responde.
+
+Ambas cartas se resuelven.
+
+Mayor Poder final gana.
+
+Resultado actual:
+
+* victoria: 1 daño al Campeón rival;
+* empate: ningún daño.
+
+Después del duelo:
+
+* quien gana abre el siguiente;
+* si hay empate, conserva la iniciativa quien abrió el duelo.
+
+El primer jugador de cada nueva ronda se alterna.
+
+⸻
+
+3.5. Quiero / No quiero
+
+Si después de los primeros dos duelos el resultado es 2–0:
+
+el jugador que pierde puede elegir:
+
+Quiero: se juega el tercer duelo.
+
+No quiero: la ronda termina inmediatamente.
+
+La carta no jugada permanece desconocida y va al descarte.
+
+Esta mecánica debe conservar una decisión de riesgo real y no convertirse en una elección automática.
+
+⸻
+
+4. Zonas del juego
+
+Mano
+
+3 cartas al comienzo de cada ronda.
+
+No persiste entre rondas.
+
+⸻
+
+Campo activo
+
+Representa las tres posiciones durante la ronda actual.
+
+El campo se reinicia cada ronda.
+
+⸻
+
+Archivo
+
+Existe un Archivo separado para:
+
+* Siniestra;
+* Trono;
+* Diestra.
+
+Al finalizar una ronda, cada carta jugada entra en el Archivo correspondiente a la posición en la que fue jugada.
+
+Información del Archivo
+
+El Archivo actualmente contiene solamente una información relevante:
+
+cantidad de cartas.
+
+No registra:
+
+* nombres;
+* Poder;
+* resultados anteriores;
+* cartas que ganaron o perdieron;
+* orden de entrada.
+
+Una habilidad de Archivo debe poder resolverse mirando únicamente esos números.
+
+Regla de diseño
+
+No crear cartas que requieran recordar información que el Archivo no almacena.
+
+Incorrecto:
+
+“Si la última carta archivada aquí ganó su duelo…”
+
+Correcto:
+
+“Si este Archivo tiene 3 o más cartas…”
+
+⸻
+
+Descarte
+
+Las cartas no utilizadas se descartan al final de cada ronda. No se conservan para la ronda siguiente.
+
+Actualmente el descarte no funciona como recurso estratégico.
+
+No debe diseñarse alrededor de él hasta que exista una decisión explícita de convertirlo en una mecánica relevante.
+
+⸻
+
+5. Timing
+
+El vocabulario de timing debe mantenerse consistente.
+
+Al jugar
+
+Se activa inmediatamente al colocar la carta.
+
+Puede modificar el duelo actual o generar un estado futuro.
+
+⸻
+
+Este duelo
+
+El efecto afecta únicamente las dos cartas que actualmente se enfrentan.
+
+Ejemplo:
+
+Este duelo, la carta rival tiene −3 Poder.
+
+⸻
+
+Próxima carta
+
+Crea un efecto pendiente.
+
+Se consume cuando ese jugador juega su siguiente carta.
+
+La interfaz física/digital debe hacer visible que el efecto está preparado. Algunos efectos pendientes pueden continuar entre rondas según su texto o regla de palabra clave.
+
+Ejemplo:
+
+Tu próxima carta obtiene +3.
+
+⸻
+
+Próxima carta rival
+
+Funciona igual, pero afecta al oponente.
+
+Ejemplo:
+
+La próxima carta rival tiene −3.
+
+⸻
+
+Después de ganar / perder un duelo
+
+Se comprueba una vez resuelto el duelo.
+
+El efecto comienza después de ese resultado.
+
+Nunca modifica retroactivamente el duelo que lo activó.
+
+⸻
+
+Al final de la ronda
+
+Se resuelve después del último duelo o de un No quiero, antes de comenzar la siguiente ronda.
+
+Las cartas jugadas pasan entonces al Archivo.
+
+Consecuencia importante
+
+El Archivo no aumenta durante una ronda.
+
+Todas las habilidades que consultan el Archivo utilizan el estado existente al comenzar esa ronda, salvo que una habilidad explícitamente vacíe o modifique un Archivo.
+
+⸻
+
+6. Anatomía de una carta
+
+Idealmente una carta contiene:
+
+* Nombre
+* Poder
+* Arte
+* Facción
+* Una habilidad breve
+
+Opcionalmente:
+
+* afinidad de posición;
+* una palabra clave con regla común definida fuera de la carta (p. ej., Augurio).
+
+Objetivo de complejidad
+
+Una carta normal debería poder entenderse mediante una sola lectura.
+
+Evitar:
+
+* múltiples párrafos;
+* listas de excepciones;
+* elecciones administrativas;
+* submenús;
+* estados que requieren marcadores innecesarios.
+
+⸻
+
+7. Poder
+
+Escala provisional
+
+La escala actual de diseño puede dividirse así:
+
+Poder 2–3
+
+Carta débil en combate directo.
+
+Debe compensarse mediante:
+
+* setup;
+* control;
+* scaling;
+* efecto futuro;
+* payoff potencial muy alto.
+
+No utilizar Poder 2–3 en cartas cuyo efecto sea marginal.
+
+⸻
+
+Poder 4–5
+
+Zona flexible.
+
+Adecuada para:
+
+* cartas utilitarias;
+* cartas adaptables;
+* efectos moderados;
+* cartas con scaling;
+* cartas que pueden obtener +2/+3 mediante condiciones.
+
+⸻
+
+Poder 6–7
+
+Carta competitiva sin demasiada ayuda.
+
+Adecuada para:
+
+* amenazas;
+* cartas de tempo;
+* cartas cuyo efecto sea más condicionado;
+* piezas que deben poder ganar un duelo por sí mismas.
+
+⸻
+
+Poder final 8–10
+
+Debe representar una carta que consiguió una condición relevante.
+
+Ejemplos:
+
+* afinidad correctamente utilizada;
+* secuencia preparada;
+* Archivo desarrollado;
+* payoff de late game.
+
+Este rango debe sentirse fuerte pero alcanzable.
+
+⸻
+
+Poder 11+
+
+Debe aparecer principalmente mediante:
+
+* inversión previa;
+* scaling tardío;
+* combinaciones;
+* sacrificio de recursos;
+* condiciones significativas.
+
+No debería ser Poder estándar disponible desde early game.
+
+⸻
+
+Principio
+
+No balancear una carta solamente según su Poder máximo.
+
+Importan también:
+
+* cuándo puede alcanzar ese máximo;
+* con qué frecuencia;
+* qué posición consume;
+* qué preparación necesita;
+* qué sacrifica;
+* qué información tiene el rival para responder.
+
+⸻
+
+8. Filosofía de habilidades
+
+Buenas habilidades
+
+Tienden a utilizar información existente:
+
+* posición;
+* orden;
+* resultado anterior;
+* cartas jugadas esta ronda;
+* número del Archivo propio;
+* número del Archivo rival;
+* Poder;
+* habilidad del Campeón;
+* predicción verificable sobre la próxima carta rival (Augurio).
+
+⸻
+
+Mecánicas a evitar
+
+Menús innecesarios
+
+Si una habilidad requiere detener repetidamente el flujo para preguntar algo trivial, probablemente no pertenece al juego.
+
+⸻
+
+Memoria invisible
+
+Evitar:
+
+“Si una carta que jugaste hace dos rondas…”
+
+salvo que exista un componente visible que registre esa información.
+
+⸻
+
+Escalas que no funcionan dentro de las partidas reales
+
+Toda condición debe evaluarse utilizando los números reales del juego.
+
+Ejemplo malo:
+
++1 por cada 3 cartas en tu Archivo.
+
+Con una carta por posición por ronda, el beneficio llega demasiado lentamente para justificar el texto.
+
+No basta aumentar el bono.
+
+El problema está en la frecuencia con la que se cumple la condición.
+
+⸻
+
+Restricciones que generan cartas muertas
+
+Una habilidad puede perderse por jugar fuera de posición.
+
+La carta no debe volverse imposible de jugar.
+
+⸻
+
+Power creep directo
+
+Una carta nueva no debería ser simplemente:
+
+“la misma carta vieja, pero mejor”.
+
+Cada nueva carta debe justificar por qué podría elegirse tanto ella como una alternativa anterior.
+
+⸻
+
+9. Identidades actuales
+
+ROJO — MAJESTAD DEXTRAL
+
+Fantasía
+
+Disciplina marcial, poder físico, jerarquía y dominio del lado dextral.
+
+Identidad mecánica
+
+Tempo, secuencias y acumulación rápida de Poder.
+
+Rojo intenta:
+
+* ganar pronto;
+* encadenar victorias;
+* preparar cartas mediante otras cartas;
+* explotar especialmente Diestra;
+* castigar mazos lentos antes de que escalen.
+
+Sensación deseada
+
+“Estoy construyendo una secuencia que termina en un golpe fuerte.”
+
+Campeón
+
+Majestad Dextral
+
+Puede utilizar Diestra dos veces durante una ronda.
+
+NO conserva la antigua habilidad de +1 Poder después de ganar un duelo. Ese bonus fue retirado en las iteraciones de balance.
+
+Debilidad conceptual
+
+Debe perder parte de su ventaja si:
+
+* no consigue mantener el tempo;
+* llega a late game contra estrategias que escalan mejor;
+* sus posiciones ideales están comprometidas.
+
+⸻
+
+10. AZUL — CORTE SINISTRAL
+
+Fantasía
+
+Magia, adaptación, manipulación, lectura del rival y control de las condiciones del combate.
+
+Identidad mecánica
+
+Adaptabilidad y respuesta.
+
+Azul no busca simplemente producir menos o más Poder.
+
+Busca:
+
+* reaccionar a la jugada rival;
+* aprovechar pérdidas;
+* modificar Poder;
+* alterar habilidades;
+* producir combinaciones;
+* convertir desventajas en oportunidades.
+
+Sensación deseada
+
+“No tengo necesariamente la carta más fuerte, pero tengo herramientas para cambiar cómo se resuelve el duelo.”
+
+Campeón
+
+Corte Sinistral
+
+Puede utilizar Siniestra dos veces durante una ronda.
+
+Una vez por ronda, después de perder un duelo, la próxima carta rival tiene −1 Poder.
+
+Debilidad conceptual
+
+Su Poder directo debe ser menor que el de una estrategia puramente agresiva.
+
+La fuerza debe encontrarse en sus interacciones.
+
+⸻
+
+11. BLANCO — EMPÍREOS
+
+Fantasía
+
+Dragones ocultos, guardianes del conocimiento perdido, creadores de los anillos y custodios de verdades que la Iglesia intenta borrar.
+
+Identidad mecánica
+
+Archivo, conocimiento acumulado y scaling.
+
+Empíreos utiliza el paso del tiempo como recurso.
+
+Sus cartas:
+
+* empiezan comparativamente débiles;
+* consultan sus propios Archivos;
+* consultan Archivos rivales;
+* cambian de posición óptima según el estado de la partida;
+* alcanzan su mayor fuerza en mid/late game.
+
+La mayoría de sus cartas no tiene afinidad fija.
+
+Esta flexibilidad es una fortaleza fundamental del mazo.
+
+Sensación deseada
+
+“Estoy sobreviviendo mientras acumulo conocimiento. Si llego al final, mis cartas empiezan a dominar.”
+
+Curva deseada
+
+Rondas 1–2:
+desventaja.
+
+Rondas 3–4:
+transición hacia paridad.
+
+Rondas 5–6:
+ventaja.
+
+La llegada al late game no debe garantizar automáticamente la victoria.
+
+Campeón
+
+Señor de los Archivos
+
+Si el rival utiliza las tres posiciones durante una ronda, la próxima carta del jugador Empíreo obtiene +2 Poder.
+
+No posee posición doble.
+
+Excepción posicional
+
+Empíreos puede contener alguna carta con afinidad específica.
+
+Actualmente Dragón Anciano utiliza Trono.
+
+Esto debe ser la excepción, no la norma.
+
+
+⸻
+
+12. SANTOS
+
+Fantasía
+
+Seres del pasado de la Quiralidad, vinculados a simetría, reflejos, equilibrio y patrones que trascienden las divisiones actuales.
+
+Identidad mecánica
+
+Poder impreso alto, duplicación de Poder base y recompensas por patrones de posición, paridad de Vida o resultados de duelo.
+
+Sensación deseada
+
+«La simetría transforma lo que parecía un enfrentamiento ordinario».
+
+Regla importante
+
+Las duplicaciones simultáneas del Poder base se SUMAN (dos duplicaciones = tres veces el Poder base), no se multiplican entre sí.
+
+Champions disponibles
+
+- Santo Simétrico: una vez por ronda, convierte una derrota por exactamente 1 Poder en empate.
+- Samas, Quinto Santo de la Quiralidad: después de empatar, la próxima carta de esa ronda recibe +2 Poder.
+
+Debilidad conceptual
+
+Sus mejores jugadas requieren patrones y circunstancias específicas. Las cifras impresas altas no deben convertirlos en una facción donde da igual el orden de juego.
+
+⸻
+
+13. PRIORATO DE MARFIL
+
+Fantasía
+
+Orden vinculada a la luna, curación, conocimiento del porvenir, augurios y constelaciones. En el mundo del juego, el Oráculo de Corte Sinistral pertenece al Priorato, y «Caballero Luciérnaga» es una denominación coloquial de los Caballeros de Marfil. Este parentesco narrativo no obliga a compartir efectos ni a reescribir sus cartas actuales.
+
+Identidad mecánica
+
+El Priorato lee posibilidades futuras y obliga al rival a tomar decisiones alrededor de predicciones anunciadas. Sus cartas de Augurio deben ser útiles tanto cuando la facción abre un duelo como cuando responde.
+
+Sensación deseada
+
+«Vi una posibilidad de tu próximo movimiento. Cumplirla o esquivarla tiene un costo».
+
+Palabra clave propia: AUGURIO
+
+La habilidad observa la próxima carta que juegue el rival después de que se juega la carta de Augurio.
+
+- Si la predicción acierta, la próxima carta propia obtiene +3 Poder.
+- Si la predicción falla, la próxima carta propia obtiene +1 Poder.
+- Solo los aciertos cuentan para la Prioresa.
+- La bonificación nunca mejora retroactivamente la carta que hizo la predicción.
+- Se preserva el efecto pendiente entre rondas si todavía no se jugó la próxima carta relevante.
+- Las cartas no necesitan llevar a la Prioresa como Champion para que sus Augurios sirvan.
+
+Campeona
+
+Prioresa de la Luna Llena:
+Cada 3 Augurios acertados, recuperás 1 Vida. Máximo 2 curaciones por partida; nunca se supera la Vida máxima de 9.
+
+Reserva de diseño / PLAYTEST
+
+- La capacidad del rival para esquivar augurios con libertad posicional resultó demasiado gratuita contra Santos y Empíreos. El +3/+1 es el ajuste incorporado para ensayar una recompensa incluso ante predicciones fallidas.
+- Sanadora, Exiliada y Daga Lunar están explícitamente marcadas para revisión tras probar el mazo.
+- No ajustar prematuramente todas las cartas por un solo enfrentamiento: medir aciertos, fallos, decisión posicional y frecuencia real de uso.
+
+⸻
+
+14. Archivo como mecánica general
+
+Archivo pertenece al sistema, no exclusivamente a Empíreos.
+
+Otras facciones pueden contener cartas individuales que lo utilicen.
+
+Sin embargo:
+
+Empíreos debe ser la facción que más profundamente transforma el estado de los Archivos en decisiones estratégicas.
+
+Una carta roja con Archivo no convierte al rojo en Empíreo.
+
+La identidad depende de densidad, combinación y propósito.
+
+⸻
+
+15. Counters
+
+Toda estrategia importante debería admitir interacción.
+
+Eso no significa crear un “mazo anti-X”.
+
+Si una mecánica se vuelve relevante, otros mazos pueden contener alguna herramienta capaz de complicarla.
+
+Ejemplo existente de modificación del Archivo:
+
+Libro de Amaram vacía el Archivo propio de la posición donde se juega, transformando esa acumulación en Poder inmediato.
+
+No se incorporó una herramienta genérica de eliminación del Archivo rival: evitar diseñar una facción entera como «anti-Archivo».
+
+Los counters deben:
+
+* costar algo;
+* tener utilidad contextual;
+* no invalidar por completo un arquetipo.
+
+⸻
+
+16. Early, mid y late game
+
+Con 24 cartas, mano de 3 y 9 de Vida, las partidas no tienen una cantidad fija de rondas. El prototipo puede reconstruir el mazo sin terminar por agotamiento.
+
+Como referencia de diseño, no como límites rígidos:
+
+Early: rondas 1–2.
+
+Mid: rondas 3–4.
+
+Late: rondas 5 en adelante.
+
+Las pruebas humanas han incluido partidas de 6–8 rondas y remontadas de más de 9 rondas.
+
+Las cartas pueden diseñarse para distintos momentos sin mencionar explícitamente el número de ronda.
+
+Preferir condiciones naturales.
+
+Early:
+
+“Si este Archivo está vacío…”
+
+Late:
+
+“Si este Archivo tiene 3 o más…”
+
+Esto permite que el propio estado de partida determine cuándo una carta cambia de valor.
+
+⸻
+
+17. Roles internos de cartas
+
+Al diseñar una carta nueva conviene identificar qué función cumple.
+
+Posibles roles:
+
+Opener
+Buena al iniciar una secuencia o partida.
+
+Setup
+Prepara una carta posterior.
+
+Payoff
+Cobra valor de una preparación anterior.
+
+Reactive
+Responde a una jugada visible.
+
+Flexible
+Puede utilizarse bien en numerosas situaciones.
+
+Finisher
+Puede generar un pico considerable de Poder.
+
+Scaling
+Mejora a medida que avanza la partida.
+
+Counter
+Ataca una estrategia determinada a cambio de eficiencia general.
+
+Una carta puede ocupar más de un rol.
+
+Evitar que demasiadas cartas de un mismo mazo ocupen exactamente el mismo.
+
+⸻
+
+18. Future-proofing
+
+Regla 1: nuevas facciones deben reinterpretar las reglas existentes
+
+Antes de crear un nuevo subsistema, intentar construir identidad mediante:
+
+* posiciones;
+* orden;
+* iniciativa;
+* Poder;
+* Archivo;
+* resultados de duelo;
+* Campeón.
+
+⸻
+
+Regla 2: no todos los campeones rompen la misma regla
+
+Una posición doble es una herramienta de diseño, no una plantilla obligatoria.
+
+⸻
+
+Regla 3: las cartas viejas deben conservar razones para existir
+
+Cada nueva carta debe superar esta pregunta:
+
+¿En qué situación elegiría la carta vieja en lugar de esta?
+
+Si no existe respuesta, revisar el diseño.
+
+⸻
+
+Regla 4: cada nueva mecánica debe jugar contra todos los mazos anteriores
+
+Un nuevo mazo se testea contra el roster completo.
+
+No únicamente contra la expansión con la que fue diseñado.
+
+⸻
+
+Regla 5: evitar inflación permanente de Poder
+
+Las expansiones no deberían pasar de:
+
+8 → 10 → 12 → 15
+
+simplemente para sentirse nuevas.
+
+La novedad debe provenir principalmente de nuevas decisiones.
+
+⸻
+
+19. Métricas de balance
+
+No utilizar solamente win rate global.
+
+Registrar:
+
+* win rate de partida;
+* empates;
+* final por Vida;
+* cantidad de veces que se recompone el mazo;
+* rondas promedio;
+* duelos ganados por ronda;
+* Poder promedio por carta;
+* tasa de activación de habilidades;
+* posición elegida;
+* frecuencia de Quiero;
+* éxito después de Quiero;
+* impacto del jugador que abre;
+* uso de habilidades de Campeón;
+* tasa de acierto/fallo de Augurio y Poder obtenido por cada resultado;
+* cantidad de curaciones de la Prioresa;
+* proporción de jugadas en que el rival evita una predicción sin perder Poder;
+* influencia del enfrentamiento y del primer jugador;
+* resultados por combinación de facciones cuando exista multifacción.
+
+Para arquetipos de early/late game, medir especialmente:
+
+win rate de duelos por ronda.
+
+⸻
+
+20. Estado de reglas
+
+VIGENTE EN PROTOTIPO (estable como base de pruebas)
+
+* 9 de Vida iniciales; partida termina por Vida, no por deck-out.
+* Mazo monofacción de 24 cartas: 12 diseños ×2 y un Champion separado.
+* Mano de 3 y hasta tres duelos por ronda.
+* Sin recurso de maná.
+* Siniestra / Trono / Diestra; una carta por posición por ronda, salvo Champion.
+* Todas las cartas pueden jugarse fuera de su afinidad; la afinidad modifica efectos.
+* Duelo secuencial; quien responde ve la carta y su posición; Poder final visible cuando puede determinarse sin la respuesta.
+* Ganador abre el duelo siguiente; el empate conserva el abridor.
+* Se alterna el abridor de cada ronda.
+* Quiero / No quiero cuando el marcador es 0–2 luego de dos duelos.
+* Archivo con cantidad de cartas por posición, actualizado al final de ronda.
+* Carta no jugada va al descarte; no hay persistencia de mano entre rondas.
+* Reconstrucción del mazo del Champion si quedan menos de 3 cartas antes de repartir.
+* Cinco facciones y nueve Champions disponibles en ui-v2.
+* Augurio +3/+1 y curación limitada de la Prioresa, funcionales en ui-v2.
+
+EN PLAYTEST / sujeto a ajustes
+
+* Balance de los cinco mazos, especialmente Priorato de Marfil.
+* Probabilidad real de acierto de cada Augurio contra todas las facciones.
+* Bonificación +3 por acierto / +1 por fallo (ya implementada, todavía experimental).
+* Calidad de juego del tercer duelo y la elección Quiero/No quiero.
+* Intensidad exacta de algunas pasivas, patrones de Santos y acumulación del Archivo.
+* Presentación del estado pendiente de Augurios y bonus en el cliente digital.
+
+PENDIENTE DE DISEÑO / IMPLEMENTACIÓN
+
+* Deckbuilding multifacción y proporciones por facción.
+* Reglas finales de elegibilidad por Champion para parejas de facciones.
+* Traits (concepto futuro, no exigido por las cartas actuales).
+* Cartas exclusivas de Champion y formato competitivo.
+* Rarezas y mulligan: solo si prueban ser necesarios.
+* Definición física de los marcadores/reglas visibles para Augurio.
+* Arte de alta resolución para inspect y arte final de otras facciones.
+
+⸻
+
+21. Regla de oro para nuevas cartas
+
+Antes de aceptar una carta nueva, responder:
+
+1. ¿Qué decisión agrega?
+2. ¿Cuándo es buena?
+3. ¿Cuándo es mala?
+4. ¿Qué posición quiere?
+5. ¿Por qué?
+6. ¿Interactúa con el plan del mazo?
+7. ¿Duplica una carta existente?
+8. ¿Su condición ocurre con suficiente frecuencia?
+9. ¿Puede resolverse mirando información visible?
+10. ¿Seguiría siendo interesante dentro de varios años y muchos mazos?
+
+Si una carta solo agrega Poder pero no una decisión nueva, probablemente necesita otra iteración.
+
+⸻
+
+22. Filosofía general
+
+El juego debe generar profundidad mediante interacciones entre reglas simples, no mediante acumulación de reglas.
+
+Una buena carta debe hacer que el jugador mire nuevamente su mano, las posiciones y el rival.
+
+Una buena facción debe hacer que esas mismas posiciones se sientan diferentes.
+
+Una buena expansión debe ampliar el espacio de decisiones sin invalidar lo que ya existía.
+
+⸻
+
+23. Glosario y reglas de AUGURIO (vigente en prototipo; balance en playtest)
+
+Augurio es una palabra clave con reglas generales y un descriptor corto en la carta. No necesita imprimir en cada carta sus recompensas ni su timing.
+
+Definición operativa
+
+Una carta con «Augurio: X» registra X al ser jugada y espera a observar la siguiente carta rival que se juegue DESPUÉS de ella.
+
+- Si la jugás primero: observa la respuesta de ese duelo.
+- Si la jugás segundo: espera a la primera carta del rival en un duelo posterior (incluso de la ronda siguiente si se corta la actual).
+- Acierto: +3 Poder a tu próxima carta jugada DESPUÉS de recibir el resultado.
+- Fallo: +1 Poder a tu próxima carta jugada DESPUÉS de recibir el resultado.
+- Si tu carta ya estaba colocada, no recibe su propio bono; este se difiere a la siguiente.
+- Si varias predicciones se resuelven ante la misma carta rival, los premios se suman.
+- Solo los aciertos incrementan el progreso de curación de la Prioresa.
+- La última predicción resuelta (acierto o fallo) sigue siendo información útil para cartas de soporte.
+- Un Augurio pendiente puede sobrevivir al fin de una ronda y se resolverá cuando vuelva a aparecer la carta rival requerida.
+
+Condiciones actuales (6 cartas)
+
+1. Misma posición: la carta rival siguiente ocupa la misma posición que la carta de Augurio.
+2. Poder impreso 6+: la carta rival siguiente tiene Poder IMPRESO 6 o más.
+3. Trono: la carta rival siguiente se juega en Trono.
+4. Lateral opuesta: Siniestra ↔ Diestra respecto de la carta de Augurio; Trono no tiene lateral opuesta.
+5. Posición repetida: el rival juega en una posición que ya utilizó durante la ronda en curso.
+6. Habilidad de posición: la carta rival tiene afinidad/habilidad posicional; no exige necesariamente que esa habilidad llegue a activarse.
+
+Nota de balance
+
+No se considera un «fallo sin valor»: el +1 crea una ganancia menor para evitar que los mazos con libertad posicional desactiven gratuitamente todos los Augurios. Es la hipótesis central del playtest actual.
+
+No agregar otras keywords solamente para abreviar frases. «Encadena», «Responde» y «Remata» se exploraron, pero no se adoptaron. Una nueva palabra clave debe definir una regla útil o una interacción distintiva (por ejemplo, una eventual regla común de duplicación), no reemplazar pocas palabras sin aportar decisiones.
+
+⸻
+
+24. Catálogo de diseños vigente — 60 cartas
+
+Todos los siguientes diseños forman parte del pool monofacción experimental de ui-v2. En los mazos actuales se usan dos copias por diseño. P = Poder impreso. Los efectos se describen en lenguaje de carta, no como código interno.
+
+GUARDIA DEXTRAL / MAJESTAD DEXTRAL (12 diseños)
+
+DEX-001 | Caballero Tigre | P6 | Diestra: si ganaste el duelo anterior, +2.
+DEX-002 | Maestro de Armas | P7 | Diestra: si ya jugaste otra carta en Diestra esta ronda, +3.
+DEX-003 | Blazewalker | P4 | Siniestra: si ya jugaste en Trono esta ronda, +4.
+DEX-004 | Guardia del Castillo | P5 | Trono: si ya jugaste en Diestra esta ronda, +3.
+DEX-005 | Invocadagas | P5 | Diestra: +2.
+DEX-006 | Guardia Dextral | P5 | Diestra: si es tu primera carta de la ronda o tu carta anterior fue Diestra, +2.
+DEX-007 | Corona Etérea | P2 | Trono: si no usaste Siniestra esta ronda, +5.
+DEX-008 | Mensajero Extraño | P5 | Si perdés este duelo, tu próxima carta recibe +3.
+DEX-009 | Asesor Real | P5 | Si ya ganaste un duelo esta ronda, tu próxima carta recibe +3.
+DEX-010 | Incendiario | P5 | Si es tu primera carta de la ronda, +3.
+DEX-011 | Abanderado Real | P6 | Tu próxima carta en Diestra obtiene +2.
+DEX-012 | Ejecutor Real | P5 | Si vas ganando la ronda, +2.
+
+CORTE SINISTRAL (12 diseños)
+
+SIN-001 | Protector | P5 | Trono: si perdiste el duelo anterior, la carta rival pierde 3.
+SIN-002 | Asesino Sinistral | P4 | Siniestra: carta rival −3.
+SIN-003 | Criatura Invocada | P6 | Siniestra: si la carta rival tiene Poder impreso 6+, +2.
+SIN-004 | Prodigio | P3 | Siniestra: Poder igual al Poder impreso rival +2.
+SIN-005 | Invocador | P3 | Trono: tu próxima carta recibe +2 si activa su habilidad de posición.
+SIN-006 | Sabio | P4 | Trono: el rival no activa habilidad de posición este duelo.
+SIN-007 | Caballero Luciérnaga | P6 | Siniestra: tercer duelo, +4.
+SIN-008 | Archivista | P5 | +1 por carta en tu Archivo de esta posición.
+SIN-009 | Oráculo | P4 | Siniestra: próxima carta rival −3.
+SIN-010 | Desencantador | P5 | Trono: si la carta rival supera su Poder impreso, pierde 2.
+SIN-011 | Lectora de Gestos | P5 | Siniestra: si la carta rival tiene habilidad de posición, +2.
+SIN-012 | Tejedor de Sombras | P4 | Trono: si hubo empate en el duelo anterior, la carta rival pierde 3.
+
+EMPÍREOS (12 diseños)
+
+EMP-001 | Gusano Blanco | P4 | Archivo propio vacío en esta posición: +2.
+EMP-002 | Bibliotecario | P4 | +1 por carta en tu Archivo de esta posición.
+EMP-003 | Legionario Dracónido | P5 | Archivo propio de esta posición con 2+ cartas: +2.
+EMP-004 | Libro de Amaram | P2 | Vaciá tu Archivo de esta posición: +2 por cada carta eliminada.
+EMP-005 | Heraldo | P5 | Archivo rival de esta posición mayor que el propio: +2.
+EMP-006 | Huevo sin Eclosionar | P2 | Archivo propio de esta posición con 3+ cartas: +6.
+EMP-007 | Dragón Anciano | P6 | Trono: Archivo propio de Trono con 3+ cartas, +3.
+EMP-008 | Forjador de Anillos | P5 | Si lo jugás en tu Archivo menos poblado, +2 (empates cuentan).
+EMP-009 | Escriba Escamado | P4 | +1 por carta en Archivo rival de esta posición, máximo +4.
+EMP-010 | Cronista Dracónido | P4 | +1 por posición donde tu Archivo supera al rival, máximo +3.
+EMP-011 | Memoria Petrificada | P3 | Archivo propio de esta posición con exactamente 2 cartas: +5.
+EMP-012 | Cartógrafo Empíreo | P5 | Tus tres Archivos tienen cantidades distintas: +3.
+
+SANTOS (12 diseños)
+
+SAN-001 | Santo Bifronte | P6 | Siniestra o Diestra: +1.
+SAN-002 | Contrapeso | P6 | Si vas perdiendo la ronda, +2.
+SAN-003 | Equilibrador | P6 | Si el marcador de la ronda está empatado, +1.
+SAN-004 | Mártir del Espejo | P3 | Si este duelo deja 1–1, tu próxima carta duplica Poder base.
+SAN-005 | Custodio del Eje | P6 | Trono: si jugaste en una lateral esta ronda, +2.
+SAN-006 | Paso Especular | P5 | Si tu carta anterior estuvo en la lateral opuesta, +3.
+SAN-007 | Procesión Perfecta | P5 | Duplica Poder base si tu segunda carta estuvo en Trono.
+SAN-008 | Reflejo Viviente | P6 | Si el rival juega en la lateral opuesta, +2.
+SAN-009 | Avatar de Simetría | P4 | Si ambos Champions tienen la misma Vida, duplica Poder base.
+SAN-010 | Péndulo | P4 | Si ganaste un duelo y perdiste otro esta ronda, +4.
+SAN-011 | Santo Gemelo | P5 | Si el duelo anterior fue empate, +3.
+SAN-012 | Palíndromo | P5 | Si tu primera carta de la ronda estuvo en la lateral opuesta, +3.
+
+PRIORATO DE MARFIL (12 diseños, EN PLAYTEST)
+
+PRI-001 | Caballero de Marfil | P6 | Si acertaste tu último Augurio, +2.
+PRI-002 | Sanadora | P5 | Si tenés menos Vida que el rival, +2. [REVISAR]
+PRI-003 | Luna Creciente | P5 | Augurio: misma posición.
+PRI-004 | Reveladora | P4 | Augurio: Poder impreso 6+.
+PRI-005 | Iniciada | P5 | Augurio: Trono.
+PRI-006 | Luna Nueva | P5 | Augurio: lateral opuesta.
+PRI-007 | Guardia Constelada | P6 | Si el rival repite posición, +2.
+PRI-008 | Lucero | P4 | Augurio: posición repetida.
+PRI-009 | Visión Revelada | P5 | Augurio: habilidad de posición.
+PRI-010 | Curación Fallida | P4 | Si fallaste tu último Augurio, +3.
+PRI-011 | Exiliada | P5 | Si el rival cambia de posición, +2. [REVISAR]
+PRI-012 | Daga Lunar | P6 | Tercer duelo: +2. [REVISAR]
+
+⸻
+
+25. Champions implementados (9)
+
+GUARDIA DEXTRAL
+1. Majestad Dextral — 9 Vida — permite 2 cartas en Diestra cada ronda.
+2. Athos, Capitán de la Guardia Dextral — 9 Vida — cada victoria con una carta en Diestra habilita otro espacio en Diestra durante esa ronda, máximo 3.
+
+CORTE SINISTRAL
+3. Corte Sinistral — 9 Vida — 2 espacios en Siniestra; una vez por ronda, después de perder, próxima carta rival −1.
+4. Vinira, Royal de Ingris — 9 Vida — una vez por ronda, primera carta jugada fuera de su afinidad activa igual esa habilidad y obtiene +1.
+
+EMPÍREOS
+5. Señor de los Archivos — 9 Vida — si el rival usó las 3 posiciones durante la ronda, tu próxima carta recibe +2.
+6. Desartes, el Empíreo Perdido — 9 Vida — capacidad 2 en las posiciones con Archivo propio más poblado; los empates cuentan.
+
+SANTOS
+7. Santo Simétrico — 9 Vida — una vez por ronda, una derrota por exactamente 1 Poder se convierte en empate.
+8. Samas, Quinto Santo de la Quiralidad — 9 Vida — tras empatar, próxima carta de esa ronda +2.
+
+PRIORATO DE MARFIL
+9. Prioresa de la Luna Llena — 9 Vida — cada 3 Augurios acertados, cura 1; máximo 2 curaciones por partida, sin superar 9.
+
+⸻
+
+26. Deckbuilding y multifacción — PROPUESTA, no regla vigente
+
+Problema central
+
+La identidad del Champion debe importar en deckbuilding, pero las cartas deben conservar funcionalidad fuera de su facción original. Por eso el Priorato no debe tener cartas que solo funcionen si está presente la Prioresa: sus Augurios son valiosos por sí mismos.
+
+Dirección para un LAB de multifacción
+
+* Permitir un máximo de DOS facciones.
+* Una de las dos debe coincidir con la facción del Champion.
+* Probar diferentes combinaciones de cartas dentro del mazo estándar de 24.
+* Mantener primero el límite de dos copias por diseño, sujeto a revisión.
+* Determinar después si conviene fijar proporciones mínimas/máximas entre facciones.
+
+Posible regla final a investigar
+
+Cada Champion podría habilitar una pareja predeterminada de facciones, al estilo de los Domains de Riftbound, en vez de permitir cualquier mezcla. Esto daría identidades de mazo distintas aun entre Champions de una misma facción.
+
+Ejemplo temático a probar, NO asignación oficial cerrada:
+
+Prioresa de la Luna Llena → Priorato de Marfil + Corte Sinistral.
+
+Relación narrativa respaldada: Oráculo pertenece al Priorato; Caballero Luciérnaga es la denominación coloquial de Caballero de Marfil. Por ahora no se cambian sus cartas ni sus efectos.
+
+No dar por aprobadas parejas, límites ni proporciones sin playtests de combinaciones y enfrentamientos cruzados.
+
+⸻
+
+27. Prototipo, auditoría y calidad
+
+Versión principal de prueba: ui-v2 (React / TypeScript / Vite). Se puede probar en navegador de escritorio o móvil. Las cartas rojas y azules usan assets de Card Studio; las otras facciones usan diseños visuales temporales hasta disponer de arte definitivo.
+
+IA actual: heurística de mano completa y planificación de secuencias; compara Poder inmediato con preparación futura, condiciones de facción y elección Quiero / No quiero. No se considera una IA de resolución óptima.
+
+Auditoría nativa:
+
+* Catálogo actual: 60 diseños y 59 identificadores de efecto únicos (uno compartido: archive_here).
+* 9 Champions, sistema de duelos, Archivo, iniciativa, Quiero/No quiero, reciclado y fin por Vida.
+* Regresiones de Incendiario, Archivista/Bibliotecario, cartas con Poder dependiente del rival y otros efectos delicados.
+* Tests nuevos de Augurio para +3/+1, timing al abrir/responder, apilamiento de premios, cruce de ronda y progreso de la Prioresa.
+* El gate de compilación y tests del repo se encuentra automatizado. Los conteos exactos de tests pueden variar cuando se agregan suites.
+
+Límites de la auditoría
+
+Que los tests pasen demuestra consistencia de los escenarios codificados, NO garantiza balance competitivo, tasas de activación satisfactorias ni una UX impecable. Especialmente el Priorato requiere probarse contra los cuatro mazos anteriores con decisiones humanas reales.
+
+⸻
+
+28. Agenda de playtest y decisiones abiertas
+
+PRIORATO (alta prioridad)
+
+1. Comparar Augurio +3/+1 contra los mazos con alta afinidad posicional (Guardia/Corte) y flexibles (Santos/Empíreos).
+2. Medir cuánto valor conserva un Augurio fallado; comprobar si el rival debe sacrificar algo para desviarse de la predicción.
+3. Revisar Sanadora, Exiliada y Daga Lunar tras varias partidas; conservarlas mientras tanto en el pool de prueba.
+4. Observar si Curación Fallida llega a P8 de manera demasiado frecuente (+1 por fallo más +3 propio).
+5. Vigilar la tasa de curaciones de la Prioresa y su curva en partidas largas.
+6. Verificar legibilidad y resolución de Augurios activos en físico y en UI, sin alargar el texto impreso.
+
+MULTIFACCIÓN (siguiente frente de diseño)
+
+1. Probar mezclas de dos facciones con Champion de una de ellas.
+2. Determinar si todas las parejas tienen sentido mecánico y narrativo.
+3. Evaluar si cada Champion debe habilitar una segunda facción fija.
+4. Evitar habilidades cuya condición dependa del Champion específico.
+5. Traits: posible capa futura de sinergias; una como máximo por carta si se adopta. No crearla antes de necesitarla.
+
+CONTENIDO / UX / DATOS
+
+1. Arte definitivo para Empíreos, Santos y Priorato, y mejor resolución de inspect azul.
+2. Instrumentación: cartas robadas/jugadas/descartadas, activación de habilidad, posición, ronda, Poder impreso/final y resultados por pareja de facciones.
+3. Medir la IA y la conducta humana por separado: un win rate de bots también mide la política de decisión del bot.
+4. Mantener el principio de bajo texto: no introducir keywords nuevas hasta que definan un efecto especial útil.
+
+⸻
+
+ANEXO — DECISIONES QUE NO DEBEN REGRESAR SIN NUEVA EVIDENCIA
+
+- No volver a 18 cartas / 9 diseños como estructura predeterminada: el baseline actual es 24 / 12.
+- No restaurar a Majestad el viejo +1 después de ganar.
+- No hacer que las posiciones bloqueen el uso de una carta por afinidad.
+- No exigir recordar identidades ni orden de cartas archivadas.
+- No construir un mazo de counters genéricos contra Archivo.
+- No hacer que el Priorato funcione solamente con su Champion.
+- No resolver el problema de Augurio agregando párrafos a cada carta.
+- No introducir palabras clave cosméticas sin función mecánica propia.
+- No interpretar propuestas de multifacción como reglas aprobadas.
