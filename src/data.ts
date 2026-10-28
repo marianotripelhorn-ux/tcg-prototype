@@ -98,6 +98,18 @@ export const ivoryCards: CardDefinition[] = [
   {id:"daga_lunar",studioId:"PRI-012",name:"DAGA LUNAR",power:6,faction:"ivory",affinity:null,text:"Tercer duelo: +2 Poder.",effect:"third2"}
 ];
 
+// Source sprites: 12 print-ready cards, each sheet is 3 columns x 2 rows.
+// The online client keeps the classic placeholders until the files are uploaded.
+whiteCards.forEach((card, index) => {
+  const sheet = Math.floor(index / 6) + 1;
+  const slot = index % 6;
+  card.art = {
+    sprite: "./cards/empyrean/empyrean-cards-" + sheet + ".webp",
+    column: slot % 3,
+    row: Math.floor(slot / 3)
+  };
+});
+
 export const cardsByFaction: Record<Faction, CardDefinition[]> = {
   red: redCards,
   blue: blueCards,
