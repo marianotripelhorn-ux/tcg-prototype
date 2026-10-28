@@ -1,0 +1,195 @@
+/* Visual identity v0.3: light-first surface system, #f6f6f8 */
+:root{
+  --canvas:#f6f6f8;
+  --surface:#ffffff;
+  --surface-soft:#eeeef2;
+  --text:#171820;
+  --text-muted:#636473;
+  --stroke:#d7d8df;
+  --accent:#a22349;
+  --accent-soft:#f7e5e9;
+  --gold-light:#b18a50;
+  color:var(--text);
+  background:var(--canvas);
+  --line:rgba(31,31,44,.13);
+  --muted:#616375;
+  --red:#bc244a;
+}
+html,body,#root{background:#f6f6f8;color:#171820}
+body{background:radial-gradient(ellipse at 84% 3%,#f3e3e9 0%,transparent 42%),radial-gradient(ellipse at 9% 82%,#e9ecf6 0%,transparent 39%),#f6f6f8}
+
+/* Main landing */
+.fo-shell{
+  color:#171820;
+  background:radial-gradient(ellipse at 83% -10%,rgba(232,186,204,.35),transparent 52%),radial-gradient(ellipse at -10% 86%,rgba(199,209,229,.42),transparent 40%),linear-gradient(155deg,#f6f6f8,#ffffff 48%,#f1f2f6);
+}
+.fo-glow{opacity:.08}.fo-wordmark{color:#24212a}.fo-top-meta,.fo-footer{color:#626473}
+.fo-footer{border-color:#d9d9df}
+.fo-back,.fo-text-button{color:#282b36;border-color:#d1d3dd;background:#ffffffd9}
+.fo-back:hover,.fo-text-button:hover{background:#e9e9ef}
+.fo-eyebrow{color:#9b3a53}
+.home-hero h1{color:#15161d;text-shadow:0 11px 32px rgba(125,83,95,.12)}
+.home-hero h1 span{color:#aa344d}
+.home-hero .home-tagline{font-family:Georgia,"Times New Roman",serif;font-style:italic;font-weight:500;max-width:620px;color:#292b36;font-size:clamp(19px,2.05vw,26px);line-height:1.33}
+.home-hero .home-subline{font-size:13px;font-weight:550;color:#636575;margin-top:13px}
+.home-crest{background:radial-gradient(circle,#e4cad1 0%,#f4e5e9 38%,transparent 70%);box-shadow:0 0 80px #b95c6b18,inset 0 0 36px #ffffff90;color:#9c284d;border-color:#b36b7e69}
+.home-crest:before,.home-crest:after{border-color:#ad768572}
+.home-crest i{background:#b46b8a66}
+.home-numbers span{color:#676a7a;border-right-color:#c4c5d0}
+.home-numbers strong{color:#923c53}
+.home-action{background:linear-gradient(125deg,#fff,#f6f6f9);color:#1b1b24;border-color:#d8d8e0;box-shadow:0 7px 22px #3132470b}
+.home-action.action-play{background:linear-gradient(112deg,#fff4f5,#f8e7eb 62%,#f5f4f7);border-color:#d7a0af}
+.home-action:hover{border-color:#a85b72;box-shadow:0 15px 35px #783d501b}
+.home-action-index{color:#9d3d58}
+.home-action>span:nth-last-of-type(1){color:#6c6d7b}
+.home-action i{color:#a2284d}
+.home-numbers,.home-hero p{color:#272b33}
+.home-logo{max-width:min(100%,520px);max-height:190px;width:auto;height:auto;object-fit:contain;object-position:center left;margin:20px 0 24px;filter:drop-shadow(0 12px 22px #942d4b1a)}
+/* Faction accordion and Champion portraits */
+.fo-intro h1{color:#1b1b23}.fo-intro p{color:#646675}
+.faction-accordion{max-width:1120px;margin:0 auto;display:grid;gap:8px}
+.picker-intro{max-width:1120px;margin-top:26px;margin-bottom:18px}
+.faction-accordion-item{overflow:hidden;border:1px solid #d2d3da;border-radius:12px;background:#ffffffdb;box-shadow:0 2px 13px #20213509}
+.faction-accordion-item.is-expanded{border-color:var(--faction);box-shadow:0 10px 28px var(--faction-glow)}
+.faction-horizontal{width:100%;min-height:59px;display:grid;grid-template-columns:42px minmax(0,1fr) auto 32px;gap:13px;align-items:center;text-align:left;border:0;background:linear-gradient(90deg,color-mix(in srgb,var(--faction-light) 21%,#ffffff),#fff 70%);color:#21212b;padding:9px 16px;cursor:pointer}
+.faction-horizontal:hover{background:linear-gradient(90deg,color-mix(in srgb,var(--faction-light) 40%,#ffffff),#ffffff 75%)}
+.faction-accordion-item.is-expanded .faction-horizontal{border-bottom:1px solid color-mix(in srgb,var(--faction) 30%,#dadbe0)}
+.faction-horizontal-symbol{width:40px;height:40px;display:grid;place-items:center;border-radius:9px;background:var(--faction-dark);color:#fff;font-family:Georgia,serif;font-size:27px}
+.faction-horizontal-name{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px}.faction-horizontal-name strong{font-family:Georgia,serif;font-size:clamp(17px,2vw,23px);font-weight:550}.faction-horizontal-name small{color:#6d6874;font-size:11px}
+.faction-horizontal-index{color:#9c99a3;font-size:10px;font-weight:750;letter-spacing:.11em}
+.faction-horizontal-toggle{width:28px;height:28px;display:grid;place-items:center;color:var(--faction-dark);border:1px solid color-mix(in srgb,var(--faction) 43%,#ffffff);border-radius:50%;font-size:19px;line-height:1}
+.faction-expanded-content{padding:14px 18px 17px;background:linear-gradient(170deg,#ffffff,#f9f9fb)}
+.faction-expanded-intro{font-size:12px;color:#656676;margin-bottom:14px!important}
+.faction-expanded-content .champion-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:820px}
+.faction-expanded-content .champion-option{min-height:228px;display:flex;flex-direction:column;align-items:stretch;gap:0;position:relative;padding:0;overflow:hidden;background:#f4f2f5;border:1px solid #d8d6dd;color:#24222b;border-radius:13px;box-shadow:none}
+.faction-expanded-content .champion-option.selected{border-color:var(--faction);box-shadow:0 0 0 2px var(--faction),0 8px 18px var(--faction-glow)}
+.faction-expanded-content .champion-option:hover{background:#f1edf1}
+.faction-expanded-content .champion-portrait{height:157px;width:100%;border:0;border-radius:0;background:radial-gradient(ellipse at 50% 55%,var(--faction-glow),transparent 70%),linear-gradient(145deg,color-mix(in srgb,var(--faction-light) 56%,#ffffff),#eeeef3)}
+.faction-expanded-content .champion-portrait:after{width:155px;max-width:85%;border-color:var(--faction)}
+.faction-expanded-content .champion-portrait-sigil{font-size:105px;opacity:.7;color:var(--faction-dark)}
+.faction-expanded-content .champion-portrait img{height:100%;object-fit:contain;object-position:bottom}
+.faction-expanded-content .champion-option-copy{padding:10px 13px 12px;gap:3px;flex:1}
+.faction-expanded-content .champion-option-copy small{font-size:9px;color:#8a4d5d}
+.faction-expanded-content .champion-option-copy strong{font-size:clamp(17px,2vw,23px);color:#22212a}
+.faction-expanded-content .champion-option-copy>span{font-size:9px;color:var(--faction-dark);margin-top:5px}
+.faction-expanded-content .champion-check{position:absolute;top:10px;right:10px;background:#ffffffdb;border-color:var(--faction);color:var(--faction-dark);font-size:14px;display:grid;place-items:center}
+.faction-expanded-content .champion-future{border-color:#d6d6dd;background:#f3f3f6;min-height:228px;color:#9b9aa7}
+.faction-expanded-content .champion-ability{margin-top:12px;grid-template-columns:45px 1fr;background:#f2f2f6;border:1px solid #dad9e0;padding:13px 16px}
+.faction-expanded-content .champion-ability-symbol{color:var(--faction-dark);font-size:35px}
+.faction-expanded-content .champion-ability strong{color:#24242e;font-size:13px}
+.faction-expanded-content .champion-ability p{color:#616372}
+.faction-expanded-content .fo-expand-button{background:#f5f5f8;color:#4e4f5b;border-color:#d2d2db}
+.faction-expanded-content .fo-expand-button span{color:#8d294d}
+.faction-expanded-content .champion-rival-select{color:#5d5e6c}
+.faction-expanded-content .champion-rival-select select{color:#252530;background:#fff;border-color:#c3c5cd}
+.faction-expanded-content .fo-main-cta{background:linear-gradient(110deg,#a82049,#c6345b);color:white}
+.faction-expanded-content .champion-bottom{margin-top:13px}
+/* Card collection */
+.library-stats span{color:#656775}.library-stats b{color:#8f314a}
+.library-toolbar{border-color:#d9d9e2}.library-faction-filters button{background:#fff;border-color:#d8d9df;color:#525363}
+.library-faction-filters button.current{background:color-mix(in srgb,var(--faction-light,#eac1cc) 34%,white);color:#252630;border-color:var(--faction,#ac5c73)}
+.library-search{background:#fff;border-color:#d3d4dc;color:#515260}
+.library-search span:not(.sr-only){color:#9a3c57}
+.library-search input{color:#1b1b24}.library-search input::placeholder{color:#8f8e9a}
+.library-result-heading{color:#5f6170}.library-result-heading strong{color:#8d304c}
+.library-card-tile{background:#fff;color:#24252d;border-color:#d2d3dc;box-shadow:0 4px 15px #1717230d}
+.library-card-tile:hover{box-shadow:0 10px 23px #1717231c}
+.library-tile-text{background:#fff}.library-tile-text strong{color:#22232c}
+.library-tile-text>span:last-child{color:#707180}
+.library-tile-id{color:#666775}.library-tile-id b{color:var(--faction-dark)}
+.library-empty{color:#555664}
+.library-modal-backdrop{background:#151622d9}
+.library-modal{color:#252631;background:linear-gradient(145deg,color-mix(in srgb,var(--faction-light) 24%,#fff),#fff 40%,#f7f7fa);border-color:var(--faction)}
+.library-modal-close{background:#fff;border-color:#cfd0d9;color:#33343f}
+.library-detail-copy h2{color:#23232d}
+.library-detail-copy .fo-eyebrow,.library-ability-heading{color:#9a314b}
+.library-detail-tags span{border-color:#d2d3dc;color:#525462;background:#fff}
+.library-detail-tags b{color:#832c4b}
+.library-detail-copy p{color:#252530}.library-detail-copy>small{color:#6a6c7b}
+.library-art-note{color:#5a5b69;background:#eeeef3}
+.library-view-toggle{background:#f2f2f6;border-color:#d0d1d8}.library-view-toggle button{color:#555664}.library-view-toggle button.active{color:#fff}
+.library-modal-nav button{color:#292a36;border-color:#d3d4dc;background:#f3f3f6}
+/* Main in-game board: fix extra empty row caused by new contextual hint */
+.app-shell{
+  color:#171820;
+  background:radial-gradient(ellipse at 15% 0%,#f1e1e8,transparent 44%),radial-gradient(ellipse at 88% 88%,#e9ecf5,transparent 43%),#f6f6f8;
+}
+.ambient{opacity:.07}
+.game-frame{
+  width:min(100%,1080px);
+  min-height:calc(100dvh - 16px);
+  grid-template-rows:auto auto auto minmax(330px,1fr) auto auto auto;
+  border:1px solid #d4d5dd;
+  background:#ffffffee;
+  box-shadow:0 24px 60px #2222381a;
+}
+.champion-bar{background:linear-gradient(90deg,#fff,#f8f8fa);color:#181921}
+.champion-medallion{border-color:#c7738a;background:linear-gradient(135deg,#f0dfe4,#fff);color:#87294b;box-shadow:inset 0 0 12px #d1a5b049}
+.champion-copy strong{color:#1e1e28}
+.champion-passive{color:#5b5d6d}
+.life-block{color:#1d1e28}
+.match-strip{background:#f4f4f7;border-color:#dedee6;color:#1e1e27}
+.match-strip span{color:#656779}
+.duel-status strong{color:#20212a}
+.utility-button{background:#fff;color:#42434d;border-color:#d5d5df}
+.academy-utility{background:#fff2f5;color:#842341;border-color:#d3a1ae}
+.game-hint{height:auto;min-height:31px;display:flex;align-items:center;justify-content:center;gap:4px;color:#4e4952;background:#f6edf0;border-bottom:1px solid #e7cad2;padding:7px 12px;font-size:11px}
+.game-hint b{color:#8e2144}
+.battlefield{min-height:330px;background:linear-gradient(#8b8d9b0b 1px,transparent 1px),linear-gradient(90deg,#8b8d9b0b 1px,transparent 1px),#fff;background-size:24px 24px}
+.board-slot{background:#f7f7f9;border-color:#dcdee6}
+.board-slot.drop-active{background:#fdeaf0;border-color:#b63358;box-shadow:inset 0 0 20px #b633581a}
+.lane-axis{color:#525466}
+.lane-axis i{background:linear-gradient(90deg,#9293a1,transparent)}
+.archive-count,.slot-capacity{background:#fff;color:#3f4050;border:1px solid #d5d5df}
+.slot-empty{border-color:#d5d6df}
+.action-line{background:#eff0f4;color:#525362;border-top:1px solid #dadbe1;min-height:30px;height:auto;padding:4px 8px;text-align:center}
+.hand-zone{background:linear-gradient(180deg,#f3f3f7,#ebeaf1)}
+.hand-label span{color:#3a3b49}.hand-label small{color:#6c6d79}
+.empty-hand{color:#5e606c}
+/* Keep physical card surfaces and their full art dark. */
+.game-card,.battle-card,.current-board-card{color:#fff}
+@media(max-width:700px){
+  .game-frame{grid-template-rows:auto auto auto minmax(290px,1fr) auto auto auto}
+  .battlefield{min-height:290px}
+  .game-hint{font-size:10px}
+  .home-logo{max-height:105px;object-position:center}
+}
+@media(max-height:720px){
+  .game-frame{grid-template-rows:auto auto auto minmax(220px,1fr) auto auto auto}
+  .battlefield{min-height:220px}
+}
+/* Tutorial: light outer surface; dark exercises remain legible and intentional. */
+.tutorial-overlay{background:#22212cbb}
+.tutorial-dialog{color:#1c1d27;background:radial-gradient(circle at 100% 0%,#f6e4e9,transparent 50%),linear-gradient(140deg,#fff,#f6f6f8);border-color:#d8c4c9;box-shadow:0 24px 76px #16162742}
+.tutorial-brand{color:#292833}.tutorial-brand b{color:#9b3652;border-left-color:#c6b6bd}
+.tutorial-close{background:#fff;color:#363642;border-color:#d1d3db}
+.tutorial-progress-dot{background:#d4d4dc}.tutorial-progress-dot.is-reached{background:#bba4b0}.tutorial-progress-dot.is-current{background:#ba3154}
+.tutorial-copy h2{color:#20212a}
+.tutorial-copy p{color:#585a6a}
+.tutorial-kicker,.tutorial-eyebrow{color:#9a3b55}
+.tutorial-bottom{border-color:#d9d9e0}.tutorial-step-count{color:#6d6e7d}
+.tutorial-back{background:#fff;color:#272832;border-color:#d1d2d9}
+.tutorial-exercise{background:linear-gradient(145deg,#302c37,#161b26);color:#f7f2ed}
+.tutorial-exercise .tutorial-eyebrow{color:#e2c391}
+.tutorial-exercise .tutorial-feedback{color:#ecd9b6}
+.tutorial-exercise .tutorial-feedback.correct{color:#d8f5e3}
+@media(max-width:580px){
+  .faction-horizontal{padding:8px 10px;grid-template-columns:34px minmax(0,1fr) auto 26px;gap:8px;min-height:53px}
+  .faction-horizontal-symbol{width:33px;height:33px;font-size:23px}
+  .faction-horizontal-name{flex-direction:column;gap:2px}
+  .faction-horizontal-name strong{font-size:16px}
+  .faction-horizontal-name small{font-size:9px}
+  .faction-horizontal-index{font-size:8px}
+  .faction-horizontal-toggle{width:25px;height:25px}
+  .faction-expanded-content{padding:11px}
+  .faction-expanded-content .champion-choices{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .faction-expanded-content .champion-option{min-height:200px}
+  .faction-expanded-content .champion-portrait{height:125px}
+  .faction-expanded-content .champion-portrait-sigil{font-size:76px}
+  .faction-expanded-content .champion-option-copy{padding:8px}
+  .faction-expanded-content .champion-option-copy strong{font-size:clamp(14px,3.5vw,19px)}
+  .faction-expanded-content .champion-ability{grid-template-columns:32px 1fr;padding:10px}
+  .faction-expanded-content .champion-ability p{font-size:11px}
+  .faction-expanded-content .champion-future{min-height:200px}
+  .game-hint{font-size:10px;padding:5px 6px}
+}
