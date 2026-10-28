@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import Tutorial from "./Tutorial";
+import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import { HomeScreen, ChampionPicker, CardCollection } from "./FrontOffice";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { positionLabels, positions } from "./data";
@@ -44,7 +45,7 @@ function TraitMark({ trait }: { trait?: string }) {
 function cardSpriteStyle(card: CardDefinition): CSSProperties | undefined {
   if (!card.art) return undefined;
   return {
-    backgroundImage: `url("${card.art.sprite}")`,
+    backgroundImage: cardSpriteBackground(card),
     backgroundSize: "300% 200%",
     backgroundPosition: `${card.art.column * 50}% ${card.art.row * 100}%`
   };
@@ -68,6 +69,7 @@ function CardFace({
   livePower?: boolean;
 }) {
   const theme = studioThemes[card.faction];
+  const artReady = useCardArtReady(card);
   const artStyle = cardSpriteStyle(card);
   const themeStyle = {
     "--card-crown": theme.crown,
@@ -77,7 +79,7 @@ function CardFace({
     "--card-power": theme.power
   } as CSSProperties;
 
-  if (card.art) {
+  if (card.art && artReady) {
     return (
       <article
         className={[
@@ -138,6 +140,7 @@ function BattleCard({
   onInspect: (played:EnginePlay)=>void;
 }) {
   const { card } = played;
+  const artReady = useCardArtReady(card);
   const theme = studioThemes[card.faction];
   const finalPower = played.finalPower ?? card.power;
   const delta = finalPower - card.power;
@@ -146,7 +149,7 @@ function BattleCard({
   return (
     <button
       type="button"
-      className={`battle-card ${card.faction} ${card.art ? "has-studio-art" : "placeholder-art"}`}
+      className={`battle-card ${card.faction} ${card.art && artReady ? "has-studio-art" : "placeholder-art"}`}
       style={{"--card-crown":theme.crown} as CSSProperties}
       aria-label={`Inspeccionar ${card.name}, Poder ${finalPower}`}
       onClick={event=>{
@@ -154,7 +157,7 @@ function BattleCard({
         onInspect(played);
       }}
     >
-      {card.art ? (
+      {card.art && artReady ? (
         <div className="battle-art-window">
           <div className="battle-art-source" style={artStyle} />
         </div>
