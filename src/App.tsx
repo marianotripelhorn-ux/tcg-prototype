@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import Tutorial from "./Tutorial";
+import { HomeScreen, ChampionPicker, CardCollection } from "./FrontOffice";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { positionLabels, positions } from "./data";
 import { studioThemes } from "./cardStudio";
@@ -299,57 +300,11 @@ function Slot({
   );
 }
 
-function Setup({
-  playerChampion,
-  opponentChampion,
-  onPlayerChange,
-  onOpponentChange,
-  onStart,
-  onTutorial
-}: {
-  playerChampion: string;
-  opponentChampion: string;
-  onPlayerChange: (value:string)=>void;
-  onOpponentChange: (value:string)=>void;
-  onStart: ()=>void;
-  onTutorial: ()=>void;
-}) {
-  const ids=Object.keys(champions);
-  return (
-    <main className="setup-shell">
-      <section className="setup-card">
-        <div className="setup-kicker">DAGGERLIGHT · ONLINE CLIENT</div>
-        <h1>Tu aventura comienza acá</h1>
-        <p>Elegí a tu Champion y enfrentá a un rival controlado por la IA. Cada carta es una decisión, cada duelo cuenta.</p>
-        <div className="setup-welcome"><span aria-hidden="true">✦</span><span>¿Es tu primera vez? <strong>Aprendé a jugar en unos pasos.</strong> No necesitás conocer otros juegos de cartas.</span></div>
-
-        <label>
-          <span>Tu Champion</span>
-          <select value={playerChampion} onChange={event=>onPlayerChange(event.target.value)}>
-            {ids.map(id=><option value={id} key={id}>{champions[id].name}</option>)}
-          </select>
-        </label>
-
-        <label>
-          <span>Rival</span>
-          <select value={opponentChampion} onChange={event=>onOpponentChange(event.target.value)}>
-            <option value="random">Aleatorio</option>
-            {ids.map(id=><option value={id} key={id}>{champions[id].name}</option>)}
-          </select>
-        </label>
-
-        <button className="primary-button" type="button" onClick={onStart}>EMPEZAR PARTIDA</button>
-        <button className="academy-button setup-academy" type="button" onClick={onTutorial}><span aria-hidden="true">✦</span> APRENDER A JUGAR · TUTORIAL</button>
-        <small>9 puntos de Vida · 3 cartas por ronda · Sin maná. Algunas facciones todavía usan arte provisional.</small>
-      </section>
-    </main>
-  );
-}
-
 export default function App() {
   const championIds=Object.keys(champions);
   const [playerChampion,setPlayerChampion]=useState("dextral");
   const [opponentChampion,setOpponentChampion]=useState("random");
+  const [screen,setScreen]=useState<"home"|"champions"|"collection">("home");
   const [game,setGame]=useState<GameState|null>(null);
   const [selectedIndex,setSelectedIndex]=useState<number|null>(null);
   const [inspection,setInspection]=useState<Inspection|null>(null);
@@ -372,17 +327,29 @@ export default function App() {
     }
   }
 
-  function beginMatch() {
+  function startWithChampion(championId:string, rivalSelection:string) {
     clearPreviewTimer();
-    const opponent = opponentChampion==="random"
-      ? championIds.filter(id=>id!==playerChampion)[Math.floor(Math.random()*(championIds.length-1))]
-      : opponentChampion;
-    setGame(startGame(playerChampion,opponent));
+    const opponent = rivalSelection==="random"
+      ? championIds.filter(id=>id!==championId)[Math.floor(Math.random()*(championIds.length-1))]
+      : rivalSelection;
+    setPlayerChampion(championId);
+    setOpponentChampion(rivalSelection);
+    setGame(startGame(championId,opponent));
     setSelectedIndex(null);
     setInspection(null);
     setDuelPreview(null);
     setDrag(null);
     setHoveredPosition(null);
+  }
+
+  function beginMatch() {
+    startWithChampion(playerChampion,opponentChampion);
+  }
+
+  function goToMenu(destination:"home"|"champions"|"collection") {
+    clearPreviewTimer();
+    setGame(null);
+    setScreen(destination);
   }
 
   function showResolvedDuel(duel:DuelSummary|null) {
@@ -480,15 +447,25 @@ export default function App() {
   if (!game) {
     return (
       <>
-      <Setup
-        playerChampion={playerChampion}
-        opponentChampion={opponentChampion}
-        onPlayerChange={setPlayerChampion}
-        onOpponentChange={setOpponentChampion}
-        onStart={beginMatch}
-        onTutorial={()=>setTutorialOpen(true)}
-      />
-      {tutorialOpen && <Tutorial inGame={false} onClose={()=>setTutorialOpen(false)} onPlay={()=>{setTutorialOpen(false);beginMatch();}} />}
+        {screen==="home" && <HomeScreen
+          onPlay={()=>setScreen("champions")}
+          onTutorial={()=>setTutorialOpen(true)}
+          onGallery={()=>setScreen("collection")}
+        />}
+        {screen==="champions" && <ChampionPicker
+          onBack={()=>setScreen("home")}
+          onPlay={startWithChampion}
+          onGallery={()=>setScreen("collection")}
+        />}
+        {screen==="collection" && <CardCollection
+          onBack={()=>setScreen("home")}
+          onPlay={()=>setScreen("champions")}
+        />}
+        {tutorialOpen && <Tutorial
+          inGame={false}
+          onClose={()=>setTutorialOpen(false)}
+          onPlay={()=>{setTutorialOpen(false);setScreen("champions");}}
+        />}
       </>
     );
   }
@@ -535,7 +512,7 @@ export default function App() {
             aria-label="Nueva partida"
             onClick={()=>{
               clearPreviewTimer();
-              setGame(null);
+              goToMenu("home");
             }}
           >×</button>
         </section>
@@ -689,7 +666,7 @@ export default function App() {
               <strong>{game.winner==="player"?"GANASTE":game.winner==="opponent"?"GANÓ LA IA":"EMPATE"}</strong>
               <p>{game.player.life}–{game.opponent.life} de Vida · {game.round} ronda{game.round===1?"":"s"}.</p>
               <div>
-                <button className="secondary-button" onClick={()=>setGame(null)}>CAMBIAR CHAMPIONS</button>
+                <button className="secondary-button" onClick={()=>goToMenu("champions")}>CAMBIAR CHAMPIONS</button>
                 <button className="primary-button" onClick={beginMatch}>REVANCHA</button>
               </div>
             </div>
