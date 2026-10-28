@@ -64,7 +64,6 @@ function Sprite({card, crop=false}: {card: CardDefinition; crop?: boolean}) {
 }
 
 export function HomeScreen({onPlay,onTutorial,onGallery}: {onPlay:()=>void;onTutorial:()=>void;onGallery:()=>void}) {
-  const [logoReady,setLogoReady] = useState(false);
   return (
     <main className="fo-shell home-screen">
       <div className="fo-glow glow-left" aria-hidden="true" />
@@ -76,9 +75,8 @@ export function HomeScreen({onPlay,onTutorial,onGallery}: {onPlay:()=>void;onTut
       <div className="home-layout">
         <section className="home-hero">
           <span className="fo-eyebrow">EL MUNDO DE LA QUIRALIDAD TE ESPERA</span>
-          <div className="home-crest" aria-hidden="true"><span>⟡</span><i /><b>☾</b></div>
-          <img src="./branding/logo.png" className="home-logo" alt="Daggerlight" onLoad={()=>setLogoReady(true)} onError={()=>setLogoReady(false)} style={{display:logoReady?"block":"none"}} />
-          {!logoReady && <h1>Dag<span>ger</span>light</h1>}
+          <div className="home-mark" aria-hidden="true"><img src="./branding/logo.png" alt="" onError={e=>{e.currentTarget.style.display="none";}} /><span className="home-logo-fallback">✦</span></div>
+          <h1 className="home-title">DAGGERLIGHT</h1>
           <p className="home-tagline">La mano que elegís determina el poder que ejercés.</p><p className="home-subline">Dos Champions. Tres posiciones. Cada carta importa.</p>
           <div className="home-numbers"><span><strong>9</strong> Vida</span><span><strong>3</strong> Cartas por ronda</span><span><strong>5</strong> Facciones</span></div>
         </section>
@@ -108,19 +106,20 @@ export function HomeScreen({onPlay,onTutorial,onGallery}: {onPlay:()=>void;onTut
   );
 }
 
-export function ChampionPicker({onBack,onPlay,onGallery}: ChampionPickerProps) {
-  const [faction,setFaction] = useState<Faction>("red");
-  const [selected,setSelected] = useState("dextral");
-  const [opponent,setOpponent] = useState("random");
-  const [showRival,setShowRival] = useState(false);
-  const factionChampions=Object.values(champions).filter(c=>c.faction===faction);
-  const active=champions[selected]?.faction===faction ? selected : factionChampions[0].id;
-  const chosen=champions[active];
-  const meta=factionInfo.find(f=>f.id===faction)!;
+export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
+  const [faction,setFaction]=useState<Faction|null>(null);
+  const [selected,setSelected]=useState<string|null>(null);
+  const [opponent,setOpponent]=useState("random");
+  const [showRival,setShowRival]=useState(false);
+  const activeChampions=faction?Object.values(champions).filter(c=>c.faction===faction):[];
+  const chosen=selected?champions[selected]:null;
+  const meta=faction?factionInfo.find(f=>f.id===faction):null;
 
   function selectFaction(next:Faction) {
+    if(faction===next) { setFaction(null);setSelected(null);return; }
     setFaction(next);
-    setSelected(Object.values(champions).find(c=>c.faction===next)!.id);
+    setSelected(null);
+    setShowRival(false);
   }
 
   return (
@@ -130,101 +129,101 @@ export function ChampionPicker({onBack,onPlay,onGallery}: ChampionPickerProps) {
         <span className="fo-wordmark"><span className="fo-glyph">✦</span> DAGGERLIGHT</span>
         <button type="button" className="fo-text-button" onClick={onGallery}>VER CARTAS ↗</button>
       </header>
-
       <section className="fo-intro picker-intro">
         <span className="fo-eyebrow">ANTES DE ENTRAR EN COMBATE</span>
-        <h1>Elegí tu Champion</h1>
-        <p>Primero elegí una facción. Después seleccioná uno de sus Champions y conocé su habilidad.</p>
+        <h1>Elegí tu facción</h1>
+        <p>Cada facción tiene un estilo propio. Elegí una para conocer a sus Champions.</p>
       </section>
 
-      <section className="faction-accordion" aria-label="Facciones y Champions">
-        {factionInfo.map((f,idx)=>{
-          const expanded=faction===f.id;
-          return (
-            <div key={f.id} className={"faction-accordion-item theme-"+f.id+(expanded?" is-expanded":"")}>
-              <button
-                type="button"
-                className="faction-horizontal"
-                aria-expanded={expanded}
-                onClick={()=>selectFaction(f.id)}
-              >
-                <span className="faction-horizontal-symbol" aria-hidden="true">{f.symbol}</span>
-                <span className="faction-horizontal-name">
-                  <strong>{factionLabels[f.id]}</strong>
-                  <small>{f.hint}</small>
-                </span>
-                <span className="faction-horizontal-index">{String(idx+1).padStart(2,"0")} / 05</span>
-                <span className="faction-horizontal-toggle" aria-hidden="true">{expanded?"−":"+"}</span>
-              </button>
-              {expanded && (
-                <section className="faction-expanded-content">
-                  <p className="faction-expanded-intro">{f.description}</p>
-                  <div className="champion-choices">
-                    {factionChampions.map(c=>{
-                      const portrait=championPortraits[c.id];
-                      return (
-                        <button
-                          type="button"
-                          key={c.id}
-                          className={"champion-option"+(active===c.id?" selected":"")}
-                          aria-pressed={active===c.id}
-                          onClick={()=>setSelected(c.id)}
-                        >
-                          <span className="champion-portrait">
-                            {portrait
-                              ? <img src={portrait} alt="" />
-                              : <span className="champion-portrait-sigil" aria-hidden="true">{meta.symbol}</span>}
-                          </span>
-                          <span className="champion-option-copy">
-                            <small>CHAMPION</small>
-                            <strong>{c.name}</strong>
-                            <span>{active===c.id?"SELECCIONADO":"ELEGIR"}</span>
-                          </span>
-                          <span className="champion-check" aria-hidden="true">{active===c.id?"✓":"+"}</span>
-                        </button>
-                      );
-                    })}
-                    {factionChampions.length===1 && (
-                      <div className="champion-future">
-                        <span aria-hidden="true">◇</span>
-                        <strong>Próximamente</strong>
-                        <small>Nuevo Champion</small>
-                      </div>
-                    )}
-                  </div>
-                  <div className="champion-ability" aria-live="polite">
-                    <div className="champion-ability-symbol" aria-hidden="true">{meta.symbol}</div>
-                    <div>
-                      <span className="fo-eyebrow">HABILIDAD DE {chosen.name.toUpperCase()}</span>
-                      <strong>{chosen.text}</strong>
-                      <p>{beginnerExplanations[chosen.id]}</p>
-                    </div>
-                  </div>
-                  <div className="champion-bottom">
-                    <div className="champion-rival-picker">
-                      <button type="button" className="fo-expand-button" onClick={()=>setShowRival(v=>!v)} aria-expanded={showRival}>
-                        RIVAL: {opponent==="random"?"ALEATORIO":champions[opponent].name.toUpperCase()} <span aria-hidden="true">{showRival?"⌃":"⌄"}</span>
-                      </button>
-                      {showRival && (
-                        <label className="champion-rival-select">
-                          <span>Elegí un rival para probar el matchup</span>
-                          <select value={opponent} onChange={e=>setOpponent(e.target.value)}>
-                            <option value="random">Aleatorio</option>
-                            {Object.values(champions).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
-                          </select>
-                        </label>
-                      )}
-                    </div>
-                    <button type="button" className="fo-main-cta" onClick={()=>onPlay(active,opponent)}>
-                      JUGAR CON {chosen.name.toUpperCase()} <span aria-hidden="true">→</span>
-                    </button>
-                  </div>
-                </section>
-              )}
-            </div>
-          );
-        })}
+      <section className="faction-banner-grid" aria-label="Facciones disponibles">
+        {factionInfo.map((f,idx)=>
+          <button
+            type="button"
+            key={f.id}
+            className={"faction-banner theme-"+f.id+(faction===f.id?" active":"")}
+            aria-pressed={faction===f.id}
+            onClick={()=>selectFaction(f.id)}
+          >
+            <span className="faction-banner-index">{String(idx+1).padStart(2,"0")} / 05</span>
+            <span className="faction-banner-art" aria-hidden="true"><span className="faction-banner-symbol">{f.symbol}</span><i/></span>
+            <span className="faction-banner-content">
+              <strong>{factionLabels[f.id]}</strong>
+              <small>{f.tagline}</small>
+            </span>
+            <span className="faction-banner-select">{faction===f.id?"SELECCIONADA":"SELECCIONAR"} <span aria-hidden="true">{faction===f.id?"✓":"+"}</span></span>
+          </button>
+        )}
       </section>
+
+      {faction&&meta&&(
+        <section className={"champion-selection theme-"+faction} aria-label="Elegir Champion">
+          <div className="champion-section-heading">
+            <div>
+              <span className="fo-eyebrow">TU FACCIÓN</span>
+              <h2>Elegí un Champion de {factionLabels[faction]}</h2>
+              <p>{meta.description}</p>
+            </div>
+            <span className="champion-style">{meta.hint}</span>
+          </div>
+          <div className="champion-choices">
+            {activeChampions.map(c=>{
+              const portrait=championPortraits[c.id];
+              return (
+                <button
+                  type="button"
+                  key={c.id}
+                  className={"champion-option"+(selected===c.id?" selected":"")}
+                  aria-pressed={selected===c.id}
+                  onClick={()=>setSelected(c.id)}
+                >
+                  <span className="champion-portrait">
+                    {portrait
+                      ? <img src={portrait} alt=""/>
+                      : <span className="champion-portrait-sigil" aria-hidden="true">{meta.symbol}</span>}
+                  </span>
+                  <span className="champion-option-copy">
+                    <small>CHAMPION</small><strong>{c.name}</strong>
+                    <span>{selected===c.id?"SELECCIONADO":"ELEGIR CHAMPION"}</span>
+                  </span>
+                  <span className="champion-check" aria-hidden="true">{selected===c.id?"✓":"+"}</span>
+                </button>
+              );
+            })}
+            {activeChampions.length===1&&(
+              <div className="champion-future"><span aria-hidden="true">◇</span><strong>Próximamente</strong><small>Un nuevo Champion</small></div>
+            )}
+          </div>
+          {chosen ? (
+            <>
+              <div className="champion-ability" aria-live="polite">
+                <div className="champion-ability-symbol" aria-hidden="true">{meta.symbol}</div>
+                <div>
+                  <span className="fo-eyebrow">HABILIDAD DE {chosen.name.toUpperCase()}</span>
+                  <strong>{chosen.text}</strong><p>{beginnerExplanations[chosen.id]}</p>
+                </div>
+              </div>
+              <div className="champion-bottom">
+                <div className="champion-rival-picker">
+                  <button type="button" className="fo-expand-button" aria-expanded={showRival} onClick={()=>setShowRival(v=>!v)}>
+                    RIVAL: {opponent==="random"?"ALEATORIO":champions[opponent].name.toUpperCase()} <span aria-hidden="true">{showRival?"⌃":"⌄"}</span>
+                  </button>
+                  {showRival&&(
+                    <label className="champion-rival-select"><span>Elegí un rival para probar el enfrentamiento</span>
+                      <select value={opponent} onChange={e=>setOpponent(e.target.value)}>
+                        <option value="random">Aleatorio</option>
+                        {Object.values(champions).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </label>
+                  )}
+                </div>
+                <button type="button" className="fo-main-cta" onClick={()=>onPlay(chosen.id,opponent)}>JUGAR CON {chosen.name.toUpperCase()} <span aria-hidden="true">→</span></button>
+              </div>
+            </>
+          ):(
+            <p className="champion-prompt">Seleccioná un Champion para conocer su habilidad y empezar la partida.</p>
+          )}
+        </section>
+      )}
       <footer className="fo-footer">TU CHAMPION DEFINE LA FACCIÓN DE TU MAZO Y TU FORMA DE JUGAR.</footer>
     </main>
   );
