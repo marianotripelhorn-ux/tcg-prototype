@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import Tutorial from "./Tutorial";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { positionLabels, positions } from "./data";
 import { studioThemes } from "./cardStudio";
@@ -303,21 +304,24 @@ function Setup({
   opponentChampion,
   onPlayerChange,
   onOpponentChange,
-  onStart
+  onStart,
+  onTutorial
 }: {
   playerChampion: string;
   opponentChampion: string;
   onPlayerChange: (value:string)=>void;
   onOpponentChange: (value:string)=>void;
   onStart: ()=>void;
+  onTutorial: ()=>void;
 }) {
   const ids=Object.keys(champions);
   return (
     <main className="setup-shell">
       <section className="setup-card">
         <div className="setup-kicker">DAGGERLIGHT · ONLINE CLIENT</div>
-        <h1>Partida de prueba</h1>
-        <p>UI v2 usa el motor real, la IA v0.8.7 y el pool actual de 60 cartas.</p>
+        <h1>Tu aventura comienza acá</h1>
+        <p>Elegí a tu Champion y enfrentá a un rival controlado por la IA. Cada carta es una decisión, cada duelo cuenta.</p>
+        <div className="setup-welcome"><span aria-hidden="true">✦</span><span>¿Es tu primera vez? <strong>Aprendé a jugar en unos pasos.</strong> No necesitás conocer otros juegos de cartas.</span></div>
 
         <label>
           <span>Tu Champion</span>
@@ -334,8 +338,9 @@ function Setup({
           </select>
         </label>
 
-        <button className="primary-button" type="button" onClick={onStart}>JUGAR</button>
-        <small>Majestad Dextral y Corte Sinistral usan diseños ilustrados. Empíreos, Santos y Priorato usan cartas temporales. Augurio observa la próxima carta rival: si acierta, tu próxima carta obtiene +3; si falla, +1.</small>
+        <button className="primary-button" type="button" onClick={onStart}>EMPEZAR PARTIDA</button>
+        <button className="academy-button setup-academy" type="button" onClick={onTutorial}><span aria-hidden="true">✦</span> APRENDER A JUGAR · TUTORIAL</button>
+        <small>9 puntos de Vida · 3 cartas por ronda · Sin maná. Algunas facciones todavía usan arte provisional.</small>
       </section>
     </main>
   );
@@ -352,6 +357,7 @@ export default function App() {
   const previewTimer=useRef<number|null>(null);
   const [drag,setDrag]=useState<DragState|null>(null);
   const [hoveredPosition,setHoveredPosition]=useState<Position|null>(null);
+  const [tutorialOpen,setTutorialOpen]=useState(false);
 
   const hand=game?.player.hand ?? [];
   const selectedCard=useMemo(
@@ -473,13 +479,17 @@ export default function App() {
 
   if (!game) {
     return (
+      <>
       <Setup
         playerChampion={playerChampion}
         opponentChampion={opponentChampion}
         onPlayerChange={setPlayerChampion}
         onOpponentChange={setOpponentChampion}
         onStart={beginMatch}
+        onTutorial={()=>setTutorialOpen(true)}
       />
+      {tutorialOpen && <Tutorial inGame={false} onClose={()=>setTutorialOpen(false)} onPlay={()=>{setTutorialOpen(false);beginMatch();}} />}
+      </>
     );
   }
 
@@ -509,7 +519,7 @@ export default function App() {
           passive={game.opponent.champion.text}
         />
 
-        <section className="match-strip">
+        <section className="match-strip has-guide">
           <div>
             <span>RONDA</span>
             <b>{game.round}</b>
@@ -518,6 +528,7 @@ export default function App() {
             <strong>{game.duelScore.player} — {game.duelScore.opponent}</strong>
             <span>{turnText}</span>
           </div>
+          <button className="academy-utility" type="button" onClick={()=>setTutorialOpen(true)} aria-label="Abrir tutorial">? AYUDA</button>
           <button
             className="utility-button"
             type="button"
@@ -529,6 +540,7 @@ export default function App() {
           >×</button>
         </section>
 
+        <div className="game-hint">{game.phase==="awaiting_player" && !duelPreview ? (game.initiative==="player" ? <><b>Tu turno:</b> elegí una carta y tocá una posición libre.</> : <><b>Tu respuesta:</b> mirá la carta rival y elegí cómo enfrentarla.</>) : <><b>Compará Poderes:</b> cada duelo ganado quita 1 Vida rival.</>}</div>
         <section className="battlefield" aria-label="Tablero">
           {positions.map(position=>(
             <div className="lane" key={position}>
@@ -685,6 +697,7 @@ export default function App() {
         )}
       </div>
 
+      {tutorialOpen && <Tutorial inGame onClose={()=>setTutorialOpen(false)} onPlay={()=>setTutorialOpen(false)} />}
       {drag && (() => {
         const card=hand[drag.handIndex];
         if (!card || !drag.moved) return null;
