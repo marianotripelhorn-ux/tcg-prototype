@@ -1,4 +1,5 @@
 import { useMemo, useState, type CSSProperties } from "react";
+import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import { allCards, factionLabels } from "./data";
 import { champions } from "./engine/champions";
 import type { CardDefinition, Faction } from "./types";
@@ -41,7 +42,8 @@ const beginnerExplanations: Record<string, string> = {
 const championPortraits: Partial<Record<string, string>> = {};
 
 function Sprite({card, crop=false}: {card: CardDefinition; crop?: boolean}) {
-  if (!card.art) {
+  const ready = useCardArtReady(card);
+  if (!card.art || !ready) {
     const faction = factionInfo.find(f=>f.id === card.faction)!;
     return (
       <div className={"library-placeholder theme-" + card.faction}>
@@ -54,7 +56,7 @@ function Sprite({card, crop=false}: {card: CardDefinition; crop?: boolean}) {
     );
   }
   const style: CSSProperties = {
-    backgroundImage: 'url("' + card.art.sprite + '")',
+    backgroundImage: cardSpriteBackground(card),
     backgroundSize: "300% 200%",
     backgroundPosition: (card.art.column * 50) + "% " + (card.art.row * 100) + "%"
   };
@@ -62,6 +64,7 @@ function Sprite({card, crop=false}: {card: CardDefinition; crop?: boolean}) {
 }
 
 export function HomeScreen({onPlay,onTutorial,onGallery}: {onPlay:()=>void;onTutorial:()=>void;onGallery:()=>void}) {
+  const [logoReady,setLogoReady] = useState(false);
   return (
     <main className="fo-shell home-screen">
       <div className="fo-glow glow-left" aria-hidden="true" />
@@ -74,7 +77,8 @@ export function HomeScreen({onPlay,onTutorial,onGallery}: {onPlay:()=>void;onTut
         <section className="home-hero">
           <span className="fo-eyebrow">EL MUNDO DE LA QUIRALIDAD TE ESPERA</span>
           <div className="home-crest" aria-hidden="true"><span>⟡</span><i /><b>☾</b></div>
-          <h1>Dag<span>ger</span>light</h1>
+          <img src="./branding/logo.png" className="home-logo" alt="Daggerlight" onLoad={()=>setLogoReady(true)} onError={()=>setLogoReady(false)} style={{display:logoReady?"block":"none"}} />
+          {!logoReady && <h1>Dag<span>ger</span>light</h1>}
           <p className="home-tagline">La mano que elegís determina el poder que ejercés.</p><p className="home-subline">Dos Champions. Tres posiciones. Cada carta importa.</p>
           <div className="home-numbers"><span><strong>9</strong> Vida</span><span><strong>3</strong> Cartas por ronda</span><span><strong>5</strong> Facciones</span></div>
         </section>
