@@ -273,3 +273,30 @@ body{background:#eae2d5!important}
   .champion-ability p{font-size:12px}
   .fo-main-cta{background:#191919}
 }
+
+
+/* Readability while high-resolution card assets are being deployed. */
+.app-shell .ambient{display:none}
+.game-card.selected{border-color:#d3b787;box-shadow:0 0 0 2px #d3b787,0 10px 25px rgba(25,25,25,.3)}
+.hand-card.is-selected{filter:drop-shadow(0 9px 13px rgba(25,25,25,.28))}
+.game-card:not(.studio-card){container-type:inline-size}
+.game-card:not(.studio-card) .card-copy strong{
+  font-size:clamp(10px,6.2cqw,25px);
+  line-height:.97;
+  overflow-wrap:break-word;
+  hyphens:auto;
+  letter-spacing:-.025em;
+}
+.game-card:not(.studio-card) .card-copy p{font-size:clamp(6px,3.0cqw,12px);line-height:1.25}
+.game-card:not(.studio-card) .card-copy{gap:clamp(3px,1.5cqw,7px)}
+.game-card:not(.studio-card) .card-copy strong:after{margin-top:clamp(3px,1.5cqw,7px)}
+.game-card.white:not(.studio-card) .card-art.no-art::before{
+  content:"◇";position:absolute;inset:11% 0 auto;text-align:center;
+  font-family:Georgia,serif;font-size:clamp(42px,27cqw,125px);font-weight:400;
+  line-height:1;color:#d3b787;opacity:.22
+}
+.game-card.blue:not(.studio-card) .card-art.no-art::before{
+  content:"✧";position:absolute;inset:11% 0 auto;text-align:center;
+  font-family:Georgia,serif;font-size:clamp(42px,27cqw,125px);
+  line-height:1;color:#d3b787;opacity:.17
+}
