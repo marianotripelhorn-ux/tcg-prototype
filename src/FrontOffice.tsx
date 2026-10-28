@@ -75,7 +75,7 @@ export function HomeScreen({onPlay,onTutorial,onGallery}: {onPlay:()=>void;onTut
       <div className="home-layout">
         <section className="home-hero">
           <span className="fo-eyebrow">EL MUNDO DE LA QUIRALIDAD TE ESPERA</span>
-          <div className="home-mark" aria-hidden="true"><img src="./branding/logo.svg" alt="" /><span className="home-logo-fallback">✦</span></div>
+          <div className="home-mark" aria-hidden="true"><img src="./branding/logo.png" alt="" onError={event=>{if (!event.currentTarget.src.endsWith("/logo.svg")) event.currentTarget.src="./branding/logo.svg";}} /></div>
           <h1 className="home-title">DAGGERLIGHT</h1>
           <p className="home-tagline">La mano que elegís determina el poder que ejercés.</p><p className="home-subline">Dos Champions. Tres posiciones. Cada carta importa.</p>
           <div className="home-numbers"><span><strong>9</strong> Vida</span><span><strong>3</strong> Cartas por ronda</span><span><strong>5</strong> Facciones</span></div>
