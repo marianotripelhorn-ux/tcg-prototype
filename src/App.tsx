@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import Tutorial from "./Tutorial";
+import ThemeToggle from "./ThemeToggle";
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import { HomeScreen, ChampionPicker, CardCollection } from "./FrontOffice";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
@@ -508,7 +509,10 @@ export default function App() {
             <strong>{game.duelScore.player} — {game.duelScore.opponent}</strong>
             <span>{turnText}</span>
           </div>
-          <button className="academy-utility" type="button" onClick={()=>setTutorialOpen(true)} aria-label="Abrir tutorial">? AYUDA</button>
+          <div className="game-tools">
+            <ThemeToggle compact />
+            <button className="academy-utility" type="button" onClick={()=>setTutorialOpen(true)} aria-label="Abrir tutorial">? AYUDA</button>
+          </div>
           <button
             className="utility-button"
             type="button"
