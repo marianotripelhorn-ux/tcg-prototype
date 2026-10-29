@@ -1,0 +1,286 @@
+/* Daggerlight — optional dark mode.
+   Brand neutrals only: black #191919, ivory #eae2d5, gold #d3b787.
+   Faction banners and actual card art retain their own colors. */
+
+.theme-toggle{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:36px;min-width:36px;padding:7px 10px;
+  border:1px solid #b69a6c;border-radius:10px;
+  background:#f7f0e3;color:#191919;cursor:pointer;
+  font-size:11px;font-weight:850;letter-spacing:.03em;
+  white-space:nowrap;transition:background .2s,border-color .2s,color .2s;
+}
+.theme-toggle:hover{background:#e8d6b4}
+.theme-toggle:focus-visible{outline:2px solid #d3b787;outline-offset:3px}
+.theme-toggle-icon{font-family:Georgia,serif;display:inline-grid;place-items:center;width:17px;font-size:21px;line-height:1}
+.theme-toggle-compact{width:33px;height:33px;min-height:33px;min-width:33px;padding:0;font-size:19px}
+.fo-header-actions{display:flex;justify-self:end;align-items:center;justify-content:flex-end;gap:9px;min-width:0}
+.fo-topbar .fo-header-actions .fo-text-button{margin:0}
+.home-screen .fo-topbar .fo-header-actions{grid-column:2}
+.game-tools{display:flex;align-items:center;gap:5px;justify-self:end}
+.game-tools .academy-utility{height:33px}
+@media(max-width:520px){
+  .fo-header-actions{gap:5px}
+  .fo-header-actions .fo-top-meta{display:none}
+  .fo-header-actions .fo-text-button{font-size:8px;padding:8px 7px}
+  .theme-toggle{padding:5px 8px;min-height:32px}
+  .theme-toggle-label{display:none}
+  .theme-toggle-compact{padding:0;min-width:30px;width:30px;min-height:30px;height:30px}
+  .game-tools{gap:3px}
+  .game-tools .academy-utility{height:30px}
+}
+@media(prefers-reduced-motion:reduce){.theme-toggle{transition:none}}
+
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --canvas:#191919;
+  --surface:#252320;
+  --surface-soft:#2a2824;
+  --text:#eae2d5;
+  --text-muted:#c2b5a0;
+  --stroke:rgba(211,183,135,.35);
+  --accent:#d3b787;
+  --accent-soft:#2c2821;
+  --gold-light:#d3b787;
+  --red:#d3b787;
+  --muted:#c3b9aa;
+  --line:rgba(211,183,135,.28);
+  background:#191919;
+  color:#eae2d5;
+}
+:root[data-theme="dark"] body,
+:root[data-theme="dark"] #root{
+  background:#191919!important;color:#eae2d5;
+}
+:root[data-theme="dark"] .theme-toggle{
+  color:#eae2d5;background:#2b2925;border-color:#d3b787;
+}
+:root[data-theme="dark"] .theme-toggle:hover{background:#423b2e}
+
+/* Global pages and navigation */
+:root[data-theme="dark"] .fo-shell{
+  color:#eae2d5;
+  background:
+    radial-gradient(ellipse at 88% -10%,rgba(211,183,135,.13),transparent 45%),
+    radial-gradient(ellipse at 8% 90%,rgba(234,226,213,.055),transparent 38%),
+    #191919;
+}
+:root[data-theme="dark"] .fo-glow{display:none}
+:root[data-theme="dark"] .fo-wordmark,
+:root[data-theme="dark"] .fo-top-meta,
+:root[data-theme="dark"] .fo-intro h1{color:#eae2d5}
+:root[data-theme="dark"] .fo-top-meta{color:#b4a895}
+:root[data-theme="dark"] .fo-eyebrow,
+:root[data-theme="dark"] .fo-glyph{color:#d3b787}
+:root[data-theme="dark"] .fo-footer{color:#b6ac9b;border-color:rgba(211,183,135,.32)}
+:root[data-theme="dark"] .fo-back,
+:root[data-theme="dark"] .fo-text-button{color:#eae2d5;border-color:rgba(211,183,135,.55);background:#282622}
+:root[data-theme="dark"] .fo-back:hover,
+:root[data-theme="dark"] .fo-text-button:hover{background:#39342c}
+:root[data-theme="dark"] .fo-intro p{color:#c7bcac}
+
+/* Landing. No faction hues outside faction surfaces. */
+:root[data-theme="dark"] .home-hero .home-title{
+  color:#eae2d5;text-shadow:none;
+}
+:root[data-theme="dark"] .home-hero .home-tagline{color:#eae2d5}
+:root[data-theme="dark"] .home-hero .home-subline{color:#cbbfad}
+:root[data-theme="dark"] .home-numbers span{color:#c4b8a6;border-color:rgba(211,183,135,.3)}
+:root[data-theme="dark"] .home-numbers strong{color:#d3b787}
+:root[data-theme="dark"] .home-mark .home-logo-fallback{color:#d3b787;border-color:#d3b787}
+:root[data-theme="dark"] .home-action,
+:root[data-theme="dark"] .home-action.action-play{
+  color:#eae2d5;background:linear-gradient(115deg,#302c25,#22211f 73%,#191919);
+  border-color:rgba(211,183,135,.42);box-shadow:0 8px 25px rgba(0,0,0,.19);
+}
+:root[data-theme="dark"] .home-action:hover{border-color:#d3b787;box-shadow:0 13px 30px rgba(0,0,0,.35)}
+:root[data-theme="dark"] .home-action-index,
+:root[data-theme="dark"] .home-action i{color:#d3b787}
+:root[data-theme="dark"] .home-action strong{color:#eae2d5}
+:root[data-theme="dark"] .home-action>span:nth-last-of-type(1){color:#d0c4b1}
+:root[data-theme="dark"] .home-action::before{background:radial-gradient(circle,rgba(211,183,135,.3),transparent 68%)}
+
+/* Faction banners are intentionally not re-colored.
+   Dark mode only changes the surrounding neutral Champion cards. */
+:root[data-theme="dark"] .faction-banner.active{
+  border-color:#eae2d5;outline-color:#d3b787;
+}
+:root[data-theme="dark"] .champion-selection{
+  color:#eae2d5;border-color:rgba(211,183,135,.56);border-top-color:#d3b787;
+  background:linear-gradient(145deg,#2b2822,#201f1c);
+  box-shadow:0 16px 38px rgba(0,0,0,.25);
+}
+:root[data-theme="dark"] .champion-section-heading h2{color:#eae2d5}
+:root[data-theme="dark"] .champion-section-heading p,
+:root[data-theme="dark"] .champion-prompt{color:#c6baaa}
+:root[data-theme="dark"] .champion-style{color:#d3b787;border-color:#d3b787}
+:root[data-theme="dark"] .champion-selection .champion-option{
+  background:#302c25;color:#eae2d5;border-color:rgba(211,183,135,.43);
+}
+:root[data-theme="dark"] .champion-selection .champion-option:hover{background:#3c3427}
+:root[data-theme="dark"] .champion-selection .champion-option.selected{
+  border-color:#d3b787;box-shadow:0 0 0 2px #d3b787,0 12px 26px #0006;
+}
+:root[data-theme="dark"] .champion-selection .champion-portrait{
+  background:radial-gradient(circle at 50% 42%,rgba(234,226,213,.19),transparent 55%),linear-gradient(145deg,#464030,#191919);
+}
+:root[data-theme="dark"] .champion-selection .champion-portrait:after{border-color:#d3b787}
+:root[data-theme="dark"] .champion-selection .champion-portrait-sigil{color:#d3b787}
+:root[data-theme="dark"] .champion-selection .champion-option-copy small,
+:root[data-theme="dark"] .champion-selection .champion-option-copy>span{color:#d3b787}
+:root[data-theme="dark"] .champion-selection .champion-option-copy strong{color:#eae2d5}
+:root[data-theme="dark"] .champion-selection .champion-check{color:#eae2d5;border-color:#d3b787;background:#191919}
+:root[data-theme="dark"] .champion-selection .champion-future{
+  background:#292622;border-color:rgba(211,183,135,.4);color:#b6aa98;
+}
+:root[data-theme="dark"] .champion-ability{
+  color:#eae2d5;background:#22211e;border-color:rgba(211,183,135,.37);
+}
+:root[data-theme="dark"] .champion-ability-symbol{color:#d3b787}
+:root[data-theme="dark"] .champion-ability strong{color:#eae2d5}
+:root[data-theme="dark"] .champion-ability p{color:#c7bcac}
+:root[data-theme="dark"] .champion-prompt{background:#292622}
+:root[data-theme="dark"] .fo-expand-button{background:#292622;color:#eae2d5;border-color:rgba(211,183,135,.5)}
+:root[data-theme="dark"] .fo-expand-button span{color:#d3b787}
+:root[data-theme="dark"] .champion-rival-select,
+:root[data-theme="dark"] .champion-rival-select span{color:#c7bcac}
+:root[data-theme="dark"] .champion-rival-select select{
+  color:#eae2d5;background:#22211f;border-color:rgba(211,183,135,.48);
+}
+:root[data-theme="dark"] .fo-main-cta{color:#191919;background:#d3b787;border-color:#d3b787}
+:root[data-theme="dark"] .fo-main-cta:hover{background:#e1cca7;filter:none}
+
+/* Collection browsing. Preserve faction accents and full-art previews. */
+:root[data-theme="dark"] .library-stats span,
+:root[data-theme="dark"] .library-result-heading{color:#c7bcac}
+:root[data-theme="dark"] .library-stats b,
+:root[data-theme="dark"] .library-result-heading strong{color:#d3b787}
+:root[data-theme="dark"] .library-toolbar{border-color:rgba(211,183,135,.32)}
+:root[data-theme="dark"] .library-faction-filters button{
+  color:#eae2d5;background:#282622;border-color:rgba(211,183,135,.4);
+}
+:root[data-theme="dark"] .library-faction-filters button.current:not([class*="theme-"]){
+  background:#d3b787;color:#191919;border-color:#d3b787;
+}
+:root[data-theme="dark"] .library-faction-filters button.current.theme-red{background:#b23e4b;color:#fff;border-color:#b23e4b}
+:root[data-theme="dark"] .library-faction-filters button.current.theme-blue{background:#554c9f;color:#fff;border-color:#554c9f}
+:root[data-theme="dark"] .library-faction-filters button.current.theme-white{background:#ccbc96;color:#191919;border-color:#ccbc96}
+:root[data-theme="dark"] .library-faction-filters button.current.theme-saints{background:#b99a44;color:#191919;border-color:#b99a44}
+:root[data-theme="dark"] .library-faction-filters button.current.theme-ivory{background:#699aaf;color:#191919;border-color:#699aaf}
+:root[data-theme="dark"] .library-search{color:#d3b787;background:#262420;border-color:rgba(211,183,135,.42)}
+:root[data-theme="dark"] .library-search span:not(.sr-only){color:#d3b787}
+:root[data-theme="dark"] .library-search input{color:#eae2d5}
+:root[data-theme="dark"] .library-search input::placeholder{color:#bcb0a0}
+:root[data-theme="dark"] .library-card-tile,
+:root[data-theme="dark"] .library-tile-text{background:#282622;color:#eae2d5;border-color:rgba(211,183,135,.35)}
+:root[data-theme="dark"] .library-card-tile:hover{border-color:#d3b787}
+:root[data-theme="dark"] .library-tile-text strong{color:#eae2d5}
+:root[data-theme="dark"] .library-tile-id{color:#c2b8a7}
+:root[data-theme="dark"] .library-tile-id b{color:#d3b787}
+:root[data-theme="dark"] .library-tile-text>span:last-child{color:#c5b8a7}
+:root[data-theme="dark"] .library-empty{color:#d0c4b2}
+:root[data-theme="dark"] .library-modal-backdrop{background:rgba(10,10,10,.88)}
+:root[data-theme="dark"] .library-modal{
+  color:#eae2d5;background:linear-gradient(145deg,#302b23,#191919 75%);
+  border-color:#d3b787;
+}
+:root[data-theme="dark"] .library-modal-close{color:#eae2d5;background:#191919;border-color:#d3b787}
+:root[data-theme="dark"] .library-detail-copy h2,
+:root[data-theme="dark"] .library-detail-copy p{color:#eae2d5}
+:root[data-theme="dark"] .library-detail-copy .fo-eyebrow,
+:root[data-theme="dark"] .library-ability-heading{color:#d3b787}
+:root[data-theme="dark"] .library-detail-tags span{
+  color:#eae2d5;background:#292720;border-color:rgba(211,183,135,.45);
+}
+:root[data-theme="dark"] .library-detail-tags b{color:#d3b787}
+:root[data-theme="dark"] .library-detail-copy>small{color:#c9bca9}
+:root[data-theme="dark"] .library-art-note{color:#eae2d5;background:#2e2920;border-color:#d3b787}
+:root[data-theme="dark"] .library-view-toggle{background:#191919;border-color:rgba(211,183,135,.5)}
+:root[data-theme="dark"] .library-view-toggle button{color:#cbbfaa}
+:root[data-theme="dark"] .library-view-toggle button.active{color:#191919;background:#d3b787;border-color:#d3b787}
+:root[data-theme="dark"] .library-modal-nav button{color:#eae2d5;background:#2d2922;border-color:rgba(211,183,135,.5)}
+
+/* Match, life bars, three lanes, action text and hand. Cards are untouched. */
+:root[data-theme="dark"] .app-shell{
+  background:radial-gradient(ellipse at 75% -10%,rgba(211,183,135,.1),transparent 53%),#191919;
+  color:#eae2d5;
+}
+:root[data-theme="dark"] .game-frame{background:#24221f;border-color:rgba(211,183,135,.48);box-shadow:0 20px 55px #0006}
+:root[data-theme="dark"] .champion-bar{color:#eae2d5;background:linear-gradient(90deg,#272520,#191919)}
+:root[data-theme="dark"] .champion-medallion{color:#d3b787;background:#191919;border-color:#d3b787;box-shadow:inset 0 0 14px rgba(211,183,135,.2)}
+:root[data-theme="dark"] .champion-copy strong,
+:root[data-theme="dark"] .life-block{color:#eae2d5}
+:root[data-theme="dark"] .champion-eyebrow{color:#d3b787}
+:root[data-theme="dark"] .champion-passive{color:#c3b9a9}
+:root[data-theme="dark"] .life-block span{color:#d3b787}
+:root[data-theme="dark"] .match-strip{color:#eae2d5;background:#191919;border-color:rgba(211,183,135,.38)}
+:root[data-theme="dark"] .match-strip span{color:#c3b9aa}
+:root[data-theme="dark"] .duel-status strong{color:#eae2d5}
+:root[data-theme="dark"] .utility-button{color:#eae2d5;background:#2b2822;border-color:rgba(211,183,135,.5)}
+:root[data-theme="dark"] .academy-utility{color:#191919;background:#d3b787;border-color:#d3b787}
+:root[data-theme="dark"] .game-hint{background:#302b22;color:#eae2d5;border-color:rgba(211,183,135,.35)}
+:root[data-theme="dark"] .game-hint b{color:#d3b787}
+:root[data-theme="dark"] .battlefield{
+  min-height:330px;
+  background:
+    linear-gradient(rgba(211,183,135,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(211,183,135,.05) 1px,transparent 1px),
+    #22211f;
+  background-size:24px 24px;
+}
+:root[data-theme="dark"] .board-slot{background:#2b2925;border-color:rgba(211,183,135,.26)}
+:root[data-theme="dark"] .board-slot.drop-active{background:#453a29;border-color:#d3b787;box-shadow:inset 0 0 24px rgba(211,183,135,.13)}
+:root[data-theme="dark"] .lane-axis{color:#c6b69f}
+:root[data-theme="dark"] .lane-axis i{background:linear-gradient(90deg,#a8936e,transparent)}
+:root[data-theme="dark"] .archive-count,
+:root[data-theme="dark"] .slot-capacity{color:#eae2d5;background:#191919;border-color:rgba(211,183,135,.39)}
+:root[data-theme="dark"] .slot-empty{border-color:rgba(211,183,135,.22)}
+:root[data-theme="dark"] .action-line{color:#d0c4b2;background:#2b2925;border-color:rgba(211,183,135,.3)}
+:root[data-theme="dark"] .hand-zone{background:linear-gradient(180deg,#252320,#191919)}
+:root[data-theme="dark"] .hand-label span{color:#eae2d5}
+:root[data-theme="dark"] .hand-label small{color:#c3b9aa}
+:root[data-theme="dark"] .empty-hand{color:#c7b9a6}
+:root[data-theme="dark"] .primary-button{background:#d3b787;border-color:#d3b787;color:#191919}
+:root[data-theme="dark"] .secondary-button{background:#2b2823;border-color:rgba(211,183,135,.49);color:#eae2d5}
+:root[data-theme="dark"] .decision-overlay{background:rgba(0,0,0,.65)}
+:root[data-theme="dark"] .decision-card{color:#eae2d5;background:#25231f;border-color:rgba(211,183,135,.52)}
+:root[data-theme="dark"] .decision-card>span{color:#d3b787}
+:root[data-theme="dark"] .decision-card>p{color:#c9bca9}
+:root[data-theme="dark"] .card-zoom-overlay{background:rgba(0,0,0,.83)}
+:root[data-theme="dark"] .zoom-actions{color:#eae2d5;background:#25231f;border-color:rgba(211,183,135,.38)}
+:root[data-theme="dark"] .zoom-actions strong{color:#eae2d5}
+:root[data-theme="dark"] .zoom-actions span{color:#c4b8a5}
+:root[data-theme="dark"] .zoom-close{color:#eae2d5;background:#191919;border-color:#d3b787}
+
+/* Academy modal. Its example cards remain dark in either theme. */
+:root[data-theme="dark"] .tutorial-overlay{background:rgba(0,0,0,.78)}
+:root[data-theme="dark"] .tutorial-dialog{color:#eae2d5;background:linear-gradient(145deg,#2b2822,#191919);border-color:#d3b787}
+:root[data-theme="dark"] .tutorial-brand,
+:root[data-theme="dark"] .tutorial-copy h2{color:#eae2d5}
+:root[data-theme="dark"] .tutorial-brand b,
+:root[data-theme="dark"] .tutorial-kicker{color:#d3b787}
+:root[data-theme="dark"] .tutorial-copy p{color:#cabeac}
+:root[data-theme="dark"] .tutorial-close{background:#191919;color:#eae2d5;border-color:#d3b787}
+:root[data-theme="dark"] .tutorial-progress-dot{background:#484035}
+:root[data-theme="dark"] .tutorial-progress-dot.is-reached{background:#a58c63}
+:root[data-theme="dark"] .tutorial-progress-dot.is-current{background:#d3b787}
+:root[data-theme="dark"] .tutorial-bottom{border-color:rgba(211,183,135,.33)}
+:root[data-theme="dark"] .tutorial-step-count{color:#d3b787}
+:root[data-theme="dark"] .tutorial-back{background:#292620;color:#eae2d5;border-color:rgba(211,183,135,.5)}
+:root[data-theme="dark"] .tutorial-next,
+:root[data-theme="dark"] .tutorial-primary,
+:root[data-theme="dark"] .tutorial-try{background:#d3b787;color:#191919;border-color:#d3b787}
+:root[data-theme="dark"] .tutorial-exercise{color:#eae2d5;background:linear-gradient(145deg,#302b24,#191919);border-color:rgba(211,183,135,.27)}
+:root[data-theme="dark"] .tutorial-exercise .tutorial-eyebrow{color:#d3b787}
+:root[data-theme="dark"] .tutorial-reminder{background:#2e2921;color:#eae2d5;border-color:#d3b787}
+:root[data-theme="dark"] .tutorial-ready p{color:#cbbfad}
+:root[data-theme="dark"] .tutorial-stat-row>span,
+:root[data-theme="dark"] .tutorial-ready-pills span{background:#28251f;border-color:rgba(211,183,135,.35);color:#eae2d5}
+:root[data-theme="dark"] .tutorial-exercise .tutorial-feedback.correct{color:#d8f5e3}
+:root[data-theme="dark"] .tutorial-decision-actions .tutorial-secondary{background:#292620;color:#eae2d5;border-color:rgba(211,183,135,.45)}
+@media(max-width:700px){
+  :root[data-theme="dark"] .battlefield{min-height:290px}
+}
+@media(max-height:720px){
+  :root[data-theme="dark"] .battlefield{min-height:220px}
+}
