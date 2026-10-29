@@ -25,3 +25,13 @@ No usar degradés rojos, azules ni otros tonos de facción en el fondo del sitio
 - `public/cards/blue/blue-cards-1-hq.webp` y `blue-cards-2-hq.webp`: hojas de alta resolución de Corte Sinistral. Los viejos sprites permanecen como respaldo.
 
 Las cinco imágenes binarias se entregan empaquetadas por separado para su carga en GitHub, ya que el conector de edición textual no transfiere binarios. Hasta que estén subidas, el prototipo muestra los frentes provisionales y las imágenes azules antiguas. Los estilos y las reglas de juego no dependen de su presencia.
+
+## Modo oscuro (opcional)
+
+La preferencia del usuario se cambia desde el botón con icono de luna/sol situado en la barra de navegación, y también desde el tablero de partida. El estado se conserva entre pantallas y se guarda en `localStorage` bajo la clave `daggerlight-theme`; el modo claro sigue siendo el predeterminado para nuevas visitas.
+
+- **Claro:** fondo marfil `#eae2d5`, texto negro `#191919`, detalles dorados `#d3b787`.
+- **Oscuro:** fondo negro `#191919`, texto marfil `#eae2d5`, detalles dorados `#d3b787`.
+- Sombras y superficies auxiliares usan variantes neutrales del negro y el marfil; ningún otro matiz debe incorporarse al diseño de la interfaz general.
+- Los colores propios de los **cinco banners de facción**, las ilustraciones de cartas y sus coronas no cambian al activar el modo oscuro.
+- La implementación está centralizada en `src/theme.ts`, `src/ThemeToggle.tsx` y `src/dark-mode.css`. El modo se inicializa antes del renderizado de React para evitar que aparezca temporalmente el tema equivocado.
