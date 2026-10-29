@@ -1,5 +1,6 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
+import ThemeToggle from "./ThemeToggle";
 import { allCards, factionLabels } from "./data";
 import { champions } from "./engine/champions";
 import type { CardDefinition, Faction } from "./types";
@@ -70,7 +71,7 @@ export function HomeScreen({onPlay,onTutorial,onGallery}: {onPlay:()=>void;onTut
       <div className="fo-glow glow-right" aria-hidden="true" />
       <header className="fo-topbar">
         <span className="fo-wordmark"><span className="fo-glyph">✦</span> DAGGERLIGHT</span>
-        <span className="fo-top-meta">TCG · VERSIÓN DE PRUEBA</span>
+        <div className="fo-header-actions"><span className="fo-top-meta">TCG · VERSIÓN DE PRUEBA</span><ThemeToggle /></div>
       </header>
       <div className="home-layout">
         <section className="home-hero">
@@ -127,7 +128,7 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
       <header className="fo-topbar">
         <button type="button" className="fo-back" onClick={onBack}>← INICIO</button>
         <span className="fo-wordmark"><span className="fo-glyph">✦</span> DAGGERLIGHT</span>
-        <button type="button" className="fo-text-button" onClick={onGallery}>VER CARTAS ↗</button>
+        <div className="fo-header-actions"><button type="button" className="fo-text-button" onClick={onGallery}>VER CARTAS ↗</button><ThemeToggle /></div>
       </header>
       <section className="fo-intro picker-intro">
         <span className="fo-eyebrow">ANTES DE ENTRAR EN COMBATE</span>
@@ -244,7 +245,7 @@ export function CardCollection({onBack,onPlay}:GalleryProps) {
       <header className="fo-topbar">
         <button className="fo-back" type="button" onClick={onBack}>← INICIO</button>
         <span className="fo-wordmark"><span className="fo-glyph">✦</span> DAGGERLIGHT</span>
-        <button type="button" className="fo-text-button" onClick={onPlay}>JUGAR ↗</button>
+        <div className="fo-header-actions"><button type="button" className="fo-text-button" onClick={onPlay}>JUGAR ↗</button><ThemeToggle /></div>
       </header>
       <section className="fo-intro library-intro">
         <span className="fo-eyebrow">ARCHIVO DE LA QUIRALIDAD</span>
