@@ -363,14 +363,14 @@ export default function App() {
     setScreen(destination);
   }
 
-  function showResolvedDuel(duel:DuelSummary|null) {
+  function showResolvedDuel(duel:DuelSummary|null, duration=1700) {
     clearPreviewTimer();
     if (!duel) return;
     setDuelPreview(duel);
     previewTimer.current=window.setTimeout(()=>{
       setDuelPreview(null);
       previewTimer.current=null;
-    },1300);
+    },duration);
   }
 
   function playCard(handIndex:number, position:Position) {
@@ -386,7 +386,7 @@ export default function App() {
     setInspection(null);
     setHoveredPosition(null);
     setDrag(null);
-    showResolvedDuel(next.lastDuel);
+    showResolvedDuel(next.lastDuel,newAuguries.length+healingEvents.length>0?2100:1700);
   }
 
   function chooseQuiero(wants:boolean) {
