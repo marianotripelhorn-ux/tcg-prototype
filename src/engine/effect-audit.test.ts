@@ -147,9 +147,9 @@ function postCase(
 }
 
 describe("Daggerlight v2 complete effect audit", () => {
-  it("covers exactly the 59 unique effect IDs in the current 60-card pool", () => {
+  it("covers exactly 54 unique effect IDs in the current 60-card pool after shared Augurio keyword", () => {
     const actual=[...new Set(allCards.map(card=>card.effect))].sort();
-    expect(actual).toHaveLength(59);
+    expect(actual).toHaveLength(54);
     expect(actual).toEqual([...auditedEffects].sort());
     expect(allCards).toHaveLength(60);
     expect(allCards.filter(card=>card.effect==="archive_here").map(card=>card.id).sort())
