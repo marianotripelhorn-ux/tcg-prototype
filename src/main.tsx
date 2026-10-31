@@ -6,6 +6,7 @@ import "./styles.css";
 import "./light-theme.css";
 import "./brand-theme.css";
 import "./dark-mode.css";
+import "./gameplay-experiment.css";
 
 initializeTheme();
 
