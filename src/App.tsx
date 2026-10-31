@@ -29,6 +29,8 @@ type DuelPublicSnapshot = {
   round:number;
   playerLife:number;
   opponentLife:number;
+  playerHealed:number;
+  opponentHealed:number;
   score:{player:number;opponent:number};
 };
 
@@ -167,9 +169,8 @@ function DuelPowerCard({played,side}:{played:EnginePlay;side:"player"|"opponent"
       </div>
       <div className="duel-showcase-details">
         <span className="duel-showcase-cardname">{played.card.name}</span>
-        {effect==="inactive"&&<span className="duel-showcase-failed">HABILIDAD NO ACTIVADA</span>}
+        {effect==="inactive"&&<span className="duel-showcase-failed">{played.card.effect==="augury_match3"?"AUGURIO FALLIDO":"HABILIDAD NO ACTIVADA"}</span>}
         {effect==="activated"&&<span className="duel-showcase-activated">HABILIDAD ACTIVADA</span>}
-        {effect==="forecast"&&<span className="duel-showcase-activated">AUGURIO ANUNCIADO</span>}
       </div>
     </div>
   );
@@ -272,12 +273,14 @@ function ChampionBar({
   side,
   name,
   life,
-  passive
+  passive,
+  healedLife=0
 }: {
   side: "player" | "opponent";
   name: string;
   life: number;
   passive: string;
+  healedLife?: number;
 }) {
   return (
     <section className={`champion-bar ${side}`}>
@@ -287,8 +290,9 @@ function ChampionBar({
         <strong>{name}</strong>
         <span className="champion-passive">{passive}</span>
       </div>
-      <div className="life-block" aria-label={`${life} de 9 de Vida`}>
+      <div className="life-block" aria-label={`${life} de 9 de Vida${healedLife>0?`, ${healedLife} Vida recuperada`: ""}`}>
         <b>{life}</b><span>♥</span>
+        {healedLife>0&&<span className="life-recovered" title="Vida recuperada por la Prioresa">{`+${healedLife}`}</span>}
       </div>
     </section>
   );
@@ -489,6 +493,8 @@ export default function App() {
       round:game.round,
       playerLife:game.player.life,
       opponentLife:game.opponent.life,
+      playerHealed:game.player.healedLife,
+      opponentHealed:game.opponent.healedLife,
       score:{...game.duelScore}
     });
     const next=cloneGame(game);
@@ -625,6 +631,7 @@ export default function App() {
           side="opponent"
           name={game.opponent.champion.name}
           life={displayed?.opponentLife??game.opponent.life}
+          healedLife={displayed?.opponentHealed??game.opponent.healedLife}
           passive={game.opponent.champion.text}
         />
 
@@ -716,6 +723,7 @@ export default function App() {
           side="player"
           name={game.player.champion.name}
           life={displayed?.playerLife??game.player.life}
+          healedLife={displayed?.playerHealed??game.player.healedLife}
           passive={game.player.champion.text}
         />
 
