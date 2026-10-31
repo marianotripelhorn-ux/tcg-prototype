@@ -3,13 +3,14 @@ import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import ThemeToggle from "./ThemeToggle";
 import { allCards, factionLabels } from "./data";
 import { champions } from "./engine/champions";
+import type { AIDifficulty } from "./engine/types";
 import type { CardDefinition, Faction } from "./types";
 import "./front-office.css";
 
 type GoHome = () => void;
 type ChampionPickerProps = {
   onBack: GoHome;
-  onPlay: (championId: string, opponentId: string) => void;
+  onPlay: (championId: string, opponentId: string, difficulty: AIDifficulty) => void;
   onGallery: () => void;
 };
 
@@ -112,6 +113,7 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
   const [selected,setSelected]=useState<string|null>(null);
   const [opponent,setOpponent]=useState("random");
   const [showRival,setShowRival]=useState(false);
+  const [difficulty,setDifficulty]=useState<AIDifficulty>("normal");
   const activeChampions=faction?Object.values(champions).filter(c=>c.faction===faction):[];
   const chosen=selected?champions[selected]:null;
   const meta=faction?factionInfo.find(f=>f.id===faction):null;
@@ -217,7 +219,20 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
                     </label>
                   )}
                 </div>
-                <button type="button" className="fo-main-cta" onClick={()=>onPlay(chosen.id,opponent)}>JUGAR CON {chosen.name.toUpperCase()} <span aria-hidden="true">→</span></button>
+                <div className="ai-difficulty-picker">
+                  <label htmlFor="difficulty-mode">DIFICULTAD DE LA IA</label>
+                  <select id="difficulty-mode" value={difficulty} onChange={event=>setDifficulty(event.target.value as AIDifficulty)}>
+                    <option value="easy">Fácil · Aprendiz</option>
+                    <option value="normal">Normal · Estratega</option>
+                    <option value="hard">Difícil · Maestro</option>
+                  </select>
+                  <small>{difficulty==="easy"
+                    ? "Un rival accesible que explora jugadas."
+                    : difficulty==="hard"
+                      ? "Planifica combinaciones y puede evitar Augurios anunciados."
+                      : "La IA del prototipo original, con decisiones tácticas."}</small>
+                </div>
+                <button type="button" className="fo-main-cta" onClick={()=>onPlay(chosen.id,opponent,difficulty)}>JUGAR CON {chosen.name.toUpperCase()} <span aria-hidden="true">→</span></button>
               </div>
             </>
           ):(
