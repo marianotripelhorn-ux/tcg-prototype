@@ -11,13 +11,6 @@ export interface EnginePlay extends PlayedCard {
   planScore?: number;
 }
 
-export interface PendingAugury {
-  effect: string;
-  sourceCardId: string;
-  sourceName: string;
-  sourcePosition: Position;
-}
-
 export interface PreparedPositionBoost {
   position: Position;
   amount: number;
@@ -45,10 +38,9 @@ export interface PlayerState {
   saintPassiveUsed: boolean;
   athosDiestraCapacity: number;
   viniraUsed: boolean;
-  pendingAuguries: PendingAugury[];
-  auguryBuff: number;
-  auguryQueuedBuff: number;
   lastAuguryResult: "hit" | "miss" | null;
+  auguryHitsTotal: number;
+  healedLife: number;
   auguryHitsSinceHeal: number;
   auguryHeals: number;
   cycles: number;
