@@ -189,3 +189,26 @@
   .duel-feedback-card .power-change,.match-final,.match-final::before,
   .match-final-sigil{animation:none!important;transform:none!important;opacity:1!important}
 }
+
+
+/* Informational Priory HUD, inside the existing hint row. */
+.game-hint{flex-wrap:wrap;gap:5px 10px}
+.game-hint-instruction{display:inline-flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:3px}
+.augury-status-strip{display:inline-flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 8px;max-width:100%;font-size:10px;line-height:1.35;color:#514b42}
+.augury-status-strip>span{display:inline-block}
+.augury-status-heading{font-size:9px;letter-spacing:.07em;font-weight:900;color:#93713b}
+.augury-status-count{font-weight:750;color:#514b42}
+.augury-status-pending{border-radius:5px;background:#e4d6bf;padding:3px 6px;max-width:min(100%,390px);white-space:normal}
+.augury-status-none{color:#847965;font-style:italic}
+.augury-status-buff{font-weight:850;color:#191919;border-bottom:1px solid #d3b787}
+:root[data-theme="dark"] .augury-status-strip,
+:root[data-theme="dark"] .augury-status-count{color:#d6cab7}
+:root[data-theme="dark"] .augury-status-heading,
+:root[data-theme="dark"] .augury-status-buff{color:#d3b787}
+:root[data-theme="dark"] .augury-status-pending{background:#433a2c;color:#eae2d5}
+:root[data-theme="dark"] .augury-status-none{color:#ada18d}
+@media(max-width:520px){
+ .game-hint{gap:4px}
+ .augury-status-strip{font-size:9px;gap:3px 6px}
+ .augury-status-heading{font-size:8px}
+}
