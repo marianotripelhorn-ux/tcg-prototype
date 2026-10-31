@@ -10,7 +10,7 @@ permissions:
   actions: write
 
 concurrency:
-  group: gameplay-v1-preview
+  group: gameplay-v1-augury-v2
   cancel-in-progress: true
 
 jobs:
