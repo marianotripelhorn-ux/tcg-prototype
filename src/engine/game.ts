@@ -1,5 +1,5 @@
 import { positionLabels } from "../data";
-import type { DuelResult } from "../types";
+import type { DuelResult, Position } from "../types";
 import { aiWantsQuiero, chooseAIPlay } from "./ai";
 import { affinityActive, calculateDuel, legalPositions, previewOpeningPower } from "./rules";
 import { createGame, resetRoundPlayer } from "./state";
