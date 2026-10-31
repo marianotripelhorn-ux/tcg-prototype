@@ -9,7 +9,7 @@ import { studioThemes } from "./cardStudio";
 import { champions } from "./engine/champions";
 import { answerQuiero, cloneGame, startGame, submitPlayerPlay } from "./engine/game";
 import { capacity, legalPositions } from "./engine/rules";
-import type { DuelSummary, EnginePlay, GameState } from "./engine/types";
+import type { AIDifficulty, DuelSummary, EnginePlay, GameState } from "./engine/types";
 import type { CardDefinition, Position } from "./types";
 
 type DragState = {
@@ -308,6 +308,7 @@ export default function App() {
   const championIds=Object.keys(champions);
   const [playerChampion,setPlayerChampion]=useState("dextral");
   const [opponentChampion,setOpponentChampion]=useState("random");
+  const [aiDifficulty,setAiDifficulty]=useState<AIDifficulty>("normal");
   const [screen,setScreen]=useState<"home"|"champions"|"collection">("home");
   const [game,setGame]=useState<GameState|null>(null);
   const [selectedIndex,setSelectedIndex]=useState<number|null>(null);
@@ -331,14 +332,15 @@ export default function App() {
     }
   }
 
-  function startWithChampion(championId:string, rivalSelection:string) {
+  function startWithChampion(championId:string, rivalSelection:string, difficulty:AIDifficulty=aiDifficulty) {
     clearPreviewTimer();
     const opponent = rivalSelection==="random"
       ? championIds.filter(id=>id!==championId)[Math.floor(Math.random()*(championIds.length-1))]
       : rivalSelection;
     setPlayerChampion(championId);
     setOpponentChampion(rivalSelection);
-    setGame(startGame(championId,opponent));
+    setAiDifficulty(difficulty);
+    setGame(startGame(championId,opponent,Math.random,undefined,difficulty));
     setSelectedIndex(null);
     setInspection(null);
     setDuelPreview(null);
@@ -347,7 +349,7 @@ export default function App() {
   }
 
   function beginMatch() {
-    startWithChampion(playerChampion,opponentChampion);
+    startWithChampion(playerChampion,opponentChampion,aiDifficulty);
   }
 
   function goToMenu(destination:"home"|"champions"|"collection") {
@@ -510,6 +512,7 @@ export default function App() {
             <span>{turnText}</span>
           </div>
           <div className="game-tools">
+            <span className="game-difficulty-label" title="Dificultad de la IA">IA: {game.aiDifficulty==="easy"?"Fácil":game.aiDifficulty==="hard"?"Difícil":"Normal"}</span>
             <ThemeToggle compact />
             <button className="academy-utility" type="button" onClick={()=>setTutorialOpen(true)} aria-label="Abrir tutorial">? AYUDA</button>
           </div>
