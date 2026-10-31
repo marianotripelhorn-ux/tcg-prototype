@@ -89,3 +89,103 @@
   .duel-cinematic::before,.duel-cinematic::after,.duel-cinematic-ring,.duel-cinematic-sparks{display:none}
   .battlefield.duel-is-resolving .board-slot{transition:none}
 }
+
+
+/* Motion v1.1 — three distinct duel outcomes, modifier feedback, final match. */
+.duel-cinematic{gap:clamp(5px,1vw,10px)}
+.duel-cinematic-opponent{
+  background:radial-gradient(ellipse at center,rgba(25,25,25,.96),rgba(25,25,25,.87) 58%,rgba(25,25,25,.38) 100%);
+}
+.duel-cinematic-opponent::before,
+.duel-cinematic-opponent::after{
+  transform:translate(-50%,-50%) rotate(-30deg);
+  background:linear-gradient(to right,transparent,#eae2d5,transparent);
+  animation:duel-loss-sweep .52s ease-out both;
+}
+.duel-cinematic-opponent::after{transform:translate(-50%,-50%) rotate(30deg);animation-delay:.08s}
+.duel-cinematic-opponent strong{color:#eae2d5;animation:duel-loss-word .42s .20s ease-out both;text-shadow:0 0 10px #eae2d533}
+.duel-cinematic-opponent .duel-cinematic-ring{border-color:#eae2d5;animation:duel-loss-ring .85s .1s ease-in both}
+.duel-cinematic-opponent .duel-cinematic-sparks{color:#eae2d5;animation:duel-sparks .60s .1s ease-out both}
+.duel-cinematic-draw{
+  background:radial-gradient(ellipse at center,rgba(43,39,31,.96),rgba(25,25,25,.83) 70%,rgba(25,25,25,.28));
+}
+.duel-cinematic-draw::before,.duel-cinematic-draw::after{display:none}
+.duel-cinematic-draw .duel-cinematic-ring{
+  width:120px;height:120px;border:1px solid #d3b787;
+  animation:duel-balance-ring 1.15s ease-in-out both;
+}
+.duel-cinematic-draw .duel-cinematic-ring.second{animation-delay:.13s;transform-origin:center;border-style:dashed}
+.duel-cinematic-draw strong{font-family:Georgia,serif;letter-spacing:.18em;font-weight:500;text-shadow:none}
+.duel-cinematic-draw .duel-cinematic-sparks{font-size:19px;letter-spacing:30px}
+.duel-cinematic-player .duel-cinematic-ring.second{animation-delay:.26s}
+.duel-feedback{
+  position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+  width:min(98%,460px);margin:5px auto 16px;
+}
+.duel-feedback-card{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 6px;border-top:1px solid #d3b78788;background:#191919b0;min-height:52px;overflow:hidden}
+.duel-feedback-card small{font-size:9px;font-weight:850;letter-spacing:.13em;color:#d3b787}
+.duel-feedback-card .power-change{font-size:clamp(13px,2.4vw,19px);letter-spacing:.07em;font-weight:850;animation:duel-power-pop .45s .40s ease-out both}
+.duel-feedback-card .power-gain{color:#d3b787}
+.duel-feedback-card .power-loss{color:#eae2d5}
+.duel-feedback-card em{font-size:9px;letter-spacing:.055em;line-height:1.2;color:#eae2d5;font-style:normal;font-weight:700}
+.duel-feedback-card em:only-of-type{margin-top:6px}
+.duel-augury-events{position:relative;display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:550px}
+.duel-augury-events>span{font-size:10px;line-height:1.25;color:#d3b787;background:#191919;border:1px solid #d3b78777;padding:6px 9px;border-radius:30px}
+.duel-cinematic-skip{bottom:5px}
+@keyframes duel-loss-sweep{
+  0%{opacity:0;scale:.3;filter:blur(10px)}30%{opacity:.8;filter:blur(0)}100%{opacity:0;scale:1.3}
+}
+@keyframes duel-loss-ring{
+  0%{opacity:.65;transform:translate(-50%,-50%) scale(1.9)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(.2)}
+}
+@keyframes duel-loss-word{
+  0%{opacity:0;transform:translateY(-15px) scale(1.1)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes duel-balance-ring{
+  0%{opacity:0;transform:translate(-50%,-50%) rotate(-30deg) scale(.5)}
+  30%{opacity:.7}100%{opacity:.18;transform:translate(-50%,-50%) rotate(80deg) scale(1.85)}
+}
+@keyframes duel-power-pop{
+  0%{opacity:0;transform:translateY(8px) scale(.8)}
+  70%{opacity:1;transform:translateY(-2px) scale(1.1)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+/* Match conclusion comes after the last duel animation. */
+.match-final{position:relative;isolation:isolate;overflow:hidden;border-color:#d3b787!important;
+  animation:match-final-enter .55s cubic-bezier(.18,.8,.22,1) both}
+.match-final::before{content:"";position:absolute;z-index:-1;inset:-30%;
+  border:1px solid #d3b78788;border-radius:50%;
+  animation:match-final-halo 2s ease-out both;pointer-events:none}
+.match-final::after{content:"";position:absolute;inset:0;border:1px solid #d3b78755;
+  border-radius:inherit;pointer-events:none}
+.match-final-sigil{display:block!important;position:relative;text-align:center;
+  font-size:62px;color:#d3b787;line-height:1.15;margin:0 0 9px!important;
+  animation:duel-power-pop .6s .16s ease-out both}
+.match-final-caption{display:block!important;color:#76654e;
+  font-size:11px;line-height:1.45;margin:0 0 17px!important}
+.match-final>div:last-child{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.match-final-player>strong{color:#ab884f}
+.match-final-opponent>.match-final-sigil{color:#6e6455}
+.match-final-draw>.match-final-sigil{color:#ac9a79}
+:root[data-theme="dark"] .match-final-caption{color:#cfbea6}
+:root[data-theme="dark"] .match-final-player>strong{color:#d3b787}
+:root[data-theme="dark"] .match-final-opponent>.match-final-sigil{color:#eae2d5}
+@keyframes match-final-enter{from{opacity:0;transform:translateY(18px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes match-final-halo{0%{opacity:0;transform:scale(.2)}55%{opacity:.45}100%{opacity:.12;transform:scale(1.45)}}
+@media(max-width:520px){
+  .duel-cinematic{padding:8px;gap:5px}
+  .duel-feedback{gap:5px;margin:3px auto 13px}
+  .duel-feedback-card{padding:7px 3px}
+  .duel-feedback-card small{font-size:8px}
+  .duel-feedback-card em{font-size:8px}
+  .duel-augury-events>span{font-size:9px}
+  .match-final>div:last-child{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  .duel-cinematic-opponent::before,.duel-cinematic-opponent::after,
+  .duel-cinematic-draw .duel-cinematic-ring,.duel-cinematic-opponent .duel-cinematic-ring,
+  .duel-feedback-card .power-change,.match-final,.match-final::before,
+  .match-final-sigil{animation:none!important;transform:none!important;opacity:1!important}
+}
