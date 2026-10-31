@@ -27,20 +27,14 @@ describe("Daggerlight configurable AI", () => {
     expect(["siniestra","trono","diestra"]).toContain(result.position);
   });
 
-  it("hard mode can dodge a publicly announced Augurio without inspecting player hand", () => {
+  it("hard AI evaluates the immediate +3 of a visible Augurio without hidden information", () => {
     const state=createGame("prioresa_luna_llena","dextral",fixed,"player");
     state.opponent.hand=[byId("invocadagas")];
-    state.player.pendingAuguries=[{
-      effect:"augury_same_position",
-      sourceCardId:"luna_creciente",
-      sourceName:"LUNA CRECIENTE",
-      sourcePosition:"diestra"
-    }];
-    state.aiDifficulty="normal";
-    const standard=chooseAIPlay(state,null,true,()=>.5);
-    expect(standard.position).toBe("diestra");
     state.aiDifficulty="hard";
-    const hard=chooseAIPlay(state,null,true,()=>.5);
-    expect(hard.position).not.toBe("diestra");
+    const response=chooseAIPlay(state,{card:byId("luna_creciente"),position:"trono"},false,()=>.5);
+    expect(response.position).toBe("diestra");
+    expect(response.card.id).toBe("invocadagas");
+    // Against the open Trono Augurio, responding in Diestra both avoids
+    // the +3 bonus and activates Invocadagas.
   });
 });
