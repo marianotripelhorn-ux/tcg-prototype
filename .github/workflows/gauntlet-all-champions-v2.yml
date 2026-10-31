@@ -1,0 +1,56 @@
+name: Full champion balance gauntlet
+on:
+  push:
+    branches: ["prototype/gameplay-v1"]
+    paths:
+      - scripts/gauntlet-all-champions-v2.ts
+      - .github/workflows/gauntlet-all-champions-v2.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: full-champions-gauntlet
+  cancel-in-progress: true
+
+jobs:
+  balance-gauntlet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout current engine
+        uses: actions/checkout@v4
+        with:
+          ref: prototype/gameplay-v1
+          fetch-depth: 0
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Run engine regression tests
+        run: npm test
+      - name: Run complete 144k-match AI-vs-AI gauntlet
+        env:
+          PAIR_MATCHES: 2000
+        run: ./node_modules/.bin/vite-node scripts/gauntlet-all-champions-v2.ts
+      - name: Archive full results
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-champions-v2-144k
+          path: reports/all-champions-augurio-v2/
+          retention-days: 90
+      - name: Commit report to experiment branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/all-champions-augurio-v2/
+          if git diff --cached --quiet; then
+            echo "Report already exists."
+            exit 0
+          fi
+          git commit -m "Record full 144k-game champion balance gauntlet"
+          git pull --rebase origin prototype/gameplay-v1
+          git push origin HEAD:prototype/gameplay-v1
