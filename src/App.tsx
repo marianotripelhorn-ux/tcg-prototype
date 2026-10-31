@@ -3,6 +3,7 @@ import Tutorial from "./Tutorial";
 import ThemeToggle from "./ThemeToggle";
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import { HomeScreen, ChampionPicker, CardCollection } from "./FrontOffice";
+import PhysicalTable from "./PhysicalTable";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { positionLabels, positions } from "./data";
 import { studioThemes } from "./cardStudio";
@@ -309,7 +310,7 @@ export default function App() {
   const [playerChampion,setPlayerChampion]=useState("dextral");
   const [opponentChampion,setOpponentChampion]=useState("random");
   const [aiDifficulty,setAiDifficulty]=useState<AIDifficulty>("normal");
-  const [screen,setScreen]=useState<"home"|"champions"|"collection">("home");
+  const [screen,setScreen]=useState<"home"|"champions"|"collection"|"table">("home");
   const [game,setGame]=useState<GameState|null>(null);
   const [selectedIndex,setSelectedIndex]=useState<number|null>(null);
   const [inspection,setInspection]=useState<Inspection|null>(null);
@@ -352,7 +353,7 @@ export default function App() {
     startWithChampion(playerChampion,opponentChampion,aiDifficulty);
   }
 
-  function goToMenu(destination:"home"|"champions"|"collection") {
+  function goToMenu(destination:"home"|"champions"|"collection"|"table") {
     clearPreviewTimer();
     setGame(null);
     setScreen(destination);
@@ -457,6 +458,7 @@ export default function App() {
           onPlay={()=>setScreen("champions")}
           onTutorial={()=>setTutorialOpen(true)}
           onGallery={()=>setScreen("collection")}
+          onPhysical={()=>setScreen("table")}
         />}
         {screen==="champions" && <ChampionPicker
           onBack={()=>setScreen("home")}
@@ -467,6 +469,7 @@ export default function App() {
           onBack={()=>setScreen("home")}
           onPlay={()=>setScreen("champions")}
         />}
+        {screen==="table" && <PhysicalTable onBack={()=>setScreen("home")}/> }
         {tutorialOpen && <Tutorial
           inGame={false}
           onClose={()=>setTutorialOpen(false)}
