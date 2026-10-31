@@ -537,8 +537,10 @@ export default function App() {
           >×</button>
         </section>
 
-        <div className="game-hint">{game.phase==="awaiting_player" && !duelPreview ? (game.initiative==="player" ? <><b>Tu turno:</b> elegí una carta y tocá una posición libre.</> : <><b>Tu respuesta:</b> mirá la carta rival y elegí cómo enfrentarla.</>) : <><b>Compará Poderes:</b> cada duelo ganado quita 1 Vida rival.</>}</div>
-        <AuguryStatus player={game.player} opponent={game.opponent} />
+        <div className="game-hint">
+          <span className="game-hint-instruction">{game.phase==="awaiting_player" && !duelPreview ? (game.initiative==="player" ? <><b>Tu turno:</b> elegí una carta y tocá una posición libre.</> : <><b>Tu respuesta:</b> mirá la carta rival y elegí cómo enfrentarla.</>) : <><b>Compará Poderes:</b> cada duelo ganado quita 1 Vida rival.</>}</span>
+          <AuguryStatus player={game.player} opponent={game.opponent} />
+        </div>
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
           {duelPreview && (
             <button type="button" className={"duel-cinematic duel-cinematic-"+duelPreview.outcome} onClick={()=>{clearPreviewTimer();setDuelPreview(null);}} aria-label="Saltar animación del duelo">
