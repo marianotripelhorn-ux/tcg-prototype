@@ -3,7 +3,7 @@ import type { DuelResult, Position } from "../types";
 import { aiWantsQuiero, chooseAIPlay } from "./ai";
 import { affinityActive, calculateDuel, legalPositions, previewOpeningPower } from "./rules";
 import { createGame, resetRoundPlayer } from "./state";
-import type { EnginePlay, GameState, PendingAugury, PlayerState, Side } from "./types";
+import type { AIDifficulty, EnginePlay, GameState, PendingAugury, PlayerState, Side } from "./types";
 
 function addBuff(player: PlayerState, amount: number, label: string) {
   player.nextBuff += amount;
@@ -172,9 +172,11 @@ export function startGame(
   playerChampion="dextral",
   opponentChampion="athos",
   rng:()=>number=Math.random,
-  forcedStarter?: Side
+  forcedStarter?: Side,
+  difficulty: AIDifficulty = "normal"
 ) {
   const state=createGame(playerChampion,opponentChampion,rng,forcedStarter);
+  state.aiDifficulty=difficulty;
   beginDuel(state,rng);
   return state;
 }
@@ -338,7 +340,7 @@ function resolvePendingDuel(state: GameState, rng:()=>number) {
       state.events.push({text:"Vas 0–2. Elegí Quiero o No quiero.",kind:"decision"});
       return;
     }
-    const wants=aiWantsQuiero(state);
+    const wants=aiWantsQuiero(state,rng);
     state.events.push({text:`IA: ${wants?"Quiero":"No quiero"}.`,kind:"decision"});
     if (!wants) {
       endRound(state,"opponent_no_quiero",rng);
