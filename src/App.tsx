@@ -11,6 +11,7 @@ import { champions } from "./engine/champions";
 import { answerQuiero, cloneGame, startGame, submitPlayerPlay } from "./engine/game";
 import { capacity, legalPositions } from "./engine/rules";
 import type { AIDifficulty, DuelSummary, EnginePlay, GameState } from "./engine/types";
+import { formatPowerDelta, playEffectFeedback, playPowerDelta } from "./engine/presentation";
 import type { CardDefinition, Position } from "./types";
 
 type DragState = {
@@ -315,6 +316,7 @@ export default function App() {
   const [selectedIndex,setSelectedIndex]=useState<number|null>(null);
   const [inspection,setInspection]=useState<Inspection|null>(null);
   const [duelPreview,setDuelPreview]=useState<DuelSummary|null>(null);
+  const [duelAuguries,setDuelAuguries]=useState<string[]>([]);
   const previewTimer=useRef<number|null>(null);
   const [drag,setDrag]=useState<DragState|null>(null);
   const [hoveredPosition,setHoveredPosition]=useState<Position|null>(null);
@@ -345,6 +347,7 @@ export default function App() {
     setSelectedIndex(null);
     setInspection(null);
     setDuelPreview(null);
+    setDuelAuguries([]);
     setDrag(null);
     setHoveredPosition(null);
   }
@@ -374,6 +377,8 @@ export default function App() {
     if (!legalPositions(game.player).includes(position)) return;
     const next=cloneGame(game);
     submitPlayerPlay(next,handIndex,position);
+    const newAuguries=next.events.slice(game.events.length).filter(event=>event.text.startsWith("Augurio ·"));
+    setDuelAuguries(newAuguries.map(event=>event.text.replace(/^Augurio · /,"").replace(" · próxima carta "," · ")).slice(0,3));
     setGame(next);
     setSelectedIndex(null);
     setInspection(null);
@@ -535,10 +540,27 @@ export default function App() {
           {duelPreview && (
             <button type="button" className={"duel-cinematic duel-cinematic-"+duelPreview.outcome} onClick={()=>{clearPreviewTimer();setDuelPreview(null);}} aria-label="Saltar animación del duelo">
               <span className="duel-cinematic-ring" aria-hidden="true"/>
-              <span className="duel-cinematic-sparks" aria-hidden="true">✦ ✧ ✦</span>
+              <span className="duel-cinematic-ring second" aria-hidden="true"/>
+              <span className="duel-cinematic-sparks" aria-hidden="true">{duelPreview.outcome==="draw"?"◇  ◇":"✦  ✧  ✦"}</span>
               <span className="duel-cinematic-label">DUELO {duelPreview.turn}</span>
               <strong>{duelPreview.outcome==="player"?"VICTORIA":duelPreview.outcome==="opponent"?"DERROTA":"EMPATE"}</strong>
               <span className="duel-cinematic-powers">{duelPreview.playerPlay.finalPower ?? duelPreview.playerPlay.card.power} <i>—</i> {duelPreview.opponentPlay.finalPower ?? duelPreview.opponentPlay.card.power}</span>
+              <span className="duel-feedback" aria-label="Cambios de Poder y habilidades">
+                {([duelPreview.playerPlay,duelPreview.opponentPlay] as EnginePlay[]).map((play,i)=>{
+                  const delta=playPowerDelta(play);
+                  const effect=playEffectFeedback(play);
+                  const label=formatPowerDelta(play);
+                  return <span className="duel-feedback-card" key={i}>
+                    <small>{i===0?"TU CARTA":"RIVAL"}</small>
+                    {label&&<b className={"power-change"+(delta<0?" power-loss":" power-gain")}>{label}</b>}
+                    {effect==="inactive"&&<em>HABILIDAD NO ACTIVADA</em>}
+                    {effect==="activated"&&<em>HABILIDAD ACTIVADA</em>}
+                    {effect==="forecast"&&<em>AUGURIO ANUNCIADO</em>}
+                    {!label&&effect==="none"&&<em>SIN MODIFICADORES</em>}
+                  </span>;
+                })}
+              </span>
+              {duelAuguries.length>0&&<span className="duel-augury-events">{duelAuguries.map((event,i)=><span key={i}>{event}</span>)}</span>}
               <span className="duel-cinematic-skip">TOCÁ PARA CONTINUAR</span>
             </button>
           )}
@@ -684,10 +706,12 @@ export default function App() {
 
         {game.phase==="finished" && !duelPreview && (
           <div className="decision-overlay">
-            <div className="decision-card result-card">
-              <span>RESULTADO</span>
+            <div className={"decision-card result-card match-final match-final-"+game.winner}>
+              <div className="match-final-sigil" aria-hidden="true">{game.winner==="player"?"✦":game.winner==="opponent"?"◇":"◈"}</div>
+              <span>RESULTADO DE LA PARTIDA</span>
               <strong>{game.winner==="player"?"GANASTE":game.winner==="opponent"?"GANÓ LA IA":"EMPATE"}</strong>
               <p>{game.player.life}–{game.opponent.life} de Vida · {game.round} ronda{game.round===1?"":"s"}.</p>
+              <div className="match-final-caption">{game.winner==="player"?"El duelo terminó a tu favor.":game.winner==="opponent"?"El rival se impuso en el combate.":"Ningún Champion consiguió imponerse."}</div>
               <div>
                 <button className="secondary-button" onClick={()=>goToMenu("champions")}>CAMBIAR CHAMPIONS</button>
                 <button className="primary-button" onClick={beginMatch}>REVANCHA</button>
