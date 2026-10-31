@@ -24,7 +24,7 @@ const factionInfo: {id: Faction; tagline: string; description: string; symbol: s
   {id:"blue",tagline:"El arte de responder",description:"Cambiá el Poder rival, interrumpí habilidades y adaptate.",symbol:"✧",hint:"Control · Reacción"},
   {id:"white",tagline:"La memoria perdura",description:"Construí tus Archivos para ser más fuerte en rondas posteriores.",symbol:"◇",hint:"Archivo · Crecimiento"},
   {id:"saints",tagline:"La belleza de la simetría",description:"Buscá patrones, empates y combinaciones de posiciones.",symbol:"◈",hint:"Patrones · Equilibrio"},
-  {id:"ivory",tagline:"La luna conoce el futuro",description:"Anunciá Augurios e influí en las próximas decisiones.",symbol:"☾",hint:"Augurio · Predicción"}
+  {id:"ivory",tagline:"El poder de la coincidencia",description:"Jugá en la misma posición que el rival para activar Augurio +3 en ese duelo.",symbol:"☾",hint:"Augurio · Posiciones"}
 ];
 
 const beginnerExplanations: Record<string, string> = {
@@ -245,7 +245,7 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
                   <small>{difficulty==="easy"
                     ? "Un rival accesible que explora jugadas."
                     : difficulty==="hard"
-                      ? "Planifica combinaciones y puede evitar Augurios anunciados."
+                      ? "Planifica combinaciones y evita activar Augurios del rival cuando le conviene."
                       : "La IA del prototipo original, con decisiones tácticas."}</small>
                 </div>
                 <button type="button" className="fo-main-cta" onClick={()=>onPlay(chosen.id,opponent,difficulty)}>JUGAR CON {chosen.name.toUpperCase()} <span aria-hidden="true">→</span></button>
