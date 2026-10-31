@@ -439,3 +439,22 @@
  }
  .duel-showcase-delta{transform:translate(-50%,0)!important}
 }
+
+
+/* One recovered life shown as a small green +1 badge. It is ordinary Life:
+   the highlight disappears before an unhealed Life point is reduced. */
+.life-block .life-recovered{
+  display:inline-grid;place-items:center;align-self:center;
+  min-width:25px;height:20px;padding:0 4px;
+  color:#e9fff0!important;background:#258650;
+  border:1px solid #51b77b;border-radius:5px;
+  font-size:11px;font-weight:950;line-height:1;
+  font-variant-numeric:tabular-nums;
+  box-shadow:0 0 9px #2586505c;
+  animation:healed-life-gain .4s cubic-bezier(.18,.8,.2,1) both;
+}
+@keyframes healed-life-gain{
+  from{opacity:0;transform:translateY(5px) scale(.7)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@media(prefers-reduced-motion:reduce){.life-block .life-recovered{animation:none}}
