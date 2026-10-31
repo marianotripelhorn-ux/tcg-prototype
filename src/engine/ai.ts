@@ -21,6 +21,7 @@ function doubleCount(state: GameState, player: PlayerState, card: CardDefinition
   let n = player.nextBaseDouble ? 1 : 0;
   if (card.effect === "second_trono_double" && state.turn === 3 && player.roundPlays[1]?.position === "trono") n++;
   if (card.effect === "equal_life_double" && player.life === opponentLife(state, player)) n++;
+  if (card.effect === "lunar_finish_double" && state.turn === 3 && player.auguryHitsTotal >= 2) n++;
   return n;
 }
 
@@ -35,7 +36,6 @@ export function estimateOwn(
   let value =
     card.power * (1 + doubleCount(state, player, card)) +
     player.nextBuff +
-    player.auguryBuff +
     (player.nextPositionBoost && aff ? player.nextPositionBoost : 0) +
     (player.nextPositionSpecificBoost && pos === player.nextPositionSpecificBoost.position
       ? player.nextPositionSpecificBoost.amount : 0) +
@@ -50,7 +50,7 @@ export function estimateOwn(
   if (card.effect === "diestra_before3" && aff && countPosition(player, "diestra") > 0) value += 3;
   if (card.effect === "second_special3" && aff && countPosition(player, "diestra") > 0) value += 3;
   if (card.effect === "enemy_printed6_2" && aff) value += 1;
-  if (card.effect === "copy_plus2" && aff) value = 7 + player.nextBuff + player.auguryBuff + (player.nextPositionBoost || 0) - player.incomingDebuff;
+  if (card.effect === "copy_plus2" && aff) value = 7 + player.nextBuff + (player.nextPositionBoost || 0) - player.incomingDebuff;
   if (card.effect === "third4" && aff && state.turn === 3) value += 4;
   if (card.effect === "archive_here") value += player.archives[pos].length;
   if (card.effect === "archive_empty2" && player.archives[pos].length === 0) value += 2;
@@ -78,7 +78,10 @@ export function estimateOwn(
   if (card.effect === "last_augury_hit2" && player.lastAuguryResult === "hit") value += 2;
   if (card.effect === "lower_life2" && player.life < opponent.life) value += 2;
   if (card.effect === "last_augury_miss3" && player.lastAuguryResult === "miss") value += 3;
-  if (card.effect === "third2" && state.turn === 3) value += 2;
+  if (card.effect === "augury_match3") {
+    const rivalLegal = legalPositions(opponent);
+    value += rivalLegal.includes(pos) ? 3 / Math.max(1,rivalLegal.length) : 0;
+  }
   if (card.effect === "enemy_repeat2") value += opponent.roundPlays.length ? 1.1 : 0;
   if (card.effect === "enemy_change2") value += opponent.roundPlays.length ? 1.1 : 0;
   if (player.champion.id === "vinira" && !player.viniraUsed && card.affinity && pos !== card.affinity && aff) value += 1;
@@ -95,8 +98,8 @@ function aiSetupScore(state: GameState, card: CardDefinition, pos: Position, pla
   if (card.effect === "loss_next3") score += 1.1;
   if (card.effect === "first_round3" && !player.roundPlays.length) score += 2.0;
   if (card.effect === "next_diestra2") score += 2.4;
-  if (card.effect.startsWith("augury_")) {
-    score += 1.25;
+  if (card.effect === "augury_match3") {
+    score += .45;
     if (player.champion.id === "prioresa_luna_llena" && player.auguryHitsSinceHeal === 2 && player.auguryHeals < 2) score += .65;
   }
   if (player.champion.id === "dextral" || player.champion.id === "athos") {
@@ -137,6 +140,7 @@ function reserveValue(state: GameState, card: CardDefinition, player: PlayerStat
   let value = 0;
   if (state.turn < 3) {
     if (card.effect === "third4") value += 3;
+    if (card.effect === "lunar_finish_double" && player.auguryHitsTotal >= 2) value += 5;
     if (card.effect === "second_special3" && countPosition(player,"diestra") === 0) value += 1.8;
     if (card.effect === "win_loss4") value += 1.7;
     if (card.effect === "second_trono_double") value += 1.5;
@@ -165,29 +169,6 @@ function handPlanScore(state: GameState, card: CardDefinition, pos: Position, pl
     if (current <= 4) score -= 1;
   }
   return score;
-}
-
-// The difficult AI only uses the player's public, announced Augurios.
-// It must never inspect the player's hand or the unrevealed deck.
-function hitsPublicAugury(state: GameState, card: CardDefinition, position: Position) {
-  return state.player.pendingAuguries.some(augury => {
-    switch (augury.effect) {
-      case "augury_same_position":
-        return position === augury.sourcePosition;
-      case "augury_printed6":
-        return card.power >= 6;
-      case "augury_trono":
-        return position === "trono";
-      case "augury_opposite_lateral":
-        return isOppositeLateral(position,augury.sourcePosition);
-      case "augury_repeated_position":
-        return state.opponent.roundPlays.some(play => play.position === position);
-      case "augury_enemy_affinity":
-        return !!card.affinity;
-      default:
-        return false;
-    }
-  });
 }
 
 export function chooseAIPlay(state: GameState, firstPlay: EnginePlay | null, aiFirst: boolean, rng:()=>number=Math.random): EnginePlay {
@@ -240,6 +221,9 @@ export function chooseAIPlay(state: GameState, firstPlay: EnginePlay | null, aiF
           if (state.turn === 2 && state.duelScore.opponent === 0 && state.duelScore.player === 1) score -= 12;
           if (state.opponent.life === 1) score -= 75;
         }
+        if (firstPlay?.card.effect === "augury_match3" && position === firstPlay.position) {
+          score -= difficulty === "hard" ? 2 : .25;
+        }
         score += rng()*.04;
       }
       if (difficulty === "hard") {
@@ -248,9 +232,6 @@ export function chooseAIPlay(state: GameState, firstPlay: EnginePlay | null, aiF
         score += setup*.35 + plan*.48;
         if (state.turn < 3 && reserveValue(state,card,state.opponent) > 0) {
           score -= reserveValue(state,card,state.opponent)*.4;
-        }
-        if (hitsPublicAugury(state,card,position)) {
-          score -= 7;
         }
       }
       if (!best || score > (best.score ?? -Infinity)) {
