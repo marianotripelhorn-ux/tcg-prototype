@@ -43,13 +43,13 @@ const conditionalEffectNotes: Record<string,string> = {
   enemy_repeat2: "+2 rival repite posición",
   last_augury_miss3: "+3 último Augurio fallado",
   enemy_change2: "+2 rival cambia de posición",
-  third2: "+2 tercer duelo"
+  lunar_finish_double: "Daga Lunar · 2 Augurios acertados"
 };
 
-export type EffectFeedback = "activated" | "inactive" | "forecast" | "none";
+export type EffectFeedback = "activated" | "inactive" | "none";
 
 export function playEffectFeedback(play:EnginePlay):EffectFeedback {
-  if (play.card.effect.startsWith("augury_")) return "forecast";
+  if (play.card.effect === "augury_match3") return play.notes?.some(note=>note.includes("+3 Augurio · misma posición")) ? "activated" : "inactive";
   const marker=conditionalEffectNotes[play.card.effect];
   if (!marker) return "none";
   return play.notes?.some(note=>note.includes(marker)) ? "activated" : "inactive";
