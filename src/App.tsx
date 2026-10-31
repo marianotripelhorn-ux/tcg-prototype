@@ -25,6 +25,13 @@ type DragState = {
   moved: boolean;
 };
 
+type DuelPublicSnapshot = {
+  round:number;
+  playerLife:number;
+  opponentLife:number;
+  score:{player:number;opponent:number};
+};
+
 type Inspection = {
   card: CardDefinition;
   finalPower?: number;
@@ -366,6 +373,7 @@ export default function App() {
   const [selectedIndex,setSelectedIndex]=useState<number|null>(null);
   const [inspection,setInspection]=useState<Inspection|null>(null);
   const [duelPreview,setDuelPreview]=useState<DuelSummary|null>(null);
+  const [preDuel,setPreDuel]=useState<DuelPublicSnapshot|null>(null);
   const [duelStep,setDuelStep]=useState<"cards"|"result">("cards");
   const [finalStep,setFinalStep]=useState<"ceremony"|"actions">("ceremony");
   const [duelAuguries,setDuelAuguries]=useState<string[]>([]);
@@ -412,6 +420,7 @@ export default function App() {
   function finishDuelPresentation() {
     clearPreviewTimer();
     setDuelPreview(null);
+    setPreDuel(null);
     if (finishingMatch.current) {
       finishingMatch.current=false;
       startFinalCeremony();
@@ -438,6 +447,7 @@ export default function App() {
     setSelectedIndex(null);
     setInspection(null);
     setDuelPreview(null);
+    setPreDuel(null);
     setDuelStep("cards");
     setFinalStep("ceremony");
     setDuelAuguries([]);
@@ -454,6 +464,7 @@ export default function App() {
     clearFinalTimer();
     finishingMatch.current=false;
     setDuelPreview(null);
+    setPreDuel(null);
     setFinalStep("ceremony");
     setGame(null);
     setScreen(destination);
@@ -474,6 +485,12 @@ export default function App() {
   function playCard(handIndex:number, position:Position) {
     if (!game || game.phase!=="awaiting_player" || duelPreview) return;
     if (!legalPositions(game.player).includes(position)) return;
+    setPreDuel({
+      round:game.round,
+      playerLife:game.player.life,
+      opponentLife:game.opponent.life,
+      score:{...game.duelScore}
+    });
     const next=cloneGame(game);
     submitPlayerPlay(next,handIndex,position);
     const newAuguries=next.events.slice(game.events.length).filter(event=>event.text.startsWith("Augurio ·"));
@@ -585,6 +602,7 @@ export default function App() {
   }
 
   const legal=game.phase==="awaiting_player" && !duelPreview ? legalPositions(game.player) : [];
+  const displayed=duelPreview?preDuel:null;
   const pendingOpponent=duelPreview ? null : game.pendingOpponentPlay;
   const focusPlayer=duelPreview?.playerPlay ?? null;
   const focusOpponent=duelPreview?.opponentPlay ?? pendingOpponent;
@@ -606,17 +624,17 @@ export default function App() {
         <ChampionBar
           side="opponent"
           name={game.opponent.champion.name}
-          life={game.opponent.life}
+          life={displayed?.opponentLife??game.opponent.life}
           passive={game.opponent.champion.text}
         />
 
         <section className="match-strip has-guide">
           <div>
             <span>RONDA</span>
-            <b>{game.round}</b>
+            <b>{displayed?.round??game.round}</b>
           </div>
           <div className="duel-status">
-            <strong>{game.duelScore.player} — {game.duelScore.opponent}</strong>
+            <strong>{displayed?.score.player??game.duelScore.player} — {displayed?.score.opponent??game.duelScore.opponent}</strong>
             <span>{turnText}</span>
           </div>
           <div className="game-tools">
@@ -637,7 +655,7 @@ export default function App() {
 
         <div className="game-hint">
           <span className="game-hint-instruction">{game.phase==="awaiting_player" && !duelPreview ? (game.initiative==="player" ? <><b>Tu turno:</b> elegí una carta y tocá una posición libre.</> : <><b>Tu respuesta:</b> mirá la carta rival y elegí cómo enfrentarla.</>) : <><b>Compará Poderes:</b> cada duelo ganado quita 1 Vida rival.</>}</span>
-          <AuguryStatus player={game.player} opponent={game.opponent} />
+          {!duelPreview && <AuguryStatus player={game.player} opponent={game.opponent} />}
         </div>
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
           {duelPreview && (duelStep==="cards"
@@ -697,7 +715,7 @@ export default function App() {
         <ChampionBar
           side="player"
           name={game.player.champion.name}
-          life={game.player.life}
+          life={displayed?.playerLife??game.player.life}
           passive={game.player.champion.text}
         />
 
