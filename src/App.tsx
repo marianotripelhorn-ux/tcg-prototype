@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import Tutorial from "./Tutorial";
 import ThemeToggle from "./ThemeToggle";
+import AuguryStatus from "./AuguryStatus";
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import { HomeScreen, ChampionPicker, CardCollection } from "./FrontOffice";
 import PhysicalTable from "./PhysicalTable";
@@ -378,7 +379,8 @@ export default function App() {
     const next=cloneGame(game);
     submitPlayerPlay(next,handIndex,position);
     const newAuguries=next.events.slice(game.events.length).filter(event=>event.text.startsWith("Augurio ·"));
-    setDuelAuguries(newAuguries.map(event=>event.text.replace(/^Augurio · /,"").replace(" · próxima carta "," · ")).slice(0,3));
+    const healingEvents=next.events.slice(game.events.length).filter(event=>event.text.includes("recupera 1 Vida"));
+    setDuelAuguries([...newAuguries,...healingEvents].map(event=>event.text.replace(/^Augurio · /,"").replace(" · próxima carta "," · ")).slice(0,3));
     setGame(next);
     setSelectedIndex(null);
     setInspection(null);
@@ -536,6 +538,7 @@ export default function App() {
         </section>
 
         <div className="game-hint">{game.phase==="awaiting_player" && !duelPreview ? (game.initiative==="player" ? <><b>Tu turno:</b> elegí una carta y tocá una posición libre.</> : <><b>Tu respuesta:</b> mirá la carta rival y elegí cómo enfrentarla.</>) : <><b>Compará Poderes:</b> cada duelo ganado quita 1 Vida rival.</>}</div>
+        <AuguryStatus player={game.player} opponent={game.opponent} />
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
           {duelPreview && (
             <button type="button" className={"duel-cinematic duel-cinematic-"+duelPreview.outcome} onClick={()=>{clearPreviewTimer();setDuelPreview(null);}} aria-label="Saltar animación del duelo">
