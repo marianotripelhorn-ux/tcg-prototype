@@ -27,6 +27,7 @@ Se contrastaron los datos vigentes de las doce cartas `PRI-001`–`PRI-012` con 
 - Las seis cartas con `augury_*` anuncian una predicción sobre la siguiente carta del rival.
 - Al acertar se concede **+3 Poder**, al fallar **+1 Poder**. Solo los aciertos aumentan el contador de curación.
 - Si la carta propia ya está comprometida en el duelo cuando se observa la respuesta rival, el bono no se aplica retrospectivamente: se guarda para la próxima carta propia.
+- **Distinción importante:** el estado de «último Augurio» sí se actualiza al observar esa respuesta. Por lo tanto **Caballero de Marfil** y **Curación Fallida** pueden activar su +2/+3 en el duelo que se está resolviendo, aunque la carta propia ya estuviera comprometida. El +3/+1 de Augurio, en cambio, sigue reservado para la siguiente carta. Es el comportamiento vigente, pero conviene validar explícitamente si esta interpretación del timing es la deseada.
 - Los bonos de Augurio pueden persistir entre rondas. La implementación existente conserva `auguryBuff` y `auguryQueuedBuff` durante el reinicio de ronda.
 - Cada tercer acierto cura **1 Vida** a la Prioresa, máximo dos curaciones por partida, sin superar su Vida máxima.
 - Si se completa el tercer acierto estando a Vida máxima, el contador queda almacenado; la curación puede ocurrir al recibir daño posteriormente. Este es un comportamiento del código actual, **no una decisión de diseño nueva**. Conviene confirmarlo en la Biblia si se desea otra interpretación.
