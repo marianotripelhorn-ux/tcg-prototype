@@ -31,3 +31,61 @@
  .ai-difficulty-picker{width:100%;max-width:none}
  .game-difficulty-label{font-size:9px}
 }
+
+/* First motion-language slice: duel presentation. All effects are cosmetic.
+   Supports skip interaction and OS-level reduced motion preferences. */
+.battlefield{position:relative;isolation:isolate}
+.battlefield.duel-is-resolving .board-slot{box-shadow:inset 0 0 22px rgba(211,183,135,.2);transition:box-shadow .2s}
+.duel-cinematic{
+  position:absolute;inset:0;z-index:30;cursor:pointer;border:0;padding:12px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
+  background:radial-gradient(ellipse at center,rgba(25,25,25,.92),rgba(25,25,25,.70) 52%,rgba(25,25,25,.16) 93%);
+  color:#eae2d5;text-align:center;
+  animation:duel-fade-in .28s ease-out both;
+  overflow:hidden;
+}
+.duel-cinematic::before,.duel-cinematic::after{
+  content:"";position:absolute;top:50%;left:50%;
+  width:min(45vw,250px);height:1px;
+  transform:translate(-50%,-50%) rotate(30deg);
+  background:linear-gradient(to right,transparent,#d3b787,transparent);
+  box-shadow:0 0 18px #d3b78799;
+  pointer-events:none;
+  animation:duel-slash .62s cubic-bezier(.12,.8,.2,1) both;
+}
+.duel-cinematic::after{transform:translate(-50%,-50%) rotate(-30deg);animation-delay:.10s}
+.duel-cinematic-ring{
+  position:absolute;top:50%;left:50%;height:135px;width:135px;
+  border:2px solid #d3b787;border-radius:50%;
+  transform:translate(-50%,-50%) scale(.3);
+  opacity:0;pointer-events:none;
+  animation:duel-wave 1.0s .15s ease-out both;
+}
+.duel-cinematic-sparks{
+  font-size:24px;line-height:1;letter-spacing:20px;color:#d3b787;
+  opacity:0;position:absolute;top:20%;left:50%;white-space:nowrap;pointer-events:none;
+  animation:duel-sparks .8s .2s ease-out both;
+}
+.duel-cinematic-label{position:relative;font-size:10px;letter-spacing:.27em;color:#d3b787;font-weight:850}
+.duel-cinematic strong{
+  position:relative;
+  font:800 clamp(25px,5vw,49px)/1.05 ui-sans-serif,system-ui,sans-serif;
+  letter-spacing:.1em;text-shadow:0 0 25px #d3b78766;
+  transform:translateY(14px);opacity:0;
+  animation:duel-word .5s .28s cubic-bezier(.16,1,.3,1) both;
+}
+.duel-cinematic-powers{position:relative;font:500 clamp(17px,3vw,24px) Georgia,serif;letter-spacing:.09em}
+.duel-cinematic-powers i{font-style:normal;color:#d3b787;margin:0 7px}
+.duel-cinematic-skip{position:absolute;bottom:12px;font-size:9px;letter-spacing:.11em;color:#d3b787}
+.duel-cinematic:focus-visible{outline:3px solid #d3b787;outline-offset:-4px}
+@keyframes duel-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes duel-wave{0%{opacity:.9;transform:translate(-50%,-50%) scale(.3)}75%{opacity:.55}100%{opacity:0;transform:translate(-50%,-50%) scale(3.4)}}
+@keyframes duel-slash{0%{opacity:0;max-width:2px}25%{opacity:1;max-width:250px}100%{opacity:0;max-width:330px}}
+@keyframes duel-sparks{0%{opacity:0;transform:translate(-50%,28px) scale(.7)}50%{opacity:.8}100%{opacity:0;transform:translate(-50%,-45px) scale(1.3)}}
+@keyframes duel-word{to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){
+  .duel-cinematic,.duel-cinematic::before,.duel-cinematic::after,
+  .duel-cinematic-ring,.duel-cinematic-sparks,.duel-cinematic strong{animation:none!important;transform:none;opacity:1}
+  .duel-cinematic::before,.duel-cinematic::after,.duel-cinematic-ring,.duel-cinematic-sparks{display:none}
+  .battlefield.duel-is-resolving .board-slot{transition:none}
+}
