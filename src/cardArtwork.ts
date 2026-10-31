@@ -13,11 +13,11 @@ export function cardSpriteBackground(card: CardDefinition) {
   return 'url("' + card.art.sprite + '")';
 }
 
-// The Empíreos sprites are uploaded separately. Until they arrive, the
-// conventional illustrated-free card front remains visible, not an empty box.
+// Empíreos and Santos are uploaded as optional static full-card sprite sheets.
+// Render readable placeholder cards until those images actually load.
 const readiness = new Map<string, boolean>();
 export function useCardArtReady(card: CardDefinition) {
-  const remote = card.faction === "white" ? card.art?.sprite : undefined;
+  const remote = (card.faction === "white" || card.faction === "saints") ? card.art?.sprite : undefined;
   const [ready, setReady] = useState(!remote || readiness.get(remote) === true);
   useEffect(() => {
     if (!remote) {
