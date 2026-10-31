@@ -77,6 +77,26 @@ describe("Priorato de Marfil: twelve card-condition audit",()=>{
     const st=fresh();expect(cardPower("daga_lunar",st)).toBe(6);
     st.turn=3;expect(cardPower("daga_lunar",st)).toBe(8);
   });
+  it("current implementation updates last Augury status during the response to a committed card",()=>{
+    const hit=fresh();
+    hit.player.hand=[byId("caballero_marfil")];
+    hit.opponent.hand=[byId("caballero_tigre")];
+    hit.player.pendingAuguries=[pending("augury_printed6")];
+    submitPlayerPlay(hit,0,"siniestra",rng);
+    expect(hit.player.lastAuguryResult).toBe("hit");
+    expect(hit.lastDuel?.playerPlay.finalPower).toBe(8);
+    expect(hit.player.auguryBuff).toBe(3);
+
+    const miss=fresh();
+    miss.player.hand=[byId("curacion_fallida")];
+    miss.opponent.hand=[byId("mensajero")];
+    miss.player.pendingAuguries=[pending("augury_printed6")];
+    submitPlayerPlay(miss,0,"siniestra",rng);
+    expect(miss.player.lastAuguryResult).toBe("miss");
+    expect(miss.lastDuel?.playerPlay.finalPower).toBe(7);
+    expect(miss.player.auguryBuff).toBe(1);
+  });
+
   it("third successful Augury triggers one heal and queues +3 on committed card",()=>{
     const st=fresh();st.player.hand=[byId("sanadora")];st.opponent.hand=[byId("invocadagas")];
     st.player.life=6;st.player.auguryHitsSinceHeal=2;
