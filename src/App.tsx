@@ -366,7 +366,7 @@ export default function App() {
     previewTimer.current=window.setTimeout(()=>{
       setDuelPreview(null);
       previewTimer.current=null;
-    },950);
+    },1300);
   }
 
   function playCard(handIndex:number, position:Position) {
@@ -531,7 +531,17 @@ export default function App() {
         </section>
 
         <div className="game-hint">{game.phase==="awaiting_player" && !duelPreview ? (game.initiative==="player" ? <><b>Tu turno:</b> elegí una carta y tocá una posición libre.</> : <><b>Tu respuesta:</b> mirá la carta rival y elegí cómo enfrentarla.</>) : <><b>Compará Poderes:</b> cada duelo ganado quita 1 Vida rival.</>}</div>
-        <section className="battlefield" aria-label="Tablero">
+        <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
+          {duelPreview && (
+            <button type="button" className={"duel-cinematic duel-cinematic-"+duelPreview.outcome} onClick={()=>{clearPreviewTimer();setDuelPreview(null);}} aria-label="Saltar animación del duelo">
+              <span className="duel-cinematic-ring" aria-hidden="true"/>
+              <span className="duel-cinematic-sparks" aria-hidden="true">✦ ✧ ✦</span>
+              <span className="duel-cinematic-label">DUELO {duelPreview.turn}</span>
+              <strong>{duelPreview.outcome==="player"?"VICTORIA":duelPreview.outcome==="opponent"?"DERROTA":"EMPATE"}</strong>
+              <span className="duel-cinematic-powers">{duelPreview.playerPlay.finalPower ?? duelPreview.playerPlay.card.power} <i>—</i> {duelPreview.opponentPlay.finalPower ?? duelPreview.opponentPlay.card.power}</span>
+              <span className="duel-cinematic-skip">TOCÁ PARA CONTINUAR</span>
+            </button>
+          )}
           {positions.map(position=>(
             <div className="lane" key={position}>
               <Slot
