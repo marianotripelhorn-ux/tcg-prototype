@@ -47,12 +47,12 @@ function opponentLife(state: GameState, player: PlayerState) {
 
 function baseDoubleReasons(state: GameState, self: PlayerState, card: CardDefinition) {
   const reasons: string[] = [];
-  if (self.nextBaseDouble) reasons.push("Mártir del Espejo");
+  if (self.nextBaseDouble) reasons.push("Mártir");
   if (
     card.effect === "second_trono_double" &&
     state.turn === 3 &&
     self.roundPlays[1]?.position === "trono"
-  ) reasons.push("Procesión Perfecta");
+  ) reasons.push("Rey sin corona");
   if (card.effect === "equal_life_double" && self.life === opponentLife(state, self)) {
     reasons.push("Avatar de Simetría");
   }
