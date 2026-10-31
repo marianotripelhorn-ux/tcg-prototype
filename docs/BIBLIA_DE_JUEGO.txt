@@ -1,3 +1,17 @@
+ACTUALIZACIÓN DE PLAYTEST — 31/10/2026 (Gameplay v1, Augurio v2)
+Este documento es la Biblia histórica v0.2. Para los duelos del prototipo
+experimental, las secciones antiguas de AUGURIO (+3 al acertar / +1 al fallar
+sobre la próxima carta, con predicciones pendientes) QUEDAN REEMPLAZADAS por:
+docs/AUGURIO_V2_2026-10-31.md.
+Resumen: 6 cartas muestran «Augurio +3». Si ambas cartas están en la misma
+posición en el duelo, la carta Augurio gana +3 PODER en ese duelo. Si no,
+no obtiene bonificación. La Prioresa cura 1 Vida tras cada 3 aciertos
+acumulados, máximo dos curaciones; Daga Lunar duplica su Poder impreso
+en el tercer duelo si acertaste 2 Augurios en la partida.
+El resto del documento conserva historia y reglas que no cambiaron.
+
+------------------------------------------------------------
+
 DAGGERLIGHT TCG — BIBLIA DE JUEGO v0.2
 Actualizada: 25 de octubre de 2026
 Base: Biblia de juego v0.1 + decisiones de diseño + estado verificado del prototipo ui-v2.
