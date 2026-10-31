@@ -32,12 +32,10 @@ export default function PhysicalTable({onBack}:{onBack:()=>void}){
   },[match]);
 
   function commit(update:(next:Match)=>void) {
-    setMatch(old=>{
-      setHistory(previous=>[...previous.slice(-49),old]);
-      const next:Match=structuredClone(old);
-      update(next);
-      return next;
-    });
+    setHistory(previous=>[...previous.slice(-49),match]);
+    const next:Match=structuredClone(match);
+    update(next);
+    setMatch(next);
     setConfirmReset(false);
   }
 
