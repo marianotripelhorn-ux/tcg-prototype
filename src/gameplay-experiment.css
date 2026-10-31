@@ -1,0 +1,33 @@
+/* Daggerlight experimental gameplay — accessible AI difficulty control */
+.ai-difficulty-picker{
+  display:grid;align-items:start;gap:5px;
+  min-width:190px;max-width:300px;flex:1;
+  padding:10px 12px;
+  border:1px solid rgba(211,183,135,.68);
+  background:rgba(211,183,135,.12);
+  border-radius:10px;
+}
+.ai-difficulty-picker label{font-size:10px;font-weight:900;letter-spacing:.08em;color:#705633}
+.ai-difficulty-picker select{
+  font:inherit;font-size:13px;font-weight:750;
+  background:#fffaf2;border:1px solid #bea987;border-radius:8px;
+  padding:9px;color:#191919;width:100%;cursor:pointer;
+}
+.ai-difficulty-picker small{font-size:10px;line-height:1.35;color:#51493e}
+.game-difficulty-label{
+  font-weight:800;font-size:10px;white-space:nowrap;
+  color:#765e36;letter-spacing:.03em;
+}
+:root[data-theme="dark"] .ai-difficulty-picker{background:#26231c;border-color:#d3b787}
+:root[data-theme="dark"] .ai-difficulty-picker label{color:#d3b787}
+:root[data-theme="dark"] .ai-difficulty-picker select{background:#191919;color:#eae2d5;border-color:#d3b787}
+:root[data-theme="dark"] .ai-difficulty-picker small{color:#c8bca9}
+:root[data-theme="dark"] .game-difficulty-label{color:#d3b787}
+@media(max-width:740px){
+ .champion-bottom{flex-wrap:wrap}
+ .ai-difficulty-picker{min-width:175px}
+}
+@media(max-width:580px){
+ .ai-difficulty-picker{width:100%;max-width:none}
+ .game-difficulty-label{font-size:9px}
+}
