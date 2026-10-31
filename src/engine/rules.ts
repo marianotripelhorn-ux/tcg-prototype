@@ -53,6 +53,9 @@ function baseDoubleReasons(state: GameState, self: PlayerState, card: CardDefini
     state.turn === 3 &&
     self.roundPlays[1]?.position === "trono"
   ) reasons.push("Rey sin corona");
+  if (card.effect === "lunar_finish_double" && state.turn === 3 && self.auguryHitsTotal >= 2) {
+    reasons.push("Daga Lunar · 2 Augurios acertados");
+  }
   if (card.effect === "equal_life_double" && self.life === opponentLife(state, self)) {
     reasons.push("Avatar de Simetría");
   }
@@ -77,10 +80,6 @@ function intrinsicPower(
     power += self.nextBuff;
     notes.push(...self.nextBuffNotes);
   }
-  if (self.auguryBuff) {
-    power += self.auguryBuff;
-    notes.push(`+${self.auguryBuff} Augurio`);
-  }
   if (self.nextPositionBoost && affinity) {
     power += self.nextPositionBoost;
     notes.push(`+${self.nextPositionBoost} Invocador`);
@@ -96,6 +95,11 @@ function intrinsicPower(
   if (self.incomingDebuff) {
     power -= self.incomingDebuff;
     notes.push(...self.incomingNotes);
+  }
+
+  if (card.effect === "augury_match3" && opponentPlay && play.position === opponentPlay.position) {
+    power += 3;
+    notes.push("+3 Augurio · misma posición");
   }
 
   if (card.effect === "bonus2" && affinity) {
@@ -115,14 +119,13 @@ function intrinsicPower(
   } else if (card.effect === "enemy_printed6_2" && affinity && opponentPlay && opponentPlay.card.power >= 6) {
     power += 2; notes.push("+2 rival con Poder impreso 6+");
   } else if (card.effect === "copy_plus2" && affinity && opponentPlay) {
-    power = opponentPlay.card.power + 2 + self.nextBuff + self.auguryBuff +
+    power = opponentPlay.card.power + 2 + self.nextBuff +
       (self.nextPositionBoost && affinity ? self.nextPositionBoost : 0) +
       (self.nextPositionSpecificBoost && play.position === self.nextPositionSpecificBoost.position ? self.nextPositionSpecificBoost.amount : 0) -
       self.incomingDebuff;
     notes.length = 0;
     notes.push(`Poder impreso rival ${opponentPlay.card.power}`, "+2 Prodigio");
     if (self.nextBuff) notes.push(...self.nextBuffNotes);
-    if (self.auguryBuff) notes.push(`+${self.auguryBuff} Augurio`);
     if (self.nextPositionBoost && affinity) notes.push(`+${self.nextPositionBoost} Invocador`);
     if (self.nextPositionSpecificBoost && play.position === self.nextPositionSpecificBoost.position) {
       notes.push(`+${self.nextPositionSpecificBoost.amount} ${self.nextPositionSpecificBoost.source}`);
@@ -190,8 +193,6 @@ function intrinsicPower(
     power += 3; notes.push("+3 último Augurio fallado");
   } else if (card.effect === "enemy_change2" && opponentPlay && opponent.roundPlays.length && opponent.roundPlays.at(-1)!.position !== opponentPlay.position) {
     power += 2; notes.push("+2 rival cambia de posición");
-  } else if (card.effect === "third2" && state.turn === 3) {
-    power += 2; notes.push("+2 tercer duelo");
   }
 
   if (
@@ -222,7 +223,8 @@ export function previewOpeningPower(
     "opposite_enemy2",
     "enemy_affinity2",
     "enemy_repeat2",
-    "enemy_change2"
+    "enemy_change2",
+    "augury_match3"
   ]).has(play.card.effect);
   const power = intrinsicPower(state, play, self, opponent, null, affinity, notes);
   const exact = !opponentDependent && !(self.champion.id === "santo_simetrico" && !self.saintPassiveUsed);
