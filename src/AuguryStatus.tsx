@@ -17,7 +17,6 @@ export default function AuguryStatus({player,opponent}:{player:PlayerState;oppon
   if(!ownPriory&&!rivalPriory)return null;
   const pending=ownPriory?player.pendingAuguries:opponent.pendingAuguries;
   const source=ownPriory?player:opponent;
-  const buff=source.auguryBuff+source.auguryQueuedBuff;
   return (
     <div className="augury-status-strip" aria-label="Estado de los Augurios">
       <span className="augury-status-heading">☾ AUGURIO {ownPriory?"PROPIO":"RIVAL"}</span>
@@ -27,7 +26,8 @@ export default function AuguryStatus({player,opponent}:{player:PlayerState;oppon
             Pendiente: {pending.map(predictionLabel).join(" · ")}
           </span>
         : <span className="augury-status-none">Sin predicción pendiente</span>}
-      {ownPriory&&buff>0&&<span className="augury-status-buff">+{buff} Poder disponible para tu próxima carta</span>}
+      {ownPriory&&source.auguryBuff>0&&<span className="augury-status-buff">+{source.auguryBuff} Poder para tu próxima carta</span>}
+      {ownPriory&&source.auguryQueuedBuff>0&&<span className="augury-status-buff">+{source.auguryQueuedBuff} Poder en espera</span>}
     </div>
   );
 }
