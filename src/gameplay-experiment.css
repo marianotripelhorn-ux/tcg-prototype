@@ -212,3 +212,230 @@
  .augury-status-strip{font-size:9px;gap:3px 6px}
  .augury-status-heading{font-size:8px}
 }
+
+
+/* Gameplay v1.2: a complete duel has two cinematic beats.
+   1. Both actual cards reveal the printed-to-final Power change.
+   2. The existing win/loss/draw visual resolves the duel.
+   The final match ceremony is a separate third beat, without buttons. */
+.duel-showcase-overlay{
+  position:absolute;inset:0;z-index:35;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:clamp(7px,1.2vh,12px);
+  padding:12px 14px 14px;
+  background:radial-gradient(ellipse at 50% 42%,#353126f7 0%,#191919f6 60%,#191919db 100%);
+  color:#eae2d5;overflow:hidden;
+  animation:showcase-screen-in .24s ease-out both;
+}
+.duel-showcase-heading{
+  font-size:clamp(9px,1.15vw,11px);font-weight:850;
+  letter-spacing:.17em;color:#d3b787;text-align:center;
+}
+.duel-showcase-pair{
+  display:flex;justify-content:center;align-items:center;
+  width:100%;gap:clamp(7px,2.4vw,32px);max-height:75%;
+}
+.duel-showcase-card{
+  width:clamp(108px,16vw,170px);min-width:0;
+  display:flex;align-items:center;flex-direction:column;gap:5px;
+  animation:showcase-card-in .4s cubic-bezier(.22,.8,.22,1) both;
+}
+.duel-showcase-card:nth-child(3){animation-delay:.1s}
+.duel-showcase-side{
+  color:#d3b787;font-size:9px;font-weight:900;letter-spacing:.1em;
+}
+.duel-showcase-face{
+  position:relative;width:100%;aspect-ratio:649/914;
+  border-radius:11px;overflow:visible;isolation:isolate;
+  box-shadow:0 15px 34px #0009;
+}
+.duel-showcase-face>.game-card{
+  width:100%;height:100%;border-color:#d3b7878c;
+  border-radius:11px;
+}
+.duel-showcase-face:after{
+  content:"";position:absolute;inset:-5px;z-index:-1;pointer-events:none;
+  border:1px solid transparent;border-radius:14px;
+}
+.duel-showcase-card.power-resolved .duel-showcase-face:after{
+  border-color:#d3b787a8;
+  box-shadow:0 0 0 3px #d3b7871e,0 0 24px #d3b78738;
+  animation:showcase-power-aura .65s ease-out both;
+}
+.duel-showcase-power{
+  position:absolute;z-index:9;left:5px;top:5px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-width:clamp(38px,5.3vw,58px);height:clamp(46px,6vw,68px);
+  padding:4px 6px;background:#191919ea;
+  border:1.5px solid #d3b787;border-radius:9px;
+  color:#eae2d5;box-shadow:0 5px 16px #0008;
+}
+.duel-showcase-power small{font-size:7px;font-weight:850;letter-spacing:.09em;line-height:1.15}
+.duel-showcase-power strong{font-size:clamp(24px,4vw,38px);font-weight:950;line-height:1.1;font-variant-numeric:tabular-nums}
+.power-resolved .duel-showcase-power strong{
+  color:#d3b787;animation:showcase-power-number .65s cubic-bezier(.18,.9,.25,1) both;
+}
+.power-resolved .duel-showcase-power.is-loss strong{
+  color:#eae2d5;animation-name:showcase-power-drop;
+}
+.duel-showcase-delta{
+  display:block;position:absolute;top:100%;left:50%;
+  white-space:nowrap;min-width:78px;text-align:center;
+  color:#191919;background:#d3b787;border:1px solid #eae2d5;
+  padding:4px 5px;border-radius:5px;
+  font-size:clamp(9px,1.3vw,12px);line-height:1.2;font-weight:950;
+  opacity:0;transform:translate(-50%,8px);
+  box-shadow:0 3px 13px #0007;pointer-events:none;
+}
+.power-resolved .duel-showcase-delta{
+  animation:showcase-delta-pop .55s cubic-bezier(.2,.8,.2,1) .08s both;
+}
+.power-resolved .is-loss .duel-showcase-delta{
+  color:#eae2d5;background:#48443c;border-color:#d3b787;
+}
+.duel-showcase-versus{font:600 clamp(14px,2.3vw,26px)/1 Georgia,serif;color:#d3b787;flex:none;margin-top:-8px}
+.duel-showcase-details{
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  gap:4px;text-align:center;min-height:25px;
+}
+.duel-showcase-cardname{
+  max-width:100%;font-size:clamp(9px,1.4vw,12px);
+  font-weight:850;letter-spacing:.03em;line-height:1.15;text-wrap:balance;
+}
+.duel-showcase-failed,.duel-showcase-activated{
+  font-size:8px;letter-spacing:.055em;line-height:1.15;font-weight:800;
+  opacity:0;animation:showcase-status-in .3s .8s ease-out both;
+}
+.duel-showcase-failed{color:#cabba6}
+.duel-showcase-activated{color:#d3b787}
+.duel-showcase-events{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 9px;max-width:100%}
+.duel-showcase-events span{font-size:9px;line-height:1.22;color:#d3b787;text-align:center}
+.duel-showcase-skip{
+  display:block;flex:none;min-height:28px;padding:6px 13px;
+  border:1px solid #d3b78778;border-radius:7px;
+  background:#24221d;color:#eae2d5;font-size:9px;font-weight:800;
+  letter-spacing:.11em;cursor:pointer;
+}
+.duel-showcase-skip:hover{border-color:#d3b787;background:#3a3226}
+.duel-showcase-skip:focus-visible{outline:2px solid #d3b787;outline-offset:3px}
+@keyframes showcase-screen-in{from{opacity:0}to{opacity:1}}
+@keyframes showcase-card-in{
+  from{opacity:0;transform:translateY(14px) scale(.94)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes showcase-power-number{
+  0%{transform:scale(.55);filter:brightness(1)}
+  50%{transform:scale(1.43);filter:brightness(1.6)}
+  100%{transform:scale(1);filter:brightness(1)}
+}
+@keyframes showcase-power-drop{
+  0%{transform:translateY(-8px) scale(1.2);opacity:.35}
+  70%{transform:translateY(2px) scale(.85)}
+  100%{transform:translateY(0) scale(1);opacity:1}
+}
+@keyframes showcase-power-aura{
+  0%{opacity:0;transform:scale(.9)}
+  55%{opacity:1;transform:scale(1.02)}
+  100%{opacity:.6;transform:scale(1)}
+}
+@keyframes showcase-delta-pop{
+  0%{opacity:0;transform:translate(-50%,11px) scale(.8)}
+  60%{opacity:1;transform:translate(-50%,-3px) scale(1.07)}
+  100%{opacity:1;transform:translate(-50%,0) scale(1)}
+}
+@keyframes showcase-status-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* A match ends with an independent full-screen ceremony, not a dialog with buttons.
+   After the animation the user gets a separate, clean rematch menu. */
+.match-conclusion-stage{overflow:hidden}
+.match-conclusion-ceremony{
+  width:min(96%,620px);min-height:320px;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;position:relative;padding:35px 12px 50px;
+  text-align:center;color:#eae2d5;
+  animation:showcase-screen-in .45s both;
+}
+.match-conclusion-ceremony:before,.match-conclusion-ceremony:after{
+  content:"";position:absolute;width:min(57vw,320px);
+  height:min(57vw,320px);border:1px solid #d3b787;
+  border-radius:50%;opacity:.30;pointer-events:none;
+  animation:ceremony-halo 1.5s ease-out both;
+}
+.match-conclusion-ceremony:after{
+  width:min(40vw,225px);height:min(40vw,225px);border-style:dashed;animation-delay:.12s;
+}
+.match-conclusion-symbol{
+  font-size:clamp(58px,12vw,100px);line-height:1;color:#d3b787;
+  text-shadow:0 0 30px #d3b78755;
+  animation:ceremony-icon .9s cubic-bezier(.18,.9,.2,1) both;
+}
+.match-conclusion-kicker{font-size:11px;color:#d3b787;font-weight:900;letter-spacing:.24em;z-index:1}
+.match-conclusion-ceremony>strong{
+  font-size:clamp(38px,8vw,75px);line-height:1;letter-spacing:.12em;
+  font-weight:850;color:#eae2d5;z-index:1;
+  animation:ceremony-text .6s .2s both;
+}
+.match-conclusion-score{font:500 clamp(15px,3vw,24px)/1.3 Georgia,serif;letter-spacing:.08em;color:#d3b787;z-index:1}
+.match-conclusion-continue{
+  position:absolute;bottom:0;z-index:2;cursor:pointer;
+  border:1px solid #d3b78769;border-radius:8px;
+  padding:8px 15px;background:#211f1a;color:#eae2d5;
+  font-size:10px;letter-spacing:.1em;font-weight:800;
+}
+.match-conclusion-continue:hover{border-color:#d3b787}
+.match-conclusion-ceremony.match-final-opponent .match-conclusion-symbol{
+  color:#eae2d5;text-shadow:0 0 23px #eae2d533;
+}
+.match-conclusion-ceremony.match-final-opponent:before{animation:ceremony-defeat-halo 1.5s ease-out both}
+.match-conclusion-ceremony.match-final-draw:before{border-style:dashed}
+.match-postgame{animation:postgame-enter .38s cubic-bezier(.2,.85,.2,1) both}
+.match-postgame>strong{color:#191919}
+.match-postgame .match-postgame-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+:root[data-theme="dark"] .match-postgame>strong{color:#eae2d5}
+@keyframes ceremony-halo{
+  from{opacity:0;transform:scale(.4)}
+  55%{opacity:.5}
+  to{opacity:.23;transform:scale(1.17)}
+}
+@keyframes ceremony-defeat-halo{
+  from{opacity:.4;transform:scale(1.35)}
+  to{opacity:.1;transform:scale(.75)}
+}
+@keyframes ceremony-icon{
+  from{opacity:0;transform:translateY(22px) scale(.65)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes ceremony-text{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@keyframes postgame-enter{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@media(max-height:580px){
+ .duel-showcase-pair{max-height:68%}
+ .duel-showcase-card{width:clamp(90px,12vw,125px)}
+ .duel-showcase-face{max-height:168px}
+ .duel-showcase-overlay{gap:5px}
+ .match-conclusion-ceremony{min-height:220px;gap:6px}
+}
+@media(max-width:520px){
+ .duel-showcase-overlay{padding:10px 5px;gap:8px}
+ .duel-showcase-pair{gap:9px}
+ .duel-showcase-card{width:clamp(105px,32vw,146px)}
+ .duel-showcase-power{min-width:37px;height:45px}
+ .duel-showcase-power strong{font-size:26px}
+ .duel-showcase-side{font-size:8px}
+ .duel-showcase-cardname{font-size:9px}
+ .duel-showcase-details span:not(:first-child){font-size:7px}
+ .duel-showcase-skip{font-size:8px}
+ .match-conclusion-ceremony{min-height:250px}
+ .match-postgame .match-postgame-actions{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+ .duel-showcase-overlay,.duel-showcase-card,.duel-showcase-face:after,
+ .duel-showcase-power strong,.duel-showcase-delta,
+ .duel-showcase-failed,.duel-showcase-activated,.match-conclusion-ceremony,
+ .match-conclusion-ceremony:before,.match-conclusion-ceremony:after,
+ .match-conclusion-symbol,.match-conclusion-ceremony>strong,.match-postgame{
+   animation:none!important;transition:none!important;
+ }
+ .duel-showcase-delta,.duel-showcase-failed,.duel-showcase-activated{
+   opacity:1!important;transform:none!important;
+ }
+ .duel-showcase-delta{transform:translate(-50%,0)!important}
+}
