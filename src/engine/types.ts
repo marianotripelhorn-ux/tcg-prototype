@@ -1,6 +1,7 @@
 import type { CardDefinition, ChampionDefinition, DuelResult, PlayedCard, Position } from "../types";
 
 export type Side = "player" | "opponent";
+export type AIDifficulty = "easy" | "normal" | "hard";
 export type GamePhase = "awaiting_player" | "awaiting_quiero" | "finished";
 
 export interface EnginePlay extends PlayedCard {
@@ -86,6 +87,7 @@ export interface GameEvent {
 }
 
 export interface GameState {
+  aiDifficulty?: AIDifficulty;
   round: number;
   turn: 1 | 2 | 3;
   roundStarter: Side;
