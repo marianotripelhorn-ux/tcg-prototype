@@ -86,16 +86,16 @@ export const ivoryCards: CardDefinition[] = [
   {id:"caballero_marfil",studioId:"PRI-001",name:"CABALLERO DE MARFIL",power:6,faction:"ivory",affinity:null,text:"Si acertaste tu último Augurio, +2 Poder.",effect:"last_augury_hit2"},
   // PLAYTEST NOTE: Sanadora, Exiliada y Daga Lunar son funcionales, pero quedan marcadas para revisión prioritaria.
   {id:"sanadora",studioId:"PRI-002",name:"SANADORA",power:5,faction:"ivory",affinity:null,text:"Si tenés menos Vida que el rival, +2 Poder.",effect:"lower_life2"},
-  {id:"luna_creciente",studioId:"PRI-003",name:"LUNA CRECIENTE",power:5,faction:"ivory",affinity:null,text:"Augurio: misma posición.",effect:"augury_same_position"},
-  {id:"reveladora",studioId:"PRI-004",name:"REVELADORA",power:4,faction:"ivory",affinity:null,text:"Augurio: Poder impreso 6+.",effect:"augury_printed6"},
-  {id:"iniciada",studioId:"PRI-005",name:"INICIADA",power:5,faction:"ivory",affinity:null,text:"Augurio: Trono.",effect:"augury_trono"},
-  {id:"luna_nueva",studioId:"PRI-006",name:"LUNA NUEVA",power:5,faction:"ivory",affinity:null,text:"Augurio: lateral opuesta.",effect:"augury_opposite_lateral"},
+  {id:"luna_creciente",studioId:"PRI-003",name:"LUNA CRECIENTE",power:5,faction:"ivory",affinity:null,text:"Augurio +3.",effect:"augury_match3"},
+  {id:"reveladora",studioId:"PRI-004",name:"REVELADORA",power:4,faction:"ivory",affinity:null,text:"Augurio +3.",effect:"augury_match3"},
+  {id:"iniciada",studioId:"PRI-005",name:"INICIADA",power:5,faction:"ivory",affinity:null,text:"Augurio +3.",effect:"augury_match3"},
+  {id:"luna_nueva",studioId:"PRI-006",name:"LUNA NUEVA",power:5,faction:"ivory",affinity:null,text:"Augurio +3.",effect:"augury_match3"},
   {id:"guardia_constelada",studioId:"PRI-007",name:"GUARDIA CONSTELADA",power:6,faction:"ivory",affinity:null,text:"Si el rival repite posición, +2 Poder.",effect:"enemy_repeat2"},
-  {id:"lucero",studioId:"PRI-008",name:"LUCERO",power:4,faction:"ivory",affinity:null,text:"Augurio: posición repetida.",effect:"augury_repeated_position"},
-  {id:"vision_revelada",studioId:"PRI-009",name:"VISIÓN REVELADA",power:5,faction:"ivory",affinity:null,text:"Augurio: habilidad de posición.",effect:"augury_enemy_affinity"},
+  {id:"lucero",studioId:"PRI-008",name:"LUCERO",power:4,faction:"ivory",affinity:null,text:"Augurio +3.",effect:"augury_match3"},
+  {id:"vision_revelada",studioId:"PRI-009",name:"VISIÓN REVELADA",power:5,faction:"ivory",affinity:null,text:"Augurio +3.",effect:"augury_match3"},
   {id:"curacion_fallida",studioId:"PRI-010",name:"CURACIÓN FALLIDA",power:4,faction:"ivory",affinity:null,text:"Si fallaste tu último Augurio, +3 Poder.",effect:"last_augury_miss3"},
   {id:"exiliada",studioId:"PRI-011",name:"EXILIADA",power:5,faction:"ivory",affinity:null,text:"Si el rival cambia de posición, +2 Poder.",effect:"enemy_change2"},
-  {id:"daga_lunar",studioId:"PRI-012",name:"DAGA LUNAR",power:6,faction:"ivory",affinity:null,text:"Tercer duelo: +2 Poder.",effect:"third2"}
+  {id:"daga_lunar",studioId:"PRI-012",name:"DAGA LUNAR",power:6,faction:"ivory",affinity:null,text:"Tercer duelo: si acertaste al menos 2 Augurios en esta partida, duplicá su Poder impreso.",effect:"lunar_finish_double"}
 ];
 
 // Santos Card Studio v0.4: static full-card sprites at native 2x print size.
