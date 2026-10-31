@@ -58,14 +58,25 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add gameplay-v1
-          if git diff --cached --quiet; then
-            echo "No preview changes to publish."
-            exit 0
-          fi
-          git commit -m "Update Daggerlight gameplay v1 prototype"
-          git pull --rebase origin main
-          git push origin HEAD:main
+          # Rebuild the commit from the latest main if another workflow
+          # publishes at the same time. Never force-push site content.
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --mixed origin/main
+            git add -A gameplay-v1
+            if git diff --cached --quiet; then
+              echo "No preview changes to publish."
+              exit 0
+            fi
+            git commit -m "Update Daggerlight gameplay v1 prototype"
+            if git push origin HEAD:main; then
+              echo "Published experimental gameplay preview."
+              exit 0
+            fi
+            echo "Main changed during publish (attempt ${attempt}); rebasing preview on latest snapshot."
+          done
+          echo "Could not publish after 5 attempts."
+          exit 1
 
       - name: Trigger Pages deployment
         env:
