@@ -1,0 +1,56 @@
+name: Augurio v2 gauntlet — exact engine
+on:
+  push:
+    branches: ["prototype/gameplay-v1"]
+    paths:
+      - scripts/gauntlet-prioresa-v2.ts
+      - .github/workflows/gauntlet-prioresa-v2.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: augurio-v2-gauntlet
+  cancel-in-progress: true
+
+jobs:
+  gauntlet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out experimental game engine
+        uses: actions/checkout@v4
+        with:
+          ref: prototype/gameplay-v1
+          fetch-depth: 0
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Run game regression tests
+        run: npm test
+      - name: Simulate AI versus AI gauntlet
+        run: ./node_modules/.bin/vite-node scripts/gauntlet-prioresa-v2.ts
+        env:
+          GAUNTLET_MATCHES_PER_OPPONENT: 2000
+      - name: Store results as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: prioresa-augurio-v2-32k
+          path: reports/prioresa-augurio-v2/
+          retention-days: 90
+      - name: Commit reproducible results to experiment branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/prioresa-augurio-v2/
+          if git diff --cached --quiet; then
+            echo "Results already checked in."
+            exit 0
+          fi
+          git commit -m "Record 32k real-engine Augurio v2 gauntlet results"
+          git pull --rebase origin prototype/gameplay-v1
+          git push origin HEAD:prototype/gameplay-v1
