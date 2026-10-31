@@ -144,9 +144,9 @@ function DuelPowerCard({played,side}:{played:EnginePlay;side:"player"|"opponent"
   const delta=final-printed;
   const effect=playEffectFeedback(played);
   useEffect(()=>{
-    const timer=window.setTimeout(()=>setResolved(true),530);
+    const timer=window.setTimeout(()=>setResolved(true),side==="player"?520:950);
     return ()=>window.clearTimeout(timer);
-  },[played]);
+  },[played,side]);
   return (
     <div className={"duel-showcase-card"+(resolved?" power-resolved":"")} aria-label={`${played.card.name}, Poder ${printed} pasa a ${final}`}>
       <span className="duel-showcase-side">{side==="player"?"TU CARTA":"RIVAL"}</span>
