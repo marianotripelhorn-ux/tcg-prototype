@@ -167,7 +167,41 @@ function handPlanScore(state: GameState, card: CardDefinition, pos: Position, pl
   return score;
 }
 
+// The difficult AI only uses the player's public, announced Augurios.
+// It must never inspect the player's hand or the unrevealed deck.
+function hitsPublicAugury(state: GameState, card: CardDefinition, position: Position) {
+  return state.player.pendingAuguries.some(augury => {
+    switch (augury.effect) {
+      case "augury_same_position":
+        return position === augury.sourcePosition;
+      case "augury_printed6":
+        return card.power >= 6;
+      case "augury_trono":
+        return position === "trono";
+      case "augury_opposite_lateral":
+        return isOppositeLateral(position,augury.sourcePosition);
+      case "augury_repeated_position":
+        return state.opponent.roundPlays.some(play => play.position === position);
+      case "augury_enemy_affinity":
+        return !!card.affinity;
+      default:
+        return false;
+    }
+  });
+}
+
 export function chooseAIPlay(state: GameState, firstPlay: EnginePlay | null, aiFirst: boolean, rng:()=>number=Math.random): EnginePlay {
+  const difficulty=state.aiDifficulty ?? "normal";
+  // Apprentice AI makes exploratory legal moves instead of always searching
+  // for the optimal response. Normal and hard preserve deterministic heuristics.
+  if (difficulty === "easy" && rng() < .78) {
+    const candidates = state.opponent.hand.flatMap((card,handIndex) =>
+      legalPositions(state.opponent).map(position => ({card,position,handIndex}))
+    );
+    if (candidates.length === 0) throw new Error("AI has no legal play.");
+    return candidates[Math.floor(rng()*candidates.length)];
+  }
+
   let best: EnginePlay | null = null;
   state.opponent.hand.forEach((card, handIndex) => {
     legalPositions(state.opponent).forEach(position => {
@@ -208,6 +242,17 @@ export function chooseAIPlay(state: GameState, firstPlay: EnginePlay | null, aiF
         }
         score += rng()*.04;
       }
+      if (difficulty === "hard") {
+        // Prioritize multi-card plans. Do not sacrifice a winning reply only
+        // to deny an Augurio: response scores have a 100-point win tier.
+        score += setup*.35 + plan*.48;
+        if (state.turn < 3 && reserveValue(state,card,state.opponent) > 0) {
+          score -= reserveValue(state,card,state.opponent)*.4;
+        }
+        if (hitsPublicAugury(state,card,position)) {
+          score -= 7;
+        }
+      }
       if (!best || score > (best.score ?? -Infinity)) {
         best = {...play,score,planScore:+plan.toFixed(2)};
       }
@@ -217,7 +262,7 @@ export function chooseAIPlay(state: GameState, firstPlay: EnginePlay | null, aiF
   return best;
 }
 
-export function aiWantsQuiero(state: GameState) {
+export function aiWantsQuiero(state: GameState, rng:()=>number=Math.random) {
   let best = -99;
   state.opponent.hand.forEach(card => legalPositions(state.opponent).forEach(pos => {
     best = Math.max(best,estimateOwn(state,card,pos,state.opponent,state.player));
@@ -230,5 +275,14 @@ export function aiWantsQuiero(state: GameState) {
   if (state.opponent.life === 1) wants = strongThreat;
   if (state.opponent.life >= 5 && best >= 6.5) wants = true;
   if (state.opponent.life <= 3 && best < expectedRival) wants = false;
+  if (state.aiDifficulty === "easy") {
+    // Occasionally accept a risky third duel or concede a promising one.
+    if (rng() < .3) wants = !wants;
+  }
+  if (state.aiDifficulty === "hard") {
+    // Better protect a match point while pressing a realistic finishing chance.
+    if (state.opponent.life <= 2 && best < expectedRival + 1.0) wants = false;
+    if (state.player.life === 1 && best >= expectedRival - 1) wants = true;
+  }
   return wants;
 }
