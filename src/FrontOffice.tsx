@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import ThemeToggle from "./ThemeToggle";
 import { allCards, factionLabels } from "./data";
@@ -114,9 +114,25 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
   const [opponent,setOpponent]=useState("random");
   const [showRival,setShowRival]=useState(false);
   const [difficulty,setDifficulty]=useState<AIDifficulty>("normal");
+  const championsAnchor=useRef<HTMLElement|null>(null);
+  const rivalAnchor=useRef<HTMLDivElement|null>(null);
   const activeChampions=faction?Object.values(champions).filter(c=>c.faction===faction):[];
   const chosen=selected?champions[selected]:null;
   const meta=faction?factionInfo.find(f=>f.id===faction):null;
+
+  useEffect(()=>{
+    if(!faction)return;
+    const motion=window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth";
+    const frame=window.requestAnimationFrame(()=>championsAnchor.current?.scrollIntoView({behavior:motion==="instant"?"instant":"smooth",block:"start"}));
+    return ()=>window.cancelAnimationFrame(frame);
+  },[faction]);
+
+  useEffect(()=>{
+    if(!selected)return;
+    const motion=window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth";
+    const frame=window.requestAnimationFrame(()=>rivalAnchor.current?.scrollIntoView({behavior:motion==="instant"?"instant":"smooth",block:"center"}));
+    return ()=>window.cancelAnimationFrame(frame);
+  },[selected]);
 
   function selectFaction(next:Faction) {
     if(faction===next) { setFaction(null);setSelected(null);return; }
@@ -159,7 +175,7 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
       </section>
 
       {faction&&meta&&(
-        <section className={"champion-selection theme-"+faction} aria-label="Elegir Champion">
+        <section ref={championsAnchor} className={"champion-selection theme-"+faction} aria-label="Elegir Champion">
           <div className="champion-section-heading">
             <div>
               <span className="fo-eyebrow">TU FACCIÓN</span>
@@ -205,7 +221,7 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
                   <strong>{chosen.text}</strong><p>{beginnerExplanations[chosen.id]}</p>
                 </div>
               </div>
-              <div className="champion-bottom">
+              <div className="champion-bottom" ref={rivalAnchor}>
                 <div className="champion-rival-picker">
                   <button type="button" className="fo-expand-button" aria-expanded={showRival} onClick={()=>setShowRival(v=>!v)}>
                     RIVAL: {opponent==="random"?"ALEATORIO":champions[opponent].name.toUpperCase()} <span aria-hidden="true">{showRival?"⌃":"⌄"}</span>
