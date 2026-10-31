@@ -65,7 +65,7 @@ function Sprite({card, crop=false}: {card: CardDefinition; crop?: boolean}) {
   return <div className={crop ? "library-art-crop" : "library-card-image"}><div className="library-card-sprite" style={style} /></div>;
 }
 
-export function HomeScreen({onPlay,onTutorial,onGallery}: {onPlay:()=>void;onTutorial:()=>void;onGallery:()=>void}) {
+export function HomeScreen({onPlay,onTutorial,onGallery,onPhysical}: {onPlay:()=>void;onTutorial:()=>void;onGallery:()=>void;onPhysical:()=>void}) {
   return (
     <main className="fo-shell home-screen">
       <div className="fo-glow glow-left" aria-hidden="true" />
@@ -103,7 +103,7 @@ export function HomeScreen({onPlay,onTutorial,onGallery}: {onPlay:()=>void;onTut
           </button>
         </nav>
       </div>
-      <footer className="fo-footer">UN JUEGO DE DECISIONES, POSICIONES Y RIESGO <span>·</span> PROTOTIPO DIGITAL</footer>
+      <footer className="fo-footer">UN JUEGO DE DECISIONES, POSICIONES Y RIESGO <span>·</span> PROTOTIPO DIGITAL <button type="button" className="home-physical-link" onClick={onPhysical}>MODO MESA · BETA ↗</button></footer>
     </main>
   );
 }
