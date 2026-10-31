@@ -1,9 +1,9 @@
 import { positionLabels } from "../data";
-import type { DuelResult, Position } from "../types";
+import type { DuelResult } from "../types";
 import { aiWantsQuiero, chooseAIPlay } from "./ai";
 import { affinityActive, calculateDuel, legalPositions, previewOpeningPower } from "./rules";
 import { createGame, resetRoundPlayer } from "./state";
-import type { AIDifficulty, EnginePlay, GameState, PendingAugury, PlayerState, Side } from "./types";
+import type { AIDifficulty, EnginePlay, GameState, PlayerState, Side } from "./types";
 
 function addBuff(player: PlayerState, amount: number, label: string) {
   player.nextBuff += amount;
@@ -15,73 +15,28 @@ function addDebuff(player: PlayerState, amount: number, label: string) {
   player.incomingNotes.push(`−${amount} ${label}`);
 }
 
-const AUGURY_EFFECTS = new Set([
-  "augury_same_position",
-  "augury_printed6",
-  "augury_trono",
-  "augury_opposite_lateral",
-  "augury_repeated_position",
-  "augury_enemy_affinity"
-]);
-
-function isOppositeLateral(a: Position, b: Position) {
-  return (a === "siniestra" && b === "diestra") || (a === "diestra" && b === "siniestra");
-}
-
+// Augurio v2 resolves in the same duel. No queued bonuses or predictions.
 export function isAuguryEffect(effect: string) {
-  return AUGURY_EFFECTS.has(effect);
+  return effect === "augury_match3";
 }
 
-export function auguryMatches(
-  augury: PendingAugury,
-  observed: EnginePlay,
-  observedPlayer: PlayerState
-) {
-  if (augury.effect === "augury_same_position") return observed.position === augury.sourcePosition;
-  if (augury.effect === "augury_printed6") return observed.card.power >= 6;
-  if (augury.effect === "augury_trono") return observed.position === "trono";
-  if (augury.effect === "augury_opposite_lateral") return isOppositeLateral(augury.sourcePosition, observed.position);
-  if (augury.effect === "augury_repeated_position") {
-    return observedPlayer.roundPlays.some(play => play.position === observed.position);
-  }
-  if (augury.effect === "augury_enemy_affinity") return !!observed.card.affinity;
-  return false;
-}
-
-function queueAugury(player: PlayerState, play: EnginePlay) {
-  if (!isAuguryEffect(play.card.effect)) return;
-  player.pendingAuguries.push({
-    effect: play.card.effect,
-    sourceCardId: play.card.id,
-    sourceName: play.card.name,
-    sourcePosition: play.position
-  });
-}
-
-export function resolveAuguries(
+export function recordAugury(
   state: GameState,
-  self: PlayerState,
-  observed: EnginePlay,
-  observedPlayer: PlayerState,
-  selfAlreadyCommitted: boolean
+  owner: PlayerState,
+  play: EnginePlay,
+  rivalPlay: EnginePlay
 ) {
-  if (!self.pendingAuguries.length) return;
-  const pending=[...self.pendingAuguries];
-  self.pendingAuguries=[];
-  for (const augury of pending) {
-    const hit=auguryMatches(augury,observed,observedPlayer);
-    self.lastAuguryResult=hit ? "hit" : "miss";
-    const bonus = hit ? 3 : 1;
-    state.events.push({
-      text:`Augurio · ${augury.sourceName}: ${hit ? "acierto" : "fallo"} · próxima carta +${bonus} Poder.`,
-      kind:"info"
-    });
-    // Augury always grants a future bonus, but only hits count for the Prioresa.
-    // A committed card cannot collect its own Augury reward.
-    if (selfAlreadyCommitted) self.auguryQueuedBuff += bonus;
-    else self.auguryBuff += bonus;
-    if (hit) self.auguryHitsSinceHeal += 1;
+  if (!isAuguryEffect(play.card.effect)) return;
+  const hit = play.position === rivalPlay.position;
+  owner.lastAuguryResult = hit ? "hit" : "miss";
+  if (hit) {
+    owner.auguryHitsTotal += 1;
+    if (owner.champion.id === "prioresa_luna_llena") owner.auguryHitsSinceHeal += 1;
   }
+  state.events.push({
+    text:`Augurio · ${play.card.name}: ${hit ? "acierto (+3 Poder en este duelo)" : "fallo (sin bonificación)"}.`,
+    kind:"info"
+  });
 }
 
 function applyPrioryHealing(state: GameState, player: PlayerState) {
@@ -94,6 +49,7 @@ function applyPrioryHealing(state: GameState, player: PlayerState) {
     player.auguryHitsSinceHeal -= 3;
     player.auguryHeals += 1;
     player.life = Math.min(player.champion.life, player.life + 1);
+    player.healedLife = Math.min(player.life, player.healedLife + 1);
     state.events.push({
       text:`Prioresa de la Luna Llena recupera 1 Vida (${player.auguryHeals}/2).`,
       kind:"info"
@@ -138,8 +94,6 @@ function consumePreparedState(state: GameState, playerPlay: EnginePlay, opponent
     player.nextPositionBoost = 0;
     player.empireanBuff = 0;
     player.nextBaseDouble = false;
-    player.auguryBuff = player.auguryQueuedBuff;
-    player.auguryQueuedBuff = 0;
   }
   if (playerSpecificUsed) state.player.nextPositionSpecificBoost = null;
   if (opponentSpecificUsed) state.opponent.nextPositionSpecificBoost = null;
@@ -154,8 +108,6 @@ function beginDuel(state: GameState, rng:()=>number) {
     const choice = chooseAIPlay(state,null,true,rng);
     const [card] = state.opponent.hand.splice(choice.handIndex!,1);
     const staged: EnginePlay = {...choice,card};
-    resolveAuguries(state,state.player,staged,state.opponent,false);
-    queueAugury(state.opponent,staged);
     const preview = previewOpeningPower(state,staged,state.opponent,state.player);
     staged.finalPower = preview.power;
     staged.powerExact = preview.exact;
@@ -272,12 +224,14 @@ function resolvePendingDuel(state: GameState, rng:()=>number) {
     outcome="player";
     state.duelScore.player += 1;
     state.opponent.life -= 1;
+    state.opponent.healedLife = Math.max(0,state.opponent.healedLife - 1);
     state.player.duelResults.push("win");
     state.opponent.duelResults.push("loss");
   } else if (power.opponent>power.player) {
     outcome="opponent";
     state.duelScore.opponent += 1;
     state.player.life -= 1;
+    state.player.healedLife = Math.max(0,state.player.healedLife - 1);
     state.player.duelResults.push("loss");
     state.opponent.duelResults.push("win");
   } else {
@@ -310,6 +264,10 @@ function resolvePendingDuel(state: GameState, rng:()=>number) {
   if (outcome==="draw"&&state.player.champion.id==="samas") addBuff(state.player,2,"Samas");
   if (outcome==="draw"&&state.opponent.champion.id==="samas") addBuff(state.opponent,2,"Samas");
 
+  // Resolve same-duel Augurios only after the Power calculation and damage.
+  // Both Champions record their own Augurio independently of who wins the duel.
+  recordAugury(state,state.player,playerPlay,opponentPlay);
+  recordAugury(state,state.opponent,opponentPlay,playerPlay);
   applyPrioryHealing(state,state.player);
   applyPrioryHealing(state,state.opponent);
 
@@ -374,21 +332,11 @@ export function submitPlayerPlay(
   const [chosen]=state.player.hand.splice(handIndex,1);
   state.pendingPlayerPlay={card:chosen,position};
 
-  resolveAuguries(
-    state,
-    state.opponent,
-    state.pendingPlayerPlay,
-    state.player,
-    state.initiative==="opponent"
-  );
-  queueAugury(state.player,state.pendingPlayerPlay);
 
   if (state.initiative==="player") {
     const aiChoice=chooseAIPlay(state,state.pendingPlayerPlay,false,rng);
     const [aiCard]=state.opponent.hand.splice(aiChoice.handIndex!,1);
     state.pendingOpponentPlay={...aiChoice,card:aiCard};
-    resolveAuguries(state,state.player,state.pendingOpponentPlay,state.opponent,true);
-    queueAugury(state.opponent,state.pendingOpponentPlay);
   } else if (!state.pendingOpponentPlay) {
     throw new Error("Opponent initiative requires a staged AI play.");
   }
