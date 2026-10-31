@@ -69,17 +69,17 @@ export const whiteCards: CardDefinition[] = [
 
 export const saintCards: CardDefinition[] = [
   {id:"santo_bifronte",studioId:"SAN-001",name:"SANTO BIFRONTE",power:6,faction:"saints",affinity:null,text:"Siniestra o Diestra: +1 Poder.",effect:"lateral1"},
-  {id:"contrapeso",studioId:"SAN-002",name:"CONTRAPESO",power:6,faction:"saints",affinity:null,text:"Si vas perdiendo la ronda, +2 Poder.",effect:"losing_round2"},
+  {id:"contrapeso",studioId:"SAN-002",name:"SEGUNDO SANTO DEL EJE",power:6,faction:"saints",affinity:null,text:"Si vas perdiendo la ronda, +2 Poder.",effect:"losing_round2"},
   {id:"equilibrador",studioId:"SAN-003",name:"EQUILIBRADOR",power:6,faction:"saints",affinity:null,text:"Si el marcador de la ronda está empatado, +1 Poder.",effect:"score_tied1"},
-  {id:"martir_espejo",studioId:"SAN-004",name:"MÁRTIR DEL ESPEJO",power:3,faction:"saints",affinity:null,text:"Si este duelo deja la ronda 1–1, tu próxima carta duplica su Poder base.",effect:"mirror_martyr"},
-  {id:"custodio_eje",studioId:"SAN-005",name:"CUSTODIO DEL EJE",power:6,faction:"saints",affinity:"trono",text:"Trono: si ya jugaste en Siniestra o Diestra esta ronda, +2 Poder.",effect:"axis_lateral2"},
-  {id:"paso_especular",studioId:"SAN-006",name:"PASO ESPECULAR",power:5,faction:"saints",affinity:null,text:"Si tu carta anterior fue jugada en la posición lateral opuesta, +3 Poder.",effect:"opposite_prev3"},
-  {id:"procesion_perfecta",studioId:"SAN-007",name:"PROCESIÓN PERFECTA",power:5,faction:"saints",affinity:null,text:"Duplica su Poder base si en el segundo duelo jugaste en Trono.",effect:"second_trono_double"},
-  {id:"reflejo_viviente",studioId:"SAN-008",name:"REFLEJO VIVIENTE",power:6,faction:"saints",affinity:null,text:"Si tu oponente jugó en la posición lateral opuesta, +2 Poder.",effect:"opposite_enemy2"},
+  {id:"martir_espejo",studioId:"SAN-004",name:"MÁRTIR",power:3,faction:"saints",affinity:null,text:"Si este duelo deja la ronda 1–1, tu próxima carta duplica su Poder base.",effect:"mirror_martyr"},
+  {id:"custodio_eje",studioId:"SAN-005",name:"GUARDIANA DE LA SIMETRÍA",power:6,faction:"saints",affinity:"trono",text:"Trono: si ya jugaste en Siniestra o Diestra esta ronda, +2 Poder.",effect:"axis_lateral2"},
+  {id:"paso_especular",studioId:"SAN-006",name:"SANTO PRISMÁTICO",power:5,faction:"saints",affinity:null,text:"Si tu carta anterior fue jugada en la posición lateral opuesta, +3 Poder.",effect:"opposite_prev3"},
+  {id:"procesion_perfecta",studioId:"SAN-007",name:"REY SIN CORONA",power:5,faction:"saints",affinity:null,text:"Duplica su Poder base si en el segundo duelo jugaste en Trono.",effect:"second_trono_double"},
+  {id:"reflejo_viviente",studioId:"SAN-008",name:"SÉPTIMA SOMBRA",power:6,faction:"saints",affinity:null,text:"Si tu oponente jugó en la posición lateral opuesta, +2 Poder.",effect:"opposite_enemy2"},
   {id:"avatar_simetria",studioId:"SAN-009",name:"AVATAR DE SIMETRÍA",power:4,faction:"saints",affinity:null,text:"Si ambos campeones tienen la misma Vida, duplica su Poder base.",effect:"equal_life_double"},
-  {id:"pendulo",studioId:"SAN-010",name:"PÉNDULO",power:4,faction:"saints",affinity:null,text:"Si ganaste un duelo y perdiste otro esta ronda, +4 Poder.",effect:"win_loss4"},
-  {id:"santo_gemelo",studioId:"SAN-011",name:"SANTO GEMELO",power:5,faction:"saints",affinity:null,text:"Si el duelo anterior terminó en empate, +3 Poder.",effect:"prev_draw3"},
-  {id:"palindromo",studioId:"SAN-012",name:"PALÍNDROMO",power:5,faction:"saints",affinity:null,text:"Si tu primera carta de la ronda fue jugada en la posición lateral opuesta a esta, +3 Poder.",effect:"first_opposite3"}
+  {id:"pendulo",studioId:"SAN-010",name:"VENGADOR EN SOMBRAS",power:4,faction:"saints",affinity:null,text:"Si ganaste un duelo y perdiste otro esta ronda, +4 Poder.",effect:"win_loss4"},
+  {id:"santo_gemelo",studioId:"SAN-011",name:"SANTIDAD ESPEJADA",power:5,faction:"saints",affinity:null,text:"Si el duelo anterior terminó en empate, +3 Poder.",effect:"prev_draw3"},
+  {id:"palindromo",studioId:"SAN-012",name:"CONSPIRADOR",power:5,faction:"saints",affinity:null,text:"Si tu primera carta de la ronda fue jugada en la posición lateral opuesta a esta, +3 Poder.",effect:"first_opposite3"}
 ];
 
 export const ivoryCards: CardDefinition[] = [
@@ -97,6 +97,19 @@ export const ivoryCards: CardDefinition[] = [
   {id:"exiliada",studioId:"PRI-011",name:"EXILIADA",power:5,faction:"ivory",affinity:null,text:"Si el rival cambia de posición, +2 Poder.",effect:"enemy_change2"},
   {id:"daga_lunar",studioId:"PRI-012",name:"DAGA LUNAR",power:6,faction:"ivory",affinity:null,text:"Tercer duelo: +2 Poder.",effect:"third2"}
 ];
+
+// Santos Card Studio v0.4: static full-card sprites at native 2x print size.
+// Keep the established engine ids and effects; match uploaded art by SAN-001..SAN-012.
+// Actual files are copied manually to public/cards/saints/ from the ZIP.
+saintCards.forEach((card, index) => {
+  const sheet = Math.floor(index / 6) + 1;
+  const slot = index % 6;
+  card.art = {
+    sprite: "./cards/saints/saints-cards-" + sheet + ".webp",
+    column: slot % 3,
+    row: Math.floor(slot / 3)
+  };
+});
 
 // Source sprites: 12 print-ready cards, each sheet is 3 columns x 2 rows.
 // The online client keeps the classic placeholders until the files are uploaded.
