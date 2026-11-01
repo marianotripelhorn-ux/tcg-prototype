@@ -1,0 +1,56 @@
+name: Blue Champion buffs — balance experiment
+on:
+  push:
+    branches: ["experiment/blue-champion-buff-v1"]
+    paths:
+      - scripts/gauntlet-blue-buff-v1.ts
+      - .github/workflows/gauntlet-blue-buff-v1.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: blue-buff-comparison-v1
+  cancel-in-progress: true
+
+jobs:
+  balance-experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout experimental buff branch
+        uses: actions/checkout@v4
+        with:
+          ref: experiment/blue-champion-buff-v1
+          fetch-depth: 0
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Run engine regression tests
+        run: npm test
+      - name: Simulate 144k matches with experimental blue buffs
+        env:
+          PAIR_MATCHES: 2000
+        run: ./node_modules/.bin/vite-node scripts/gauntlet-blue-buff-v1.ts
+      - name: Archive experimental results
+        uses: actions/upload-artifact@v4
+        with:
+          name: blue-champion-buff-144k
+          path: reports/blue-champion-buff-v1/
+          retention-days: 90
+      - name: Commit experimental results to branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/blue-champion-buff-v1/
+          if git diff --cached --quiet; then
+            echo "Experimental report already committed."
+            exit 0
+          fi
+          git commit -m "Save full 144k-match blue Champion buff experiment"
+          git pull --rebase origin experiment/blue-champion-buff-v1
+          git push origin HEAD:experiment/blue-champion-buff-v1
