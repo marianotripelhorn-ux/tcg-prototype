@@ -84,7 +84,7 @@ export function estimateOwn(
   }
   if (card.effect === "enemy_repeat2") value += opponent.roundPlays.length ? 1.1 : 0;
   if (card.effect === "enemy_change2") value += opponent.roundPlays.length ? 1.1 : 0;
-  if (player.champion.id === "vinira" && !player.viniraUsed && card.affinity && pos !== card.affinity && aff) value += 1;
+  if (player.champion.id === "vinira" && !player.viniraUsed && card.affinity && pos !== card.affinity && aff) value += 2;
   return value;
 }
 
