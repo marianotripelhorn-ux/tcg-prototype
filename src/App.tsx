@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Tutorial from "./Tutorial";
 import ThemeToggle from "./ThemeToggle";
 import AuguryStatus from "./AuguryStatus";
+import { factionArtUrl } from "./factionArtwork";
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import { HomeScreen, ChampionPicker, CardCollection } from "./FrontOffice";
 import PhysicalTable from "./PhysicalTable";
@@ -13,7 +14,7 @@ import { answerQuiero, cloneGame, startGame, submitPlayerPlay } from "./engine/g
 import { capacity, legalPositions } from "./engine/rules";
 import type { AIDifficulty, DuelSummary, EnginePlay, GameState } from "./engine/types";
 import { formatPowerDelta, playEffectFeedback, playPowerDelta } from "./engine/presentation";
-import type { CardDefinition, Position } from "./types";
+import type { CardDefinition, Faction, Position } from "./types";
 
 type DragState = {
   handIndex: number;
@@ -271,19 +272,22 @@ function CurrentBoardCard({
 
 function ChampionBar({
   side,
+  faction,
   name,
   life,
   passive,
   healedLife=0
 }: {
   side: "player" | "opponent";
+  faction: Faction;
   name: string;
   life: number;
   passive: string;
   healedLife?: number;
 }) {
   return (
-    <section className={`champion-bar ${side}`}>
+    <section className={`champion-bar ${side} faction-illustrated faction-${faction}`}>
+      <img className="champion-faction-image" src={factionArtUrl(faction,"banner")} alt="" aria-hidden="true" decoding="async" />
       <div className="champion-medallion">{side === "player" ? "M" : "A"}</div>
       <div className="champion-copy">
         <span className="champion-eyebrow">{side === "player" ? "VOS" : "RIVAL"}</span>
@@ -629,6 +633,7 @@ export default function App() {
       <div className="game-frame">
         <ChampionBar
           side="opponent"
+          faction={game.opponent.champion.faction}
           name={game.opponent.champion.name}
           life={displayed?.opponentLife??game.opponent.life}
           healedLife={displayed?.opponentHealed??game.opponent.healedLife}
@@ -721,6 +726,7 @@ export default function App() {
 
         <ChampionBar
           side="player"
+          faction={game.player.champion.faction}
           name={game.player.champion.name}
           life={displayed?.playerLife??game.player.life}
           healedLife={displayed?.playerHealed??game.player.healedLife}
