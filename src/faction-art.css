@@ -1,0 +1,159 @@
+/*
+ * Faction illustrations — first visual integration.
+ * Source art: five vertical patterns (1060x1484 PNG) and four provided CUT
+ * references, plus a derived horizontal crop for the Priorato.
+ *
+ * Picker cards are fluid; source image is vertically composed at 3:4.
+ * Champion bars are narrow panoramic strips and deliberately crop their image.
+ * Missing files leave the original faction-colored banners in place.
+ */
+
+/* 1. Champion selection — art goes all the way to the edges. */
+.faction-banner .faction-banner-image{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center 45%;
+  border-radius:inherit;
+  opacity:0;
+  pointer-events:none;
+  transform:scale(1);
+  transition:opacity .25s ease-out,transform .5s ease-out;
+}
+.faction-banner.faction-has-art .faction-banner-image{opacity:1}
+.faction-banner.faction-has-art:hover .faction-banner-image,
+.faction-banner.faction-has-art.active .faction-banner-image{transform:scale(1.035)}
+/* The supplied illustration's own colors represent the faction.
+   Gradient belongs only to the typography, not to the artwork itself. */
+.faction-banner.faction-has-art:before{
+  z-index:1;
+  inset:0;
+  opacity:1;
+  background:linear-gradient(
+    180deg,
+    rgba(25,25,25,.50) 0%,
+    rgba(25,25,25,.08) 34%,
+    rgba(25,25,25,.16) 52%,
+    rgba(25,25,25,.84) 100%
+  );
+}
+.faction-banner.faction-has-art .faction-banner-art{z-index:1}
+.faction-banner.faction-has-art .faction-banner-symbol,
+.faction-banner.faction-has-art .faction-banner-art:before,
+.faction-banner.faction-has-art .faction-banner-art:after,
+.faction-banner.faction-has-art .faction-banner-art i{display:none}
+.faction-banner.faction-has-art .faction-banner-index,
+.faction-banner.faction-has-art .faction-banner-content,
+.faction-banner.faction-has-art .faction-banner-select{z-index:2;color:#eae2d5}
+.faction-banner.faction-has-art .faction-banner-index{
+  width:max-content;
+  padding:4px 6px;
+  border-radius:5px;
+  background:rgba(25,25,25,.35);
+  opacity:1;
+  color:#eae2d5;
+}
+.faction-banner.faction-has-art .faction-banner-content{
+  background:linear-gradient(to top,rgba(25,25,25,.52),transparent);
+}
+.faction-banner.faction-has-art .faction-banner-content strong{
+  color:#eae2d5;
+  text-shadow:0 1px 9px rgba(0,0,0,.65);
+}
+.faction-banner.faction-has-art .faction-banner-content small{
+  color:#eae2d5;
+  opacity:.93;
+  text-shadow:0 1px 7px rgba(0,0,0,.6);
+}
+.faction-banner.faction-has-art .faction-banner-select{
+  background:rgba(25,25,25,.80);
+  border-color:rgba(211,183,135,.44);
+  color:#d3b787;
+}
+/* The new art is equally visible in the light/dark interface. */
+:root[data-theme="dark"] .faction-banner.faction-has-art .faction-banner-index,
+:root[data-theme="dark"] .faction-banner.faction-has-art .faction-banner-content strong,
+:root[data-theme="dark"] .faction-banner.faction-has-art .faction-banner-content small{color:#eae2d5}
+:root[data-theme="dark"] .faction-banner.faction-has-art .faction-banner-select{color:#d3b787}
+
+/* 2. In-game Champion bars — banner is behind the portrait, name, and Life. */
+.champion-bar.faction-illustrated{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  background:#191919;
+  color:#eae2d5;
+}
+.champion-bar.faction-illustrated .champion-faction-image{
+  position:absolute;
+  display:block;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center center;
+  z-index:0;
+  opacity:1;
+  pointer-events:none;
+}
+.champion-bar.faction-illustrated::before{
+  content:"";
+  position:absolute;
+  z-index:1;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(
+    90deg,
+    rgba(25,25,25,.83) 0%,
+    rgba(25,25,25,.68) 28%,
+    rgba(25,25,25,.48) 56%,
+    rgba(25,25,25,.77) 100%
+  );
+}
+.champion-bar.faction-illustrated > :not(.champion-faction-image){
+  position:relative;
+  z-index:2;
+}
+.champion-bar.faction-illustrated .champion-medallion{
+  background:rgba(25,25,25,.84);
+  color:#d3b787;
+  border-color:rgba(211,183,135,.80);
+}
+.champion-bar.faction-illustrated .champion-copy strong,
+.champion-bar.faction-illustrated .life-block{
+  color:#eae2d5;
+  text-shadow:0 1px 6px rgba(0,0,0,.85);
+}
+.champion-bar.faction-illustrated .champion-eyebrow{color:#d3b787}
+.champion-bar.faction-illustrated .champion-passive{
+  color:#eae2d5;
+  opacity:.89;
+  text-shadow:0 1px 6px rgba(0,0,0,.8);
+}
+.champion-bar.faction-illustrated .life-block > span:not(.life-recovered){color:#d3b787}
+:root[data-theme="dark"] .champion-bar.faction-illustrated{
+  color:#eae2d5;background:#191919;
+}
+:root[data-theme="dark"] .champion-bar.faction-illustrated .champion-copy strong,
+:root[data-theme="dark"] .champion-bar.faction-illustrated .life-block,
+:root[data-theme="dark"] .champion-bar.faction-illustrated .champion-passive{color:#eae2d5}
+:root[data-theme="dark"] .champion-bar.faction-illustrated .champion-medallion{
+  background:rgba(25,25,25,.84);
+  color:#d3b787;
+  border-color:#d3b787;
+}
+@media(max-width:580px){
+  .champion-bar.faction-illustrated::before{
+    background:linear-gradient(90deg,rgba(25,25,25,.88),rgba(25,25,25,.65) 45%,rgba(25,25,25,.80));
+  }
+  .faction-banner.faction-has-art .faction-banner-image{object-position:center 40%}
+}
+@media(prefers-reduced-motion:reduce){
+  .faction-banner .faction-banner-image{transition:none!important}
+  .faction-banner.faction-has-art:hover .faction-banner-image,
+  .faction-banner.faction-has-art.active .faction-banner-image{transform:none}
+}
