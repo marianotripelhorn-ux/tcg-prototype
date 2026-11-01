@@ -7,6 +7,7 @@ import "./light-theme.css";
 import "./brand-theme.css";
 import "./dark-mode.css";
 import "./gameplay-experiment.css";
+import "./faction-art.css";
 
 initializeTheme();
 
