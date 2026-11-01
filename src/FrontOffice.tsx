@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import ThemeToggle from "./ThemeToggle";
+import { factionArtUrl } from "./factionArtwork";
 import { allCards, factionLabels } from "./data";
 import { champions } from "./engine/champions";
 import type { AIDifficulty } from "./engine/types";
@@ -30,8 +31,8 @@ const factionInfo: {id: Faction; tagline: string; description: string; symbol: s
 const beginnerExplanations: Record<string, string> = {
   dextral: "Te deja ocupar Diestra dos veces en una misma ronda. Ideal si te gusta concentrar tus mejores golpes en esa posición.",
   athos: "Si ganás usando Diestra, obtenés un espacio adicional allí para seguir atacando. Podés llegar a tres cartas en Diestra en esa ronda.",
-  sinistral: "Podés usar Siniestra dos veces por ronda. Además, después de tu primera derrota de cada ronda, la siguiente carta rival pierde 1 Poder.",
-  vinira: "Una vez por ronda, la primera carta que juegues fuera de su posición preferida activa igualmente su habilidad posicional y obtiene +1 Poder.",
+  sinistral: "Podés usar Siniestra dos veces por ronda. Además, después de tu primera derrota de cada ronda, la siguiente carta rival pierde 2 Poder.",
+  vinira: "Una vez por ronda, la primera carta que juegues fuera de su posición preferida activa igualmente su habilidad posicional y obtiene +2 Poder.",
   empireos: "Si tu rival juega en las tres posiciones durante una ronda, tu próxima carta gana +2 Poder. Castigás a quien usa todo el tablero.",
   desartes: "Podés ocupar dos veces las posiciones que tengan más cartas en tu Archivo. Si varias están empatadas, todas sirven.",
   santo_simetrico: "Una vez por ronda, cuando ibas a perder por exactamente 1 Poder, convertís esa derrota en empate.",
@@ -114,6 +115,7 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
   const [opponent,setOpponent]=useState("random");
   const [showRival,setShowRival]=useState(false);
   const [difficulty,setDifficulty]=useState<AIDifficulty>("normal");
+  const [loadedArt,setLoadedArt]=useState<Partial<Record<Faction,boolean>>>({});
   const championsAnchor=useRef<HTMLElement|null>(null);
   const rivalAnchor=useRef<HTMLDivElement|null>(null);
   const activeChampions=faction?Object.values(champions).filter(c=>c.faction===faction):[];
@@ -159,10 +161,12 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
           <button
             type="button"
             key={f.id}
-            className={"faction-banner theme-"+f.id+(faction===f.id?" active":"")}
+            className={"faction-banner theme-"+f.id+(loadedArt[f.id]?" faction-has-art":"")+(faction===f.id?" active":"")}
             aria-pressed={faction===f.id}
             onClick={()=>selectFaction(f.id)}
           >
+            <img className="faction-banner-image" src={factionArtUrl(f.id,"portrait")} alt="" aria-hidden="true" loading="lazy" decoding="async"
+              onLoad={()=>setLoadedArt(previous=>previous[f.id]?previous:{...previous,[f.id]:true})}/>
             <span className="faction-banner-index">{String(idx+1).padStart(2,"0")} / 05</span>
             <span className="faction-banner-art" aria-hidden="true"><span className="faction-banner-symbol">{f.symbol}</span><i/></span>
             <span className="faction-banner-content">
