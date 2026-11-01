@@ -55,20 +55,20 @@ describe("Daggerlight v2 Champion audit", () => {
     expect(capacity(state.player,"diestra")).toBe(3);
   });
 
-  it("Corte Sinistral prepares -1 after its first loss of the round", () => {
+  it("Corte Sinistral prepares -2 after its first loss of the round", () => {
     const state=controlled("sinistral","athos","prodigio","trono","mensajero","trono");
     expect(state.lastDuel?.outcome).toBe("opponent");
     expect(state.player.bluePassiveUsed).toBe(true);
-    expect(state.opponent.incomingDebuff).toBe(1);
+    expect(state.opponent.incomingDebuff).toBe(2);
   });
 
-  it("Vinira enables the first off-affinity positional ability and gives +1", () => {
+  it("Vinira enables the first off-affinity positional ability and gives +2", () => {
     const state=createGame("vinira","desartes",fixed,"player");
     state.player.roundPlays=[];
     state.opponent.roundPlays=[];
     const first=calculateDuel(state,play("invocadagas","trono"),play("mensajero","trono"));
     expect(first.playerAffinity).toBe(true);
-    expect(first.player).toBe(8);
+    expect(first.player).toBe(9);
 
     const resolved=controlled("vinira","desartes","invocadagas","trono","mensajero","trono");
     expect(resolved.player.viniraUsed).toBe(true);
