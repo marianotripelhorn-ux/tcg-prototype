@@ -202,8 +202,8 @@ function intrinsicPower(
     play.position !== card.affinity &&
     affinity
   ) {
-    power += 1;
-    notes.push("+1 Vinira fuera de afinidad");
+    power += 2;
+    notes.push("+2 Vinira fuera de afinidad");
   }
 
   return power;
