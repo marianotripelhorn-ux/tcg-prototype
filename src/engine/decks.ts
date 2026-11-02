@@ -16,14 +16,16 @@ export interface DeckDefinition {
 export interface DeckRules {
   deckSize:number;
   maxCopies:number;
+  distinctCards:number;
   maxFactions:number;
   requireChampionFaction:boolean;
   minPrimaryCards:number;
 }
 
 export const proposedMultifactionRules:DeckRules = {
-  deckSize:24,
-  maxCopies:2,
+  deckSize:36,
+  maxCopies:3,
+  distinctCards:12,
   maxFactions:2,
   requireChampionFaction:true,
   minPrimaryCards:1
@@ -52,8 +54,9 @@ export function validateDeck(deck:DeckDefinition,rules:DeckRules=proposedMultifa
     copies.set(card.id,(copies.get(card.id)??0)+1);
     amounts[card.faction]=(amounts[card.faction]??0)+1;
   }
+  if(copies.size!==rules.distinctCards)errors.push(`Elegí exactamente ${rules.distinctCards} cartas distintas.`);
   for(const [id,count] of copies) {
-    if(count>rules.maxCopies)errors.push(`Demasiadas copias de ${id}: ${count}/${rules.maxCopies}`);
+    if(count!==rules.maxCopies)errors.push(`La carta ${id} debe tener exactamente ${rules.maxCopies} copias (actualmente ${count}).`);
   }
   const factions=Object.keys(amounts) as Faction[];
   if(factions.length>rules.maxFactions)errors.push(`Se permiten hasta ${rules.maxFactions} facciones.`);
@@ -70,7 +73,7 @@ export function makeMonoDeckDefinition(championId:string):DeckDefinition {
     id:"mono-"+championId,
     name:"Mazo inicial · "+champion.name,
     championId,
-    cardIds:cardsByFaction[champion.faction].flatMap(card=>[card.id,card.id])
+    cardIds:cardsByFaction[champion.faction].flatMap(card=>[card.id,card.id,card.id])
   };
 }
 
