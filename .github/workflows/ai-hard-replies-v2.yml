@@ -1,0 +1,47 @@
+name: Experimental hard AI calibration
+on:
+  push:
+    branches: ["experiment/ai-hard-replies-v2"]
+    paths:
+      - src/engine/ai.ts
+      - scripts/calibrate-ai-hard-v2.ts
+      - .github/workflows/ai-hard-replies-v2.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: experimental-hard-ai-calibration
+  cancel-in-progress: true
+jobs:
+  calibrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout experimental engine
+        uses: actions/checkout@v4
+        with:
+          ref: experiment/ai-hard-replies-v2
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install and test
+        run: npm install && npm test
+      - name: Calibrate difficulty
+        env:
+          DIFFICULTY_MATCHES_PER_CHAMPION: 400
+        run: ./node_modules/.bin/vite-node scripts/calibrate-ai-hard-v2.ts
+      - name: Preserve report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hard-ai-reply-calibration
+          path: reports/ai-hard-replies-v2/
+      - name: Commit experimental results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/ai-hard-replies-v2/
+          git diff --cached --quiet && exit 0
+          git commit -m "Record AI hard public-reply experiment"
+          git pull --rebase origin experiment/ai-hard-replies-v2
+          git push origin HEAD:experiment/ai-hard-replies-v2
