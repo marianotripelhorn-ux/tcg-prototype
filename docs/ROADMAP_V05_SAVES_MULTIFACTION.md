@@ -113,14 +113,29 @@ Resultado inicial de 10.800 partidas:
 - Difícil contra Normal: Difícil gana 49,97%.
 - Difícil contra Fácil: Difícil gana 92,78%.
 
-Interpretación: Fácil es excesivamente débil y Difícil no es
-significativamente mejor que Normal. **No se cambiaron las heurísticas
-en la versión jugable en esta etapa.** Primero debemos experimentar
-con una IA más consistente, sin leer información oculta ni ajustar
-Poderes de las cartas.
+Interpretación inicial: Fácil era excesivamente débil y Difícil
+no era significativamente mejor que Normal. Se probó y promovió
+una segunda versión con decisiones más cuidadosas:
 
-Archivo completo:
-`reports/ai-difficulty-calibration-v1/summary.md`.
+- Fácil elige jugadas aleatorias legales en 40% de sus oportunidades,
+  frente al 78% anterior.
+- Difícil estima los posibles contraataques usando el catálogo PÚBLICO
+  de la facción principal del rival, sin acceder a su mano ni a su mazo oculto.
+- El balance de cartas y las reglas permanecen idénticos.
+
+Nueva calibración con las mismas 10.800 simulaciones y semillas:
+- Normal contra Fácil: Normal gana **80,28%**.
+- Difícil contra Normal: Difícil gana **54,22%**.
+- Difícil contra Fácil: Difícil gana **83,53%**.
+
+La mejora de Difícil es modesta pero medible en esta muestra.
+En mazos multifacción la heurística inicial considera solo la facción
+principal; requiere futura ampliación cuando formalicemos la
+visibilidad pública de la composición del mazo.
+
+Archivos comparables:
+`reports/ai-difficulty-calibration-v1/summary.md` (antes) y
+`experiment/ai-calibration-v2/reports/ai-difficulty-experiment-v2/summary.md` (después).
 
 ## 5. Archivos principales
 
