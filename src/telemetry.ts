@@ -54,7 +54,9 @@ export function sendCompletedMatch(record:MatchRecord):void {
       rival_life:record.opponentLife,
       augury_hits:record.auguryHits,
       augury_heals:record.auguryHeals,
-      no_quiero:record.noQuiero
+      no_quiero:record.noQuiero,
+      mixed_deck:record.mixedDeck,
+      factions:record.factions.join("+")
     },
     timestamp:record.finishedAt
   };
