@@ -1,4 +1,4 @@
-import { positions } from "../data";
+import { positions, cardsByFaction } from "../data";
 import type { CardDefinition, Position } from "../types";
 import { affinityActive, calculateDuel, capacity, countPosition, legalPositions } from "./rules";
 import type { EnginePlay, GameState, PlayerState } from "./types";
@@ -171,11 +171,33 @@ function handPlanScore(state: GameState, card: CardDefinition, pos: Position, pl
   return score;
 }
 
+// Expert AI evaluates potential replies from the rival's publicly known
+// primary-faction card pool. This never reads the player's hidden hand or deck.
+function estimateOpeningRisk(state:GameState,play:EnginePlay):number {
+  const rivalPool=cardsByFaction[state.player.champion.faction];
+  const rivalPositions=legalPositions(state.player);
+  if(!rivalPool.length||!rivalPositions.length)return 0;
+  let beats=0,draws=0;
+  for(const card of rivalPool) {
+    let bestMargin=-Infinity;
+    for(const position of rivalPositions) {
+      const duel=calculateDuel(state,{card,position},play);
+      bestMargin=Math.max(bestMargin,duel.player-duel.opponent);
+    }
+    if(bestMargin>0)beats++;
+    else if(bestMargin===0)draws++;
+  }
+  const probability=beats/rivalPool.length;
+  // Probability that a hypothetical three-card hand contains a winning reply.
+  // Avoid handing the rival an easy win; preserve card economy elsewhere.
+  return -10*(1-Math.pow(1-probability,3))-2*(draws/rivalPool.length);
+}
+
 export function chooseAIPlay(state: GameState, firstPlay: EnginePlay | null, aiFirst: boolean, rng:()=>number=Math.random): EnginePlay {
   const difficulty=state.aiDifficulty ?? "normal";
   // Apprentice AI makes exploratory legal moves instead of always searching
   // for the optimal response. Normal and hard preserve deterministic heuristics.
-  if (difficulty === "easy" && rng() < .78) {
+  if (difficulty === "easy" && rng() < .40) {
     const candidates = state.opponent.hand.flatMap((card,handIndex) =>
       legalPositions(state.opponent).map(position => ({card,position,handIndex}))
     );
@@ -193,6 +215,7 @@ export function chooseAIPlay(state: GameState, firstPlay: EnginePlay | null, aiF
       if (aiFirst || !firstPlay) {
         const immediate = estimateOwn(state,card,position,state.opponent,state.player);
         score = immediate + setup + plan - card.power*.05;
+        if (difficulty==="hard") score += estimateOpeningRisk(state,play);
         if (state.player.life === 1) score += immediate*.9;
         if (state.turn === 3) score += immediate*.55;
         score += rng()*.05;
