@@ -22,6 +22,7 @@ export interface PlayerState {
   life: number;
   hand: CardDefinition[];
   deck: CardDefinition[];
+  deckRecipe?: string[]; // Optional validated experimental multifaction list.
   archives: Record<Position, CardDefinition[]>;
   discard: CardDefinition[];
   roundPlays: EnginePlay[];
