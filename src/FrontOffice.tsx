@@ -68,10 +68,10 @@ function Sprite({card, crop=false}: {card: CardDefinition; crop?: boolean}) {
 }
 
 export function HomeScreen({
-  onPlay,onTutorial,onGallery,onPhysical,onContinue,saved,summary,
+  onPlay,onTutorial,onGallery,onPhysical,onDeckLab,onContinue,saved,summary,
   analyticsReady,analyticsConsent,onChangeAnalytics
 }: {
-  onPlay:()=>void;onTutorial:()=>void;onGallery:()=>void;onPhysical:()=>void;
+  onPlay:()=>void;onTutorial:()=>void;onGallery:()=>void;onPhysical:()=>void;onDeckLab:()=>void;
   onContinue:()=>void;saved:SavedMatch|null;
   summary:{total:number;wins:number;losses:number;draws:number;winRate:number};
   analyticsReady:boolean;analyticsConsent:boolean;onChangeAnalytics:(value:boolean)=>void;
@@ -123,6 +123,7 @@ export function HomeScreen({
         <span>PARTIDAS: {summary.total} · VICTORIAS: {summary.wins} · DERROTAS: {summary.losses} · EMPATES: {summary.draws}</span>
         <span>·</span>
         <button type="button" className="home-physical-link" onClick={onPhysical}>MODO MESA · BETA ↗</button>
+        <button type="button" className="home-physical-link" onClick={onDeckLab}>MAZOS MULTIFACCIÓN · LAB ↗</button>
         {analyticsReady && <label className="home-analytics-consent">
           <input type="checkbox" checked={analyticsConsent} onChange={event=>onChangeAnalytics(event.target.checked)}/>
           Compartir estadísticas anónimas de partidas completas
