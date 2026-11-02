@@ -221,7 +221,7 @@ export function chooseAIPlay(state: GameState, firstPlay: EnginePlay | null, aiF
       if (aiFirst || !firstPlay) {
         const immediate = estimateOwn(state,card,position,state.opponent,state.player);
         score = immediate + setup + plan - card.power*.05;
-        if(difficulty === "hard") score+=publicReplyRisk(state,play)*3.5;
+        if(difficulty === "hard") score+=publicReplyRisk(state,play)*6;
         if (state.player.life === 1) score += immediate*.9;
         if (state.turn === 3) score += immediate*.55;
         score += rng()*.05;
