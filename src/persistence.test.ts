@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { startGame } from "./engine/game";
+import { redCards,blueCards } from "./data";
 import {
   appendMatchHistory, clearSavedMatch, completedMatch, newSavedMatch,
   readMatchHistory, readSavedMatch, SAVE_KEY, summarizeHistory, writeSavedMatch
@@ -60,6 +61,24 @@ describe("Daggerlight local match persistence",()=>{
     expect(appendMatchHistory(record!)).toBe(false);
     expect(readMatchHistory()).toHaveLength(1);
     expect(summarizeHistory(readMatchHistory())).toMatchObject({total:1,wins:1,losses:0,winRate:100});
+  });
+
+  it("restores the exact 24-card multifaction recipe and classifies its result",()=>{
+    const cardIds=[
+      ...redCards.slice(0,6).flatMap(c=>[c.id,c.id]),
+      ...blueCards.slice(0,6).flatMap(c=>[c.id,c.id])
+    ];
+    const deck={id:"mixed-test",name:"Mazo mixto",championId:"dextral",cardIds};
+    const game=startGame("dextral","vinira",()=>.4,"player","normal",{player:deck});
+    const saved=newSavedMatch(game,"vinira");
+    expect(writeSavedMatch(saved)).toBe(true);
+    const resumed=readSavedMatch();
+    expect(resumed?.game.player.deckRecipe).toEqual(cardIds);
+    const committed=resumed!;
+    committed.game.phase="finished";
+    committed.game.winner="player";
+    const record=completedMatch(committed);
+    expect(record).toMatchObject({mixedDeck:true,factions:["red","blue"]});
   });
 
   it("does not record unfinished matches",()=>{
