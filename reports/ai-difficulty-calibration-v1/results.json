@@ -1,0 +1,230 @@
+{
+  "games": 10800,
+  "comparisons": [
+    {
+      "strong": "normal",
+      "weak": "easy",
+      "games": 3600,
+      "wins": 3339,
+      "losses": 261,
+      "draws": 0,
+      "winPct": 92.75,
+      "approxMargin95": 0.85,
+      "champions": [
+        {
+          "id": "dextral",
+          "name": "Majestad Dextral",
+          "games": 400,
+          "strongWins": 398,
+          "strongWinPct": 99.5
+        },
+        {
+          "id": "athos",
+          "name": "Athos, Capitán de la Guardia Dextral",
+          "games": 400,
+          "strongWins": 398,
+          "strongWinPct": 99.5
+        },
+        {
+          "id": "sinistral",
+          "name": "Corte Sinistral",
+          "games": 400,
+          "strongWins": 371,
+          "strongWinPct": 92.75
+        },
+        {
+          "id": "vinira",
+          "name": "Vinira, Royal de Ingris",
+          "games": 400,
+          "strongWins": 351,
+          "strongWinPct": 87.75
+        },
+        {
+          "id": "empireos",
+          "name": "Señor de los Archivos",
+          "games": 400,
+          "strongWins": 338,
+          "strongWinPct": 84.5
+        },
+        {
+          "id": "desartes",
+          "name": "Desartes, El Empíreo Perdido",
+          "games": 400,
+          "strongWins": 359,
+          "strongWinPct": 89.75
+        },
+        {
+          "id": "santo_simetrico",
+          "name": "Santo Simétrico",
+          "games": 400,
+          "strongWins": 387,
+          "strongWinPct": 96.75
+        },
+        {
+          "id": "samas",
+          "name": "Samas, Quinto Santo de la Quiralidad",
+          "games": 400,
+          "strongWins": 375,
+          "strongWinPct": 93.75
+        },
+        {
+          "id": "prioresa_luna_llena",
+          "name": "Prioresa de la Luna Llena",
+          "games": 400,
+          "strongWins": 362,
+          "strongWinPct": 90.5
+        }
+      ]
+    },
+    {
+      "strong": "hard",
+      "weak": "normal",
+      "games": 3600,
+      "wins": 1799,
+      "losses": 1801,
+      "draws": 0,
+      "winPct": 49.97,
+      "approxMargin95": 1.63,
+      "champions": [
+        {
+          "id": "dextral",
+          "name": "Majestad Dextral",
+          "games": 400,
+          "strongWins": 206,
+          "strongWinPct": 51.5
+        },
+        {
+          "id": "athos",
+          "name": "Athos, Capitán de la Guardia Dextral",
+          "games": 400,
+          "strongWins": 188,
+          "strongWinPct": 47
+        },
+        {
+          "id": "sinistral",
+          "name": "Corte Sinistral",
+          "games": 400,
+          "strongWins": 197,
+          "strongWinPct": 49.25
+        },
+        {
+          "id": "vinira",
+          "name": "Vinira, Royal de Ingris",
+          "games": 400,
+          "strongWins": 222,
+          "strongWinPct": 55.5
+        },
+        {
+          "id": "empireos",
+          "name": "Señor de los Archivos",
+          "games": 400,
+          "strongWins": 204,
+          "strongWinPct": 51
+        },
+        {
+          "id": "desartes",
+          "name": "Desartes, El Empíreo Perdido",
+          "games": 400,
+          "strongWins": 198,
+          "strongWinPct": 49.5
+        },
+        {
+          "id": "santo_simetrico",
+          "name": "Santo Simétrico",
+          "games": 400,
+          "strongWins": 195,
+          "strongWinPct": 48.75
+        },
+        {
+          "id": "samas",
+          "name": "Samas, Quinto Santo de la Quiralidad",
+          "games": 400,
+          "strongWins": 189,
+          "strongWinPct": 47.25
+        },
+        {
+          "id": "prioresa_luna_llena",
+          "name": "Prioresa de la Luna Llena",
+          "games": 400,
+          "strongWins": 200,
+          "strongWinPct": 50
+        }
+      ]
+    },
+    {
+      "strong": "hard",
+      "weak": "easy",
+      "games": 3600,
+      "wins": 3340,
+      "losses": 260,
+      "draws": 0,
+      "winPct": 92.78,
+      "approxMargin95": 0.85,
+      "champions": [
+        {
+          "id": "dextral",
+          "name": "Majestad Dextral",
+          "games": 400,
+          "strongWins": 395,
+          "strongWinPct": 98.75
+        },
+        {
+          "id": "athos",
+          "name": "Athos, Capitán de la Guardia Dextral",
+          "games": 400,
+          "strongWins": 400,
+          "strongWinPct": 100
+        },
+        {
+          "id": "sinistral",
+          "name": "Corte Sinistral",
+          "games": 400,
+          "strongWins": 372,
+          "strongWinPct": 93
+        },
+        {
+          "id": "vinira",
+          "name": "Vinira, Royal de Ingris",
+          "games": 400,
+          "strongWins": 350,
+          "strongWinPct": 87.5
+        },
+        {
+          "id": "empireos",
+          "name": "Señor de los Archivos",
+          "games": 400,
+          "strongWins": 313,
+          "strongWinPct": 78.25
+        },
+        {
+          "id": "desartes",
+          "name": "Desartes, El Empíreo Perdido",
+          "games": 400,
+          "strongWins": 364,
+          "strongWinPct": 91
+        },
+        {
+          "id": "santo_simetrico",
+          "name": "Santo Simétrico",
+          "games": 400,
+          "strongWins": 381,
+          "strongWinPct": 95.25
+        },
+        {
+          "id": "samas",
+          "name": "Samas, Quinto Santo de la Quiralidad",
+          "games": 400,
+          "strongWins": 383,
+          "strongWinPct": 95.75
+        },
+        {
+          "id": "prioresa_luna_llena",
+          "name": "Prioresa de la Luna Llena",
+          "games": 400,
+          "strongWins": 382,
+          "strongWinPct": 95.5
+        }
+      ]
+    }
+  ]
+}
