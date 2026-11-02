@@ -6,12 +6,12 @@ import { previewOpeningPower } from "./rules";
 const fixed = () => 0.314159;
 
 describe("Daggerlight UI v2 engine lifecycle", () => {
-  it("deals three cards from a 24-card faction deck", () => {
+  it("deals three cards from a 36-card faction deck", () => {
     const game=startGame("dextral","athos",fixed,"player");
     expect(game.player.hand).toHaveLength(3);
     expect(game.opponent.hand).toHaveLength(3);
-    expect(game.player.deck).toHaveLength(21);
-    expect(game.opponent.deck).toHaveLength(21);
+    expect(game.player.deck).toHaveLength(33);
+    expect(game.opponent.deck).toHaveLength(33);
     expect(game.turn).toBe(1);
   });
 
