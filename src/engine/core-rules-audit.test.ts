@@ -13,11 +13,11 @@ function play(id:string,position:Position):EnginePlay {
 }
 
 describe("Daggerlight v2 core-rules audit", () => {
-  it("uses 24-card faction decks and deals exactly three cards", () => {
+  it("uses 36-card faction decks and deals exactly three cards", () => {
     const state=createGame("dextral","athos",fixed,"player");
     expect(state.player.hand).toHaveLength(3);
-    expect(state.player.deck).toHaveLength(21);
-    expect(state.player.hand.length+state.player.deck.length).toBe(24);
+    expect(state.player.deck).toHaveLength(33);
+    expect(state.player.hand.length+state.player.deck.length).toBe(36);
   });
 
   it("uses one slot per position by default and Champion capacity overrides it", () => {
@@ -91,7 +91,7 @@ describe("Daggerlight v2 core-rules audit", () => {
     expect(state.duelScore).toEqual({player:0,opponent:0});
   });
 
-  it("rebuilds the 24-card faction deck when fewer than three cards remain", () => {
+  it("rebuilds the 36-card faction deck when fewer than three cards remain", () => {
     const state=createGame("athos","desartes",fixed,"player");
     state.player.deck=[byId("mensajero")];
     state.player.hand=[];
@@ -99,7 +99,7 @@ describe("Daggerlight v2 core-rules audit", () => {
     resetRoundPlayer(state.player,fixed);
     expect(state.player.cycles).toBe(1);
     expect(state.player.hand).toHaveLength(3);
-    expect(state.player.deck).toHaveLength(21);
+    expect(state.player.deck).toHaveLength(33);
   });
 
   it("Life reaching zero ends the game immediately", () => {
