@@ -23,8 +23,8 @@ export interface DeckRules {
 }
 
 export const proposedMultifactionRules:DeckRules = {
-  deckSize:36,
-  maxCopies:3,
+  deckSize:24,
+  maxCopies:2,
   distinctCards:12,
   maxFactions:2,
   requireChampionFaction:true,
@@ -73,7 +73,7 @@ export function makeMonoDeckDefinition(championId:string):DeckDefinition {
     id:"mono-"+championId,
     name:"Mazo inicial · "+champion.name,
     championId,
-    cardIds:cardsByFaction[champion.faction].flatMap(card=>[card.id,card.id,card.id])
+    cardIds:cardsByFaction[champion.faction].flatMap(card=>[card.id,card.id])
   };
 }
 
