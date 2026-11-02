@@ -21,7 +21,7 @@ export function shuffle<T>(items: T[], rng:()=>number=Math.random) {
 export function makeDeck(faction: Faction, rng:()=>number=Math.random) {
   const deck: CardDefinition[] = [];
   for (const card of cardsByFaction[faction]) {
-    deck.push(card,card);
+    deck.push(card,card,card);
   }
   return shuffle(deck,rng);
 }
