@@ -66,7 +66,7 @@ export default function DeckLab({onBack,onPlay}:{
       <section className="deck-lab-intro">
         <span>PRUEBAS DE CONSTRUCCIÓN · REGLAS PROVISIONALES</span>
         <h1>Explorá nuevas alianzas.</h1>
-        <p>Combiná cartas de hasta dos facciones bajo un solo Champion. Elegí 12 cartas diferentes, con 3 copias de cada una (36 cartas en total). No modifica los mazos originales ni establece todavía las reglas definitivas.</p>
+        <p>Combiná cartas de hasta dos facciones bajo un solo Champion. Elegí 12 cartas diferentes: cada selección agrega exactamente 2 copias (24 cartas en total). No modifica los mazos originales ni establece todavía las reglas definitivas.</p>
       </section>
       <section className="deck-lab-config" aria-label="Configuración del mazo">
         <label>CHAMPION
@@ -97,9 +97,9 @@ export default function DeckLab({onBack,onPlay}:{
             <h2>{card.name}</h2>
             <p>{card.text}</p>
             <div className="deck-lab-card-controls">
-              <button type="button" disabled={!count} onClick={()=>changeCard(card.id,false)} aria-label={"Quitar las 3 copias de "+card.name}>−</button>
+              <button type="button" disabled={!count} onClick={()=>changeCard(card.id,false)} aria-label={"Quitar las 2 copias de "+card.name}>−</button>
               <span aria-label={count+" de "+maxCopies+" copias"}>{count} / {maxCopies}</span>
-              <button type="button" disabled={Boolean(count)||distinct>=distinctCards} onClick={()=>changeCard(card.id,true)} aria-label={"Agregar 3 copias de "+card.name}>+</button>
+              <button type="button" disabled={Boolean(count)||distinct>=distinctCards} onClick={()=>changeCard(card.id,true)} aria-label={"Agregar 2 copias de "+card.name}>+</button>
             </div>
           </article>;
         })}
