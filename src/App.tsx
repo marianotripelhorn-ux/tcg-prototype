@@ -14,6 +14,9 @@ import { answerQuiero, cloneGame, startGame, submitPlayerPlay } from "./engine/g
 import { capacity, legalPositions } from "./engine/rules";
 import type { AIDifficulty, DuelSummary, EnginePlay, GameState } from "./engine/types";
 import { formatPowerDelta, playEffectFeedback, playPowerDelta } from "./engine/presentation";
+import { appendMatchHistory, clearSavedMatch, completedMatch, newSavedMatch, readMatchHistory, readSavedMatch, summarizeHistory, writeSavedMatch } from "./persistence";
+import type { SavedMatch } from "./persistence";
+import { analyticsAvailable, analyticsOptedIn, sendCompletedMatch, setAnalyticsConsent } from "./telemetry";
 import type { CardDefinition, Faction, Position } from "./types";
 
 type DragState = {
@@ -378,6 +381,10 @@ export default function App() {
   const [aiDifficulty,setAiDifficulty]=useState<AIDifficulty>("normal");
   const [screen,setScreen]=useState<"home"|"champions"|"collection"|"table">("home");
   const [game,setGame]=useState<GameState|null>(null);
+  const [savedMatch,setSavedMatch]=useState<SavedMatch|null>(()=>readSavedMatch());
+  const [matchMeta,setMatchMeta]=useState<SavedMatch|null>(null);
+  const [history,setHistory]=useState(()=>readMatchHistory());
+  const [analyticsConsent,setTelemetryOn]=useState(()=>analyticsOptedIn());
   const [selectedIndex,setSelectedIndex]=useState<number|null>(null);
   const [inspection,setInspection]=useState<Inspection|null>(null);
   const [duelPreview,setDuelPreview]=useState<DuelSummary|null>(null);
@@ -441,6 +448,44 @@ export default function App() {
     previewTimer.current=window.setTimeout(finishDuelPresentation,isReducedMotion()?650:1400);
   }
 
+  function persistTurn(next:GameState) {
+    if(!matchMeta)return;
+    const updated:SavedMatch={...matchMeta,game:next,updatedAt:new Date().toISOString()};
+    if(next.phase==="finished") {
+      const record=completedMatch(updated);
+      if(record && appendMatchHistory(record)){
+        setHistory(readMatchHistory());
+        sendCompletedMatch(record);
+      }
+      clearSavedMatch(matchMeta.id);
+      setSavedMatch(null);
+    } else {
+      writeSavedMatch(updated);
+      setSavedMatch(updated);
+    }
+    setMatchMeta(updated);
+  }
+
+  function continueMatch() {
+    const saved=readSavedMatch();
+    if(!saved){setSavedMatch(null);return;}
+    clearPreviewTimer();
+    clearFinalTimer();
+    finishingMatch.current=false;
+    setPlayerChampion(saved.game.player.champion.id);
+    setOpponentChampion(saved.rivalSelection);
+    setAiDifficulty(saved.game.aiDifficulty??"normal");
+    setMatchMeta(saved);
+    setGame(saved.game);
+    setDuelPreview(null);
+    setPreDuel(null);
+    setSelectedIndex(null);
+    setInspection(null);
+    setDrag(null);
+    setHoveredPosition(null);
+    setDuelAuguries([]);
+  }
+
   function startWithChampion(championId:string, rivalSelection:string, difficulty:AIDifficulty=aiDifficulty) {
     clearPreviewTimer();
     clearFinalTimer();
@@ -451,7 +496,12 @@ export default function App() {
     setPlayerChampion(championId);
     setOpponentChampion(rivalSelection);
     setAiDifficulty(difficulty);
-    setGame(startGame(championId,opponent,Math.random,undefined,difficulty));
+    const next=startGame(championId,opponent,Math.random,undefined,difficulty);
+    const newMatch=newSavedMatch(next,rivalSelection);
+    writeSavedMatch(newMatch);
+    setSavedMatch(newMatch);
+    setMatchMeta(newMatch);
+    setGame(next);
     setSelectedIndex(null);
     setInspection(null);
     setDuelPreview(null);
@@ -507,6 +557,7 @@ export default function App() {
     const healingEvents=next.events.slice(game.events.length).filter(event=>event.text.includes("recupera 1 Vida"));
     setDuelAuguries([...newAuguries,...healingEvents].map(event=>event.text.replace(/^Augurio · /,"").replace(" · próxima carta "," · ")).slice(0,3));
     setGame(next);
+    persistTurn(next);
     setSelectedIndex(null);
     setInspection(null);
     setHoveredPosition(null);
@@ -519,6 +570,8 @@ export default function App() {
     const next=cloneGame(game);
     answerQuiero(next,wants);
     setGame(next);
+    persistTurn(next);
+    if(next.phase==="finished")startFinalCeremony();
     setSelectedIndex(null);
   }
 
@@ -591,6 +644,12 @@ export default function App() {
           onTutorial={()=>setTutorialOpen(true)}
           onGallery={()=>setScreen("collection")}
           onPhysical={()=>setScreen("table")}
+          onContinue={continueMatch}
+          saved={savedMatch}
+          summary={summarizeHistory(history)}
+          analyticsReady={analyticsAvailable()}
+          analyticsConsent={analyticsConsent}
+          onChangeAnalytics={value=>{setAnalyticsConsent(value);setTelemetryOn(value);}}
         />}
         {screen==="champions" && <ChampionPicker
           onBack={()=>setScreen("home")}
