@@ -53,3 +53,24 @@
 @media(max-width:1050px){.deck-lab-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.deck-lab-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.deck-lab-config{padding:12px}.deck-lab-bottom{position:static}}
 @media(max-width:420px){.deck-lab-grid{gap:7px}.deck-lab-card{padding:9px;min-height:178px}.deck-lab-card-head strong{font-size:8px}.deck-lab-screen{padding:14px 10px 32px}.deck-lab-card-controls button{width:32px;height:32px}}
+
+
+/* 12 distinct selections, 3 physical copies of each.
+   Selection is intentionally a single click, not three separate plus taps. */
+.deck-lab-card.is-selected{
+  border-color:#a58451;
+  box-shadow:inset 0 0 0 1px #d3b787,0 4px 14px #19191914;
+}
+.deck-lab-card.is-selected .deck-lab-card-controls{
+  border-top-color:#b69a6e;
+}
+.deck-lab-card.is-selected .deck-lab-card-controls span{
+  color:#97713a;font-weight:800;
+}
+.deck-lab-count{flex-wrap:wrap;justify-content:flex-end}
+.deck-lab-count>small{
+  flex-basis:100%;text-align:right;font-size:10px;
+  color:var(--lab-muted);font-weight:700;
+}
+:root[data-theme="dark"] .deck-lab-card.is-selected{border-color:#d3b787}
+:root[data-theme="dark"] .deck-lab-card.is-selected .deck-lab-card-controls span{color:#d3b787}
