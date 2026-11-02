@@ -5,6 +5,7 @@ import { factionArtUrl } from "./factionArtwork";
 import { allCards, factionLabels } from "./data";
 import { champions } from "./engine/champions";
 import type { AIDifficulty } from "./engine/types";
+import type { SavedMatch } from "./persistence";
 import type { CardDefinition, Faction } from "./types";
 import "./front-office.css";
 
@@ -66,7 +67,15 @@ function Sprite({card, crop=false}: {card: CardDefinition; crop?: boolean}) {
   return <div className={crop ? "library-art-crop" : "library-card-image"}><div className="library-card-sprite" style={style} /></div>;
 }
 
-export function HomeScreen({onPlay,onTutorial,onGallery,onPhysical}: {onPlay:()=>void;onTutorial:()=>void;onGallery:()=>void;onPhysical:()=>void}) {
+export function HomeScreen({
+  onPlay,onTutorial,onGallery,onPhysical,onContinue,saved,summary,
+  analyticsReady,analyticsConsent,onChangeAnalytics
+}: {
+  onPlay:()=>void;onTutorial:()=>void;onGallery:()=>void;onPhysical:()=>void;
+  onContinue:()=>void;saved:SavedMatch|null;
+  summary:{total:number;wins:number;losses:number;draws:number;winRate:number};
+  analyticsReady:boolean;analyticsConsent:boolean;onChangeAnalytics:(value:boolean)=>void;
+}) {
   return (
     <main className="fo-shell home-screen">
       <div className="fo-glow glow-left" aria-hidden="true" />
@@ -90,6 +99,12 @@ export function HomeScreen({onPlay,onTutorial,onGallery,onPhysical}: {onPlay:()=
             <span>Elegí una facción y tu Champion.</span>
             <i aria-hidden="true">→</i>
           </button>
+          {saved && <button type="button" className="home-action action-continue" onClick={onContinue}>
+            <span className="home-action-index">PARTIDA GUARDADA</span>
+            <strong>Continuar partida</strong>
+            <span>{saved.game.player.champion.name} contra {saved.game.opponent.champion.name} · Ronda {saved.game.round} · IA {saved.game.aiDifficulty==="hard"?"Difícil":saved.game.aiDifficulty==="easy"?"Fácil":"Normal"}</span>
+            <i aria-hidden="true">→</i>
+          </button>}
           <button type="button" className="home-action action-learn" onClick={onTutorial}>
             <span className="home-action-index">02 / APRENDER</span>
             <strong>Aprender a jugar</strong>
@@ -104,7 +119,16 @@ export function HomeScreen({onPlay,onTutorial,onGallery,onPhysical}: {onPlay:()=
           </button>
         </nav>
       </div>
-      <footer className="fo-footer">UN JUEGO DE DECISIONES, POSICIONES Y RIESGO <span>·</span> PROTOTIPO DIGITAL <button type="button" className="home-physical-link" onClick={onPhysical}>MODO MESA · BETA ↗</button></footer>
+      <footer className="fo-footer">
+        <span>PARTIDAS: {summary.total} · VICTORIAS: {summary.wins} · DERROTAS: {summary.losses} · EMPATES: {summary.draws}</span>
+        <span>·</span>
+        <button type="button" className="home-physical-link" onClick={onPhysical}>MODO MESA · BETA ↗</button>
+        {analyticsReady && <label className="home-analytics-consent">
+          <input type="checkbox" checked={analyticsConsent} onChange={event=>onChangeAnalytics(event.target.checked)}/>
+          Compartir estadísticas anónimas de partidas completas
+        </label>}
+        {!analyticsReady && <span title="Sin conexión de analítica externa configurada">ESTADÍSTICAS EN ESTE DISPOSITIVO</span>}
+      </footer>
     </main>
   );
 }
