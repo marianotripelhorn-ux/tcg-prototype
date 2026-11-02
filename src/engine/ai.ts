@@ -1,4 +1,4 @@
-import { positions } from "../data";
+import { cardsByFaction, positions } from "../data";
 import type { CardDefinition, Position } from "../types";
 import { affinityActive, calculateDuel, capacity, countPosition, legalPositions } from "./rules";
 import type { EnginePlay, GameState, PlayerState } from "./types";
@@ -171,6 +171,34 @@ function handPlanScore(state: GameState, card: CardDefinition, pos: Position, pl
   return score;
 }
 
+/**
+ * Evaluates how risky it is to open with this card against an optimal reply.
+ * Uses ONLY the public monofaction card catalog. The human's actual hand,
+ * draw order and deck are never examined.
+ */
+function publicReplyRisk(state:GameState,opening:EnginePlay):number {
+  const rivalCards=cardsByFaction[state.player.champion.faction];
+  const positions=legalPositions(state.player);
+  if(positions.length===0)return 0;
+  let wins=0,draws=0,losses=0;
+  for(const rivalCard of rivalCards){
+    let bestRival=-Infinity;
+    for(const position of positions){
+      const response:EnginePlay={card:rivalCard,position};
+      const result=calculateDuel(state,response,opening);
+      const advantage=result.player-result.opponent;
+      bestRival=Math.max(bestRival,advantage);
+    }
+    if(bestRival>0)losses++;
+    else if(bestRival===0)draws++;
+    else wins++;
+  }
+  // 12 cards in the public opposing faction, each treated as equally likely.
+  // Prefer openings that survive plausible replies; keep a modest weight so
+  // this risk model cannot entirely erase positioning and card synergy.
+  return (wins-losses)/rivalCards.length + draws/(2*rivalCards.length);
+}
+
 export function chooseAIPlay(state: GameState, firstPlay: EnginePlay | null, aiFirst: boolean, rng:()=>number=Math.random): EnginePlay {
   const difficulty=state.aiDifficulty ?? "normal";
   // Apprentice AI makes exploratory legal moves instead of always searching
@@ -193,6 +221,7 @@ export function chooseAIPlay(state: GameState, firstPlay: EnginePlay | null, aiF
       if (aiFirst || !firstPlay) {
         const immediate = estimateOwn(state,card,position,state.opponent,state.player);
         score = immediate + setup + plan - card.power*.05;
+        if(difficulty === "hard") score+=publicReplyRisk(state,play)*3.5;
         if (state.player.life === 1) score += immediate*.9;
         if (state.turn === 3) score += immediate*.55;
         score += rng()*.05;
