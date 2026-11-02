@@ -1,0 +1,53 @@
+name: Calibrate AI difficulty levels
+on:
+  push:
+    branches: ["prototype/gameplay-v1"]
+    paths:
+      - scripts/calibrate-ai-difficulty.ts
+      - .github/workflows/calibrate-ai-difficulty.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daggerlight-ai-calibration
+  cancel-in-progress: true
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout current game
+        uses: actions/checkout@v4
+        with:
+          ref: prototype/gameplay-v1
+          fetch-depth: 0
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Validate engine tests
+        run: npm test
+      - name: Run cross-difficulty AI games
+        env:
+          DIFFICULTY_MATCHES_PER_CHAMPION: 400
+        run: ./node_modules/.bin/vite-node scripts/calibrate-ai-difficulty.ts
+      - name: Archive the results
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-difficulty-10800-games
+          path: reports/ai-difficulty-calibration-v1/
+          retention-days: 90
+      - name: Commit report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/ai-difficulty-calibration-v1/
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Save AI difficulty calibration results"
+          git pull --rebase origin prototype/gameplay-v1
+          git push origin HEAD:prototype/gameplay-v1
