@@ -3,7 +3,7 @@ import type { MatchRecord } from "./persistence";
 const CONSENT_KEY="daggerlight-analytics-consent-v1";
 const DEVICE_KEY="daggerlight-analytics-install-v1";
 const apiKey=(import.meta.env.VITE_POSTHOG_KEY??"").trim();
-const host=(import.meta.env.VITE_POSTHOG_HOST??"https://us.i.posthog.com").trim().replace(/\/$/,"");
+const host=(import.meta.env.VITE_POSTHOG_HOST??"").trim().replace(/\/$/,"");
 
 export function analyticsAvailable():boolean {
   return !!apiKey && /^https:\/\//.test(host);
