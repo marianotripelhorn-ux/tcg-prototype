@@ -1,4 +1,6 @@
-import { cardsByFaction } from "../data";
+import { byId, cardsByFaction } from "../data";
+import { cardsForDeck } from "./decks";
+import type { DeckDefinition } from "./decks";
 import type { CardDefinition, Faction, Position } from "../types";
 import { champions } from "./champions";
 import type { GameState, PlayerState, Side } from "./types";
@@ -24,13 +26,16 @@ export function makeDeck(faction: Faction, rng:()=>number=Math.random) {
   return shuffle(deck,rng);
 }
 
-export function createPlayer(championId: string, rng:()=>number=Math.random): PlayerState {
+export function createPlayer(championId: string, rng:()=>number=Math.random, definition?:DeckDefinition): PlayerState {
   const champion = champions[championId];
   if (!champion) throw new Error(`Unknown champion: ${championId}`);
+  if(definition && definition.championId!==championId)throw new Error("Champion del mazo no coincide.");
+  const sourceCards=definition?cardsForDeck(definition):null;
   return {
     champion,
     life: champion.life,
-    deck: makeDeck(champion.faction,rng),
+    deck: sourceCards?shuffle(sourceCards,rng):makeDeck(champion.faction,rng),
+    deckRecipe:sourceCards?sourceCards.map(card=>card.id):undefined,
     hand: [],
     archives: emptyArchives(),
     discard: [],
@@ -59,7 +64,9 @@ export function createPlayer(championId: string, rng:()=>number=Math.random): Pl
 
 export function resetRoundPlayer(player: PlayerState, rng:()=>number=Math.random) {
   if (player.deck.length < 3) {
-    player.deck = makeDeck(player.champion.faction,rng);
+    player.deck = player.deckRecipe
+      ? shuffle(player.deckRecipe.map(id=>byId(id)),rng)
+      : makeDeck(player.champion.faction,rng);
     player.cycles += 1;
   }
   player.hand = player.deck.splice(0,3);
@@ -83,7 +90,8 @@ export function createGame(
   playerChampion="dextral",
   opponentChampion="athos",
   rng:()=>number=Math.random,
-  forcedStarter?: Side
+  forcedStarter?: Side,
+  decks?:{player?:DeckDefinition;opponent?:DeckDefinition}
 ): GameState {
   const starter = forcedStarter ?? (rng()<.5?"player":"opponent");
   const state: GameState = {
@@ -93,8 +101,8 @@ export function createGame(
     initiative: starter,
     phase: "awaiting_player",
     duelScore: {player:0,opponent:0},
-    player: createPlayer(playerChampion,rng),
-    opponent: createPlayer(opponentChampion,rng),
+    player: createPlayer(playerChampion,rng,decks?.player),
+    opponent: createPlayer(opponentChampion,rng,decks?.opponent),
     pendingPlayerPlay: null,
     pendingOpponentPlay: null,
     lastDuel: null,
