@@ -6,6 +6,8 @@ import { factionArtUrl } from "./factionArtwork";
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import { HomeScreen, ChampionPicker, CardCollection } from "./FrontOffice";
 import PhysicalTable from "./PhysicalTable";
+import DeckLab from "./DeckLab";
+import type { DeckDefinition } from "./engine/decks";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { positionLabels, positions } from "./data";
 import { studioThemes } from "./cardStudio";
@@ -379,10 +381,11 @@ export default function App() {
   const [playerChampion,setPlayerChampion]=useState("dextral");
   const [opponentChampion,setOpponentChampion]=useState("random");
   const [aiDifficulty,setAiDifficulty]=useState<AIDifficulty>("normal");
-  const [screen,setScreen]=useState<"home"|"champions"|"collection"|"table">("home");
+  const [screen,setScreen]=useState<"home"|"champions"|"collection"|"table"|"decklab">("home");
   const [game,setGame]=useState<GameState|null>(null);
   const [savedMatch,setSavedMatch]=useState<SavedMatch|null>(()=>readSavedMatch());
   const [matchMeta,setMatchMeta]=useState<SavedMatch|null>(null);
+  const [currentDeck,setCurrentDeck]=useState<DeckDefinition|null>(null);
   const [history,setHistory]=useState(()=>readMatchHistory());
   const [analyticsConsent,setTelemetryOn]=useState(()=>analyticsOptedIn());
   const [selectedIndex,setSelectedIndex]=useState<number|null>(null);
@@ -476,6 +479,12 @@ export default function App() {
     setOpponentChampion(saved.rivalSelection);
     setAiDifficulty(saved.game.aiDifficulty??"normal");
     setMatchMeta(saved);
+    setCurrentDeck(saved.game.player.deckRecipe?{
+      id:"restored-"+saved.game.player.champion.id,
+      name:"Mazo multifacción recuperado",
+      championId:saved.game.player.champion.id,
+      cardIds:[...saved.game.player.deckRecipe]
+    }:null);
     setGame(saved.game);
     setDuelPreview(null);
     setPreDuel(null);
@@ -486,7 +495,7 @@ export default function App() {
     setDuelAuguries([]);
   }
 
-  function startWithChampion(championId:string, rivalSelection:string, difficulty:AIDifficulty=aiDifficulty) {
+  function startWithChampion(championId:string, rivalSelection:string, difficulty:AIDifficulty=aiDifficulty, deck?:DeckDefinition|null) {
     clearPreviewTimer();
     clearFinalTimer();
     finishingMatch.current=false;
@@ -496,7 +505,8 @@ export default function App() {
     setPlayerChampion(championId);
     setOpponentChampion(rivalSelection);
     setAiDifficulty(difficulty);
-    const next=startGame(championId,opponent,Math.random,undefined,difficulty);
+    const next=startGame(championId,opponent,Math.random,undefined,difficulty,deck?{player:deck}:undefined);
+    setCurrentDeck(deck??null);
     const newMatch=newSavedMatch(next,rivalSelection);
     writeSavedMatch(newMatch);
     setSavedMatch(newMatch);
@@ -514,10 +524,10 @@ export default function App() {
   }
 
   function beginMatch() {
-    startWithChampion(playerChampion,opponentChampion,aiDifficulty);
+    startWithChampion(playerChampion,opponentChampion,aiDifficulty,currentDeck);
   }
 
-  function goToMenu(destination:"home"|"champions"|"collection"|"table") {
+  function goToMenu(destination:"home"|"champions"|"collection"|"table"|"decklab") {
     clearPreviewTimer();
     clearFinalTimer();
     finishingMatch.current=false;
@@ -644,6 +654,7 @@ export default function App() {
           onTutorial={()=>setTutorialOpen(true)}
           onGallery={()=>setScreen("collection")}
           onPhysical={()=>setScreen("table")}
+          onDeckLab={()=>setScreen("decklab")}
           onContinue={continueMatch}
           saved={savedMatch}
           summary={summarizeHistory(history)}
@@ -661,6 +672,7 @@ export default function App() {
           onPlay={()=>setScreen("champions")}
         />}
         {screen==="table" && <PhysicalTable onBack={()=>setScreen("home")}/> }
+        {screen==="decklab" && <DeckLab onBack={()=>setScreen("home")} onPlay={(deck,rival,difficulty)=>startWithChampion(deck.championId,rival,difficulty,deck)}/> }
         {tutorialOpen && <Tutorial
           inGame={false}
           onClose={()=>setTutorialOpen(false)}
