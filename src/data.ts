@@ -123,6 +123,18 @@ whiteCards.forEach((card, index) => {
   };
 });
 
+// Priory / Priorato de Marfil — full-card sprites exported from Card Studio.
+// PRI-001..PRI-006 on the first sheet, PRI-007..PRI-012 on the second.
+ivoryCards.forEach((card, index) => {
+  const sheet = Math.floor(index / 6) + 1;
+  const slot = index % 6;
+  card.art = {
+    sprite: "./cards/ivory/ivory-cards-" + sheet + ".webp",
+    column: slot % 3,
+    row: Math.floor(slot / 3)
+  };
+});
+
 export const cardsByFaction: Record<Faction, CardDefinition[]> = {
   red: redCards,
   blue: blueCards,
