@@ -69,16 +69,15 @@ a playtesters públicos.
 Acceso: menú inicial → **Mazos multifacción · Lab**.
 
 Reglas **provisionales y configurables** en `src/engine/decks.ts`:
-- Tamaño: 24 cartas.
+- Tamaño: **36 cartas = 12 cartas distintas × 3 copias**.
 - Hasta 2 facciones.
-- Máximo 2 copias por carta.
+- **Exactamente 3 copias de cada una de las 12 cartas seleccionadas**.
 - Debe incluir al menos 1 carta de la facción del Champion elegido.
 
 Estas restricciones **todavía no se incorporan a la Biblia como reglas
 oficiales**. Son el punto de partida de los playtests.
 
-Podés elegir un Champion, agregar una segunda facción, quitar o agregar
-copias de las cartas, y probar un mazo válido contra la IA. El mazo mixto
+Podés elegir un Champion y una segunda facción. El laboratorio **abre vacío** y el cambio de Champion o de segunda facción reinicia el borrador. Cada selección agrega automáticamente las 3 copias de una carta; un clic para quitarla retira las 3. Al llegar a 12 cartas distintas (36 cartas físicas), podés probar el mazo contra la IA. El mazo mixto
 se integra al motor real de combate. Al acabarse el mazo para una nueva
 ronda, se recicla la receta original (misma lógica que los mazos monofacción).
 Si guardás y retomás la partida, esa receta sigue intacta. La revancha
@@ -89,12 +88,18 @@ de decklists**. La partida guardada sí conserva la composición exacta.
 La siguiente etapa será decidir las reglas oficiales y añadir un gestor
 de mazos persistente, con múltiples diseños y selección previa a la partida.
 
+
+### Alineación de tamaños — noviembre de 2026
+
+El formato confirmado para esta etapa es **12 cartas distintas × 3 copias = 36 cartas en total**, tanto en mazos monofacción como mixtos. Se corrigió también la construcción automática de mazos de una sola facción, que hasta ahora armaba 12 × 2 (24 cartas). Esta corrección no cambia Poderes ni efectos, pero **puede afectar las frecuencias de robo y, por lo tanto, las estadísticas anteriores de balance**. Los gauntlets anteriores (24 cartas) son válidos como historial de pruebas, pero para conocer el balance actual hay que ejecutarlos otra vez con 36 cartas.
+
+Las partidas guardadas antiguas se pueden terminar con el mazo con el que empezaron; las partidas nuevas usan la regla de 36. El historial de resultados anteriores sigue conservándose.
+
 ### Preguntas de playtest importantes
 - ¿Debe ser obligatorio combinar dos facciones o permitirse una sola?
 - ¿Se exige cierta cantidad mínima de cartas de cada facción (p. ej. 8/8)?
 - ¿Puede un Champion usar toda carta de las facciones elegidas?
-- ¿Pueden usarse los mismos nombres de cartas hasta dos veces sin distinguir
-  facción principal?
+- El formato actual selecciona 12 nombres distintos con exactamente tres copias cada uno, sin duplicar nombres dentro de una combinación de facciones.
 - ¿Qué interacciones son ambiguas cuando la carta pertenece a una facción
   diferente del Champion (por ejemplo bonificaciones propias de posición)?
 
