@@ -3,6 +3,7 @@ import type { DuelResult, Position } from "../types";
 import { aiWantsQuiero, chooseAIPlay } from "./ai";
 import { affinityActive, calculateDuel, legalPositions, previewOpeningPower } from "./rules";
 import { createGame, resetRoundPlayer } from "./state";
+import type { DeckDefinition } from "./decks";
 import type { AIDifficulty, EnginePlay, GameState, PlayerState, Side } from "./types";
 
 function addBuff(player: PlayerState, amount: number, label: string) {
@@ -125,9 +126,10 @@ export function startGame(
   opponentChampion="athos",
   rng:()=>number=Math.random,
   forcedStarter?: Side,
-  difficulty: AIDifficulty = "normal"
+  difficulty: AIDifficulty = "normal",
+  decks?:{player?:DeckDefinition;opponent?:DeckDefinition}
 ) {
-  const state=createGame(playerChampion,opponentChampion,rng,forcedStarter);
+  const state=createGame(playerChampion,opponentChampion,rng,forcedStarter,decks);
   state.aiDifficulty=difficulty;
   beginDuel(state,rng);
   return state;
