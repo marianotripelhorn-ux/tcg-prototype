@@ -1,4 +1,5 @@
 import { champions } from "./engine/champions";
+import { byId } from "./data";
 import type { AIDifficulty, GameState } from "./engine/types";
 
 export const SAVE_KEY = "daggerlight-match-save-v1";
@@ -34,6 +35,8 @@ export interface MatchRecord {
   auguryHits: number;
   auguryHeals: number;
   noQuiero: number;
+  factions: string[];
+  mixedDeck: boolean;
 }
 
 function storage():Storage|null {
@@ -105,6 +108,9 @@ export function completedMatch(match:SavedMatch):MatchRecord|null {
   const {game}=match;
   if(game.phase!=="finished" || !game.winner)return null;
   const noQuiero=game.rounds.filter(r=>r.reason!=="completed").length;
+  const factions=game.player.deckRecipe
+    ? [...new Set(game.player.deckRecipe.map(id=>byId(id).faction))]
+    : [game.player.champion.faction];
   return {
     id:match.id,version:SAVE_VERSION,ruleset:RULESET,
     startedAt:match.createdAt,finishedAt:new Date().toISOString(),
@@ -115,7 +121,9 @@ export function completedMatch(match:SavedMatch):MatchRecord|null {
     completedDuels:game.events.filter(e=>e.kind==="duel").length,
     finalLife:game.player.life,opponentLife:game.opponent.life,
     auguryHits:game.player.auguryHitsTotal,auguryHeals:game.player.auguryHeals,
-    noQuiero
+    noQuiero,
+    factions,
+    mixedDeck:factions.length>1
   };
 }
 
