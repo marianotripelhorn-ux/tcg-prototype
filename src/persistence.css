@@ -1,0 +1,20 @@
+/* Playtest v0.5 — continue a locally saved battle and show match stats. */
+.home-action.action-continue{
+  background:linear-gradient(110deg,#f8f5ed,#ebdfca);
+  border-color:#ab8c59;
+  min-height:110px;
+  box-shadow:inset 3px 0 0 #d3b787,0 7px 20px rgba(25,25,25,.07);
+}
+.home-action.action-continue strong{font-size:clamp(20px,2.2vw,27px)}
+.home-action.action-continue .home-action-index{color:#71582e}
+.home-action.action-continue:hover{border-color:#876838;box-shadow:inset 3px 0 0 #d3b787,0 11px 25px #19191920}
+.fo-footer .home-analytics-consent{display:inline-flex;align-items:center;gap:5px;cursor:pointer;letter-spacing:0;font-size:10px}
+.fo-footer .home-analytics-consent input{accent-color:#a58a5e;cursor:pointer}
+:root[data-theme="dark"] .home-action.action-continue{
+  background:linear-gradient(112deg,#343027,#24221c);
+  border-color:#b49768;
+}
+:root[data-theme="dark"] .home-action.action-continue .home-action-index{color:#d3b787}
+:root[data-theme="dark"] .home-action.action-continue strong{color:#eae2d5}
+:root[data-theme="dark"] .home-action.action-continue>span:nth-last-of-type(1){color:#ded0bc}
+@media(max-width:580px){.home-action.action-continue{min-height:104px}}
