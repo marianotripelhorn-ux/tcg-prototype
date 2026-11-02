@@ -63,10 +63,10 @@ describe("Daggerlight local match persistence",()=>{
     expect(summarizeHistory(readMatchHistory())).toMatchObject({total:1,wins:1,losses:0,winRate:100});
   });
 
-  it("restores the exact 24-card multifaction recipe and classifies its result",()=>{
+  it("restores the exact 36-card multifaction recipe and classifies its result",()=>{
     const cardIds=[
-      ...redCards.slice(0,6).flatMap(c=>[c.id,c.id]),
-      ...blueCards.slice(0,6).flatMap(c=>[c.id,c.id])
+      ...redCards.slice(0,6).flatMap(c=>[c.id,c.id,c.id]),
+      ...blueCards.slice(0,6).flatMap(c=>[c.id,c.id,c.id])
     ];
     const deck={id:"mixed-test",name:"Mazo mixto",championId:"dextral",cardIds};
     const game=startGame("dextral","vinira",()=>.4,"player","normal",{player:deck});
