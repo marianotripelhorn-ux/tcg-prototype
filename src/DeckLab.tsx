@@ -1,7 +1,7 @@
 import {useMemo,useState} from "react";
 import {allCards,factionLabels} from "./data";
 import {champions} from "./engine/champions";
-import {makeMonoDeckDefinition,validateDeck} from "./engine/decks";
+import {proposedMultifactionRules,validateDeck} from "./engine/decks";
 import type {DeckDefinition} from "./engine/decks";
 import type {AIDifficulty} from "./engine/types";
 import type {Faction} from "./types";
@@ -10,7 +10,6 @@ import "./deck-lab.css";
 
 const factions: Faction[]=["red","blue","white","saints","ivory"];
 const championIds=Object.keys(champions);
-const countCards=(ids:string[])=>ids.reduce<Record<string,number>>((a,id)=>({...a,[id]:(a[id]??0)+1}),{});
 
 export default function DeckLab({onBack,onPlay}:{
   onBack:()=>void;
@@ -18,11 +17,13 @@ export default function DeckLab({onBack,onPlay}:{
 }) {
   const [championId,setChampionId]=useState("dextral");
   const [secondary,setSecondary]=useState<Faction|null>(null);
-  const [counts,setCounts]=useState<Record<string,number>>(()=>countCards(makeMonoDeckDefinition("dextral").cardIds));
+  const [counts,setCounts]=useState<Record<string,number>>({});
   const [rival,setRival]=useState("random");
   const [difficulty,setDifficulty]=useState<AIDifficulty>("normal");
   const champion=champions[championId];
-  const total=Object.values(counts).reduce((s,n)=>s+n,0);
+  const total=Object.values(counts).reduce((sum,n)=>sum+n,0);
+  const distinct=Object.keys(counts).length;
+  const {deckSize,maxCopies,distinctCards}=proposedMultifactionRules;
   const definition:DeckDefinition=useMemo(()=>({
     id:"multifaction-draft-"+championId,
     name:"Mazo experimental · "+champion.name,
@@ -34,24 +35,23 @@ export default function DeckLab({onBack,onPlay}:{
 
   function changeChampion(id:string){
     setChampionId(id);
-    setCounts(countCards(makeMonoDeckDefinition(id).cardIds));
+    setCounts({});
     setSecondary(null);
   }
   function changeSecondary(id:string){
     const next=(id||null) as Faction|null;
     setSecondary(next);
-    setCounts(current=>Object.fromEntries(Object.entries(current).filter(([cardId])=>{
-      const card=allCards.find(c=>c.id===cardId);
-      return card && (card.faction===champions[championId].faction||card.faction===next);
-    })));
+    // A new faction pairing always begins with an empty deck.
+    setCounts({});
   }
-  function changeCard(id:string,delta:1|-1) {
+  function changeCard(id:string,selected:boolean) {
     setCounts(old=>{
-      const current=old[id]??0;
-      if(delta===1 && (current>=2||total>=24))return old;
-      if(delta===-1 && current===0)return old;
-      const next={...old,[id]:current+delta};
-      if(next[id]===0)delete next[id];
+      const alreadySelected=Boolean(old[id]);
+      if(selected===alreadySelected)return old;
+      if(selected && Object.keys(old).length>=distinctCards)return old;
+      const next={...old};
+      if(selected)next[id]=maxCopies;
+      else delete next[id];
       return next;
     });
   }
@@ -66,7 +66,7 @@ export default function DeckLab({onBack,onPlay}:{
       <section className="deck-lab-intro">
         <span>PRUEBAS DE CONSTRUCCIÓN · REGLAS PROVISIONALES</span>
         <h1>Explorá nuevas alianzas.</h1>
-        <p>Combiná cartas de hasta dos facciones bajo un solo Champion. El formato de prueba utiliza 24 cartas y hasta dos copias de cada una. No modifica los mazos originales ni establece todavía las reglas definitivas.</p>
+        <p>Combiná cartas de hasta dos facciones bajo un solo Champion. Elegí 12 cartas diferentes, con 3 copias de cada una (36 cartas en total). No modifica los mazos originales ni establece todavía las reglas definitivas.</p>
       </section>
       <section className="deck-lab-config" aria-label="Configuración del mazo">
         <label>CHAMPION
@@ -81,14 +81,15 @@ export default function DeckLab({onBack,onPlay}:{
           </select>
         </label>
         <div className="deck-lab-count">
-          <span>CARTAS</span>
-          <strong className={total===24?"complete":""}>{total} / 24</strong>
+          <span>SELECCIONADAS</span>
+          <strong className={distinct===distinctCards?"complete":""}>{distinct} / {distinctCards}</strong>
+          <small>{total} / {deckSize} cartas</small>
         </div>
       </section>
       <section className="deck-lab-grid" aria-label="Cartas para construir el mazo">
         {pool.map(card=>{
           const count=counts[card.id]??0;
-          return <article className={"deck-lab-card theme-"+card.faction} key={card.id}>
+          return <article className={"deck-lab-card theme-"+card.faction+(count?" is-selected":"")} key={card.id}>
             <div className="deck-lab-card-head">
               <span>{card.studioId}</span>
               <strong>{card.power} PODER</strong>
@@ -96,9 +97,9 @@ export default function DeckLab({onBack,onPlay}:{
             <h2>{card.name}</h2>
             <p>{card.text}</p>
             <div className="deck-lab-card-controls">
-              <button type="button" disabled={!count} onClick={()=>changeCard(card.id,-1)} aria-label={"Quitar copia de "+card.name}>−</button>
-              <span aria-label={count+" copias"}>{count} / 2</span>
-              <button type="button" disabled={count>=2||total>=24} onClick={()=>changeCard(card.id,1)} aria-label={"Agregar copia de "+card.name}>+</button>
+              <button type="button" disabled={!count} onClick={()=>changeCard(card.id,false)} aria-label={"Quitar las 3 copias de "+card.name}>−</button>
+              <span aria-label={count+" de "+maxCopies+" copias"}>{count} / {maxCopies}</span>
+              <button type="button" disabled={Boolean(count)||distinct>=distinctCards} onClick={()=>changeCard(card.id,true)} aria-label={"Agregar 3 copias de "+card.name}>+</button>
             </div>
           </article>;
         })}
