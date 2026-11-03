@@ -34,6 +34,25 @@ describe("Daggerlight local match persistence",()=>{
     expect(restored?.game.phase).toBe("awaiting_player");
   });
 
+  it("restores canonical Champion names from old snapshots without changing Champion IDs",()=>{
+    const oldNames=[
+      ["dextral","Majestad Dextral","Majestad Carmesi, Rey de Latalia"],
+      ["sinistral","Corte Sinistral","Vor Calasta, Usurpador Ígneo"],
+      ["empireos","Señor de los Archivos","Lenares, Forjador de Reyes"],
+      ["santo_simetrico","Santo Simétrico","Tellet, Primer Santo del Orden"]
+    ] as const;
+    for(const [id,former,updated] of oldNames){
+      const next=startGame(id,"athos",()=>.4,"player");
+      next.player.champion={...next.player.champion,name:former};
+      const snapshot=newSavedMatch(next,"athos");
+      expect(writeSavedMatch(snapshot)).toBe(true);
+      const resumed=readSavedMatch();
+      expect(resumed?.game.player.champion.id).toBe(id);
+      expect(resumed?.game.player.champion.name).toBe(updated);
+      expect(resumed?.game.player.champion.life).toBe(9);
+    }
+  });
+
   it("refuses malformed or old ruleset saves without throwing",()=>{
     store.setItem(SAVE_KEY,"not json");expect(readSavedMatch()).toBeNull();
     const save=newSavedMatch(startGame("dextral","athos",()=>.4),"random");
