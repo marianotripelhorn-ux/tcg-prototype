@@ -10,6 +10,7 @@ import "./gameplay-experiment.css";
 import "./faction-art.css";
 import "./persistence.css";
 import "./immersive-menu.css";
+import "./bold-ui.css";
 
 initializeTheme();
 

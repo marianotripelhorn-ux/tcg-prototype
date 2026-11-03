@@ -429,12 +429,9 @@ export default function App() {
   }
 
   function startFinalCeremony() {
+    // Remain on VICTORIA / DERROTA / EMPATE until the player presses CONTINUAR.
     clearFinalTimer();
     setFinalStep("ceremony");
-    finalTimer.current=window.setTimeout(()=>{
-      setFinalStep("actions");
-      finalTimer.current=null;
-    },isReducedMotion()?600:1900);
   }
 
   function finishDuelPresentation() {
@@ -813,12 +810,13 @@ export default function App() {
             <span>TU MANO</span>
             <small>{hand.length} cartas</small>
           </div>
-          <div className="hand">
+          <div className="hand" key={game.round}>
             {hand.map((card,index)=>(
               <button
                 className={`hand-card ${selectedIndex===index?"is-selected":""}`}
                 type="button"
                 key={`${card.id}-${index}`}
+                style={{animationDelay:`${index*115}ms`}}
                 disabled={game.phase!=="awaiting_player" || !!duelPreview}
                 onPointerDown={event=>handlePointerDown(event,index)}
                 onPointerMove={handlePointerMove}

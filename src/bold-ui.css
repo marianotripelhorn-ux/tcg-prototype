@@ -1,0 +1,289 @@
+/* Daggerlight UI v2: graphic surfaces, restrained circular motion and viewport-fit board.
+   This file is intentionally last in main.tsx. Never alters rules or game state. */
+:root {
+  --dl-paper: #eae2d5;
+  --dl-dark: #1b1c1d;
+  --dl-surface: #f5eee2;
+  --dl-night-panel: #191919;
+  --dl-gold: #d3b787;
+  --dl-ink: #191919;
+  --dl-bg-light: url("/branding/menu/parchment.webp");
+  --dl-bg-dark: url("/branding/menu/background-dark.webp");
+}
+:root[data-theme="light"] body,:root[data-theme="light"] #root {
+  background:#eae2d5 !important;
+}
+:root[data-theme="dark"] body,:root[data-theme="dark"] #root {
+  background:#1b1c1d !important;
+}
+.fo-shell,.dagger-splash,.app-shell,.physical-shell,.deck-lab-screen,.setup-shell {
+  background-image: var(--dl-bg-light) !important;
+  background-color:var(--dl-paper) !important;
+  background-size:cover !important;
+  background-position:center center !important;
+}
+:root[data-theme="dark"] .fo-shell,
+:root[data-theme="dark"] .dagger-splash,
+:root[data-theme="dark"] .app-shell,
+:root[data-theme="dark"] .physical-shell,
+:root[data-theme="dark"] .deck-lab-screen,
+:root[data-theme="dark"] .setup-shell {
+  background-image:var(--dl-bg-dark) !important;
+  background-color:var(--dl-dark) !important;
+}
+/* No soft gradient washes on neutral UI. Retain faction card artwork. */
+.fo-glow,.hero-art-halo,.splash-vignette,.splash-orbit {display:none !important}
+.dagger-splash::before,.splash-art::after{display:none !important}
+.dagger-splash,.splash-art img,.home-hero-art img {
+  animation:none !important;
+}
+.splash-art img,.home-hero-art img{transform:none !important;filter:none !important}
+.home-screen .home-layout{align-content:center}
+.home-screen .home-hero{transform:none}
+.splash-crown,.home-hero-crown,.menu-top-crown{
+  filter:none !important;
+}
+.splash-title-rule{background:#d3b787;height:1px}
+.splash-start{background:#d3b787 !important;color:#191919 !important;border-color:#191919 !important;border-radius:3px;box-shadow:none !important}
+.splash-start:hover,.splash-start:focus-visible{background:#e4cda2 !important;box-shadow:none !important}
+:root[data-theme="dark"] .splash-start{border-color:#d3b787 !important}
+:root[data-theme="dark"] .splash-start:hover{background:#e4cda2 !important}
+/* Five genuinely round, thin circles that open once rather than orbiting. */
+.splash-rings{
+  position:absolute;z-index:0;inset:0;display:grid;place-items:center;pointer-events:none;
+}
+.splash-ring{
+  position:absolute;width:min(44vw,500px);aspect-ratio:1;border:1px solid rgba(93,71,36,.32);
+  border-radius:50%;opacity:0;transform:scale(.15);animation:dl-open-ring .9s cubic-bezier(.16,1,.3,1) both;
+}
+.splash-ring:nth-child(2){width:min(59vw,670px);border-color:rgba(93,71,36,.25)}
+.splash-ring:nth-child(3){width:min(75vw,840px);border-color:rgba(93,71,36,.19)}
+.splash-ring:nth-child(4){width:min(91vw,1000px);border-color:rgba(93,71,36,.14)}
+.splash-ring:nth-child(5){width:min(108vw,1190px);border-color:rgba(93,71,36,.10)}
+:root[data-theme="dark"] .splash-ring{border-color:rgba(211,183,135,.29)}
+:root[data-theme="dark"] .splash-ring:nth-child(n+3){border-color:rgba(211,183,135,.16)}
+@keyframes dl-open-ring{from{opacity:0;transform:scale(.12)}to{opacity:1;transform:scale(1)}}
+/* Buttons: flat ink, strong type, circular image reveal on hover/tap. */
+.home-screen .home-action,
+:root[data-theme="dark"] .home-screen .home-action,
+:root[data-theme="dark"] .home-screen .home-action.action-play,
+.home-screen .home-action.action-play{
+  color:#eae2d5 !important;
+  background:#191919 !important;
+  background-image:none !important;
+  border:1px solid #5b5141 !important;
+  border-radius:9px;
+  box-shadow:none !important;
+}
+.home-screen .home-action:is(:hover,:focus-visible,.is-selected,:active){
+  background:#262522 !important;border-color:#d3b787 !important;
+}
+.home-screen .home-action::before{background:none !important;display:none !important}
+.home-screen .home-action::after{background:#d3b787 !important}
+.home-screen .home-action strong{
+  font-size:clamp(17px,2vw,25px) !important;
+  font-weight:950 !important;
+  letter-spacing:.005em !important;
+  text-transform:uppercase;
+  font-family:Inter,system-ui,sans-serif !important;
+}
+.home-screen .home-action .home-action-description{color:#d6cbbd !important}
+.home-screen .home-action-index{color:#d3b787 !important}
+.home-screen .home-action-art{
+  clip-path:circle(0% at 73% 50%);
+  opacity:0 !important;
+  transform:none !important;
+  right:5px;bottom:-6px;
+  width:36%;height:112%;object-fit:contain;
+  transition:clip-path .5s cubic-bezier(.16,1,.3,1),opacity .15s !important;
+}
+.home-action-reveal-ring{
+  position:absolute;z-index:2;pointer-events:none;
+  right:-3%;top:50%;width:min(42%,180px);aspect-ratio:1;
+  border:1px solid #d3b787;border-radius:50%;opacity:0;
+  transform:translateY(-50%) scale(.05);
+  transition:transform .46s cubic-bezier(.16,1,.3,1),opacity .3s;
+}
+.home-screen .home-action:is(:hover,:focus-visible,.is-selected,:active) .home-action-art{
+  clip-path:circle(80% at 73% 50%);opacity:.92 !important;
+}
+.home-screen .home-action:is(:hover,:focus-visible,.is-selected,:active) .home-action-reveal-ring{
+  opacity:.7;transform:translateY(-50%) scale(1.4);
+}
+.home-screen .home-action:is(:hover,:focus-visible,.is-selected,:active) .home-action-arrow{opacity:0}
+.home-screen .home-action:hover{transform:none}
+.home-screen .home-action.is-selected{transform:scale(.99)}
+.home-screen .home-action-arrow{color:#d3b787}
+.home-screen .home-hero-caption{color:inherit;opacity:.6}
+.fo-shell .fo-footer,.menu-footer{border-color:currentColor}
+.fo-shell :is(.faction-expanded-content,.champion-selection,.library-modal,.library-card-tile,.library-tile-text,.faction-accordion-item){
+  background-image:none !important;
+}
+:root:not([data-theme="dark"]) .fo-shell :is(.faction-expanded-content,.champion-selection,.library-modal,.library-card-tile,.library-tile-text,.faction-accordion-item){
+  background-color:#f7f0e4;
+}
+:root[data-theme="dark"] .fo-shell :is(.faction-expanded-content,.champion-selection,.library-modal,.library-card-tile,.library-tile-text,.faction-accordion-item){
+  background-color:#222222;color:#eae2d5;
+}
+/* Game board fits inside the visible viewport instead of pushing the hand off screen. */
+.app-shell{
+  padding:5px !important;
+  height:100dvh;min-height:0 !important;overflow:hidden;
+}
+.app-shell .game-frame{
+  height:100%;min-height:0 !important;max-height:100%;
+  width:min(100%,1160px);
+  display:grid;grid-template-rows:auto auto auto minmax(0,1fr) auto auto auto;
+  overflow:hidden;border-radius:8px;
+  box-shadow:none;
+}
+.app-shell .champion-bar{
+  min-height:46px;height:46px;padding:4px 11px;
+}
+.app-shell .champion-medallion{width:35px;height:35px;font-size:13px}
+.app-shell .champion-copy strong{font-size:12px;line-height:1.15}
+.app-shell .champion-passive{font-size:9px}
+.app-shell .life-block b{font-size:23px}
+.app-shell .match-strip.has-guide{
+  height:36px;min-height:36px;padding:0 9px;gap:8px;
+}
+.app-shell .match-strip b{font-size:14px}
+.app-shell .duel-status strong{font-size:16px}
+.app-shell .game-hint{
+  min-height:26px;height:26px;display:flex;justify-content:center;
+  align-items:center;gap:6px;padding:2px 8px;
+  overflow:hidden;font-size:10px;line-height:1.1;
+}
+.app-shell .game-hint-instruction{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app-shell .battlefield{
+  min-height:0 !important;height:100%;overflow:hidden;
+  padding:5px;gap:5px;background:#f8f2e9 !important;background-image:none !important;
+}
+.app-shell .lane{
+  min-height:0;gap:2px;
+  grid-template-rows:minmax(0,1fr) 17px minmax(0,1fr);
+}
+.app-shell .lane-axis{min-height:0}
+.app-shell .lane-axis i{background:#b9ae9f}
+.app-shell .board-slot{min-height:0;padding:3px;border-radius:7px;overflow:hidden}
+.app-shell .slot-empty{width:67%;height:63%;border-radius:5px}
+.app-shell .slot-stack{min-height:0;max-height:100%;overflow:hidden}
+.app-shell .current-board-card{height:min(100%,135px);width:auto !important;max-width:80%;aspect-ratio:649/914}
+.app-shell .battle-card{height:clamp(20px,3.7vh,40px)}
+.app-shell .action-line{height:23px;min-height:23px;padding:2px 8px;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;text-align:center}
+.app-shell .hand-zone{
+  min-height:0;height:clamp(116px,23dvh,178px);
+  padding:3px 7px 5px;background:#eae2d5 !important;background-image:none !important;
+  border-top:1px solid #b5a587;
+}
+.app-shell .hand-label{height:17px}
+.app-shell .hand{height:calc(100% - 17px);min-height:0 !important;padding:0;gap:clamp(4px,1vw,12px);align-items:flex-end}
+.app-shell .hand-card{
+  width:auto !important;height:min(100%,160px);max-width:31%;flex:0 1 auto;
+  aspect-ratio:63/88;transform:none;animation:dl-hand-deal .38s cubic-bezier(.2,.8,.3,1) both;
+}
+.app-shell .hand-card:nth-child(1),.app-shell .hand-card:nth-child(3){transform:none}
+.app-shell .hand-card.is-selected{transform:translateY(-5px) !important}
+@keyframes dl-hand-deal{
+  from{opacity:0;translate:0 22px;scale:.95}
+  to{opacity:1;translate:0 0;scale:1}
+}
+/* State-driven rings: valid slots, incoming cards, inspection and final result. */
+.app-shell .board-slot.drop-active::after{
+  content:"";position:absolute;inset:50% auto auto 50%;
+  width:min(54%,95px);aspect-ratio:1;border:1px solid #aa8852;border-radius:50%;
+  pointer-events:none;z-index:2;animation:dl-slot-ring .45s ease-out both;
+}
+@keyframes dl-slot-ring{from{opacity:0;transform:translate(-50%,-50%) scale(.1)}to{opacity:.8;transform:translate(-50%,-50%) scale(1)}}
+.app-shell .current-board-card.pending{animation:dl-card-reveal .32s cubic-bezier(.2,.8,.3,1) both}
+@keyframes dl-card-reveal{from{opacity:0;clip-path:circle(0% at 50% 50%)}to{opacity:1;clip-path:circle(75% at 50% 50%)}}
+.app-shell .card-zoom-panel::before{
+  content:"";position:absolute;left:50%;top:40%;width:min(66vw,360px);aspect-ratio:1;
+  border-radius:50%;border:1px solid #d3b787;pointer-events:none;
+  transform:translate(-50%,-50%);animation:dl-open-ring .5s both;
+}
+.app-shell .duel-cinematic,
+.app-shell .duel-cinematic-opponent,
+.app-shell .duel-cinematic-draw{background:#191919 !important}
+.app-shell .duel-cinematic::before,.app-shell .duel-cinematic::after{
+  width:clamp(140px,22vw,300px);height:auto;aspect-ratio:1;
+  border:1px solid #d3b787;border-radius:50%;background:none !important;
+  box-shadow:none;animation:dl-duel-wave .9s both;
+}
+.app-shell .duel-cinematic::after{animation-delay:.13s}
+.app-shell .duel-cinematic-ring{
+  border-width:1px;border-radius:50%;animation:dl-duel-wave 1s .2s both;
+}
+.app-shell .duel-cinematic-ring.second{animation-delay:.35s}
+@keyframes dl-duel-wave{
+  from{opacity:.85;transform:translate(-50%,-50%) scale(.1)}
+  to{opacity:0;transform:translate(-50%,-50%) scale(1.8)}
+}
+.match-conclusion-ceremony::before,.match-conclusion-ceremony::after{
+  aspect-ratio:1;width:min(55vw,320px);height:auto;border-width:1px;border-style:solid;
+}
+.match-conclusion-ceremony::after{width:min(40vw,225px);border-style:solid}
+.match-conclusion-ceremony{min-height:0}
+.match-conclusion-continue{font-size:12px;min-height:38px}
+.app-shell .game-frame{background:#f7f0e4 !important;background-image:none !important}
+.app-shell .match-strip,.app-shell .action-line,.app-shell .game-hint{background-image:none !important}
+.app-shell .match-strip{background-color:#f0e6d7 !important}
+.app-shell .game-hint{background-color:#e3d3bc !important}
+.app-shell .action-line{background-color:#f0e6d7 !important;color:#4b443b}
+.app-shell .board-slot{background:#f3eadd !important;background-image:none !important}
+.app-shell .board-slot.drop-active{background:#e4d1ae !important;border-color:#9f7a46}
+.app-shell .lane-axis span{color:#493b28}
+.app-shell .decision-card,.app-shell .card-zoom-panel,.tutorial-dialog{
+  border-radius:9px;background-image:none !important;box-shadow:none;
+}
+:root:not([data-theme="dark"]) .app-shell .decision-card,
+:root:not([data-theme="dark"]) .tutorial-dialog{background:#f3ebdd !important;color:#191919}
+:root[data-theme="dark"] .app-shell .game-frame{background:#292929 !important}
+:root[data-theme="dark"] .app-shell .battlefield{background:#2a2a2a !important}
+:root[data-theme="dark"] .app-shell .board-slot{background:#242424 !important;border-color:#686053}
+:root[data-theme="dark"] .app-shell .board-slot.drop-active{background:#3c3328 !important;border-color:#d3b787}
+:root[data-theme="dark"] .app-shell .hand-zone{background:#252525 !important;border-color:#7b6b4f}
+:root[data-theme="dark"] .app-shell .match-strip{background:#242424 !important}
+:root[data-theme="dark"] .app-shell .game-hint{background:#33302a !important}
+:root[data-theme="dark"] .app-shell .action-line{background:#242424 !important;color:#d5c9b8}
+:root[data-theme="dark"] .app-shell .lane-axis span{color:#d3b787}
+:root[data-theme="dark"] .app-shell .decision-card,
+:root[data-theme="dark"] .tutorial-dialog{background:#262626 !important;color:#eae2d5}
+.tutorial-exercise,.tutorial-demo-card,.tutorial-small-card,.academy-button{
+  background-image:none !important;background-color:#252525;
+}
+.tutorial-dialog :is(button,select):focus-visible,.app-shell :is(button,select):focus-visible{outline:2px solid #d3b787;outline-offset:2px}
+@media(max-width:720px){
+  .app-shell .champion-bar{height:40px;min-height:40px;padding:3px 6px;gap:6px}
+  .app-shell .champion-medallion{width:29px;height:29px}
+  .app-shell .champion-copy strong{font-size:10px}
+  .app-shell .champion-passive{font-size:8px}
+  .app-shell .life-block b{font-size:21px}
+  .app-shell .match-strip.has-guide{height:36px;min-height:36px}
+  .app-shell .game-hint{height:24px;min-height:24px;font-size:9px}
+  .app-shell .battlefield{padding:3px;gap:3px}
+  .app-shell .lane{grid-template-rows:minmax(0,1fr) 14px minmax(0,1fr)}
+  .app-shell .lane-axis span{font-size:8px}
+  .app-shell .board-slot{padding:2px}
+  .app-shell .slot-capacity,.app-shell .archive-count{font-size:8px;min-height:15px;height:15px;padding:0 3px}
+  .app-shell .current-board-card{max-width:92%;height:min(100%,115px)}
+  .app-shell .hand-zone{height:clamp(109px,23dvh,157px)}
+  .app-shell .hand-card{height:min(100%,145px)}
+  .app-shell .action-line{height:20px;min-height:20px}
+}
+@media(max-height:650px){
+  .app-shell .hand-zone{height:clamp(96px,22dvh,139px)}
+  .app-shell .game-hint{height:22px;min-height:22px}
+  .app-shell .champion-bar{height:37px;min-height:37px}
+  .app-shell .hand-card{height:min(100%,130px)}
+  .app-shell .lane{grid-template-rows:minmax(0,1fr) 13px minmax(0,1fr)}
+}
+@media(prefers-reduced-motion:reduce){
+  .splash-ring,.home-action-art,.home-action-reveal-ring,.app-shell .hand-card,
+  .app-shell .board-slot.drop-active::after,.app-shell .current-board-card.pending,
+  .app-shell .card-zoom-panel::before,.app-shell .duel-cinematic::before,.app-shell .duel-cinematic::after,
+  .app-shell .duel-cinematic-ring{animation:none !important;transition:none !important}
+  .splash-ring{opacity:1;transform:scale(1)}
+  .app-shell .hand-card{opacity:1;translate:0 0;scale:1}
+  .home-screen .home-action-art{clip-path:circle(80% at 73% 50%)}
+}

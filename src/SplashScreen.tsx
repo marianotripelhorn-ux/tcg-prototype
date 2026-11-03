@@ -22,8 +22,9 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
   return (
     <main className={"dagger-splash" + (entering ? " is-entering" : "")} aria-label="Bienvenido a Daggerlight">
       <div className="splash-vignette" aria-hidden="true" />
-      <div className="splash-orbit splash-orbit-one" aria-hidden="true" />
-      <div className="splash-orbit splash-orbit-two" aria-hidden="true" />
+      <div className="splash-rings" aria-hidden="true">
+        {[0,1,2,3,4].map(index=><span className="splash-ring" key={index} style={{animationDelay:`${index*115}ms`}} />)}
+      </div>
       <div className="splash-stage">
         <div className="splash-art" aria-hidden="true">
           <img

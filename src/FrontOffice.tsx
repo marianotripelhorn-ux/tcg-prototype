@@ -95,14 +95,14 @@ export function HomeScreen({
   };
 
   const buttons = [
-    {id:"play", index:"01", title:"Empezar partida", subtitle:"Elegí tu Champion y enfrentate a la IA.", image:"egg.webp", fallback:"./factions/red-portrait.webp", action:onPlay},
+    {id:"play", index:"01", title:"EMPEZAR PARTIDA", subtitle:"Elegí tu Champion y enfrentate a la IA.", image:"dagger.webp", fallback:"./factions/red-portrait.webp", action:onPlay},
     ...(saved ? [{
-      id:"continue", index:"↳", title:"Continuar partida",
+      id:"continue", index:"↳", title:"CONTINUAR PARTIDA",
       subtitle:`${saved.game.player.champion.name} vs. ${saved.game.opponent.champion.name} · Ronda ${saved.game.round}`,
-      image:"dagger.webp", fallback:"./factions/saints-portrait.webp", action:onContinue
+      image:"banner.webp", fallback:"./factions/saints-portrait.webp", action:onContinue
     }] : []),
-    {id:"learn", index:"02", title:"Aprender a jugar", subtitle:"Conocé las reglas en un tutorial interactivo.", image:"book.webp", fallback:"./factions/white-portrait.webp", action:onTutorial},
-    {id:"library", index:"03", title:"Ver cartas", subtitle:"Explorá las cartas y sus habilidades.", image:"dagger.webp", fallback:"./factions/ivory-portrait.webp", action:onGallery}
+    {id:"learn", index:"02", title:"APRENDER A JUGAR", subtitle:"Conocé las reglas en un tutorial interactivo.", image:"egg.webp", fallback:"./factions/white-portrait.webp", action:onTutorial},
+    {id:"library", index:"03", title:"VER CARTAS", subtitle:"Explorá las cartas y sus habilidades.", image:"book.webp", fallback:"./factions/ivory-portrait.webp", action:onGallery}
   ];
 
   return (
@@ -146,6 +146,7 @@ export function HomeScreen({
                 <strong>{button.title}</strong>
                 <span className="home-action-description">{button.subtitle}</span>
               </span>
+              <span className="home-action-reveal-ring" aria-hidden="true" />
               <img className="home-action-art" src={"./branding/menu/" + button.image} alt="" aria-hidden="true" onError={event => {
                 if (!event.currentTarget.src.endsWith(button.fallback.split("/").at(-1)!))
                   event.currentTarget.src = button.fallback;
