@@ -1,3 +1,16 @@
+ACTUALIZACIÓN DE CANON — 02/11/2026 · NOMBRES DE CHAMPIONS
+Se renombran cuatro Champions iniciales sin cambiar sus IDs de motor,
+su facción, su Vida ni sus habilidades:
+- dextral: Majestad Carmesi, Rey de Latalia (antes: Majestad Dextral).
+- sinistral: Vor Calasta, Usurpador Ígneo (antes: Corte Sinistral).
+- empireos: Lenares, Forjador de Reyes (antes: Señor de los Archivos).
+- santo_simetrico: Tellet, Primer Santo del Orden (antes: Santo Simétrico).
+La Guardia Dextral, la Corte Sinistral, los Empíreos y los Santos
+CONSERVAN sus nombres de facción. Las menciones a nombres antiguos más
+abajo pertenecen a la versión histórica v0.2 y no a la versión vigente.
+
+------------------------------------------------------------
+
 ACTUALIZACIÓN DE PLAYTEST — 31/10/2026 (Gameplay v1, Augurio v2)
 Este documento es la Biblia histórica v0.2. Para los duelos del prototipo
 experimental, las secciones antiguas de AUGURIO (+3 al acertar / +1 al fallar
