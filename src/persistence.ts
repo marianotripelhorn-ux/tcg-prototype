@@ -64,6 +64,12 @@ export function readSavedMatch():SavedMatch|null {
     const saved=JSON.parse(store.getItem(SAVE_KEY)??"null") as Partial<SavedMatch>|null;
     if(!saved || saved.version!==SAVE_VERSION || saved.ruleset!==RULESET || typeof saved.id!=="string"
       || typeof saved.createdAt!=="string" || !validGame(saved.game))return null;
+    // Saved GameState embeds Champion objects. Refresh display names from the
+    // canonical registry so renamed Champions appear correctly when resuming
+    // an older match, without invalidating its ID or gameplay state.
+    const game=saved.game!;
+    game.player.champion=champions[game.player.champion.id];
+    game.opponent.champion=champions[game.opponent.champion.id];
     return saved as SavedMatch;
   }catch{return null;}
 }
