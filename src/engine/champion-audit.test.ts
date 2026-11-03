@@ -38,7 +38,7 @@ function controlled(
 }
 
 describe("Daggerlight v2 Champion audit", () => {
-  it("Majestad Dextral has two Diestra slots and no old win buff", () => {
+  it("Majestad Carmesi has two Diestra slots and no old win buff", () => {
     const state=createGame("dextral","athos",fixed,"player");
     expect(capacity(state.player,"diestra")).toBe(2);
     const resolved=controlled("dextral","athos","invocadagas","diestra","mensajero","trono");
@@ -55,7 +55,7 @@ describe("Daggerlight v2 Champion audit", () => {
     expect(capacity(state.player,"diestra")).toBe(3);
   });
 
-  it("Corte Sinistral prepares -2 after its first loss of the round", () => {
+  it("Vor Calasta prepares -2 after its first loss of the round", () => {
     const state=controlled("sinistral","athos","prodigio","trono","mensajero","trono");
     expect(state.lastDuel?.outcome).toBe("opponent");
     expect(state.player.bluePassiveUsed).toBe(true);
@@ -77,7 +77,7 @@ describe("Daggerlight v2 Champion audit", () => {
     expect(second.player).toBe(5);
   });
 
-  it("Señor de los Archivos grants +2 next round after rival used all three positions", () => {
+  it("Lenares grants +2 next round after rival used all three positions", () => {
     const state=createGame("empireos","athos",fixed,"player");
     state.turn=3;
     state.phase="awaiting_player";
@@ -111,7 +111,7 @@ describe("Daggerlight v2 Champion audit", () => {
     expect(capacity(state.player,"trono")).toBe(1);
   });
 
-  it("Santo Simétrico turns a one-Power loss into a tie once per round", () => {
+  it("Tellet turns a one-Power loss into a tie once per round", () => {
     const state=controlled("santo_simetrico","athos","pendulo","trono","mensajero","trono");
     expect(state.lastDuel?.outcome).toBe("draw");
     expect(state.lastDuel?.playerPlay.finalPower).toBe(5);
