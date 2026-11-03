@@ -1,13 +1,14 @@
-# Daggerlight · assets for splash and main menu
+# Daggerlight visual assets
 
-Copy the following image files from the supplied visual pack into this directory:
+These assets are deployed with the Vite client. Splash and menu artwork are intentionally static; the circular UI effects are CSS animations.
 
-- `splash-art.webp` — the transparent three-character illustration used on both screens
-- `parchment.webp` — the common parchment background
-- `book.webp` — card gallery / tutorial hover illustration
-- `egg.webp` — new game hover illustration
-- `dagger.webp` — continue / card gallery hover illustration
+- `splash-art.webp`: splash and home illustration
+- `parchment.webp`: original light-mode texture
+- `background-dark.webp`: optimized version of the supplied dark texture
+- `dagger.webp`: Empezar partida
+- `banner.webp`: Continuar partida (optimized supplied BANNER CLEAR)
+- `egg.webp`: Aprender a jugar
+- `book.webp`: Ver cartas
+- `crown.svg`: the golden Daggerlight crown
 
-The source layouts (`SPLASH SCREEN.png`, `MAIN SCREEN.png`) are reference mockups, not runtime assets. The supplied GIF crown has been vectorized to `crown.svg`; its entrance animation is handled in CSS.
-
-If a visual image has not been uploaded yet, the UI uses an existing faction illustration or neutral color as a fallback. No gameplay rules depend on these resources.
+Use `prefers-reduced-motion` to suppress nonessential UI animation. All game mechanics remain unchanged.
