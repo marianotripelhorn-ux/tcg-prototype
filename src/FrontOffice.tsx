@@ -131,7 +131,6 @@ export function HomeScreen({
                 event.currentTarget.src="./factions/red-portrait.webp";
             }} />
           </div>
-          <span className="home-hero-caption">DAGGERLIGHT · UN JUEGO DE QUIRALIDAD</span>
         </section>
         <nav className="home-actions" aria-label="Menú principal">
           {buttons.map(button => (

@@ -347,10 +347,7 @@ function Slot({
       <span className="archive-count" title="Archivo">{archive}</span>
       <span className="slot-capacity" title="Capacidad">{cards.length}/{capacityValue}</span>
       <div className="slot-stack">
-        {cards.length === 0 && !pendingCard && !focusPlay ? (
-          <div className="slot-empty" />
-        ) : (
-          <>
+        <>
             {cards.map((played,index)=>(
               <div className="played-card" key={`${played.card.id}-${index}`}>
                 {samePlay(played,focusPlay) ? (
@@ -370,8 +367,7 @@ function Slot({
                 <CurrentBoardCard played={pendingCard} onInspect={onInspect} pending />
               </div>
             )}
-          </>
-        )}
+        </>
       </div>
     </div>
   );

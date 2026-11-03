@@ -1,0 +1,190 @@
+/* Daggerlight visual corrections — 2026-11-03.
+   Solid inverted menu colors; action/hover rings stay purely cosmetic.
+   Styles intentionally follow bold-ui.css to preserve gameplay layout. */
+
+/* Splash: give the illustration and crown breathing room. */
+.dagger-splash .splash-art{
+  height:clamp(215px,49dvh,510px);
+}
+.dagger-splash .splash-copy{
+  margin-top:clamp(20px,3vh,34px);
+}
+.dagger-splash .splash-start,
+:root[data-theme="dark"] .dagger-splash .splash-start{
+  background:#191919 !important;
+  color:#d3b787 !important;
+  border:0 !important;
+  border-radius:3px;
+  box-shadow:none !important;
+}
+.dagger-splash .splash-start:hover,
+.dagger-splash .splash-start:focus-visible,
+:root[data-theme="dark"] .dagger-splash .splash-start:hover{
+  background:#302e29 !important;
+  color:#e2c99d !important;
+  border:0 !important;
+}
+.dagger-splash .splash-start:focus-visible{
+  outline:3px solid #b38d51;
+  outline-offset:4px;
+}
+.dagger-splash .splash-edition,.home-screen .home-hero-caption{display:none!important}
+
+/* Menu: button fill carries the contrast; no decorative border.
+   Light paper -> dark buttons / cream ink.
+   Dark paper  -> cream buttons / dark ink. */
+:root:not([data-theme="dark"]) .home-screen .home-action,
+:root:not([data-theme="dark"]) .home-screen .home-action.action-play{
+  background:#191919 !important;
+  color:#eae2d5 !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+:root:not([data-theme="dark"]) .home-screen .home-action:is(:hover,:focus-visible,.is-selected,:active){
+  background:#2a2926 !important;
+}
+:root:not([data-theme="dark"]) .home-screen .home-action strong{
+  color:#eae2d5 !important;
+}
+:root:not([data-theme="dark"]) .home-screen .home-action .home-action-description{
+  color:#d7cbbc !important;
+}
+:root:not([data-theme="dark"]) .home-screen .home-action-index,
+:root:not([data-theme="dark"]) .home-screen .home-action-arrow{
+  color:#d3b787 !important;
+}
+:root:not([data-theme="dark"]) .home-screen .home-action-reveal-ring{
+  border-color:#d3b787;
+}
+:root[data-theme="dark"] .home-screen .home-action,
+:root[data-theme="dark"] .home-screen .home-action.action-play,
+:root[data-theme="dark"] .home-screen .home-action.action-continue{
+  background:#eae2d5 !important;
+  color:#191919 !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+:root[data-theme="dark"] .home-screen .home-action:is(:hover,:focus-visible,.is-selected,:active){
+  background:#f7efdf !important;
+  border:0 !important;
+}
+:root[data-theme="dark"] .home-screen .home-action strong,
+:root[data-theme="dark"] .home-screen .home-action .home-action-description{
+  color:#191919 !important;
+}
+:root[data-theme="dark"] .home-screen .home-action-index,
+:root[data-theme="dark"] .home-screen .home-action-arrow{
+  color:#755b32 !important;
+}
+:root[data-theme="dark"] .home-screen .home-action-reveal-ring{
+  border-color:#866b44;
+}
+.home-screen .home-action::after{
+  display:none !important;
+}
+.home-screen .home-action:focus-visible{
+  outline:3px solid #d3b787;
+  outline-offset:3px;
+}
+
+/* Keep only played cards + archive and slot-capacity counters in positions.
+   Legal-position feedback still uses the slot's surface color, never a
+   marker or ring that could appear to predict where the AI will play. */
+.app-shell .slot-empty,
+.app-shell .board-slot.drop-active::after{
+  content:none !important;
+  display:none !important;
+}
+
+/* Inspection: the circle must preserve the translate(-50%, -50%) at every
+   animation frame. Otherwise scaling overrides the centering transform. */
+.app-shell .card-zoom-panel{
+  position:relative;
+  isolation:isolate;
+  animation:dl-inspection-enter .34s cubic-bezier(.18,.78,.25,1) both;
+}
+.app-shell .card-zoom-panel::before{
+  content:"";
+  display:block;
+  position:absolute;
+  left:50% !important;
+  top:40% !important;
+  width:min(65vw,360px);
+  aspect-ratio:1;
+  border:1px solid #d3b787;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:0;
+  transform:translate(-50%,-50%) scale(1);
+  animation:dl-inspection-ring .58s cubic-bezier(.2,.8,.3,1) both !important;
+}
+.app-shell .zoom-card-frame,
+.app-shell .zoom-actions{
+  position:relative;
+  z-index:1;
+}
+@keyframes dl-inspection-enter{
+  from{opacity:0;transform:translateY(23px) scale(.97)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes dl-inspection-ring{
+  from{opacity:0;transform:translate(-50%,-50%) scale(.18)}
+  to{opacity:.64;transform:translate(-50%,-50%) scale(1)}
+}
+
+/* On precise pointers, cards enlarge briefly without idle movement. */
+@media (hover:hover) and (pointer:fine){
+  .app-shell .hand-card:not(:disabled){
+    transition:transform .18s cubic-bezier(.2,.8,.3,1),filter .18s ease;
+  }
+  .app-shell .hand-card:not(:disabled):hover{
+    position:relative;
+    z-index:7;
+    transform:translateY(-7px) scale(1.055) !important;
+    filter:drop-shadow(0 5px 9px rgba(0,0,0,.33));
+  }
+  .app-shell .hand-card:not(:disabled).is-selected:hover{
+    transform:translateY(-9px) scale(1.06) !important;
+  }
+  .app-shell .current-board-card,
+  .app-shell .battle-card{
+    transition:transform .18s cubic-bezier(.2,.8,.3,1),filter .18s;
+    transform-origin:center;
+  }
+  .app-shell .current-board-card:hover{
+    transform:scale(1.055);
+    z-index:8;
+  }
+  .app-shell .battle-card:hover{
+    transform:scale(1.035);
+    z-index:8;
+  }
+  .app-shell .played-card:has(button:hover){
+    position:relative;
+    z-index:8;
+  }
+}
+@media (max-height:660px){
+  .dagger-splash .splash-art{height:clamp(150px,42dvh,310px)}
+  .dagger-splash .splash-copy{margin-top:14px}
+}
+@media (max-width:520px) and (min-height:661px){
+  .dagger-splash .splash-art{height:clamp(210px,43dvh,360px)}
+  .dagger-splash .splash-copy{margin-top:20px}
+}
+@media(prefers-reduced-motion:reduce){
+  .app-shell .card-zoom-panel,
+  .app-shell .card-zoom-panel::before{
+    animation:none !important;
+    opacity:1;
+    transform:none;
+  }
+  .app-shell .card-zoom-panel::before{
+    transform:translate(-50%,-50%) !important;
+  }
+  .app-shell .hand-card,
+  .app-shell .current-board-card,
+  .app-shell .battle-card{
+    transition:none !important;
+  }
+}

@@ -47,7 +47,6 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
           </button>
         </div>
       </div>
-      <span className="splash-edition">EL MUNDO DE LA QUIRALIDAD</span>
     </main>
   );
 }
