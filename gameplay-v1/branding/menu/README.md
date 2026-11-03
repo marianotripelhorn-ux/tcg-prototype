@@ -8,6 +8,6 @@ Copy the following image files from the supplied visual pack into this directory
 - `egg.webp` — new game hover illustration
 - `dagger.webp` — continue / card gallery hover illustration
 
-The source layouts (`SPLASH SCREEN.png`, `MAIN SCREEN.png`) are reference mockups, not runtime assets. The original GIF crown is represented by the existing scalable `public/branding/logo.svg`, with entrance animation handled in CSS.
+The source layouts (`SPLASH SCREEN.png`, `MAIN SCREEN.png`) are reference mockups, not runtime assets. The supplied GIF crown has been vectorized to `crown.svg`; its entrance animation is handled in CSS.
 
 If a visual image has not been uploaded yet, the UI uses an existing faction illustration or neutral color as a fallback. No gameplay rules depend on these resources.
