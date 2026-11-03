@@ -255,11 +255,11 @@ function resolvePendingDuel(state: GameState, rng:()=>number) {
   }
 
   if (outcome==="opponent"&&state.player.champion.id==="sinistral"&&!state.player.bluePassiveUsed) {
-    addDebuff(state.opponent,2,"Corte Sinistral");
+    addDebuff(state.opponent,2,"Vor Calasta");
     state.player.bluePassiveUsed=true;
   }
   if (outcome==="player"&&state.opponent.champion.id==="sinistral"&&!state.opponent.bluePassiveUsed) {
-    addDebuff(state.player,2,"Corte Sinistral");
+    addDebuff(state.player,2,"Vor Calasta");
     state.opponent.bluePassiveUsed=true;
   }
 
