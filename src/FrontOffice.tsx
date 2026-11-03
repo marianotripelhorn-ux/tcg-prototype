@@ -109,7 +109,7 @@ export function HomeScreen({
     <main className="fo-shell home-screen">
       <header className="fo-topbar">
         <span className="fo-wordmark">
-          <img src="./branding/logo.svg" alt="" aria-hidden="true" className="menu-top-crown" />
+          <img src="./branding/menu/crown.svg" alt="" aria-hidden="true" className="menu-top-crown" />
           DAGGERLIGHT
         </span>
         <div className="fo-header-actions">
@@ -120,7 +120,7 @@ export function HomeScreen({
       <div className="home-layout">
         <section className="home-hero" aria-label="Daggerlight">
           <div className="home-hero-copy">
-            <img className="home-hero-crown" src="./branding/logo.svg" alt="" aria-hidden="true" />
+            <img className="home-hero-crown" src="./branding/menu/crown.svg" alt="" aria-hidden="true" />
             <h1 className="home-title">DAGGERLIGHT</h1>
             <p className="home-tagline">La mano que elegís determina el poder que ejercés.</p>
           </div>

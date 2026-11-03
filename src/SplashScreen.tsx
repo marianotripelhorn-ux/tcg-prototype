@@ -36,7 +36,7 @@ export default function SplashScreen({ onStart }: { onStart: () => void }) {
           />
         </div>
         <div className="splash-copy">
-          <img className="splash-crown" src="./branding/logo.svg" alt="" aria-hidden="true" />
+          <img className="splash-crown" src="./branding/menu/crown.svg" alt="" aria-hidden="true" />
           <span className="splash-title-rule" aria-hidden="true" />
           <h1>DAGGERLIGHT</h1>
           <span className="splash-subtitle">TRADING CARD GAME</span>
