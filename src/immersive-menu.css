@@ -7,7 +7,7 @@
   --menu-ink: #191919;
   --menu-ivory: #eae2d5;
   --menu-gold: #d3b787;
-  --menu-texture: url("../branding/menu/parchment.webp");
+  --menu-texture: url("/branding/menu/parchment.webp");
 }
 .dagger-splash, .home-screen, .home-screen button { -webkit-tap-highlight-color: transparent; }
 .dagger-splash {
