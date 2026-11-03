@@ -9,6 +9,7 @@ import "./dark-mode.css";
 import "./gameplay-experiment.css";
 import "./faction-art.css";
 import "./persistence.css";
+import "./immersive-menu.css";
 
 initializeTheme();
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Tutorial from "./Tutorial";
+import SplashScreen from "./SplashScreen";
 import ThemeToggle from "./ThemeToggle";
 import AuguryStatus from "./AuguryStatus";
 import { factionArtUrl } from "./factionArtwork";
@@ -382,6 +383,7 @@ export default function App() {
   const [opponentChampion,setOpponentChampion]=useState("random");
   const [aiDifficulty,setAiDifficulty]=useState<AIDifficulty>("normal");
   const [screen,setScreen]=useState<"home"|"champions"|"collection"|"table"|"decklab">("home");
+  const [hasEntered,setHasEntered]=useState(false);
   const [game,setGame]=useState<GameState|null>(null);
   const [savedMatch,setSavedMatch]=useState<SavedMatch|null>(()=>readSavedMatch());
   const [matchMeta,setMatchMeta]=useState<SavedMatch|null>(null);
@@ -645,6 +647,8 @@ export default function App() {
     setDrag(null);
     setHoveredPosition(null);
   }
+
+  if (!hasEntered) return <SplashScreen onStart={()=>setHasEntered(true)} />;
 
   if (!game) {
     return (

@@ -76,59 +76,95 @@ export function HomeScreen({
   summary:{total:number;wins:number;losses:number;draws:number;winRate:number};
   analyticsReady:boolean;analyticsConsent:boolean;onChangeAnalytics:(value:boolean)=>void;
 }) {
+  const [selectedAction,setSelectedAction] = useState<string|null>(null);
+  const pendingNavigation = useRef<number|null>(null);
+
+  useEffect(() => () => {
+    if (pendingNavigation.current !== null) window.clearTimeout(pendingNavigation.current);
+  }, []);
+
+  // Keep a pressed illustration visible on touch screens before navigation.
+  const activate = (id:string, callback:()=>void) => {
+    if (pendingNavigation.current !== null) return;
+    setSelectedAction(id);
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    pendingNavigation.current = window.setTimeout(() => {
+      pendingNavigation.current = null;
+      callback();
+    }, reduce ? 0 : 230);
+  };
+
+  const buttons = [
+    {id:"play", index:"01", title:"Empezar partida", subtitle:"Elegí tu Champion y enfrentate a la IA.", image:"egg.webp", fallback:"./factions/red-portrait.webp", action:onPlay},
+    ...(saved ? [{
+      id:"continue", index:"↳", title:"Continuar partida",
+      subtitle:`${saved.game.player.champion.name} vs. ${saved.game.opponent.champion.name} · Ronda ${saved.game.round}`,
+      image:"dagger.webp", fallback:"./factions/saints-portrait.webp", action:onContinue
+    }] : []),
+    {id:"learn", index:"02", title:"Aprender a jugar", subtitle:"Conocé las reglas en un tutorial interactivo.", image:"book.webp", fallback:"./factions/white-portrait.webp", action:onTutorial},
+    {id:"library", index:"03", title:"Ver cartas", subtitle:"Explorá las cartas y sus habilidades.", image:"dagger.webp", fallback:"./factions/ivory-portrait.webp", action:onGallery}
+  ];
+
   return (
     <main className="fo-shell home-screen">
-      <div className="fo-glow glow-left" aria-hidden="true" />
-      <div className="fo-glow glow-right" aria-hidden="true" />
       <header className="fo-topbar">
-        <span className="fo-wordmark"><span className="fo-glyph">✦</span> DAGGERLIGHT</span>
-        <div className="fo-header-actions"><span className="fo-top-meta">TCG · VERSIÓN DE PRUEBA</span><ThemeToggle /></div>
+        <span className="fo-wordmark">
+          <img src="./branding/logo.svg" alt="" aria-hidden="true" className="menu-top-crown" />
+          DAGGERLIGHT
+        </span>
+        <div className="fo-header-actions">
+          <span className="fo-top-meta">TCG · PROTOTIPO</span>
+          <ThemeToggle />
+        </div>
       </header>
       <div className="home-layout">
-        <section className="home-hero">
-          <span className="fo-eyebrow">EL MUNDO DE LA QUIRALIDAD TE ESPERA</span>
-          <div className="home-mark" aria-hidden="true"><img src="./branding/logo.png" alt="" onError={event=>{if (!event.currentTarget.src.endsWith("/logo.svg")) event.currentTarget.src="./branding/logo.svg";}} /></div>
-          <h1 className="home-title">DAGGERLIGHT</h1>
-          <p className="home-tagline">La mano que elegís determina el poder que ejercés.</p><p className="home-subline">Dos Champions. Tres posiciones. Cada carta importa.</p>
-          <div className="home-numbers"><span><strong>9</strong> Vida</span><span><strong>3</strong> Cartas por ronda</span><span><strong>5</strong> Facciones</span></div>
+        <section className="home-hero" aria-label="Daggerlight">
+          <div className="home-hero-copy">
+            <img className="home-hero-crown" src="./branding/logo.svg" alt="" aria-hidden="true" />
+            <h1 className="home-title">DAGGERLIGHT</h1>
+            <p className="home-tagline">La mano que elegís determina el poder que ejercés.</p>
+          </div>
+          <div className="home-hero-art" aria-hidden="true">
+            <span className="hero-art-halo" />
+            <img src="./branding/menu/splash-art.webp" alt="" onError={event => {
+              if (!event.currentTarget.src.endsWith("/red-portrait.webp"))
+                event.currentTarget.src="./factions/red-portrait.webp";
+            }} />
+          </div>
+          <span className="home-hero-caption">DAGGERLIGHT · UN JUEGO DE QUIRALIDAD</span>
         </section>
         <nav className="home-actions" aria-label="Menú principal">
-          <button type="button" className="home-action action-play" onClick={onPlay}>
-            <span className="home-action-index">01 / JUGAR</span>
-            <strong>Empezar partida</strong>
-            <span>Elegí una facción y tu Champion.</span>
-            <i aria-hidden="true">→</i>
-          </button>
-          {saved && <button type="button" className="home-action action-continue" onClick={onContinue}>
-            <span className="home-action-index">PARTIDA GUARDADA</span>
-            <strong>Continuar partida</strong>
-            <span>{saved.game.player.champion.name} contra {saved.game.opponent.champion.name} · Ronda {saved.game.round} · IA {saved.game.aiDifficulty==="hard"?"Difícil":saved.game.aiDifficulty==="easy"?"Fácil":"Normal"}</span>
-            <i aria-hidden="true">→</i>
-          </button>}
-          <button type="button" className="home-action action-learn" onClick={onTutorial}>
-            <span className="home-action-index">02 / APRENDER</span>
-            <strong>Aprender a jugar</strong>
-            <span>Un tutorial corto con ejemplos interactivos.</span>
-            <i aria-hidden="true">→</i>
-          </button>
-          <button type="button" className="home-action action-library" onClick={onGallery}>
-            <span className="home-action-index">03 / EXPLORAR</span>
-            <strong>Ver cartas</strong>
-            <span>Conocé los diseños y las habilidades de cada facción.</span>
-            <i aria-hidden="true">→</i>
-          </button>
+          {buttons.map(button => (
+            <button
+              key={button.id}
+              type="button"
+              className={"home-action action-" + button.id + (selectedAction === button.id ? " is-selected" : "")}
+              onClick={() => activate(button.id,button.action)}
+            >
+              <span className="home-action-index">{button.index}</span>
+              <span className="home-action-content">
+                <strong>{button.title}</strong>
+                <span className="home-action-description">{button.subtitle}</span>
+              </span>
+              <img className="home-action-art" src={"./branding/menu/" + button.image} alt="" aria-hidden="true" onError={event => {
+                if (!event.currentTarget.src.endsWith(button.fallback.split("/").at(-1)!))
+                  event.currentTarget.src = button.fallback;
+              }} />
+              <span className="home-action-arrow" aria-hidden="true">↗</span>
+            </button>
+          ))}
         </nav>
       </div>
-      <footer className="fo-footer">
-        <span>PARTIDAS: {summary.total} · VICTORIAS: {summary.wins} · DERROTAS: {summary.losses} · EMPATES: {summary.draws}</span>
-        <span>·</span>
-        <button type="button" className="home-physical-link" onClick={onPhysical}>MODO MESA · BETA ↗</button>
-        <button type="button" className="home-physical-link" onClick={onDeckLab}>MAZOS MULTIFACCIÓN · LAB ↗</button>
-        {analyticsReady && <label className="home-analytics-consent">
-          <input type="checkbox" checked={analyticsConsent} onChange={event=>onChangeAnalytics(event.target.checked)}/>
-          Compartir estadísticas anónimas de partidas completas
-        </label>}
-        {!analyticsReady && <span title="Sin conexión de analítica externa configurada">ESTADÍSTICAS EN ESTE DISPOSITIVO</span>}
+      <footer className="fo-footer menu-footer">
+        <span className="menu-record">{summary.total} PARTIDAS · {summary.wins} VICTORIAS · {summary.losses} DERROTAS · {summary.draws} EMPATES</span>
+        <div className="menu-extras">
+          <button type="button" className="home-physical-link" onClick={onPhysical}>MODO MESA · BETA</button>
+          <button type="button" className="home-physical-link" onClick={onDeckLab}>MAZOS MULTIFACCIÓN · LAB</button>
+        </div>
+        {analyticsReady ? <label className="home-analytics-consent">
+          <input type="checkbox" checked={analyticsConsent} onChange={event=>onChangeAnalytics(event.target.checked)} />
+          Compartir estadísticas anónimas
+        </label> : <span className="menu-local-stats">ESTADÍSTICAS LOCALES</span>}
       </footer>
     </main>
   );
