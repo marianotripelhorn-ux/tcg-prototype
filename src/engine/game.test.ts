@@ -57,7 +57,7 @@ describe("Daggerlight UI v2 engine lifecycle", () => {
     expect(preview.exact).toBe(false);
   });
 
-  it("carries Señor de los Archivos +2 through the round reset", () => {
+  it("carries Lenares +2 through the round reset", () => {
     const game=startGame("empireos","athos",fixed,"player");
     game.turn=3;
     game.initiative="player";
