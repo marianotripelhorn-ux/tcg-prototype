@@ -1,0 +1,103 @@
+
+/* Shared neutral UI language: firm, borderless, uppercase, sans-serif.
+   Card fronts and faction artwork are never restyled here. */
+:root{
+ --dl-ui-fill:#191919;
+ --dl-ui-ink:#eae2d5;
+ --dl-ui-muted:#d7cabb;
+}
+:root[data-theme="dark"]{
+ --dl-ui-fill:#eae2d5;
+ --dl-ui-ink:#191919;
+ --dl-ui-muted:#4a4339;
+}
+:where(.fo-shell,.deck-lab-screen,.physical-shell,.tutorial-dialog,.setup-shell,.app-shell)
+:is(h1,h2,h3){
+ font-family:Inter,Arial,Helvetica,sans-serif!important;
+ font-weight:900!important;
+ text-transform:uppercase;
+}
+:where(.fo-shell,.deck-lab-screen,.physical-shell,.tutorial-dialog,.setup-shell,.app-shell)
+:is(button,select,input){
+ font-family:Inter,Arial,Helvetica,sans-serif;
+}
+.fo-shell .library-search input,
+.deck-lab-screen .deck-lab-back,
+.deck-lab-screen .deck-lab-play,
+.physical-shell .physical-back,
+.physical-shell .physical-tool-button,
+.app-shell .utility-button,
+.app-shell .academy-utility,
+.fo-shell .library-modal-nav button,
+.fo-shell .library-view-toggle button{
+ border:0!important;
+ border-radius:6px;
+ background:var(--dl-ui-fill)!important;
+ color:var(--dl-ui-ink)!important;
+ box-shadow:none!important;
+}
+.fo-shell .library-search input::placeholder{color:var(--dl-ui-muted)}
+.fo-shell .library-search{border:0!important}
+:root[data-theme="dark"] .fo-shell .library-search input::placeholder{color:#514c43}
+.fo-shell :is(.library-faction-filters button.current,.library-view-toggle button.active){
+ background:#d3b787!important;color:#191919!important
+}
+.fo-shell .library-tile-text,.fo-shell .library-card-tile{border:0!important;box-shadow:none!important}
+/* Remove soft decorative panels from neutral controls without touching active card art. */
+.fo-shell .library-modal,
+.fo-shell .library-toolbar,
+.fo-shell .library-tile-art,
+.deck-lab-screen .deck-lab-config,
+.deck-lab-screen .deck-lab-card,
+.deck-lab-screen .deck-lab-bottom,
+.physical-shell .physical-seat,
+.physical-shell .physical-confirm{
+ background-image:none!important;
+ box-shadow:none!important;
+}
+.deck-lab-screen .deck-lab-config,
+.deck-lab-screen .deck-lab-card,
+.deck-lab-screen .deck-lab-bottom{
+ background:var(--dl-ui-fill)!important;
+ color:var(--dl-ui-ink)!important;
+ border:0!important;
+ border-radius:8px;
+}
+.deck-lab-screen .deck-lab-card :is(h2,p),
+.deck-lab-screen .deck-lab-card-head>span,
+.deck-lab-screen .deck-lab-config label,
+.deck-lab-screen .deck-lab-bottom p,
+.deck-lab-screen .deck-lab-bottom strong{
+ color:var(--dl-ui-ink)!important;
+}
+.deck-lab-screen .deck-lab-card p{opacity:.82}
+.deck-lab-screen .deck-lab-card-controls button,
+.deck-lab-screen .deck-lab-config select,
+.deck-lab-screen .deck-lab-bottom select{
+ border:0!important;
+ background:#d3b787!important;color:#191919!important;
+}
+.physical-shell :is(.physical-back,.physical-tool-button,.physical-round button,.physical-confirm button){
+ border:0!important;
+ background:var(--dl-ui-fill)!important;color:var(--dl-ui-ink)!important;
+}
+.app-shell .game-tools :is(.academy-utility,.utility-button){
+ background:var(--dl-ui-fill)!important;color:var(--dl-ui-ink)!important;border:0!important;
+}
+.tutorial-dialog{border:0!important;background-image:none!important}
+.tutorial-dialog :is(.tutorial-next,.tutorial-primary,.tutorial-back,.tutorial-secondary,.tutorial-try){
+ border:0!important;box-shadow:none!important;
+}
+:root:not([data-theme="dark"]) .tutorial-dialog :is(.tutorial-next,.tutorial-primary,.tutorial-back,.tutorial-secondary,.tutorial-try){
+ background:#eae2d5!important;color:#191919!important
+}
+:root[data-theme="dark"] .tutorial-dialog :is(.tutorial-next,.tutorial-primary,.tutorial-back,.tutorial-secondary,.tutorial-try){
+ background:#d3b787!important;color:#191919!important
+}
+:where(.fo-shell,.deck-lab-screen,.physical-shell,.tutorial-dialog,.setup-shell,.app-shell)
+:is(button,select,input):focus-visible{
+ outline:3px solid #b69659!important;outline-offset:3px;
+}
+@media (prefers-reduced-motion:reduce){
+ .dl-champion-card,.dl-faction-tab{transition:none!important}
+}

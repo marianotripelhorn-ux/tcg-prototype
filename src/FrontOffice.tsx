@@ -255,7 +255,6 @@ export function CardCollection({onBack,onPlay}:GalleryProps) {
     (faction==="all" || c.faction===faction) &&
     (c.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()) || c.studioId.toLowerCase().includes(query.trim().toLowerCase()))
   ),[faction,query]);
-  const totalArt=allCards.filter(c=>!!c.art).length;
   return (
     <main className="fo-shell library-screen">
       <header className="fo-topbar">
@@ -267,7 +266,6 @@ export function CardCollection({onBack,onPlay}:GalleryProps) {
         <span className="fo-eyebrow">ARCHIVO DE LA QUIRALIDAD</span>
         <h1>La colección</h1>
         <p>Explorá los {allCards.length} diseños del juego. Tocá una carta para verla en detalle y leer su habilidad.</p>
-        <div className="library-stats"><span><b>{allCards.length}</b> DISEÑOS</span><span><b>{factionInfo.length}</b> FACCIONES</span><span><b>{totalArt}</b> CARTAS ILUSTRADAS</span></div>
       </section>
       <div className="library-toolbar">
         <div className="library-faction-filters" role="group" aria-label="Filtrar cartas por facción">
@@ -276,7 +274,7 @@ export function CardCollection({onBack,onPlay}:GalleryProps) {
         </div>
         <label className="library-search"><span className="sr-only">Buscar carta por nombre o ID</span><span aria-hidden="true">⌕</span><input placeholder="Buscar una carta..." value={query} onChange={e=>setQuery(e.target.value)} type="search" /></label>
       </div>
-      <div className="library-result-heading"><strong>{filtered.length} {filtered.length===1?"CARTA":"CARTAS"}</strong><span>ARTE COMPLETO DISPONIBLE PARA LAS FACCIONES ILUSTRADAS</span></div>
+      <div className="library-result-heading"><strong>{filtered.length} {filtered.length===1?"CARTA":"CARTAS"}</strong></div>
       {filtered.length===0 ? <div className="library-empty">No se encontraron cartas con ese filtro. Probá con otro nombre.</div> : <section className="library-grid" aria-label="Cartas">
         {filtered.map(card=><button type="button" key={card.studioId} className={"library-card-tile theme-"+card.faction} onClick={()=>{setSelected(card);setView("art");}} aria-label={"Ver "+card.name}>
           <div className="library-tile-art"><Sprite card={card} crop={!!card.art}/></div>

@@ -67,7 +67,7 @@ export default function DeckLab({onBack,onPlay}:{
       <section className="deck-lab-intro">
         <span>PRUEBAS DE CONSTRUCCIÓN · REGLAS PROVISIONALES</span>
         <h1>Explorá nuevas alianzas.</h1>
-        <p>Combiná cartas de hasta dos facciones bajo un solo Campeón. Elegí 12 cartas diferentes: cada selección agrega exactamente 2 copias (24 cartas en total). No modifica los mazos originales ni establece todavía las reglas definitivas.</p>
+        <p>24 CARTAS · HASTA 2 FACCIONES · 12 CARTAS DIFERENTES.</p>
       </section>
       <section className="deck-lab-config" aria-label="Configuración del mazo">
         <label>CAMPEÓN
