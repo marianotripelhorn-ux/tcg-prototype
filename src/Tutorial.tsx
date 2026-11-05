@@ -8,13 +8,13 @@ type TutorialProps = {
 };
 
 const screens = [
-  { kicker: "01 · TU MISIÓN", title: "Ganás cuando el Champion rival se queda sin Vida", body: "Cada Champion empieza con 9 puntos de Vida. Cada duelo que ganás le quita 1 punto al rival. No hay maná: tu desafío es elegir bien tus tres cartas." },
+  { kicker: "01 · TU MISIÓN", title: "Ganás cuando el Campeón rival se queda sin Vida", body: "Cada Campeón empieza con 9 puntos de Vida. Cada duelo que ganás le quita 1 punto al rival. No hay maná: tu desafío es elegir bien tus tres cartas." },
   { kicker: "02 · EL COMBATE", title: "Una carta contra otra", body: "Un jugador abre el duelo y el otro responde después de ver su carta y posición. Se comparan los Poderes finales. El mayor gana; si son iguales, nadie pierde Vida." },
   { kicker: "03 · LAS POSICIONES", title: "La posición puede cambiar tu jugada", body: "Podés jugar en Siniestra, Trono o Diestra. Algunas habilidades solo funcionan en una posición concreta. Probalo con Invocadagas." },
   { kicker: "04 · LA RONDA", title: "Pensá en el orden de tus tres cartas", body: "Al comenzar cada ronda recibís 3 cartas. Quien gana un duelo abre el siguiente; en empate conserva la iniciativa quien abrió. Las habilidades pueden preparar tu próxima carta." },
   { kicker: "05 · QUIERO / NO QUIERO", title: "Cuando vas 0–2, decidís el riesgo", body: "Si perdés los dos primeros duelos, podés jugar el tercero para intentar ganar 1 punto o decir «No quiero» y cerrar la ronda. No hay puntos extra por ganar la ronda." },
   { kicker: "06 · EL ARCHIVO", title: "Las cartas jugadas dejan huella", body: "Al final de cada ronda, las cartas que jugaste se guardan en el Archivo de su posición. Solo importa cuántas hay en cada Archivo; algunos efectos se hacen más fuertes con esos números." },
-  { kicker: "07 · TU PRIMERA PARTIDA", title: "Ya conocés lo necesario para empezar", body: "Elegí un Champion, mirá las tres cartas de tu mano, inspeccioná sus habilidades y decidí el orden y las posiciones. Podés volver a esta guía cuando quieras." }
+  { kicker: "07 · TU PRIMERA PARTIDA", title: "Ya conocés lo necesario para empezar", body: "Elegí un Campeón, mirá las tres cartas de tu mano, inspeccioná sus habilidades y decidí el orden y las posiciones. Podés volver a esta guía cuando quieras." }
 ];
 
 export default function Tutorial({ onClose, onPlay, inGame }: TutorialProps) {
@@ -57,9 +57,9 @@ export default function Tutorial({ onClose, onPlay, inGame }: TutorialProps) {
           {step === 0 && (
             <div className="tutorial-intro">
               <div className="tutorial-life-group">
-                <div><span className="tutorial-eyebrow">TU CHAMPION</span><strong>9 <span>♥</span></strong><small>Vida</small></div>
+                <div><span className="tutorial-eyebrow">TU CAMPEÓN</span><strong>9 <span>♥</span></strong><small>Vida</small></div>
                 <div className="tutorial-versus">VS</div>
-                <div><span className="tutorial-eyebrow">CHAMPION RIVAL</span><strong>9 <span>♥</span></strong><small>Vida</small></div>
+                <div><span className="tutorial-eyebrow">CAMPEÓN RIVAL</span><strong>9 <span>♥</span></strong><small>Vida</small></div>
               </div>
               <div className="tutorial-stat-row"><span><b>3</b> cartas por ronda</span><span><b>3</b> posiciones</span><span><b>1</b> daño por victoria</span></div>
             </div>

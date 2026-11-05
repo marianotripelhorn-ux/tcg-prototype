@@ -1,6 +1,7 @@
 import {useMemo,useState} from "react";
 import {allCards,factionLabels} from "./data";
 import {champions} from "./engine/champions";
+import {championShortName} from "./championArtwork";
 import {proposedMultifactionRules,validateDeck} from "./engine/decks";
 import type {DeckDefinition} from "./engine/decks";
 import type {AIDifficulty} from "./engine/types";
@@ -66,12 +67,12 @@ export default function DeckLab({onBack,onPlay}:{
       <section className="deck-lab-intro">
         <span>PRUEBAS DE CONSTRUCCIÓN · REGLAS PROVISIONALES</span>
         <h1>Explorá nuevas alianzas.</h1>
-        <p>Combiná cartas de hasta dos facciones bajo un solo Champion. Elegí 12 cartas diferentes: cada selección agrega exactamente 2 copias (24 cartas en total). No modifica los mazos originales ni establece todavía las reglas definitivas.</p>
+        <p>Combiná cartas de hasta dos facciones bajo un solo Campeón. Elegí 12 cartas diferentes: cada selección agrega exactamente 2 copias (24 cartas en total). No modifica los mazos originales ni establece todavía las reglas definitivas.</p>
       </section>
       <section className="deck-lab-config" aria-label="Configuración del mazo">
-        <label>CHAMPION
+        <label>CAMPEÓN
           <select value={championId} onChange={e=>changeChampion(e.target.value)}>
-            {championIds.map(id=><option key={id} value={id}>{champions[id].name}</option>)}
+            {championIds.map(id=><option key={id} value={id}>{championShortName(champions[id].name)}</option>)}
           </select>
         </label>
         <label>SEGUNDA FACCIÓN
@@ -114,7 +115,7 @@ export default function DeckLab({onBack,onPlay}:{
         <label>RIVAL
           <select value={rival} onChange={e=>setRival(e.target.value)}>
             <option value="random">Aleatorio</option>
-            {championIds.map(id=><option key={id} value={id}>{champions[id].name}</option>)}
+            {championIds.map(id=><option key={id} value={id}>{championShortName(champions[id].name)}</option>)}
           </select>
         </label>
         <label>IA

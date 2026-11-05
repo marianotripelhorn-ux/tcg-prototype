@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import ThemeToggle from "./ThemeToggle";
-import { factionArtUrl } from "./factionArtwork";
 import { championBackgroundUrl,championImageUrl,championShortName,championSubtitle } from "./championArtwork";
 import { allCards, factionLabels } from "./data";
 import { champions } from "./engine/champions";
@@ -83,7 +82,7 @@ export function HomeScreen({
     {id:"play", index:"01", title:"EMPEZAR PARTIDA", subtitle:"Elegí tu Campeón y enfrentate a la IA.", image:"dagger.webp", fallback:"./factions/red-portrait.webp", action:onPlay},
     ...(saved ? [{
       id:"continue", index:"↳", title:"CONTINUAR PARTIDA",
-      subtitle:`${saved.game.player.champion.name} vs. ${saved.game.opponent.champion.name} · Ronda ${saved.game.round}`,
+      subtitle:`${championShortName(saved.game.player.champion.name)} vs. ${championShortName(saved.game.opponent.champion.name)} · Ronda ${saved.game.round}`,
       image:"banner.webp", fallback:"./factions/saints-portrait.webp", action:onContinue
     }] : []),
     {id:"learn", index:"02", title:"APRENDER A JUGAR", subtitle:"Conocé las reglas en un tutorial interactivo.", image:"egg.webp", fallback:"./factions/white-portrait.webp", action:onTutorial},
@@ -197,10 +196,6 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
       </nav>
 
       <section className="dl-champion-content" aria-label={"Campeones de "+factionLabels[faction]}>
-        <div className="dl-champion-section-title">
-          <h2>{factionLabels[faction].toUpperCase()}</h2>
-          <span>{activeChampions.length} {activeChampions.length===1?"CAMPEÓN":"CAMPEONES"}</span>
-        </div>
         <div className="dl-champion-grid">
           {activeChampions.map(c=>(
             <button type="button" key={c.id}

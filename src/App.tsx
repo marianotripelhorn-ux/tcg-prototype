@@ -914,7 +914,7 @@ export default function App() {
                 <strong>{game.winner==="player"?"GANASTE":game.winner==="opponent"?"GANÓ LA IA":"EMPATE"}</strong>
                 <p>{game.player.life}–{game.opponent.life} de Vida · {game.round} ronda{game.round===1?"":"s"}.</p>
                 <div className="match-postgame-actions">
-                  <button className="secondary-button" type="button" onClick={()=>goToMenu("champions")}>CAMBIAR CHAMPION</button>
+                  <button className="secondary-button" type="button" onClick={()=>goToMenu("champions")}>CAMBIAR CAMPEÓN</button>
                   <button className="primary-button" type="button" onClick={beginMatch}>REVANCHA</button>
                 </div>
               </div>

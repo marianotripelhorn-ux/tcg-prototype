@@ -16,7 +16,7 @@ const canon = [
   ["SAN-012", "CONSPIRADOR", 5, "first_opposite3"],
 ] as const;
 
-describe("Santos Card Studio v0.4 sync", () => {
+describe("Santos Card Studio v0.6 — final artwork", () => {
   it("has twelve distinct canonical cards with preserved mechanical IDs", () => {
     expect(saintCards).toHaveLength(12);
     expect(new Set(saintCards.map(c => c.id)).size).toBe(12);
@@ -34,7 +34,7 @@ describe("Santos Card Studio v0.4 sync", () => {
       const sheet = Math.floor(i / 6) + 1;
       const slot = i % 6;
       expect(card.art).toEqual({
-        sprite: `./cards/saints/saints-cards-${sheet}.webp`,
+        sprite: `./cards/v4/saints-${sheet}.webp`,
         column: slot % 3,
         row: Math.floor(slot / 3)
       });
