@@ -1,0 +1,215 @@
+
+/* Daggerlight · Champion Selection v4.
+   All artwork comes from the user's Champion Art and background CHAMP archives.
+   Visual changes do not affect game mechanics. */
+.fo-shell h1,.fo-shell h2,.fo-shell h3,
+.fo-shell .fo-intro h1,.fo-shell .champion-section-heading h2,
+.fo-shell .library-detail-copy h2,.deck-lab-screen .deck-lab-intro h1 {
+  font-family:Inter,Arial,Helvetica,sans-serif !important;
+  font-weight:900 !important;
+  text-transform:uppercase;
+  letter-spacing:-.035em;
+}
+.fo-shell .fo-wordmark{
+  display:flex;align-items:center;gap:8px;
+  font-family:Inter,Arial,sans-serif;font-weight:950;letter-spacing:.11em;
+}
+.fo-shell .menu-top-crown{width:27px;height:27px;object-fit:contain}
+.fo-shell .fo-back,.fo-shell .fo-text-button,
+.fo-shell .library-faction-filters button,.fo-shell .library-modal-nav button,
+.fo-shell .library-view-toggle button {
+  border:0 !important;border-radius:5px;
+  box-shadow:none !important;background:#191919 !important;color:#eae2d5 !important;
+  font-family:Inter,Arial,sans-serif;font-weight:850;
+}
+.fo-shell .fo-back:hover,.fo-shell .fo-text-button:hover,
+.fo-shell .library-faction-filters button:hover,.fo-shell .library-modal-nav button:hover,
+.fo-shell .library-view-toggle button:hover {background:#35322b !important;color:#f4eee4 !important}
+:root[data-theme="dark"] .fo-shell .fo-back,
+:root[data-theme="dark"] .fo-shell .fo-text-button,
+:root[data-theme="dark"] .fo-shell .library-faction-filters button,
+:root[data-theme="dark"] .fo-shell .library-modal-nav button,
+:root[data-theme="dark"] .fo-shell .library-view-toggle button {
+  background:#eae2d5 !important;color:#191919 !important;
+}
+:root[data-theme="dark"] .fo-shell .fo-back:hover,
+:root[data-theme="dark"] .fo-shell .fo-text-button:hover,
+:root[data-theme="dark"] .fo-shell .library-faction-filters button:hover,
+:root[data-theme="dark"] .fo-shell .library-modal-nav button:hover,
+:root[data-theme="dark"] .fo-shell .library-view-toggle button:hover {
+  background:#fff3dc !important;color:#191919 !important;
+}
+.fo-shell .library-faction-filters button.current,
+.fo-shell .library-view-toggle button.active {background:#d3b787 !important;color:#191919 !important}
+.fo-shell .library-card-tile,.fo-shell .library-modal{
+  border:0 !important;box-shadow:none !important;
+}
+.fo-shell .library-tile-text{border:0 !important;background:#191919 !important;color:#eae2d5 !important}
+.fo-shell .library-tile-text strong,.fo-shell .library-tile-text span{color:#eae2d5 !important}
+:root[data-theme="dark"] .fo-shell .library-tile-text{background:#eae2d5 !important;color:#191919 !important}
+:root[data-theme="dark"] .fo-shell .library-tile-text strong,
+:root[data-theme="dark"] .fo-shell .library-tile-text span{color:#191919 !important}
+.fo-shell :is(.library-modal-close,.library-view-toggle button,.library-modal-nav button):focus-visible{
+  outline:3px solid #d3b787;outline-offset:3px
+}
+/* Compact one-page faction switcher. */
+.dl-picker{
+  --dl-champ-ink:#191919;--dl-champ-cream:#eae2d5;--dl-champ-gold:#d3b787;
+  padding-bottom:40px;
+}
+.dl-picker-header{width:min(100%,1240px);margin:27px auto 17px}
+.dl-picker-header h1{
+  color:#191919;font-size:clamp(30px,4.9vw,62px) !important;
+  line-height:1;letter-spacing:-.045em;margin:0;
+}
+:root[data-theme="dark"] .dl-picker-header h1{color:#eae2d5}
+.dl-faction-switcher{
+  width:min(100%,1240px);margin:0 auto;
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;
+}
+.dl-faction-tab{
+  min-height:66px;padding:10px 12px;border:0 !important;border-radius:6px;
+  background:#191919;color:#eae2d5;
+  display:flex;align-items:center;gap:9px;text-align:left;cursor:pointer;
+  font-family:Inter,Arial,sans-serif;font-size:clamp(10px,1.1vw,14px);font-weight:900;
+  line-height:1.12;text-transform:uppercase;
+  transition:background .16s,transform .16s;
+}
+.dl-faction-tab .dl-faction-number{font-size:10px;opacity:.66;letter-spacing:.06em}
+.dl-faction-tab.active{background:#d3b787 !important;color:#191919 !important}
+.dl-faction-tab:hover:not(.active){background:#38342b;transform:translateY(-2px)}
+.dl-faction-tab:focus-visible{outline:3px solid #d3b787;outline-offset:3px}
+:root[data-theme="dark"] .dl-faction-tab{background:#eae2d5;color:#191919}
+:root[data-theme="dark"] .dl-faction-tab:hover:not(.active){background:#fff2d8}
+.dl-champion-content{width:min(100%,1240px);margin:17px auto 0}
+.dl-champion-section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 15px}
+.dl-champion-section-title h2{font-size:clamp(14px,1.5vw,20px);margin:0;color:#191919;font-weight:900}
+.dl-champion-section-title>span{font-size:10px;font-weight:850;letter-spacing:.1em;color:#675d4c}
+:root[data-theme="dark"] .dl-champion-section-title h2,
+:root[data-theme="dark"] .dl-champion-section-title>span{color:#eae2d5}
+.dl-champion-grid{
+  display:flex;justify-content:center;gap:clamp(12px,3vw,32px);
+  align-items:stretch;flex-wrap:wrap;
+}
+.dl-champion-card{
+  display:flex;flex-direction:column;flex:none;
+  position:relative;width:min(100%,clamp(280px,27vw,340px));
+  min-height:490px;padding:0;overflow:hidden;
+  background:#000;color:#fafafa;border:0 !important;border-radius:16px;
+  text-align:left;cursor:pointer;outline:none;
+  box-shadow:none !important;
+  transition:transform .18s ease,filter .18s ease;
+}
+.dl-champion-card:hover{transform:translateY(-3px)}
+.dl-champion-card:focus-visible{outline:3px solid #d3b787;outline-offset:3px}
+.dl-champion-card.is-selected{filter:drop-shadow(0 0 0 #000)}
+.dl-champion-card.is-selected .dl-champion-panel{background:#201c16}
+.dl-champion-card.is-selected::after{
+  content:"";position:absolute;inset:auto 0 0;height:5px;background:#d3b787;
+}
+.dl-champion-art{
+  position:relative;height:326px;flex:0 0 326px;
+  display:block;overflow:hidden;background-color:#31221f;
+  background-size:cover;background-position:center top;background-repeat:no-repeat;
+}
+.dl-champion-figure-placeholder{font-size:30px}
+.dl-champion-art img{
+  display:block;position:absolute;left:0;top:0;
+  width:100%;height:122%;object-fit:contain;object-position:center top;
+  pointer-events:none;user-select:none;
+  transition:transform .2s ease;
+}
+.dl-champion-card:hover .dl-champion-art img{transform:scale(1.025)}
+.dl-champion-panel{
+  display:flex;flex-direction:column;gap:6px;
+  min-height:170px;flex:1;padding:16px 20px 21px;
+  background:#050505;color:#fafafa;
+}
+.dl-champion-panel strong{
+  font-family:Inter,Arial,sans-serif;font-size:clamp(23px,2.2vw,32px);
+  font-weight:950;letter-spacing:-.044em;line-height:1;text-transform:uppercase;
+}
+.dl-champion-subtitle{
+  font-size:12px;font-weight:600;line-height:1.25;color:#d0c7bb;
+}
+.dl-champion-ability{
+  font-family:Inter,Arial,sans-serif;font-size:clamp(14px,1.2vw,16px);
+  line-height:1.35;font-weight:500;margin-top:9px;color:#fff;
+}
+.dl-champion-selected{
+  position:absolute;right:14px;top:14px;z-index:3;width:34px;height:34px;
+  display:grid;place-items:center;border-radius:50%;border:0;
+  background:#d3b787;color:#191919;font-weight:950;font-size:20px;
+}
+.dl-champion-settings{
+  width:min(100%,760px);margin:22px auto 0;display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(175px,1.3fr);
+  align-items:end;gap:10px;
+}
+.dl-champion-settings label{display:flex;flex-direction:column;gap:7px}
+.dl-champion-settings label>span{
+  font-family:Inter,Arial,sans-serif;font-size:11px;font-weight:900;
+  letter-spacing:.13em;color:#191919;
+}
+.dl-champion-settings select,
+.dl-champion-start{
+  width:100%;min-height:47px;padding:11px 12px;
+  border:0 !important;border-radius:5px;cursor:pointer;
+  background:#191919;color:#eae2d5;
+  font-family:Inter,Arial,sans-serif;font-weight:850;font-size:12px;
+}
+.dl-champion-start{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#d3b787;color:#191919;font-weight:950}
+.dl-champion-start span{font-size:20px}
+.dl-champion-start:hover{background:#ead1a5}
+.dl-champion-settings select:focus-visible,.dl-champion-start:focus-visible{
+  outline:3px solid #b2935d;outline-offset:3px;
+}
+:root[data-theme="dark"] .dl-champion-settings label>span{color:#eae2d5}
+:root[data-theme="dark"] .dl-champion-settings select{background:#eae2d5;color:#191919}
+/* The Champion medallions now show the actual character faces. */
+.app-shell .dl-champion-avatar{
+  padding:0 !important;overflow:hidden;position:relative;
+  border-radius:50% !important;border:0 !important;
+  background:#3b2a25;display:grid;place-items:center;
+}
+.app-shell .dl-champion-avatar img{
+  width:100%;height:100%;object-fit:cover;object-position:50% 34%;
+  display:block;position:absolute;inset:0;
+}
+.app-shell .faction-blue .dl-champion-avatar{background:#263957}
+.app-shell .faction-saints .dl-champion-avatar{background:#67542b}
+.app-shell .faction-white .dl-champion-avatar{background:#555057}
+.app-shell .faction-ivory .dl-champion-avatar{background:#45445c}
+.app-shell .champion-copy strong{font-family:Inter,Arial,sans-serif;font-weight:900;text-transform:uppercase}
+.app-shell .champion-passive{font-family:Inter,Arial,sans-serif;font-weight:500}
+/* Avoid unnecessary duplicate descriptions elsewhere. */
+.fo-shell .library-intro h1{font-size:clamp(30px,4.2vw,54px);letter-spacing:-.03em}
+.fo-shell .library-intro .library-stats{margin-top:12px}
+@media(max-width:920px){
+  .dl-faction-switcher{gap:6px}
+  .dl-faction-tab{font-size:10px;min-height:63px;padding:8px}
+  .dl-champion-card{width:min(100%,310px)}
+}
+@media(max-width:680px){
+  .dl-picker{padding-inline:12px}
+  .dl-picker-header{margin-top:20px}
+  .dl-faction-switcher{
+    display:flex;overflow-x:auto;scrollbar-width:thin;padding:4px 1px 11px;
+    scroll-snap-type:x mandatory;
+  }
+  .dl-faction-tab{flex:0 0 auto;min-width:137px;max-width:165px;scroll-snap-align:center}
+  .dl-champion-grid{gap:13px}
+  .dl-champion-card{width:min(100%,330px);min-height:460px}
+  .dl-champion-art{height:307px;flex-basis:307px}
+  .dl-champion-settings{grid-template-columns:1fr 1fr}
+  .dl-champion-start{grid-column:1/-1}
+}
+@media(max-width:375px){
+  .dl-champion-card{width:100%}
+  .dl-champion-art{height:285px;flex-basis:285px}
+  .dl-champion-settings{gap:7px}
+  .dl-champion-settings select{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+  .dl-faction-tab,.dl-champion-card,.dl-champion-art img{transition:none!important}
+}

@@ -5,6 +5,7 @@ import type { CardDefinition } from "./types";
 // Without the optional HQ upload, the blue cards retain their existing imagery.
 export function cardSpriteBackground(card: CardDefinition) {
   if (!card.art) return "";
+  if (card.art.sprite.includes("/v4/")) return 'url("' + card.art.sprite + '")';
   if (card.faction === "blue") {
     const number = Number(card.studioId.split("-")[1]);
     const sheet = number <= 6 ? 1 : 2;
@@ -17,7 +18,7 @@ export function cardSpriteBackground(card: CardDefinition) {
 // Render readable placeholder cards until those images actually load.
 const readiness = new Map<string, boolean>();
 export function useCardArtReady(card: CardDefinition) {
-  const remote = (card.faction === "white" || card.faction === "saints" || card.faction === "ivory") ? card.art?.sprite : undefined;
+  const remote = card.art?.sprite;
   const [ready, setReady] = useState(!remote || readiness.get(remote) === true);
   useEffect(() => {
     if (!remote) {

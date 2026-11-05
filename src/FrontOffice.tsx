@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import ThemeToggle from "./ThemeToggle";
 import { factionArtUrl } from "./factionArtwork";
+import { championBackgroundUrl,championImageUrl,championShortName,championSubtitle } from "./championArtwork";
 import { allCards, factionLabels } from "./data";
 import { champions } from "./engine/champions";
 import type { AIDifficulty } from "./engine/types";
@@ -28,22 +29,6 @@ const factionInfo: {id: Faction; tagline: string; description: string; symbol: s
   {id:"saints",tagline:"La belleza de la simetría",description:"Buscá patrones, empates y combinaciones de posiciones.",symbol:"◈",hint:"Patrones · Equilibrio"},
   {id:"ivory",tagline:"El poder de la coincidencia",description:"Jugá en la misma posición que el rival para activar Augurio +3 en ese duelo.",symbol:"☾",hint:"Augurio · Posiciones"}
 ];
-
-const beginnerExplanations: Record<string, string> = {
-  dextral: "Te deja ocupar Diestra dos veces en una misma ronda. Ideal si te gusta concentrar tus mejores golpes en esa posición.",
-  athos: "Si ganás usando Diestra, obtenés un espacio adicional allí para seguir atacando. Podés llegar a tres cartas en Diestra en esa ronda.",
-  sinistral: "Podés usar Siniestra dos veces por ronda. Además, después de tu primera derrota de cada ronda, la siguiente carta rival pierde 2 Poder.",
-  vinira: "Una vez por ronda, la primera carta que juegues fuera de su posición preferida activa igualmente su habilidad posicional y obtiene +2 Poder.",
-  empireos: "Si tu rival juega en las tres posiciones durante una ronda, tu próxima carta gana +2 Poder. Castigás a quien usa todo el tablero.",
-  desartes: "Podés ocupar dos veces las posiciones que tengan más cartas en tu Archivo. Si varias están empatadas, todas sirven.",
-  santo_simetrico: "Una vez por ronda, cuando ibas a perder por exactamente 1 Poder, convertís esa derrota en empate.",
-  samas: "Después de un duelo empatado, tu siguiente carta de esa misma ronda obtiene +2 Poder.",
-  prioresa_luna_llena: "Cada tres Augurios acertados, recuperás 1 Vida. Podés curarte hasta dos veces en la partida y nunca superar 9 Vida."
-};
-
-// Images will be assigned here when the final Champion portraits are ready.
-// Example: dextral: "./champions/majestad-dextral.webp"
-const championPortraits: Partial<Record<string, string>> = {};
 
 function Sprite({card, crop=false}: {card: CardDefinition; crop?: boolean}) {
   const ready = useCardArtReady(card);
@@ -95,7 +80,7 @@ export function HomeScreen({
   };
 
   const buttons = [
-    {id:"play", index:"01", title:"EMPEZAR PARTIDA", subtitle:"Elegí tu Champion y enfrentate a la IA.", image:"dagger.webp", fallback:"./factions/red-portrait.webp", action:onPlay},
+    {id:"play", index:"01", title:"EMPEZAR PARTIDA", subtitle:"Elegí tu Campeón y enfrentate a la IA.", image:"dagger.webp", fallback:"./factions/red-portrait.webp", action:onPlay},
     ...(saved ? [{
       id:"continue", index:"↳", title:"CONTINUAR PARTIDA",
       subtitle:`${saved.game.player.champion.name} vs. ${saved.game.opponent.champion.name} · Ronda ${saved.game.round}`,
@@ -171,157 +156,97 @@ export function HomeScreen({
 }
 
 export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
-  const [faction,setFaction]=useState<Faction|null>(null);
+  const [faction,setFaction]=useState<Faction>("red");
   const [selected,setSelected]=useState<string|null>(null);
   const [opponent,setOpponent]=useState("random");
-  const [showRival,setShowRival]=useState(false);
   const [difficulty,setDifficulty]=useState<AIDifficulty>("normal");
-  const [loadedArt,setLoadedArt]=useState<Partial<Record<Faction,boolean>>>({});
-  const championsAnchor=useRef<HTMLElement|null>(null);
-  const rivalAnchor=useRef<HTMLDivElement|null>(null);
-  const activeChampions=faction?Object.values(champions).filter(c=>c.faction===faction):[];
+  const activeChampions=Object.values(champions).filter(c=>c.faction===faction);
   const chosen=selected?champions[selected]:null;
-  const meta=faction?factionInfo.find(f=>f.id===faction):null;
 
-  useEffect(()=>{
-    if(!faction)return;
-    const motion=window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth";
-    const frame=window.requestAnimationFrame(()=>championsAnchor.current?.scrollIntoView({behavior:motion==="instant"?"instant":"smooth",block:"start"}));
-    return ()=>window.cancelAnimationFrame(frame);
-  },[faction]);
-
-  useEffect(()=>{
-    if(!selected)return;
-    const motion=window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth";
-    const frame=window.requestAnimationFrame(()=>rivalAnchor.current?.scrollIntoView({behavior:motion==="instant"?"instant":"smooth",block:"center"}));
-    return ()=>window.cancelAnimationFrame(frame);
-  },[selected]);
-
-  function selectFaction(next:Faction) {
-    if(faction===next) { setFaction(null);setSelected(null);return; }
+  function chooseFaction(next:Faction) {
+    if(next===faction) return;
     setFaction(next);
     setSelected(null);
-    setShowRival(false);
   }
 
   return (
-    <main className="fo-shell picker-screen">
+    <main className="fo-shell picker-screen dl-picker">
       <header className="fo-topbar">
         <button type="button" className="fo-back" onClick={onBack}>← INICIO</button>
-        <span className="fo-wordmark"><span className="fo-glyph">✦</span> DAGGERLIGHT</span>
-        <div className="fo-header-actions"><button type="button" className="fo-text-button" onClick={onGallery}>VER CARTAS ↗</button><ThemeToggle /></div>
+        <span className="fo-wordmark"><img className="menu-top-crown" src="./branding/menu/crown.svg" alt="" aria-hidden="true" /> DAGGERLIGHT</span>
+        <div className="fo-header-actions">
+          <button type="button" className="fo-text-button" onClick={onGallery}>VER CARTAS</button>
+          <ThemeToggle />
+        </div>
       </header>
-      <section className="fo-intro picker-intro">
-        <span className="fo-eyebrow">ANTES DE ENTRAR EN COMBATE</span>
-        <h1>Elegí tu facción</h1>
-        <p>Cada facción tiene un estilo propio. Elegí una para conocer a sus Champions.</p>
+
+      <section className="dl-picker-header">
+        <h1>ELEGÍ TU CAMPEÓN</h1>
       </section>
 
-      <section className="faction-banner-grid" aria-label="Facciones disponibles">
-        {factionInfo.map((f,idx)=>
-          <button
-            type="button"
-            key={f.id}
-            className={"faction-banner theme-"+f.id+(loadedArt[f.id]?" faction-has-art":"")+(faction===f.id?" active":"")}
+      <nav className="dl-faction-switcher" aria-label="Elegí una facción">
+        {factionInfo.map((f,index)=>(
+          <button type="button" key={f.id}
+            className={"dl-faction-tab"+(faction===f.id?" active":"")}
             aria-pressed={faction===f.id}
-            onClick={()=>selectFaction(f.id)}
-          >
-            <img className="faction-banner-image" src={factionArtUrl(f.id,"portrait")} alt="" aria-hidden="true" loading="lazy" decoding="async"
-              onLoad={()=>setLoadedArt(previous=>previous[f.id]?previous:{...previous,[f.id]:true})}/>
-            <span className="faction-banner-index">{String(idx+1).padStart(2,"0")} / 05</span>
-            <span className="faction-banner-art" aria-hidden="true"><span className="faction-banner-symbol">{f.symbol}</span><i/></span>
-            <span className="faction-banner-content">
-              <strong>{factionLabels[f.id]}</strong>
-              <small>{f.tagline}</small>
-            </span>
-            <span className="faction-banner-select">{faction===f.id?"SELECCIONADA":"SELECCIONAR"} <span aria-hidden="true">{faction===f.id?"✓":"+"}</span></span>
+            onClick={()=>chooseFaction(f.id)}>
+            <span className="dl-faction-number">{String(index+1).padStart(2,"0")}</span>
+            <span>{factionLabels[f.id]}</span>
           </button>
+        ))}
+      </nav>
+
+      <section className="dl-champion-content" aria-label={"Campeones de "+factionLabels[faction]}>
+        <div className="dl-champion-section-title">
+          <h2>{factionLabels[faction].toUpperCase()}</h2>
+          <span>{activeChampions.length} {activeChampions.length===1?"CAMPEÓN":"CAMPEONES"}</span>
+        </div>
+        <div className="dl-champion-grid">
+          {activeChampions.map(c=>(
+            <button type="button" key={c.id}
+              className={"dl-champion-card"+(selected===c.id?" is-selected":"")}
+              aria-pressed={selected===c.id}
+              aria-label={championShortName(c.name)+". "+c.text}
+              onClick={()=>setSelected(c.id)}>
+              <span className="dl-champion-art"
+                style={{backgroundImage:`url("${championBackgroundUrl(c.faction)}")`}}>
+                <img src={championImageUrl(c.id)} alt="" loading="lazy" decoding="async"/>
+              </span>
+              <span className="dl-champion-panel">
+                <strong>{championShortName(c.name)}</strong>
+                {championSubtitle(c.name)&&<span className="dl-champion-subtitle">{championSubtitle(c.name)}</span>}
+                <span className="dl-champion-ability">{c.text}</span>
+              </span>
+              {selected===c.id&&<span className="dl-champion-selected" aria-hidden="true">✓</span>}
+            </button>
+          ))}
+        </div>
+        {chosen&&(
+          <div className="dl-champion-settings">
+            <label>
+              <span>RIVAL</span>
+              <select value={opponent} onChange={e=>setOpponent(e.target.value)}>
+                <option value="random">ALEATORIO</option>
+                {Object.values(champions).map(c=>
+                  <option key={c.id} value={c.id}>{championShortName(c.name).toUpperCase()}</option>
+                )}
+              </select>
+            </label>
+            <label>
+              <span>DIFICULTAD</span>
+              <select value={difficulty} onChange={e=>setDifficulty(e.target.value as AIDifficulty)}>
+                <option value="easy">FÁCIL</option>
+                <option value="normal">NORMAL</option>
+                <option value="hard">DIFÍCIL</option>
+              </select>
+            </label>
+            <button type="button" className="dl-champion-start"
+              onClick={()=>onPlay(chosen.id,opponent,difficulty)}>
+              EMPEZAR PARTIDA <span aria-hidden="true">↗</span>
+            </button>
+          </div>
         )}
       </section>
-
-      {faction&&meta&&(
-        <section ref={championsAnchor} className={"champion-selection theme-"+faction} aria-label="Elegir Champion">
-          <div className="champion-section-heading">
-            <div>
-              <span className="fo-eyebrow">TU FACCIÓN</span>
-              <h2>Elegí un Champion de {factionLabels[faction]}</h2>
-              <p>{meta.description}</p>
-            </div>
-            <span className="champion-style">{meta.hint}</span>
-          </div>
-          <div className="champion-choices">
-            {activeChampions.map(c=>{
-              const portrait=championPortraits[c.id];
-              return (
-                <button
-                  type="button"
-                  key={c.id}
-                  className={"champion-option"+(selected===c.id?" selected":"")}
-                  aria-pressed={selected===c.id}
-                  onClick={()=>setSelected(c.id)}
-                >
-                  <span className="champion-portrait">
-                    {portrait
-                      ? <img src={portrait} alt=""/>
-                      : <span className="champion-portrait-sigil" aria-hidden="true">{meta.symbol}</span>}
-                  </span>
-                  <span className="champion-option-copy">
-                    <small>CHAMPION</small><strong>{c.name}</strong>
-                    <span>{selected===c.id?"SELECCIONADO":"ELEGIR CHAMPION"}</span>
-                  </span>
-                  <span className="champion-check" aria-hidden="true">{selected===c.id?"✓":"+"}</span>
-                </button>
-              );
-            })}
-            {activeChampions.length===1&&(
-              <div className="champion-future"><span aria-hidden="true">◇</span><strong>Próximamente</strong><small>Un nuevo Champion</small></div>
-            )}
-          </div>
-          {chosen ? (
-            <>
-              <div className="champion-ability" aria-live="polite">
-                <div className="champion-ability-symbol" aria-hidden="true">{meta.symbol}</div>
-                <div>
-                  <span className="fo-eyebrow">HABILIDAD DE {chosen.name.toUpperCase()}</span>
-                  <strong>{chosen.text}</strong><p>{beginnerExplanations[chosen.id]}</p>
-                </div>
-              </div>
-              <div className="champion-bottom" ref={rivalAnchor}>
-                <div className="champion-rival-picker">
-                  <button type="button" className="fo-expand-button" aria-expanded={showRival} onClick={()=>setShowRival(v=>!v)}>
-                    RIVAL: {opponent==="random"?"ALEATORIO":champions[opponent].name.toUpperCase()} <span aria-hidden="true">{showRival?"⌃":"⌄"}</span>
-                  </button>
-                  {showRival&&(
-                    <label className="champion-rival-select"><span>Elegí un rival para probar el enfrentamiento</span>
-                      <select value={opponent} onChange={e=>setOpponent(e.target.value)}>
-                        <option value="random">Aleatorio</option>
-                        {Object.values(champions).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
-                      </select>
-                    </label>
-                  )}
-                </div>
-                <div className="ai-difficulty-picker">
-                  <label htmlFor="difficulty-mode">DIFICULTAD DE LA IA</label>
-                  <select id="difficulty-mode" value={difficulty} onChange={event=>setDifficulty(event.target.value as AIDifficulty)}>
-                    <option value="easy">Fácil · Aprendiz</option>
-                    <option value="normal">Normal · Estratega</option>
-                    <option value="hard">Difícil · Maestro</option>
-                  </select>
-                  <small>{difficulty==="easy"
-                    ? "Un rival accesible que explora jugadas."
-                    : difficulty==="hard"
-                      ? "Planifica combinaciones y evita activar Augurios del rival cuando le conviene."
-                      : "La IA del prototipo original, con decisiones tácticas."}</small>
-                </div>
-                <button type="button" className="fo-main-cta" onClick={()=>onPlay(chosen.id,opponent,difficulty)}>JUGAR CON {chosen.name.toUpperCase()} <span aria-hidden="true">→</span></button>
-              </div>
-            </>
-          ):(
-            <p className="champion-prompt">Seleccioná un Champion para conocer su habilidad y empezar la partida.</p>
-          )}
-        </section>
-      )}
-      <footer className="fo-footer">TU CHAMPION DEFINE LA FACCIÓN DE TU MAZO Y TU FORMA DE JUGAR.</footer>
     </main>
   );
 }
@@ -340,7 +265,7 @@ export function CardCollection({onBack,onPlay}:GalleryProps) {
     <main className="fo-shell library-screen">
       <header className="fo-topbar">
         <button className="fo-back" type="button" onClick={onBack}>← INICIO</button>
-        <span className="fo-wordmark"><span className="fo-glyph">✦</span> DAGGERLIGHT</span>
+        <span className="fo-wordmark"><img className="menu-top-crown" src="./branding/menu/crown.svg" alt="" aria-hidden="true" /> DAGGERLIGHT</span>
         <div className="fo-header-actions"><button type="button" className="fo-text-button" onClick={onPlay}>JUGAR ↗</button><ThemeToggle /></div>
       </header>
       <section className="fo-intro library-intro">
@@ -363,7 +288,7 @@ export function CardCollection({onBack,onPlay}:GalleryProps) {
           <div className="library-tile-text"><span className="library-tile-id">{card.studioId} <b>{card.power} P</b></span><strong>{card.name}</strong><span>{factionLabels[card.faction]}</span></div>
         </button>)}
       </section>}
-      <footer className="fo-footer">COLECCIÓN EN DESARROLLO · FUTURA BASE DEL CONSTRUCTOR DE MAZOS MULTIFACCIÓN</footer>
+      
       {selected && <div className="library-modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setSelected(null);}}>
         <section className={"library-modal theme-"+selected.faction} role="dialog" aria-modal="true" aria-label={"Detalle de "+selected.name}>
           <button type="button" className="library-modal-close" onClick={()=>setSelected(null)} aria-label="Cerrar detalle de carta">×</button>
@@ -383,7 +308,7 @@ export function CardCollection({onBack,onPlay}:GalleryProps) {
             <span className="library-ability-heading">HABILIDAD</span>
             <p>{selected.text}</p>
             {!selected.art && <div className="library-art-note">Esta carta todavía no tiene ilustración final. La ficha muestra su diseño mecánico vigente.</div>}
-            <small>El efecto se aplica según las reglas y el momento del duelo. Algunos efectos requieren preparar una jugada anterior.</small>
+            
             <div className="library-modal-nav">
               <button type="button" onClick={()=>{const i=filtered.findIndex(c=>c.studioId===selected.studioId);setSelected(filtered[(i-1+filtered.length)%filtered.length]);setView("art");}}>← ANTERIOR</button>
               <button type="button" onClick={()=>{const i=filtered.findIndex(c=>c.studioId===selected.studioId);setSelected(filtered[(i+1)%filtered.length]);setView("art");}}>SIGUIENTE →</button>

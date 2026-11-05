@@ -145,6 +145,18 @@ export const cardsByFaction: Record<Faction, CardDefinition[]> = {
 
 export const allCards = [...redCards, ...blueCards, ...whiteCards, ...saintCards, ...ivoryCards];
 
+// Supplied Card Studio GAME exports: 60 finished cards in 10 exact 3x2 sheets.
+// Preserve engine IDs, effects and balance while replacing their visible fronts.
+allCards.forEach(card=>{
+  const order=Number(card.studioId.split("-")[1])-1;
+  const slot=order%6;
+  card.art={
+    sprite:"./cards/v4/"+card.faction+"-"+(Math.floor(order/6)+1)+".webp",
+    column:slot%3,
+    row:Math.floor(slot/3)
+  };
+});
+
 export const byId = (id: string) => {
   const found = allCards.find(card => card.id === id || card.studioId === id);
   if (!found) throw new Error(`Unknown card: ${id}`);

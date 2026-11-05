@@ -12,6 +12,7 @@ import "./persistence.css";
 import "./immersive-menu.css";
 import "./bold-ui.css";
 import "./ui-polish-v3.css";
+import "./champion-v4.css";
 
 initializeTheme();
 

@@ -4,6 +4,7 @@ import SplashScreen from "./SplashScreen";
 import ThemeToggle from "./ThemeToggle";
 import AuguryStatus from "./AuguryStatus";
 import { factionArtUrl } from "./factionArtwork";
+import { championImageUrl,championShortName } from "./championArtwork";
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import { HomeScreen, ChampionPicker, CardCollection } from "./FrontOffice";
 import PhysicalTable from "./PhysicalTable";
@@ -279,6 +280,7 @@ function CurrentBoardCard({
 function ChampionBar({
   side,
   faction,
+  championId,
   name,
   life,
   passive,
@@ -286,6 +288,7 @@ function ChampionBar({
 }: {
   side: "player" | "opponent";
   faction: Faction;
+  championId: string;
   name: string;
   life: number;
   passive: string;
@@ -294,10 +297,10 @@ function ChampionBar({
   return (
     <section className={`champion-bar ${side} faction-illustrated faction-${faction}`}>
       <img className="champion-faction-image" src={factionArtUrl(faction,"banner")} alt="" aria-hidden="true" decoding="async" />
-      <div className="champion-medallion">{side === "player" ? "M" : "A"}</div>
+      <div className="champion-medallion dl-champion-avatar"><img src={championImageUrl(championId,true)} alt={championShortName(name)} loading="eager" decoding="async" /></div>
       <div className="champion-copy">
         <span className="champion-eyebrow">{side === "player" ? "VOS" : "RIVAL"}</span>
-        <strong>{name}</strong>
+        <strong>{championShortName(name)}</strong>
         <span className="champion-passive">{passive}</span>
       </div>
       <div className="life-block" aria-label={`${life} de 9 de Vida${healedLife>0?`, ${healedLife} Vida recuperada`: ""}`}>
@@ -701,6 +704,7 @@ export default function App() {
       <div className="game-frame">
         <ChampionBar
           side="opponent"
+          championId={game.opponent.champion.id}
           faction={game.opponent.champion.faction}
           name={game.opponent.champion.name}
           life={displayed?.opponentLife??game.opponent.life}
@@ -794,6 +798,7 @@ export default function App() {
 
         <ChampionBar
           side="player"
+          championId={game.player.champion.id}
           faction={game.player.champion.faction}
           name={game.player.champion.name}
           life={displayed?.playerLife??game.player.life}
