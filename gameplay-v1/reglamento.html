@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Daggerlight · Reglamento para playtest</title>
+<style>
+:root{color-scheme:light;--ink:#191919;--paper:#f6f0e5;--gold:#bd9957}
+*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;background:var(--paper);color:var(--ink);margin:0}
+.page{width:min(100%,850px);margin:32px auto;padding:28px 38px;background:#fffdfa}
+header{display:flex;justify-content:space-between;align-items:center;padding-bottom:13px;border-bottom:2px solid var(--ink);font-size:11px;letter-spacing:.13em;font-weight:800}
+h1{font-size:clamp(44px,7vw,78px);letter-spacing:-.06em;margin:34px 0 7px;line-height:.95}h2{font-size:23px;margin:29px 0 12px;letter-spacing:-.035em}h3{font-size:15px;letter-spacing:.04em;margin:21px 0 5px}
+.lead{font-size:19px;line-height:1.4;margin:14px 0}.tag{display:inline-block;background:var(--ink);color:#f8ecdb;font-size:10px;font-weight:800;letter-spacing:.12em;padding:8px 12px;margin:6px 0}
+p,li{line-height:1.48;font-size:13px}ol,ul{padding-left:21px}li{margin:5px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.panel{padding:15px;background:#f0e6d5}
+.panel.dark{background:var(--ink);color:#fff8ef}.panel h3{margin-top:0}
+.columns{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0}.columns>div{text-align:center;background:var(--ink);color:white;padding:13px 5px;font-weight:900;font-size:12px}
+.note{border-left:3px solid var(--gold);padding:9px 13px;background:#f6f0e5;font-size:12px;margin:15px 0}
+.bottom{font-size:10px;color:#68635b;border-top:1px solid #c8bca7;margin-top:25px;padding-top:8px}
+@media print{@page{size:A4;margin:12mm}.page{width:auto;margin:0;padding:0;background:white;break-after:page;min-height:260mm}.page:last-child{break-after:auto}body{background:white}h1{font-size:60px}p,li{font-size:12px}h2{font-size:21px}.tag{print-color-adjust:exact;-webkit-print-color-adjust:exact}.panel,.columns>div{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+@media(max-width:560px){.page{padding:20px;margin:0}.grid{grid-template-columns:1fr}}
+</style></head><body>
+<section class="page">
+<header><span>DAGGERLIGHT · TCG</span><span>GUÍA PARA PLAYTEST · v0.3</span></header>
+<h1>DAGGERLIGHT</h1><div class="tag">DOS JUGADORES · TRES POSICIONES · TRES CARTAS</div>
+<p class="lead">Ganá duelos con cartas y habilidades de posición. Cada duelo ganado quita una Vida al Campeón rival. El primero que reduce la Vida rival a cero gana.</p>
+<div class="grid">
+<div class="panel dark"><h3>PREPARACIÓN</h3><p>Cada jugador elige <strong>1 Campeón</strong>, separado de su mazo, y comienza con <strong>9 Vida</strong>. Cada mazo monofacción tiene <strong>24 cartas</strong>: 12 diseños con 2 copias de cada uno.</p></div>
+<div class="panel"><h3>MATERIAL</h3><p>Dos mazos, dos Campeones y marcadores para Vida y Archivos. No hay maná, costes ni cartas de recursos.</p></div>
+</div>
+<h2>EL CAMPO DE JUEGO</h2>
+<p>Cada jugador tiene tres posiciones. Las cartas pueden jugarse en cualquier posición con capacidad libre, incluso si su habilidad indica otra afinidad.</p>
+<div class="columns"><div>SINIESTRA</div><div>TRONO</div><div>DIESTRA</div></div>
+<p>La capacidad normal es <strong>1 carta por posición y por ronda</strong>. Algunos Campeones permiten ampliar una posición. Las cartas de ambos jugadores se enfrentan en un mismo duelo aunque estén colocadas en posiciones distintas.</p>
+<h2>CÓMO EMPIEZA UNA RONDA</h2>
+<ol><li>Cada jugador roba <strong>3 cartas</strong> de su mazo.</li><li>En el primer duelo, uno de los dos abre. El abridor del primer duelo alterna entre rondas.</li><li>El abridor coloca una carta en una posición libre. El rival <strong>ve la carta y su posición</strong> antes de responder.</li></ol>
+<div class="note"><strong>Importante:</strong> el juego es secuencial. No se juegan ambas cartas boca abajo y al mismo tiempo.</div>
+<div class="bottom">Reglamento para pruebas físicas. Basado en la Biblia de Juego v0.3 (2 nov 2026). Las reglas marcadas como experimentales pueden cambiar.</div>
+</section>
+<section class="page">
+<header><span>DAGGERLIGHT · REGLAS</span><span>RONDA Y DUELOS</span></header>
+<h2>RESOLVER UN DUELO</h2>
+<ol>
+<li>El segundo jugador coloca una carta en una posición legal.</li>
+<li>Se aplican las habilidades que corresponden, incluidas las afinidades de posición.</li>
+<li>Se compara el <strong>Poder final</strong> de ambas cartas.</li>
+<li>Quien tiene más Poder gana el duelo y quita <strong>1 Vida</strong> al rival. Si hay empate, nadie pierde Vida.</li>
+<li>Quien gana <strong>abre el duelo siguiente</strong>. Si empatan, vuelve a abrir quien abrió el duelo empatado.</li>
+</ol>
+<div class="grid"><div class="panel"><h3>PODER IMPRESO</h3><p>Es el número que aparece en la carta. El Poder final suma o resta modificadores. Las duplicaciones agregan otra copia del Poder base impreso: dos duplicaciones de un Poder 6 dan 18 antes de otros efectos, no 24.</p></div><div class="panel dark"><h3>AFINIDAD</h3><p><strong>SINIESTRA:</strong>, <strong>TRONO:</strong> y <strong>DIESTRA:</strong> indican dónde se activa esa habilidad. Fuera de su afinidad una carta conserva su Poder y sigue siendo jugable.</p></div></div>
+<h2>EL TERCER DUELO</h2>
+<p>Cuando los dos primeros duelos quedan <strong>1–1</strong>, se juega obligatoriamente un tercero. Si un jugador gana los dos primeros y el marcador queda <strong>2–0</strong>, el perdedor elige:</p>
+<div class="grid"><div class="panel dark"><h3>QUIERO</h3><p>Se juega el tercer duelo.</p></div><div class="panel"><h3>NO QUIERO</h3><p>La ronda termina inmediatamente. No se revela la última carta de quien renunció.</p></div></div>
+<p>Ganar una ronda <strong>no da Vida ni daño extra</strong>. Cada duelo ganado ya infligió su propio punto de daño.</p>
+<h2>CIERRE DE RONDA</h2>
+<ol>
+<li>Las cartas que fueron jugadas van a los <strong>Archivos</strong> del jugador, cada una en la posición donde se colocó.</li>
+<li>Las cartas que quedaron sin jugar se descartan <strong>boca abajo</strong>.</li>
+<li>El campo se vacía. Cada jugador roba 3 cartas para la siguiente ronda y se alterna el abridor inicial.</li>
+</ol>
+<div class="bottom">No hay tres batallas paralelas: cada pareja de cartas resuelve un solo duelo, aunque ocupe posiciones diferentes.</div>
+</section>
+<section class="page">
+<header><span>DAGGERLIGHT · REFERENCIA</span><span>ARCHIVO Y AUGURIO</span></header>
+<h2>ARCHIVO</h2>
+<p>Los Archivos son tres pilas acumulativas por jugador: Siniestra, Trono y Diestra. Salvo una habilidad que indique otra cosa, solo importa <strong>cuántas cartas</strong> hay en cada una. Las cartas jugadas se archivan al final de la ronda, no inmediatamente después de cada duelo.</p>
+<div class="columns"><div>ARCHIVO DE SINIESTRA</div><div>ARCHIVO DE TRONO</div><div>ARCHIVO DE DIESTRA</div></div>
+<p>Las habilidades que consultan el Archivo pueden contar el propio o el rival. Algunas cartas pueden vaciar su propio Archivo. La identidad y el orden de las cartas archivadas normalmente no importan.</p>
+<h2>AUGURIO +3</h2>
+<div class="panel dark"><h3>UNA PREDICCIÓN EN ESTE MISMO DUELO</h3><p>Una carta con <strong>Augurio +3</strong> recibe <strong>+3 Poder en el duelo actual</strong> si su posición coincide con la posición de la carta rival. Si no coincide, no recibe bonificación. No se acumula un premio para la próxima carta.</p></div>
+<p><strong>Ejemplo:</strong> Luna Creciente (5 Poder) juega en Siniestra. Si la respuesta rival ocupa también Siniestra, Luna Creciente combate con 8 Poder antes de otros modificadores. Si el rival responde en Trono, mantiene 5 Poder.</p>
+<h2>HABILIDADES Y MOMENTOS</h2>
+<ul>
+<li><strong>Este duelo:</strong> modifica el enfrentamiento actual.</li>
+<li><strong>Tu próxima carta:</strong> prepara el modificador para la siguiente carta propia.</li>
+<li><strong>La próxima carta rival:</strong> afecta a la siguiente carta del oponente.</li>
+<li><strong>Después de ganar o perder:</strong> se comprueba al finalizar el duelo; no cambia el resultado que ya ocurrió.</li>
+<li><strong>Al final de la ronda:</strong> se archiva lo jugado, se descarta lo no jugado y se roba la nueva mano.</li>
+</ul>
+<h2>FINAL DE PARTIDA</h2>
+<p>Cuando la Vida de un Campeón llega a <strong>0</strong>, la partida termina. El resto de la ronda no se juega.</p>
+<div class="note"><strong>Regla experimental de reciclado:</strong> si al empezar una ronda quedan menos de tres cartas en el mazo, el prototipo recompone y mezcla sus 24 cartas. Se utiliza aquí para que las partidas de prueba no terminen por agotamiento; confirmar su adopción definitiva antes de imprimir el reglamento comercial.</div>
+<div class="bottom">Vigencia: Biblia de Juego v0.3 · Augurio v2 · formato monofacción estándar. Los mazos multifacción siguen en LABORATORIO.</div>
+</section>
+<section class="page">
+<header><span>DAGGERLIGHT · AYUDA RÁPIDA</span><span>UNA HOJA PARA LA MESA</span></header>
+<h1 style="font-size:47px">REFERENCIA<br>DE PARTIDA</h1>
+<div class="grid">
+<div class="panel dark"><h3>1 · ROBO</h3><p>Cada jugador roba 3 cartas. El abridor inicial alterna entre rondas.</p></div>
+<div class="panel"><h3>2 · APERTURA</h3><p>El abridor coloca una carta en una posición libre. El rival la observa.</p></div>
+<div class="panel"><h3>3 · RESPUESTA</h3><p>El rival juega una carta en cualquier posición legal.</p></div>
+<div class="panel dark"><h3>4 · PODER</h3><p>Aplicá habilidades y compará Poder final. Ganar quita 1 Vida.</p></div>
+<div class="panel dark"><h3>5 · INICIATIVA</h3><p>Quien ganó abre el siguiente duelo. En empate, mantiene el abridor.</p></div>
+<div class="panel"><h3>6 · QUERER</h3><p>Con 2–0, el perdedor decide Quiero / No quiero. Con 1–1 el tercer duelo es obligatorio.</p></div>
+<div class="panel"><h3>7 · ARCHIVO</h3><p>Al terminar la ronda, archivá cartas jugadas por posición y descartá la sobrante.</p></div>
+<div class="panel dark"><h3>8 · FIN</h3><p>La partida termina cuando un Campeón baja a 0 Vida.</p></div>
+</div>
+<h2>RECORDATORIOS</h2>
+<div class="columns"><div>UNA CARTA POR POSICIÓN*</div><div>AUGURIO<br> MISMA POSICIÓN = +3</div><div>9 VIDA<br> INICIAL</div></div>
+<p style="font-size:11px">*Salvo Campeones que amplían capacidad. Las cartas se enfrentan aunque ocupen posiciones distintas.</p>
+<div class="bottom">Prototipo de playtesting · no es un reglamento comercial definitivo · feedback recomendado después de cada partida.</div>
+</section>
+</body></html>
