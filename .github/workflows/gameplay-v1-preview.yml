@@ -43,6 +43,13 @@ jobs:
         working-directory: gameplay-source
         run: npm test
 
+      - name: Verify PvP backend can compile without deployment
+        working-directory: gameplay-source/pvp-worker
+        run: |
+          npm install
+          npm run check
+          npx wrangler deploy --dry-run --outdir .wrangler-build
+
       - name: Build gameplay prototype
         working-directory: gameplay-source
         env:
