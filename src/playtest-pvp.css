@@ -1,0 +1,106 @@
+/* PvP and playtesting — intentionally flat, high contrast and responsive. */
+.pvp-screen,.playtest-screen{min-height:100dvh;padding:clamp(14px,2vw,28px) clamp(12px,3vw,38px) 28px}
+.pvp-screen .fo-topbar,.playtest-screen .fo-topbar{max-width:1320px;margin:auto}
+.pvp-inner,.playtest-inner{max-width:1180px;margin:32px auto 0}
+.pvp-inner h1,.playtest-inner h1{font:950 clamp(34px,5vw,68px)/1 Inter,system-ui,sans-serif;letter-spacing:-.05em;margin:0 0 16px}
+.pvp-screen button,.playtest-screen button{cursor:pointer}
+.pvp-screen button:disabled{opacity:.45;cursor:not-allowed}
+.pvp-inner>section,.playtest-inner>section{min-width:0}
+.pvp-notice,.pvp-join,.playtest-empty{padding:24px;background:#191919;color:#eae2d5;border-radius:10px;max-width:640px}
+.pvp-notice strong,.pvp-notice h2{font-size:22px;line-height:1.1}
+.pvp-notice p{line-height:1.55;max-width:55ch}
+.pvp-notice input{width:100%;border:0;padding:10px 12px;color:#191919;background:#eae2d5}
+.pvp-join label,.pvp-summary label,.playtest-detail label{display:grid;gap:8px;font-size:12px;font-weight:800;letter-spacing:.08em}
+.pvp-screen select,.playtest-screen select,.pvp-screen textarea,.playtest-screen textarea{width:100%;font:inherit;padding:11px;border:0;background:#fff8ec;color:#191919;border-radius:4px}
+.pvp-join button,.pvp-roomline button,.pvp-place,.pvp-decide button,.pvp-summary button,.pvp-result-overlay button,.playtest-actions button,.playtest-save{
+  border:0;min-height:40px;padding:10px 18px;background:#d3b787;color:#191919;font-size:12px;font-weight:900;letter-spacing:.07em;border-radius:4px;
+}
+.pvp-join button:focus-visible,.pvp-game button:focus-visible,.playtest-screen button:focus-visible{outline:3px solid #bb9954;outline-offset:3px}
+.pvp-hero-champion{display:flex;align-items:center;gap:18px;margin:20px 0;padding:12px;background:#302c26}
+.pvp-hero-champion img{width:92px;height:122px;object-fit:contain}
+.pvp-hero-champion strong{font-size:16px}
+.pvp-hero-champion p{font-size:13px;flex:1}
+.pvp-join .pvp-minor{display:block;background:transparent;color:#eae2d5;margin-top:12px}
+.pvp-roomline{display:flex;align-items:center;flex-wrap:wrap;gap:16px;padding:10px 0;margin-bottom:8px;font-weight:800}
+.pvp-roomline span{font-size:11px;letter-spacing:.06em}
+.pvp-roomline button{margin-left:auto}
+.pvp-game{max-width:1100px;margin:auto;background:#eae2d5;color:#191919;padding:12px;border-radius:12px}
+.pvp-scoreline{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;padding:8px 10px;background:#171717;color:#eae2d5;font-size:12px}
+.pvp-scoreline>div{display:flex;align-items:center;gap:8px;min-width:0}
+.pvp-scoreline>div:last-child{justify-content:flex-end}
+.pvp-scoreline img{width:38px;height:38px;object-fit:cover;border-radius:50%}
+.pvp-scoreline strong{font-weight:850}
+.pvp-scoreline>div strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
+.pvp-scoreline span{font-weight:900;color:#d3b787}
+.pvp-status{text-align:center;padding:8px 6px;font-weight:900;font-size:12px;letter-spacing:.08em}
+.pvp-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.pvp-lane{min-width:0;display:grid;gap:6px}
+.pvp-lane h2{font-size:12px;margin:4px 0 0;font-weight:900;letter-spacing:.07em}
+.pvp-lane-cards{height:clamp(112px,21vh,175px);padding:5px;background:#f4eadd;display:flex;flex-direction:column;gap:5px;overflow:hidden}
+.pvp-lane-cards>span{font-size:9px;font-weight:800;white-space:nowrap}
+.pvp-lane-cards>div{display:flex;flex:1;gap:4px;min-height:0;align-items:center;justify-content:center}
+.pvp-lane-cards button{border:0;padding:0;background:transparent;display:flex;max-width:49%;max-height:100%}
+.pvp-board-play{max-height:100%;display:flex;justify-content:center}
+.pvp-card-face{position:relative;display:flex;flex-direction:column;justify-content:flex-end;gap:5px;aspect-ratio:649/914;width:clamp(82px,13vw,155px);border-radius:6px;overflow:hidden;background-color:#121212;background-repeat:no-repeat;color:#fff;background-size:cover;box-shadow:0 3px 7px #0004}
+.pvp-card-face.small{height:clamp(91px,17vh,153px);width:auto;min-width:0}
+.pvp-card-face>b{font-size:22px}.pvp-card-face>strong{font-size:13px}.pvp-card-face>small{font-size:9px}
+.pvp-place{min-height:33px;padding:7px;font-size:10px}
+.pvp-place:disabled{background:#beb1a0;opacity:1!important;color:#655b4f}
+.pvp-hand{margin-top:8px;padding:8px;background:#191919;color:#eae2d5}
+.pvp-hand h2{font-size:11px;margin:0 0 8px;font-weight:900;letter-spacing:.08em}
+.pvp-hand>div{display:flex;align-items:center;justify-content:center;gap:10px}
+.pvp-hand button{border:0;padding:0;background:none;max-width:31%}
+.pvp-hand button.selected{outline:3px solid #d3b787;outline-offset:4px;border-radius:5px}
+.pvp-hand .pvp-card-face{height:clamp(132px,23vh,190px);width:auto;max-width:100%}
+.pvp-decide{display:flex;justify-content:center;gap:10px;padding:12px}
+.pvp-summary{padding:20px;margin-top:10px;background:#191919;color:#eae2d5}
+.pvp-summary h2{font:950 34px/1 Inter,system-ui,sans-serif;margin:0}
+.pvp-summary>button{margin:8px 8px 0 0}
+.pvp-ratings{display:flex;gap:15px;margin:12px 0}
+.pvp-error{padding:12px;background:#862f29;color:white;font-weight:800}
+.pvp-result-overlay{position:fixed;z-index:12000;inset:0;background:#000c;display:grid;place-items:center;padding:16px}
+.pvp-result-overlay>div{max-height:92dvh;overflow:auto;display:grid;gap:12px;justify-items:center;background:#191919;color:#eae2d5;padding:20px;border-radius:9px}
+.pvp-result-overlay h2{margin:0;font-size:25px}
+.pvp-duel-cards{display:flex;align-items:center;gap:10px}
+.pvp-duel-cards>span{font-size:22px;font-weight:900}
+.playtest-subtitle{font-size:12px;font-weight:800;letter-spacing:.14em;margin-top:-10px}
+.playtest-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:20px 0}
+.playtest-stats>strong{display:grid;gap:4px;padding:22px 14px;background:#191919;color:#eae2d5;font:900 34px/1 Inter,system-ui,sans-serif}
+.playtest-stats>strong span{font-size:11px;font-weight:750;letter-spacing:.12em}
+.playtest-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 20px}
+.playtest-layout{display:grid;grid-template-columns:minmax(240px,.8fr) minmax(0,1.6fr);gap:16px}
+.playtest-list{display:grid;align-content:start;gap:7px;max-height:60vh;overflow:auto}
+.playtest-list button{border:0;background:#191919;color:#eae2d5;padding:16px;text-align:left;display:grid;gap:7px}
+.playtest-list button.is-selected{background:#d3b787;color:#191919}
+.playtest-list button span{font-size:11px}
+.playtest-list button strong{font-size:13px}
+.playtest-detail{padding:20px;background:#191919;color:#eae2d5}
+.playtest-detail h2,.playtest-detail h3{font-size:20px;margin:0 0 12px}
+.playtest-ratings{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:12px}
+.playtest-detail textarea{margin:8px 0}
+.playtest-log{max-height:35vh;overflow:auto;font-size:12px;line-height:1.4}
+.playtest-log p{padding:7px 0;border-bottom:1px solid #6d6357}
+.playtest-log span{font-size:10px;font-weight:800;color:#d3b787}
+.playtest-privacy{font-size:12px;margin-top:20px}
+:root[data-theme="dark"] .pvp-game{background:#262626;color:#f3ead9}
+:root[data-theme="dark"] .pvp-lane-cards{background:#353332}
+:root[data-theme="dark"] .pvp-place:disabled{background:#4d4740;color:#bbb3a8}
+:root[data-theme="dark"] .pvp-scoreline{background:#eae2d5;color:#191919}
+:root[data-theme="dark"] .pvp-hand,:root[data-theme="dark"] .pvp-summary{background:#eae2d5;color:#191919}
+:root[data-theme="dark"] .pvp-hand button.selected{outline-color:#98743d}
+:root[data-theme="dark"] .playtest-stats>strong,:root[data-theme="dark"] .playtest-list button,:root[data-theme="dark"] .playtest-detail{background:#eae2d5;color:#191919}
+:root[data-theme="dark"] .playtest-list button.is-selected{background:#c49c60}
+:root[data-theme="dark"] .playtest-log span{color:#8a6732}
+@media(max-width:740px){
+ .pvp-inner,.playtest-inner{margin:14px auto}
+ .pvp-board{gap:3px}.pvp-game{padding:5px}
+ .pvp-scoreline{gap:4px;font-size:9px;grid-template-columns:1fr auto 1fr}
+ .pvp-scoreline img{width:29px;height:29px}.pvp-scoreline>div strong{max-width:55px;font-size:9px}
+ .pvp-lane-cards{height:clamp(91px,16vh,140px);padding:3px}
+ .pvp-lane-cards>span{font-size:7px}
+ .pvp-lane h2{font-size:9px}.pvp-card-face.small{height:clamp(80px,13vh,125px)}
+ .pvp-place{font-size:8px;padding:5px}
+ .pvp-hand .pvp-card-face{height:clamp(116px,19vh,154px)}
+ .playtest-layout{grid-template-columns:1fr}.playtest-list{max-height:180px}
+}
+@media(prefers-reduced-motion:reduce){.pvp-screen *,.playtest-screen *{animation:none!important;transition:none!important}}

@@ -105,7 +105,7 @@ function beginDuel(state: GameState, rng:()=>number) {
   state.phase = "awaiting_player";
   state.pendingPlayerPlay = null;
   state.pendingOpponentPlay = null;
-  if (state.initiative === "opponent") {
+  if (state.initiative === "opponent" && state.mode !== "pvp") {
     const choice = chooseAIPlay(state,null,true,rng);
     const [card] = state.opponent.hand.splice(choice.handIndex!,1);
     const staged: EnginePlay = {...choice,card};
@@ -295,6 +295,11 @@ function resolvePendingDuel(state: GameState, rng:()=>number) {
   }
 
   if (state.turn===2 && (state.duelScore.player===2 || state.duelScore.opponent===2)) {
+    if (state.mode === "pvp") {
+      state.phase="awaiting_quiero";
+      state.events.push({text:"El jugador que perdió los dos primeros duelos decide Quiero o No quiero.",kind:"decision"});
+      return;
+    }
     if (state.duelScore.opponent===2) {
       state.phase="awaiting_quiero";
       state.events.push({text:"Vas 0–2. Elegí Quiero o No quiero.",kind:"decision"});
@@ -359,4 +364,79 @@ export function answerQuiero(state: GameState, wants: boolean, rng:()=>number=Ma
 
 export function cloneGame(state: GameState): GameState {
   return structuredClone(state);
+}
+
+/**
+ * PvP lives on the authoritative room server. These functions never call AI,
+ * and reject out-of-turn and illegal commands before changing game state.
+ * The two seats are the host ("player") and guest ("opponent").
+ */
+export function startPvpGame(
+  hostChampion: string,
+  guestChampion: string,
+  rng:()=>number=Math.random,
+  forcedStarter?:Side
+):GameState {
+  const state=createGame(hostChampion,guestChampion,rng,forcedStarter);
+  state.mode="pvp";
+  beginDuel(state,rng);
+  return state;
+}
+
+export function nextHumanSide(state:GameState):Side|null {
+  if(state.mode!=="pvp" || state.phase!=="awaiting_player")return null;
+  if(state.pendingPlayerPlay && state.pendingOpponentPlay)return null;
+  if(state.pendingPlayerPlay)return "opponent";
+  if(state.pendingOpponentPlay)return "player";
+  return state.initiative;
+}
+
+export function submitHumanPlay(
+  state:GameState,
+  side:Side,
+  handIndex:number,
+  position:Position,
+  rng:()=>number=Math.random
+):void {
+  if(state.mode!=="pvp")throw new Error("La sala no es PvP.");
+  if(nextHumanSide(state)!==side)throw new Error("No es tu turno.");
+  if(!Number.isInteger(handIndex))throw new Error("Índice de carta inválido.");
+  const owner=side==="player"?state.player:state.opponent;
+  const rival=side==="player"?state.opponent:state.player;
+  if(!legalPositions(owner).includes(position))throw new Error("Posición ocupada.");
+  if(handIndex<0 || handIndex>=owner.hand.length)throw new Error("Carta inexistente.");
+  const [card]=owner.hand.splice(handIndex,1);
+  const staged:EnginePlay={card,position};
+  const isOpening=state.pendingPlayerPlay===null && state.pendingOpponentPlay===null;
+  if(isOpening){
+    const opening=previewOpeningPower(state,staged,owner,rival);
+    staged.finalPower=opening.power;
+    staged.powerExact=opening.exact;
+    staged.notes=opening.notes;
+  }
+  if(side==="player")state.pendingPlayerPlay=staged;
+  else state.pendingOpponentPlay=staged;
+  state.events.push({text:`${owner.champion.name.split(",")[0]} jugó ${card.name} en ${positionLabels[position]}.`,kind:"info"});
+  if(state.pendingPlayerPlay && state.pendingOpponentPlay)resolvePendingDuel(state,rng);
+}
+
+export function nextHumanQuieroSide(state:GameState):Side|null {
+  if(state.mode!=="pvp" || state.phase!=="awaiting_quiero")return null;
+  return state.duelScore.player===0?"player":"opponent";
+}
+
+export function submitHumanQuiero(
+  state:GameState,
+  side:Side,
+  wants:boolean,
+  rng:()=>number=Math.random
+):void {
+  if(nextHumanQuieroSide(state)!==side)throw new Error("La decisión Quiero no te corresponde.");
+  state.events.push({text:`${side==="player"?"Anfitrión":"Invitado"}: ${wants?"Quiero":"No quiero"}.`,kind:"decision"});
+  if(!wants){
+    endRound(state,side==="player"?"player_no_quiero":"opponent_no_quiero",rng);
+    return;
+  }
+  state.turn=3;
+  beginDuel(state,rng);
 }

@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "WebWorker"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": [
+      "@cloudflare/workers-types"
+    ],
+    "skipLibCheck": true,
+    "noEmit": true,
+    "strict": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "../src/engine/**/*.ts",
+    "../src/data.ts",
+    "../src/types.ts"
+  ]
+}

@@ -1,0 +1,14 @@
+name = "daggerlight-pvp"
+main = "src/index.ts"
+compatibility_date = "2026-11-06"
+
+[vars]
+ALLOWED_ORIGIN = "https://marianotripelhorn-ux.github.io"
+
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "DaggerlightRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["DaggerlightRoom"]

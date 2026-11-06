@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Tutorial from "./Tutorial";
 import SplashScreen from "./SplashScreen";
+import Multiplayer from "./Multiplayer";
+import PlaytestHub from "./PlaytestHub";
+import { saveAiMatch } from "./playtestStorage";
 import ThemeToggle from "./ThemeToggle";
 import AuguryStatus from "./AuguryStatus";
 import { factionArtUrl } from "./factionArtwork";
@@ -381,7 +384,7 @@ export default function App() {
   const [playerChampion,setPlayerChampion]=useState("dextral");
   const [opponentChampion,setOpponentChampion]=useState("random");
   const [aiDifficulty,setAiDifficulty]=useState<AIDifficulty>("normal");
-  const [screen,setScreen]=useState<"home"|"champions"|"collection"|"table"|"decklab">("home");
+  const [screen,setScreen]=useState<"home"|"champions"|"collection"|"table"|"decklab"|"multiplayer"|"playtest">("home");
   const [hasEntered,setHasEntered]=useState(false);
   const [game,setGame]=useState<GameState|null>(null);
   const [savedMatch,setSavedMatch]=useState<SavedMatch|null>(()=>readSavedMatch());
@@ -455,6 +458,7 @@ export default function App() {
     if(next.phase==="finished") {
       const record=completedMatch(updated);
       if(record && appendMatchHistory(record)){
+        saveAiMatch(updated,record);
         setHistory(readMatchHistory());
         sendCompletedMatch(record);
       }
@@ -655,6 +659,8 @@ export default function App() {
           onGallery={()=>setScreen("collection")}
           onPhysical={()=>setScreen("table")}
           onDeckLab={()=>setScreen("decklab")}
+          onMultiplayer={()=>setScreen("multiplayer")}
+          onPlaytest={()=>setScreen("playtest")}
           onContinue={continueMatch}
           saved={savedMatch}
           summary={summarizeHistory(history)}
@@ -672,6 +678,8 @@ export default function App() {
           onPlay={()=>setScreen("champions")}
         />}
         {screen==="table" && <PhysicalTable onBack={()=>setScreen("home")}/> }
+        {screen==="multiplayer" && <Multiplayer onBack={()=>setScreen("home")}/>}
+        {screen==="playtest" && <PlaytestHub onBack={()=>setScreen("home")}/>}
         {screen==="decklab" && <DeckLab onBack={()=>setScreen("home")} onPlay={(deck,rival,difficulty)=>startWithChampion(deck.championId,rival,difficulty,deck)}/> }
         {tutorialOpen && <Tutorial
           inGame={false}

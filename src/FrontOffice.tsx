@@ -52,10 +52,11 @@ function Sprite({card, crop=false}: {card: CardDefinition; crop?: boolean}) {
 }
 
 export function HomeScreen({
-  onPlay,onTutorial,onGallery,onPhysical,onDeckLab,onContinue,saved,summary,
+  onPlay,onTutorial,onGallery,onPhysical,onDeckLab,onMultiplayer,onPlaytest,onContinue,saved,summary,
   analyticsReady,analyticsConsent,onChangeAnalytics
 }: {
   onPlay:()=>void;onTutorial:()=>void;onGallery:()=>void;onPhysical:()=>void;onDeckLab:()=>void;
+  onMultiplayer:()=>void;onPlaytest:()=>void;
   onContinue:()=>void;saved:SavedMatch|null;
   summary:{total:number;wins:number;losses:number;draws:number;winRate:number};
   analyticsReady:boolean;analyticsConsent:boolean;onChangeAnalytics:(value:boolean)=>void;
@@ -142,6 +143,9 @@ export function HomeScreen({
       <footer className="fo-footer menu-footer">
         <span className="menu-record">{summary.total} PARTIDAS · {summary.wins} VICTORIAS · {summary.losses} DERROTAS · {summary.draws} EMPATES</span>
         <div className="menu-extras">
+          <button type="button" className="home-physical-link" onClick={onMultiplayer}>MULTIJUGADOR · BETA</button>
+          <button type="button" className="home-physical-link" onClick={onPlaytest}>PLAYTEST</button>
+          <a className="home-physical-link" href="./reglamento.html" target="_blank" rel="noopener noreferrer">REGLAMENTO</a>
           <button type="button" className="home-physical-link" onClick={onPhysical}>MODO MESA · BETA</button>
           <button type="button" className="home-physical-link" onClick={onDeckLab}>MAZOS MULTIFACCIÓN · LAB</button>
         </div>

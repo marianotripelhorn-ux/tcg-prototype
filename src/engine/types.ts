@@ -81,6 +81,7 @@ export interface GameEvent {
 }
 
 export interface GameState {
+  mode?: "pvp";
   aiDifficulty?: AIDifficulty;
   round: number;
   turn: 1 | 2 | 3;
