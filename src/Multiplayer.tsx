@@ -85,7 +85,7 @@ export default function Multiplayer({onBack}:{onBack:()=>void}) {
   const duelCount=game?.events.filter(e=>e.kind==="duel").length||0;
   useEffect(()=>{
     if(!game)return;
-    if(duelCount>lastDuelCount.current&&lastDuelCount.current!==0)setResultOpen(true);
+    if(duelCount>lastDuelCount.current)setResultOpen(true);
     lastDuelCount.current=duelCount;
     if(game.phase==="finished" && credentials && !finishedSaved.current){
       finishedSaved.current=true;
