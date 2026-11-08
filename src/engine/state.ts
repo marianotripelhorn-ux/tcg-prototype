@@ -37,6 +37,8 @@ export function createPlayer(championId: string, rng:()=>number=Math.random, def
     deck: sourceCards?shuffle(sourceCards,rng):makeDeck(champion.faction,rng),
     deckRecipe:sourceCards?sourceCards.map(card=>card.id):undefined,
     hand: [],
+    specialHand: [],
+    manifestations: [],
     archives: emptyArchives(),
     discard: [],
     roundPlays: [],

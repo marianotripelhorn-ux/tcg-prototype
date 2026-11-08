@@ -142,7 +142,7 @@ export class DaggerlightRoom {
       // Only room members can download anonymized match results.
       return Response.json({
         roomStatus:room.game.phase,startedAt:room.createdAt,updatedAt:room.updatedAt,
-        ruleset:"augurio-v2-blue-boost-2026-11",
+        ruleset:"manifestaciones-v0.1-2026-11",
         champions:[room.hostChampion,room.guestChampion],
         winner:room.game.winner||null,rounds:room.game.rounds,
         events:room.game.events,duels:room.game.events.filter(e=>e.kind==="duel").length,

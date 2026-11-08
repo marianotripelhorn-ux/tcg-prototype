@@ -15,6 +15,7 @@ import "./ui-polish-v3.css";
 import "./champion-v4.css";
 import "./site-polish-v4.css";
 import "./playtest-pvp.css";
+import "./manifestations.css";
 
 initializeTheme();
 

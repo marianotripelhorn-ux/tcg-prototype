@@ -17,6 +17,7 @@ export interface CardDefinition {
     row: number;
   };
   trait?: string;
+  specialArchiveKind?: "dagger" | "relic";
 }
 
 export interface PlayedCard {

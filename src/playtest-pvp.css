@@ -104,3 +104,15 @@
  .playtest-layout{grid-template-columns:1fr}.playtest-list{max-height:180px}
 }
 @media(prefers-reduced-motion:reduce){.pvp-screen *,.playtest-screen *{animation:none!important;transition:none!important}}
+
+/* Special card hand and anchored board tokens (Manifestaciones v0.1) */
+.pvp-card-face .pvp-card-trait{position:absolute;z-index:3;right:3px;top:3px;max-width:67%;font:800 7px/1.1 Inter,system-ui,sans-serif;letter-spacing:.01em;text-align:right;background:#191919;color:#e6c78d;padding:3px;border-radius:2px}
+.pvp-token-tags{display:flex;flex-wrap:wrap;gap:3px;max-height:30px;overflow:auto}
+.pvp-token-tags span{background:#d3b787;color:#191919;padding:3px 4px;border-radius:2px;font:800 8px/1 Inter,system-ui,sans-serif}
+.pvp-special-hand{display:flex;gap:5px;flex-wrap:wrap;margin:0 0 9px}
+.pvp-special-hand button,.pvp-copy-menu button{border:0;border-radius:3px;background:#d3b787;color:#191919;font:800 10px/1.2 Inter,system-ui,sans-serif;padding:8px 9px;cursor:pointer}
+.pvp-special-hand button.armed{background:#fff8ed;outline:2px solid #d3b787}
+.pvp-special-hand button:disabled{opacity:.4;cursor:not-allowed}
+.pvp-copy-menu{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 10px}
+:root[data-theme="dark"] .pvp-special-hand button.armed{background:#191919;color:#d3b787;outline-color:#d3b787}
+@media(max-width:740px){.pvp-token-tags span,.pvp-card-face .pvp-card-trait{font-size:6px;padding:2px}.pvp-special-hand button{font-size:9px}}

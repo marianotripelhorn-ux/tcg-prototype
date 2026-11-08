@@ -5,7 +5,8 @@ import type { AIDifficulty, GameState } from "./engine/types";
 export const SAVE_KEY = "daggerlight-match-save-v1";
 export const HISTORY_KEY = "daggerlight-match-history-v1";
 export const SAVE_VERSION = 1;
-export const RULESET = "augurio-v2-blue-boost-2026-11";
+export const RULESET = "manifestaciones-v0.1-2026-11";
+const LEGACY_RULESET = "augurio-v2-blue-boost-2026-11";
 const HISTORY_LIMIT = 250;
 
 export interface SavedMatch {
@@ -62,7 +63,7 @@ export function readSavedMatch():SavedMatch|null {
   const store=storage();if(!store)return null;
   try {
     const saved=JSON.parse(store.getItem(SAVE_KEY)??"null") as Partial<SavedMatch>|null;
-    if(!saved || saved.version!==SAVE_VERSION || saved.ruleset!==RULESET || typeof saved.id!=="string"
+    if(!saved || saved.version!==SAVE_VERSION || ![RULESET,LEGACY_RULESET].includes(saved.ruleset??"") || typeof saved.id!=="string"
       || typeof saved.createdAt!=="string" || !validGame(saved.game))return null;
     // Saved GameState embeds Champion objects. Refresh display names from the
     // canonical registry so renamed Champions appear correctly when resuming

@@ -4,6 +4,7 @@ import ThemeToggle from "./ThemeToggle";
 import { championBackgroundUrl,championImageUrl,championShortName,championSubtitle } from "./championArtwork";
 import { allCards, factionLabels } from "./data";
 import { champions } from "./engine/champions";
+import { SPECIAL_TEXT,specialKindFor } from "./engine/manifestations";
 import type { AIDifficulty } from "./engine/types";
 import type { SavedMatch } from "./persistence";
 import type { CardDefinition, Faction } from "./types";
@@ -282,7 +283,7 @@ export function CardCollection({onBack,onPlay}:GalleryProps) {
       {filtered.length===0 ? <div className="library-empty">No se encontraron cartas con ese filtro. Probá con otro nombre.</div> : <section className="library-grid" aria-label="Cartas">
         {filtered.map(card=><button type="button" key={card.studioId} className={"library-card-tile theme-"+card.faction} onClick={()=>{setSelected(card);setView("art");}} aria-label={"Ver "+card.name}>
           <div className="library-tile-art"><Sprite card={card} crop={!!card.art}/></div>
-          <div className="library-tile-text"><span className="library-tile-id">{card.studioId} <b>{card.power} P</b></span><strong>{card.name}</strong><span>{factionLabels[card.faction]}</span></div>
+          <div className="library-tile-text"><span className="library-tile-id">{card.studioId} <b>{card.power} P</b></span><strong>{card.name}</strong>{card.trait && <small className="library-token-keyword">{card.trait.toUpperCase()}</small>}<span>{factionLabels[card.faction]}</span></div>
         </button>)}
       </section>}
       
@@ -304,6 +305,9 @@ export function CardCollection({onBack,onPlay}:GalleryProps) {
             <div className="library-detail-tags"><span>PODER <b>{selected.power}</b></span><span>{selected.affinity ? "AFINIDAD: "+selected.affinity.toUpperCase() : "SIN AFINIDAD POSICIONAL"}</span></div>
             <span className="library-ability-heading">HABILIDAD</span>
             <p>{selected.text}</p>
+             {specialKindFor(selected) && <p className="library-special-rule">
+               <strong>{selected.trait?.toUpperCase()}</strong> · {SPECIAL_TEXT[specialKindFor(selected)!]}
+             </p>}
             {!selected.art && <div className="library-art-note">Esta carta todavía no tiene ilustración final. La ficha muestra su diseño mecánico vigente.</div>}
             
             <div className="library-modal-nav">

@@ -17,9 +17,11 @@ import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { positionLabels, positions } from "./data";
 import { studioThemes } from "./cardStudio";
 import { champions } from "./engine/champions";
-import { answerQuiero, cloneGame, startGame, submitPlayerPlay } from "./engine/game";
+import { answerQuiero, cloneGame, startGame, submitPlayerPlay, submitPlayerSpecial } from "./engine/game";
+import { SPECIAL_NAME,SPECIAL_TEXT,copyTargets } from "./engine/manifestations";
+import type { CopyTarget } from "./engine/manifestations";
 import { capacity, legalPositions } from "./engine/rules";
-import type { AIDifficulty, DuelSummary, EnginePlay, GameState } from "./engine/types";
+import type { AIDifficulty, DuelSummary, EnginePlay, GameState, ActiveManifestation } from "./engine/types";
 import { formatPowerDelta, playEffectFeedback, playPowerDelta } from "./engine/presentation";
 import { appendMatchHistory, clearSavedMatch, completedMatch, newSavedMatch, readMatchHistory, readSavedMatch, summarizeHistory, writeSavedMatch } from "./persistence";
 import type { SavedMatch } from "./persistence";
@@ -118,6 +120,7 @@ function CardFace({
         aria-label={card.name}
       >
         <div className="studio-card-sprite" style={artStyle} />
+        {card.trait && <span className="manifest-keyword" title={card.trait}>{card.trait.toUpperCase()}</span>}
         {livePower && (
           <span className={`live-power-badge ${powerExact ? "" : "uncertain"}`}>
             <small>PODER</small>
@@ -141,6 +144,7 @@ function CardFace({
       aria-label={card.name}
     >
       <div className="card-art no-art" />
+      {card.trait && <span className="manifest-keyword">{card.trait.toUpperCase()}</span>}
       <div className="card-shade" />
       <div className="card-power">{powerExact ? (finalPower ?? card.power) : "?"}</div>
       <div className="card-symbols">
@@ -328,6 +332,7 @@ function Slot({
   archive,
   active,
   capacityValue,
+  manifestations,
   onTap,
   onInspect
 }: {
@@ -339,6 +344,7 @@ function Slot({
   archive: number;
   active: boolean;
   capacityValue: number;
+  manifestations?: ActiveManifestation[];
   onTap?: () => void;
   onInspect: (played:EnginePlay)=>void;
 }) {
@@ -352,6 +358,13 @@ function Slot({
     >
       <span className="archive-count" title="Archivo">{archive}</span>
       <span className="slot-capacity" title="Capacidad">{cards.length}/{capacityValue}</span>
+      {!!manifestations?.length && <div className="manifest-slots" aria-label="Manifestaciones">
+        {(["shield","relic"] as const).map(kind=>{
+          const n=manifestations.filter(t=>t.kind===kind&&t.position===position).length;
+          return n>0?<span key={kind} className={"manifest-position "+kind}
+            title={SPECIAL_TEXT[kind]}>{kind==="shield"?"ESCUDO":"RELIQUIA"}{n>1?" ×"+n:""}</span>:null;
+        })}
+      </div>}
       <div className="slot-stack">
         <>
             {cards.map((played,index)=>(
@@ -405,6 +418,14 @@ export default function App() {
   const [drag,setDrag]=useState<DragState|null>(null);
   const [hoveredPosition,setHoveredPosition]=useState<Position|null>(null);
   const [tutorialOpen,setTutorialOpen]=useState(false);
+  const [daggersToUse,setDaggersToUse]=useState(0);
+  const [specialMode,setSpecialMode]=useState<"relic"|"symmetry"|null>(null);
+  const [specialError,setSpecialError]=useState("");
+  const specialHand=game?.player.specialHand||[];
+  const availableDaggers=specialHand.filter(kind=>kind==="dagger").length;
+  const availableRelics=specialHand.filter(kind=>kind==="relic").length;
+  const availableSymmetry=specialHand.filter(kind=>kind==="symmetry").length;
+  const symmetryTargets=game?copyTargets(game.opponent):[];
 
   const hand=game?.player.hand ?? [];
   const selectedCard=useMemo(
@@ -491,6 +512,9 @@ export default function App() {
     setDuelPreview(null);
     setPreDuel(null);
     setSelectedIndex(null);
+    setDaggersToUse(0);
+    setSpecialMode(null);
+    setSpecialError("");
     setInspection(null);
     setDrag(null);
     setHoveredPosition(null);
@@ -552,6 +576,16 @@ export default function App() {
     previewTimer.current=window.setTimeout(showDuelResult,isReducedMotion()?750:2150);
   }
 
+  function useSpecial(kind:"relic"|"symmetry",position?:Position,target?:CopyTarget) {
+    if(!game || game.phase!=="awaiting_player" || duelPreview)return;
+    try{
+      const next=cloneGame(game);
+      submitPlayerSpecial(next,kind,position,target);
+      setGame(next);persistTurn(next);
+      setSpecialMode(null);setSpecialError("");
+    }catch(error){setSpecialError(error instanceof Error?error.message:"No se pudo usar la especial.");}
+  }
+
   function playCard(handIndex:number, position:Position) {
     if (!game || game.phase!=="awaiting_player" || duelPreview) return;
     if (!legalPositions(game.player).includes(position)) return;
@@ -564,7 +598,7 @@ export default function App() {
       score:{...game.duelScore}
     });
     const next=cloneGame(game);
-    submitPlayerPlay(next,handIndex,position);
+    submitPlayerPlay(next,handIndex,position,Math.random,Math.min(daggersToUse,availableDaggers));
     const newAuguries=next.events.slice(game.events.length).filter(event=>event.text.startsWith("Augurio ·"));
     const healingEvents=next.events.slice(game.events.length).filter(event=>event.text.includes("recupera 1 Vida"));
     setDuelAuguries([...newAuguries,...healingEvents].map(event=>event.text.replace(/^Augurio · /,"").replace(" · próxima carta "," · ")).slice(0,3));
@@ -771,6 +805,7 @@ export default function App() {
                 pendingCard={pendingOpponent?.position===position ? pendingOpponent : null}
                 focusPlay={focusOpponent?.position===position ? focusOpponent : null}
                 archive={game.opponent.archives[position].length}
+                 manifestations={game.opponent.manifestations}
                 active={false}
                 capacityValue={capacity(game.opponent,position)}
                 onInspect={inspectPlay}
@@ -787,9 +822,15 @@ export default function App() {
                 cards={game.player.roundPlays.filter(play=>play.position===position)}
                 focusPlay={focusPlayer?.position===position ? focusPlayer : null}
                 archive={game.player.archives[position].length}
-                active={(hoveredPosition===position || (!!selectedCard&&!drag)) && legal.includes(position)}
+                 manifestations={game.player.manifestations}
+                active={specialMode==="relic"
+                   ? game.player.roundPlays.every(p=>p.position!==position)
+                   : (hoveredPosition===position || (!!selectedCard&&!drag)) && legal.includes(position)}
                 capacityValue={capacity(game.player,position)}
-                onTap={()=>selectedIndex!==null && legal.includes(position) && playCard(selectedIndex,position)}
+                onTap={()=>{
+                   if(specialMode==="relic"){useSpecial("relic",position);return;}
+                   if(selectedIndex!==null && legal.includes(position))playCard(selectedIndex,position);
+                 }}
                 onInspect={inspectPlay}
               />
             </div>
@@ -814,12 +855,40 @@ export default function App() {
           passive={game.player.champion.text}
         />
 
-        <section className="hand-zone" aria-label="Tu mano">
+        <section className={"hand-zone"+(specialHand.length?" has-specials":"")} aria-label="Tu mano">
           <div className="hand-label">
             <span>TU MANO</span>
             <small>{hand.length} cartas</small>
           </div>
-          <div className="hand" key={game.round}>
+          {!!specialHand.length && <div className="special-hand" aria-label="Cartas especiales">
+             {availableDaggers>0 && <button type="button" className={daggersToUse?"armed":""}
+               title={SPECIAL_TEXT.dagger}
+               disabled={game.phase!=="awaiting_player" || !!duelPreview}
+               onClick={()=>{setSpecialMode(null);setDaggersToUse((daggersToUse+1)%(availableDaggers+1));}}>
+                 DAGA +1 · {daggersToUse}/{availableDaggers}
+               </button>}
+             {availableRelics>0 && <button type="button" className={specialMode==="relic"?"armed":""}
+               title={SPECIAL_TEXT.relic}
+               disabled={game.phase!=="awaiting_player" || !!duelPreview}
+               onClick={()=>setSpecialMode(specialMode==="relic"?null:"relic")}>
+                 RELIQUIA · {availableRelics}
+               </button>}
+             {availableSymmetry>0 && <button type="button" className={specialMode==="symmetry"?"armed":""}
+               title={SPECIAL_TEXT.symmetry}
+               disabled={game.phase!=="awaiting_player" || !!duelPreview || !symmetryTargets.length}
+               onClick={()=>setSpecialMode(specialMode==="symmetry"?null:"symmetry")}>
+                 SIMETRÍA · {availableSymmetry}
+               </button>}
+             {specialMode==="relic" && <span className="special-instruction">ELEGÍ UNA POSICIÓN VACÍA</span>}
+           </div>}
+           {specialMode==="symmetry" && <div className="special-copy-targets">
+             {symmetryTargets.map((target,i)=><button type="button" key={target.kind+"-"+target.position+"-"+i}
+               onClick={()=>useSpecial("symmetry",undefined,target)}>
+               COPIAR {SPECIAL_NAME[target.kind]} · {positionLabels[target.position].toUpperCase()}
+             </button>)}
+           </div>}
+           {specialError&&<span className="special-error" role="alert">{specialError}</span>}
+           <div className="hand" key={game.round}>
             {hand.map((card,index)=>(
               <button
                 className={`hand-card ${selectedIndex===index?"is-selected":""}`}
@@ -865,7 +934,14 @@ export default function App() {
                   livePower={inspection.finalPower!==undefined || inspection.powerExact===false}
                 />
               </div>
-              <div className="zoom-actions">
+              {inspection.card.trait && <p className="manifest-inspect-rule">
+                 <strong>{inspection.card.trait.toUpperCase()}</strong> · {SPECIAL_TEXT[
+                   inspection.card.trait.startsWith("Portaanillos")?
+                     inspection.card.trait.includes("Sinistral")?"shield":"dagger":
+                     inspection.card.trait==="Objeto mágico"?"relic":"symmetry"
+                 ]}
+               </p>}
+               <div className="zoom-actions">
                 <div>
                   <strong>{inspection.card.name}</strong>
                   <span>

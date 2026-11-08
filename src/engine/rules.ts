@@ -1,6 +1,7 @@
 import { positionLabels, positions } from "../data";
 import type { CardDefinition, Position } from "../types";
 import type { DuelPowerResult, EnginePlay, GameState, PlayerState } from "./types";
+import { shieldCount } from "./manifestations";
 
 export function countPosition(player: PlayerState, position: Position) {
   return player.roundPlays.filter(play => play.position === position).length;
@@ -206,6 +207,10 @@ function intrinsicPower(
     notes.push("+2 Vinira fuera de afinidad");
   }
 
+  if(play.daggers){
+    power += play.daggers;
+    notes.push(`+${play.daggers} Daga Etérea`);
+  }
   return power;
 }
 
@@ -280,6 +285,18 @@ export function calculateDuel(
   }
   if (opponentPlay.card.effect === "prev_draw_enemy3" && opponentAffinity && B.duelResults.at(-1) === "draw") {
     player -= 3; playerNotes.push("−3 Tejedor de sombras");
+  }
+
+  // Escudos se colocan al resolver el duelo; sólo afectan duelos posteriores.
+  const ownShields=shieldCount(A,opponentPlay.position);
+  const rivalShields=shieldCount(B,playerPlay.position);
+  if(ownShields){
+    opponent-=2*ownShields;
+    opponentNotes.push(`−${2*ownShields} Escudo Etéreo`);
+  }
+  if(rivalShields){
+    player-=2*rivalShields;
+    playerNotes.push(`−${2*rivalShields} Escudo Etéreo`);
   }
 
   let playerSaintTriggered = false;

@@ -5,6 +5,7 @@ export type AIDifficulty = "easy" | "normal" | "hard";
 export type GamePhase = "awaiting_player" | "awaiting_quiero" | "finished";
 
 export interface EnginePlay extends PlayedCard {
+  daggers?: number;
   position: Position;
   handIndex?: number;
   score?: number;
@@ -17,7 +18,17 @@ export interface PreparedPositionBoost {
   source: string;
 }
 
+export type SpecialKind = "dagger" | "shield" | "relic" | "symmetry";
+
+export interface ActiveManifestation {
+  kind: "shield" | "relic";
+  position: Position;
+  createdRound: number;
+}
+
 export interface PlayerState {
+  specialHand: SpecialKind[];
+  manifestations: ActiveManifestation[];
   champion: ChampionDefinition;
   life: number;
   hand: CardDefinition[];

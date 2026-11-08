@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { positions,positionLabels } from "./data";
 import { champions } from "./engine/champions";
 import { legalPositions } from "./engine/rules";
+import { SPECIAL_NAME,SPECIAL_TEXT,copyTargets } from "./engine/manifestations";
 import type { GameState, EnginePlay } from "./engine/types";
 import type { CardDefinition,Position } from "./types";
 import { cardSpriteBackground } from "./cardArtwork";
@@ -32,6 +33,7 @@ function CardPreview({card,small=false}:{card:CardDefinition;small?:boolean}) {
     backgroundPosition:`${card.art.column*50}% ${card.art.row*100}%`
   }:undefined;
   return <span className={"pvp-card-face"+(small?" small":"")} style={style} title={card.name}>
+    {card.trait&&<span className="pvp-card-trait">{card.trait.toUpperCase()}</span>}
     {!card.art&&<><b>{card.power}</b><strong>{card.name}</strong><small>{card.text}</small></>}
   </span>;
 }
@@ -46,6 +48,8 @@ export default function Multiplayer({onBack}:{onBack:()=>void}) {
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState("");
   const [selected,setSelected]=useState<number|null>(null);
+  const [daggersToUse,setDaggersToUse]=useState(0);
+  const [specialMode,setSpecialMode]=useState<"relic"|"symmetry"|null>(null);
   const [inspected,setInspected]=useState<CardDefinition|null>(null);
   const [resultOpen,setResultOpen]=useState(false);
   const [fun,setFun]=useState(4),[clarity,setClarity]=useState(4),[comment,setComment]=useState("");
@@ -95,6 +99,11 @@ export default function Multiplayer({onBack}:{onBack:()=>void}) {
   const myTurn=!!view?.myTurn&&!busy;
   const legal=game&&myTurn&&game.phase==="awaiting_player"?legalPositions(game.player):[];
   const canPlace=selected!==null&&myTurn&&game?.phase==="awaiting_player";
+  const specialHand=game?.player.specialHand||[];
+  const daggersAvailable=specialHand.filter(x=>x==="dagger").length;
+  const relicsAvailable=specialHand.filter(x=>x==="relic").length;
+  const symmetryAvailable=specialHand.filter(x=>x==="symmetry").length;
+  const symmetryTargets=game?copyTargets(game.opponent):[];
   const invite=useMemo(()=>{
     try {const url=new URL(window.location.href);url.searchParams.set("room",code);return url.toString();}
     catch{return window.location.href;}
@@ -119,7 +128,7 @@ export default function Multiplayer({onBack}:{onBack:()=>void}) {
     setBusy(true);setError("");
     try {
       await api("POST","/api/rooms/"+session.code+"/action",{...action,version:view.version},session.token);
-      setSelected(null);
+      setSelected(null);setDaggersToUse(0);setSpecialMode(null);
       await sync(session);
     }catch(e){setError(e instanceof Error?e.message:"No se pudo completar la jugada.");}
     finally{setBusy(false);}
@@ -192,17 +201,27 @@ export default function Multiplayer({onBack}:{onBack:()=>void}) {
               <h2>{positionLabels[pos]}</h2>
               <div className="pvp-lane-cards">
                 <span>{game.opponent.roundPlays.filter(p=>p.position===pos).length} / {pos==="siniestra"&&game.opponent.champion.id==="sinistral"?2:1} · ARCHIVO {game.opponent.archives[pos].length}</span>
+                <div className="pvp-token-tags">{game.opponent.manifestations?.filter(t=>t.position===pos).map((t,i)=>
+                  <span key={i} title={SPECIAL_TEXT[t.kind]}>{SPECIAL_NAME[t.kind]}</span>)}</div>
                 <div>{game.opponent.roundPlays.filter(p=>p.position===pos).map((p,i)=><button key={i} onClick={()=>setInspected(p.card)}><BoardPlay played={p}/></button>)}
                 {game.pendingOpponentPlay?.position===pos&&<button onClick={()=>setInspected(game.pendingOpponentPlay!.card)}><BoardPlay played={game.pendingOpponentPlay}/></button>}</div>
               </div>
               <div className="pvp-lane-cards">
                 <span>{game.player.roundPlays.filter(p=>p.position===pos).length} / {legalPositions(game.player).includes(pos)?"1+":"1"} · ARCHIVO {game.player.archives[pos].length}</span>
+                <div className="pvp-token-tags">{game.player.manifestations?.filter(t=>t.position===pos).map((t,i)=>
+                  <span key={i} title={SPECIAL_TEXT[t.kind]}>{SPECIAL_NAME[t.kind]}</span>)}</div>
                 <div>{game.player.roundPlays.filter(p=>p.position===pos).map((p,i)=><button key={i} onClick={()=>setInspected(p.card)}><BoardPlay played={p}/></button>)}
                   {game.pendingPlayerPlay?.position===pos&&<button onClick={()=>setInspected(game.pendingPlayerPlay!.card)}><BoardPlay played={game.pendingPlayerPlay}/></button>}
                 </div>
               </div>
-              <button className="pvp-place" disabled={!canPlace||!legal.includes(pos)} onClick={()=>void send({type:"play",handIndex:selected,position:pos})}>
-                {canPlace&&legal.includes(pos)?"JUGAR ACÁ":"—"}
+              <button className="pvp-place"
+                disabled={specialMode==="relic"
+                  ? !myTurn || game.phase!=="awaiting_player" || game.player.roundPlays.some(p=>p.position===pos)
+                  : !canPlace||!legal.includes(pos)}
+                onClick={()=>void send(specialMode==="relic"
+                  ? {type:"special",kind:"relic",position:pos}
+                  : {type:"play",handIndex:selected,position:pos,daggers:Math.min(daggersToUse,daggersAvailable)})}>
+                {specialMode==="relic"&&myTurn?"COLOCAR RELIQUIA":canPlace&&legal.includes(pos)?"JUGAR ACÁ":"—"}
               </button>
             </section>)}
           </div>
@@ -211,7 +230,29 @@ export default function Multiplayer({onBack}:{onBack:()=>void}) {
             <button onClick={()=>void send({type:"quiero",wants:true})}>QUIERO</button>
           </div>}
           <section className="pvp-hand">
-            <h2>TU MANO</h2><div>{game.player.hand.map((card,i)=><button key={card.id+"-"+i}
+            <h2>TU MANO</h2>
+            {!!specialHand.length && <div className="pvp-special-hand" aria-label="Cartas especiales">
+              {daggersAvailable>0&&<button className={daggersToUse?"armed":""} disabled={!myTurn}
+                onClick={()=>{setSpecialMode(null);setDaggersToUse((daggersToUse+1)%(daggersAvailable+1));}}>
+                DAGA +1 · {daggersToUse}/{daggersAvailable}
+              </button>}
+              {relicsAvailable>0&&<button className={specialMode==="relic"?"armed":""} disabled={!myTurn}
+                onClick={()=>setSpecialMode(specialMode==="relic"?null:"relic")}>
+                RELIQUIA ×{relicsAvailable}
+              </button>}
+              {symmetryAvailable>0&&<button className={specialMode==="symmetry"?"armed":""}
+                disabled={!myTurn||!symmetryTargets.length}
+                onClick={()=>setSpecialMode(specialMode==="symmetry"?null:"symmetry")}>
+                SIMETRÍA ×{symmetryAvailable}
+              </button>}
+            </div>}
+            {specialMode==="symmetry"&&<div className="pvp-copy-menu">
+              {symmetryTargets.map((t,i)=><button key={t.kind+"-"+t.position+"-"+i}
+                onClick={()=>void send({type:"special",kind:"symmetry",target:t})}>
+                COPIAR {SPECIAL_NAME[t.kind]} · {positionLabels[t.position]}
+              </button>)}
+            </div>}
+            <div>{game.player.hand.map((card,i)=><button key={card.id+"-"+i}
               className={selected===i?"selected":""} disabled={!myTurn||game.phase!=="awaiting_player"} onClick={()=>setSelected(i)}>
               <CardPreview card={card}/>
               </button>)}</div>

@@ -3,6 +3,11 @@ import type { DuelResult, Position } from "../types";
 import { aiWantsQuiero, chooseAIPlay } from "./ai";
 import { affinityActive, calculateDuel, legalPositions, previewOpeningPower } from "./rules";
 import { createGame, resetRoundPlayer } from "./state";
+import {
+  SPECIAL_NAME,collectRelicArchive,consumeShields,copyTargets,
+  ensureManifestations,expireRelics,generateOnPlay,archivedSpecial
+} from "./manifestations";
+import type { CopyTarget } from "./manifestations";
 import type { DeckDefinition } from "./decks";
 import type { AIDifficulty, EnginePlay, GameState, PlayerState, Side } from "./types";
 
@@ -100,15 +105,94 @@ function consumePreparedState(state: GameState, playerPlay: EnginePlay, opponent
   if (opponentSpecificUsed) state.opponent.nextPositionSpecificBoost = null;
 }
 
+
+function ownerFor(state:GameState,side:Side):PlayerState{
+  return side==="player"?state.player:state.opponent;
+}
+function otherFor(state:GameState,side:Side):PlayerState{
+  return side==="player"?state.opponent:state.player;
+}
+function spendDaggers(owner:PlayerState,count:number){
+  ensureManifestations(owner);
+  if(!Number.isInteger(count)||count<0)throw new Error("Cantidad de Dagas inválida.");
+  if(owner.specialHand.filter(k=>k==="dagger").length<count)throw new Error("No tenés suficientes Dagas.");
+  for(let i=0;i<count;i++)owner.specialHand.splice(owner.specialHand.indexOf("dagger"),1);
+}
+function aiDaggerCount(state:GameState){
+  const amount=(state.opponent.specialHand||[]).filter(k=>k==="dagger").length;
+  if(!amount)return 0;
+  if(state.turn===3 || state.player.life<=3 || state.opponent.life<=3)return Math.min(amount,2);
+  return amount>=2?1:0;
+}
+/** El uso de una especial no consume una de las tres jugadas normales. */
+function activateSpecial(
+  state:GameState,side:Side,kind:"relic"|"symmetry",
+  position?:Position,target?:CopyTarget
+){
+  if(state.phase!=="awaiting_player")throw new Error("No podés usar especiales ahora.");
+  const self=ownerFor(state,side),rival=otherFor(state,side);
+  ensureManifestations(self);ensureManifestations(rival);
+  const i=self.specialHand.indexOf(kind);
+  if(i<0)throw new Error("No tenés esta carta especial.");
+  if(kind==="relic"){
+    if(!position || !["siniestra","trono","diestra"].includes(position))
+      throw new Error("Elegí una posición.");
+    const staged=side==="player"?state.pendingPlayerPlay:state.pendingOpponentPlay;
+    if(self.roundPlays.some(p=>p.position===position) || staged?.position===position)
+      throw new Error("La Reliquia exige una posición sin cartas.");
+    self.manifestations.push({kind:"relic",position,createdRound:state.round});
+    self.specialHand.splice(i,1);
+    state.events.push({text:`${self.champion.name.split(",")[0]} colocó Reliquia en ${positionLabels[position]}.`,kind:"info"});
+    return;
+  }
+  if(!target || !copyTargets(rival).some(t=>t.kind===target.kind&&t.position===target.position))
+    throw new Error("Seleccioná una carta especial rival visible.");
+  self.specialHand.splice(i,1);
+  if(target.kind==="dagger")self.specialHand.push("dagger");
+  else self.manifestations.push({kind:target.kind,position:target.position,createdRound:state.round});
+  state.events.push({text:`Simetría Perfecta copió ${SPECIAL_NAME[target.kind]} en ${positionLabels[target.position]}.`,kind:"info"});
+}
+export function submitPlayerSpecial(
+  state:GameState,kind:"relic"|"symmetry",position?:Position,target?:CopyTarget
+){
+  if(state.mode==="pvp")throw new Error("Usá la sala PvP.");
+  activateSpecial(state,"player",kind,position,target);
+}
+export function submitHumanSpecial(
+  state:GameState,side:Side,kind:"relic"|"symmetry",position?:Position,target?:CopyTarget
+){
+  if(state.mode!=="pvp" || nextHumanSide(state)!==side)throw new Error("No es tu turno.");
+  activateSpecial(state,side,kind,position,target);
+}
+function prepareAISpecials(state:GameState) {
+  if(state.mode==="pvp")return;
+  const ai=state.opponent;
+  ensureManifestations(ai);
+  if(ai.specialHand.includes("symmetry")){
+    const targets=copyTargets(state.player);
+    const chosen=targets.find(t=>t.kind==="relic")||targets.find(t=>t.kind==="shield")||targets[0];
+    if(chosen)activateSpecial(state,"opponent","symmetry",undefined,chosen);
+  }
+  if(ai.specialHand.includes("relic")){
+    const pos=(["siniestra","trono","diestra"] as Position[]).find(p=>
+      !ai.roundPlays.some(play=>play.position===p) &&
+      !ai.manifestations.some(token=>token.kind==="relic"&&token.position===p));
+    if(pos)activateSpecial(state,"opponent","relic",pos);
+  }
+}
+
 function beginDuel(state: GameState, rng:()=>number) {
   if (state.phase === "finished") return;
   state.phase = "awaiting_player";
   state.pendingPlayerPlay = null;
   state.pendingOpponentPlay = null;
   if (state.initiative === "opponent" && state.mode !== "pvp") {
+    prepareAISpecials(state);
     const choice = chooseAIPlay(state,null,true,rng);
     const [card] = state.opponent.hand.splice(choice.handIndex!,1);
-    const staged: EnginePlay = {...choice,card};
+    const daggers=aiDaggerCount(state);
+    spendDaggers(state.opponent,daggers);
+    const staged: EnginePlay = {...choice,card,daggers};
     const preview = previewOpeningPower(state,staged,state.opponent,state.player);
     staged.finalPower = preview.power;
     staged.powerExact = preview.exact;
@@ -167,6 +251,7 @@ function endRound(
 
   for (const player of [state.player,state.opponent]) {
     player.roundPlays.forEach(play=>player.archives[play.position].push(play.card));
+    expireRelics(player);
     while (player.hand.length) player.discard.push(player.hand.pop()!);
   }
 
@@ -205,6 +290,8 @@ function resolvePendingDuel(state: GameState, rng:()=>number) {
   if (!playerPlay || !opponentPlay) throw new Error("Both plays are required to resolve a duel.");
 
   const power=calculateDuel(state,playerPlay,opponentPlay);
+  consumeShields(state.player,opponentPlay.position);
+  consumeShields(state.opponent,playerPlay.position);
   consumePreparedState(state,playerPlay,opponentPlay);
 
   if (power.playerSaintTriggered) state.player.saintPassiveUsed=true;
@@ -220,6 +307,14 @@ function resolvePendingDuel(state: GameState, rng:()=>number) {
 
   state.player.roundPlays.push(playerPlay);
   state.opponent.roundPlays.push(opponentPlay);
+
+  // El Archivo recibe Dagas consumidas y las dos marcas generadas por
+  // cada Reliquia que todavía protege una posición sin usar.
+  for(const [owner,play] of [[state.player,playerPlay],[state.opponent,opponentPlay]] as const){
+    for(let i=0;i<(play.daggers||0);i++)
+      owner.archives[play.position].push(archivedSpecial("dagger",owner.champion.faction));
+    collectRelicArchive(owner,state.round);
+  }
 
   let outcome: Side | "draw"="draw";
   if (power.player>power.opponent) {
@@ -272,6 +367,15 @@ function resolvePendingDuel(state: GameState, rng:()=>number) {
   recordAugury(state,state.opponent,opponentPlay,playerPlay);
   applyPrioryHealing(state,state.player);
   applyPrioryHealing(state,state.opponent);
+
+  // Se crean después de resolver el duelo, sin retroactividad.
+  for(const [owner,play] of [[state.player,playerPlay],[state.opponent,opponentPlay]] as const){
+    const created=generateOnPlay(owner,play.card,play.position,state.round);
+    if(created)state.events.push({
+      text:`${owner.champion.name.split(",")[0]} generó ${SPECIAL_NAME[created]}.`,
+      kind:"info"
+    });
+  }
 
   if (outcome==="player") state.initiative="player";
   else if (outcome==="opponent") state.initiative="opponent";
@@ -329,21 +433,26 @@ export function submitPlayerPlay(
   state: GameState,
   handIndex: number,
   position: Position,
-  rng:()=>number=Math.random
+  rng:()=>number=Math.random,
+  daggers=0
 ) {
   if (state.phase!=="awaiting_player") return;
   if (!legalPositions(state.player).includes(position)) return;
   const card=state.player.hand[handIndex];
   if (!card) return;
+  spendDaggers(state.player,daggers);
 
   const [chosen]=state.player.hand.splice(handIndex,1);
-  state.pendingPlayerPlay={card:chosen,position};
+  state.pendingPlayerPlay={card:chosen,position,daggers};
 
 
   if (state.initiative==="player") {
+    prepareAISpecials(state);
     const aiChoice=chooseAIPlay(state,state.pendingPlayerPlay,false,rng);
     const [aiCard]=state.opponent.hand.splice(aiChoice.handIndex!,1);
-    state.pendingOpponentPlay={...aiChoice,card:aiCard};
+    const aiDaggers=aiDaggerCount(state);
+    spendDaggers(state.opponent,aiDaggers);
+    state.pendingOpponentPlay={...aiChoice,card:aiCard,daggers:aiDaggers};
   } else if (!state.pendingOpponentPlay) {
     throw new Error("Opponent initiative requires a staged AI play.");
   }
@@ -396,7 +505,8 @@ export function submitHumanPlay(
   side:Side,
   handIndex:number,
   position:Position,
-  rng:()=>number=Math.random
+  rng:()=>number=Math.random,
+  daggers=0
 ):void {
   if(state.mode!=="pvp")throw new Error("La sala no es PvP.");
   if(nextHumanSide(state)!==side)throw new Error("No es tu turno.");
@@ -405,8 +515,9 @@ export function submitHumanPlay(
   const rival=side==="player"?state.opponent:state.player;
   if(!legalPositions(owner).includes(position))throw new Error("Posición ocupada.");
   if(handIndex<0 || handIndex>=owner.hand.length)throw new Error("Carta inexistente.");
+  spendDaggers(owner,daggers);
   const [card]=owner.hand.splice(handIndex,1);
-  const staged:EnginePlay={card,position};
+  const staged:EnginePlay={card,position,daggers};
   const isOpening=state.pendingPlayerPlay===null && state.pendingOpponentPlay===null;
   if(isOpening){
     const opening=previewOpeningPower(state,staged,owner,rival);
