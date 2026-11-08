@@ -47,3 +47,9 @@
   .app-shell .hand-zone.has-specials .hand{height:calc(100% - 43px)}
 }
 @media(prefers-reduced-motion:reduce){.app-shell .special-hand *, .manifest-slots *{animation:none!important;transition:none!important}}
+
+.tutorial-manifestations{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.tutorial-manifestations>div{display:grid;gap:7px;background:#191919;color:#f3eadc;padding:14px;border-radius:5px}
+.tutorial-manifestations strong{color:#d3b787;font-size:12px;line-height:1.15}
+.tutorial-manifestations span{font-size:12px;line-height:1.35}
+@media(max-width:500px){.tutorial-manifestations{grid-template-columns:1fr}.tutorial-manifestations>div{padding:8px;gap:3px}.tutorial-manifestations span{font-size:11px}}
