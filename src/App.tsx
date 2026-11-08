@@ -21,7 +21,8 @@ import { answerQuiero, cloneGame, startGame, submitPlayerPlay, submitPlayerSpeci
 import { SPECIAL_NAME,SPECIAL_TEXT,copyTargets } from "./engine/manifestations";
 import type { CopyTarget } from "./engine/manifestations";
 import { capacity, legalPositions } from "./engine/rules";
-import type { AIDifficulty, DuelSummary, EnginePlay, GameState, ActiveManifestation } from "./engine/types";
+import type { AIDifficulty, DuelSummary, EnginePlay, GameState, ActiveManifestation, SpecialKind } from "./engine/types";
+import { ManifestCard, ManifestCardDialog } from "./ManifestCard";
 import { formatPowerDelta, playEffectFeedback, playPowerDelta } from "./engine/presentation";
 import { appendMatchHistory, clearSavedMatch, completedMatch, newSavedMatch, readMatchHistory, readSavedMatch, summarizeHistory, writeSavedMatch } from "./persistence";
 import type { SavedMatch } from "./persistence";
@@ -333,8 +334,13 @@ function Slot({
   active,
   capacityValue,
   manifestations,
+  archiveCards,
   onTap,
-  onInspect
+  onInspect,
+  onManifestInspect,
+  onCopyTarget,
+  onCopyArchive,
+  onDropRelic
 }: {
   side: "player" | "opponent";
   position: Position;
@@ -345,26 +351,60 @@ function Slot({
   active: boolean;
   capacityValue: number;
   manifestations?: ActiveManifestation[];
+  archiveCards?: CardDefinition[];
   onTap?: () => void;
   onInspect: (played:EnginePlay)=>void;
+  onManifestInspect: (kind:SpecialKind)=>void;
+  onCopyTarget?: (target:CopyTarget)=>void;
+  onCopyArchive?: ()=>void;
+  onDropRelic?: ()=>void;
 }) {
   const focusAlreadyInCards = !!focusPlay && cards.some(played=>samePlay(played,focusPlay));
+  const fieldCards=(manifestations||[]).filter(token=>token.position===position);
+  const archivedKind=archiveCards?.find(card=>card.specialArchiveKind==="dagger")?.specialArchiveKind
+    ||archiveCards?.find(card=>card.specialArchiveKind==="relic")?.specialArchiveKind;
   return (
     <div
       className={`board-slot ${side} ${active ? "drop-active" : ""}`}
       data-position={position}
       data-side={side}
       onClick={side === "player" ? onTap : undefined}
+      onDragOver={side==="player"&&onDropRelic
+        ? event=>{if(event.dataTransfer.types.includes("text/plain"))event.preventDefault();} : undefined}
+      onDrop={side==="player"&&onDropRelic
+        ? event=>{if(event.dataTransfer.getData("text/plain")==="daggerlight-relic"){
+          event.preventDefault();
+          onDropRelic();
+        }} : undefined}
     >
-      <span className="archive-count" title="Archivo">{archive}</span>
+      {archivedKind
+        ? <button type="button" className="archive-count manifest-archive-button"
+          title={onCopyArchive&&archiveCards?.some(card=>card.specialArchiveKind==="dagger")
+            ? "Copiar una Daga Etérea archivada con Simetría Perfecta"
+            : "Inspeccionar carta especial archivada"}
+          onClick={event=>{
+            event.stopPropagation();
+            if(onCopyArchive&&archiveCards?.some(card=>card.specialArchiveKind==="dagger"))
+              onCopyArchive();
+            else onManifestInspect(archivedKind);
+          }}>{archive}</button>
+        : <span className="archive-count" title="Archivo">{archive}</span>}
       <span className="slot-capacity" title="Capacidad">{cards.length}/{capacityValue}</span>
-      {!!manifestations?.length && <div className="manifest-slots" aria-label="Manifestaciones">
-        {(["shield","relic"] as const).map(kind=>{
-          const n=manifestations.filter(t=>t.kind===kind&&t.position===position).length;
-          return n>0?<span key={kind} className={"manifest-position "+kind}
-            title={SPECIAL_TEXT[kind]}>{kind==="shield"?"ESCUDO":"RELIQUIA"}{n>1?" ×"+n:""}</span>:null;
-        })}
-      </div>}
+      {!!fieldCards.length && <div className="manifest-board-zone" aria-label="Cartas especiales en esta posición">
+        {fieldCards.map((token,index)=><button type="button" key={token.kind+"-"+token.createdRound+"-"+index}
+          className={"manifest-board-item"+(onCopyTarget?" is-copy-target":"")}
+          title={onCopyTarget
+            ? "Copiar "+SPECIAL_NAME[token.kind]+" con Simetría Perfecta"
+            : "Ver "+SPECIAL_NAME[token.kind]}
+          aria-label={(onCopyTarget?"Copiar ":"Inspeccionar ")+SPECIAL_NAME[token.kind]}
+          onClick={event=>{
+            event.stopPropagation();
+            if(onCopyTarget)onCopyTarget({kind:token.kind,position});
+            else onManifestInspect(token.kind);
+          }}>
+          <ManifestCard kind={token.kind} size="field"/>
+        </button>)}
+      </div>}}
       <div className="slot-stack">
         <>
             {cards.map((played,index)=>(
@@ -421,10 +461,9 @@ export default function App() {
   const [daggersToUse,setDaggersToUse]=useState(0);
   const [specialMode,setSpecialMode]=useState<"relic"|"symmetry"|null>(null);
   const [specialError,setSpecialError]=useState("");
+  const [specialInspection,setSpecialInspection]=useState<SpecialKind|null>(null);
   const specialHand=game?.player.specialHand||[];
   const availableDaggers=specialHand.filter(kind=>kind==="dagger").length;
-  const availableRelics=specialHand.filter(kind=>kind==="relic").length;
-  const availableSymmetry=specialHand.filter(kind=>kind==="symmetry").length;
   const symmetryTargets=game?copyTargets(game.opponent):[];
 
   const hand=game?.player.hand ?? [];
@@ -547,6 +586,10 @@ export default function App() {
     setDuelAuguries([]);
     setDrag(null);
     setHoveredPosition(null);
+    setDaggersToUse(0);
+    setSpecialMode(null);
+    setSpecialInspection(null);
+    setSpecialError("");
   }
 
   function beginMatch() {
@@ -561,6 +604,9 @@ export default function App() {
     setPreDuel(null);
     setFinalStep("ceremony");
     setGame(null);
+    setDaggersToUse(0);
+    setSpecialMode(null);
+    setSpecialInspection(null);
     setScreen(destination);
   }
 
@@ -805,7 +851,14 @@ export default function App() {
                 pendingCard={pendingOpponent?.position===position ? pendingOpponent : null}
                 focusPlay={focusOpponent?.position===position ? focusOpponent : null}
                 archive={game.opponent.archives[position].length}
-                 manifestations={game.opponent.manifestations}
+                archiveCards={game.opponent.archives[position]}
+                manifestations={game.opponent.manifestations}
+                onManifestInspect={setSpecialInspection}
+                onCopyTarget={specialMode==="symmetry"
+                  ? target=>useSpecial("symmetry",undefined,target) : undefined}
+                onCopyArchive={specialMode==="symmetry"&&game.opponent.archives[position]
+                  .some(card=>card.specialArchiveKind==="dagger")
+                  ? ()=>useSpecial("symmetry",undefined,{kind:"dagger",position}):undefined}
                 active={false}
                 capacityValue={capacity(game.opponent,position)}
                 onInspect={inspectPlay}
@@ -822,7 +875,10 @@ export default function App() {
                 cards={game.player.roundPlays.filter(play=>play.position===position)}
                 focusPlay={focusPlayer?.position===position ? focusPlayer : null}
                 archive={game.player.archives[position].length}
-                 manifestations={game.player.manifestations}
+                archiveCards={game.player.archives[position]}
+                manifestations={game.player.manifestations}
+                onManifestInspect={setSpecialInspection}
+                onDropRelic={()=>useSpecial("relic",position)}
                 active={specialMode==="relic"
                    ? game.player.roundPlays.every(p=>p.position!==position)
                    : (hoveredPosition===position || (!!selectedCard&&!drag)) && legal.includes(position)}
@@ -860,34 +916,14 @@ export default function App() {
             <span>TU MANO</span>
             <small>{hand.length} cartas</small>
           </div>
-          {!!specialHand.length && <div className="special-hand" aria-label="Cartas especiales">
-             {availableDaggers>0 && <button type="button" className={daggersToUse?"armed":""}
-               title={SPECIAL_TEXT.dagger}
-               disabled={game.phase!=="awaiting_player" || !!duelPreview}
-               onClick={()=>{setSpecialMode(null);setDaggersToUse((daggersToUse+1)%(availableDaggers+1));}}>
-                 DAGA +1 · {daggersToUse}/{availableDaggers}
-               </button>}
-             {availableRelics>0 && <button type="button" className={specialMode==="relic"?"armed":""}
-               title={SPECIAL_TEXT.relic}
-               disabled={game.phase!=="awaiting_player" || !!duelPreview}
-               onClick={()=>setSpecialMode(specialMode==="relic"?null:"relic")}>
-                 RELIQUIA · {availableRelics}
-               </button>}
-             {availableSymmetry>0 && <button type="button" className={specialMode==="symmetry"?"armed":""}
-               title={SPECIAL_TEXT.symmetry}
-               disabled={game.phase!=="awaiting_player" || !!duelPreview || !symmetryTargets.length}
-               onClick={()=>setSpecialMode(specialMode==="symmetry"?null:"symmetry")}>
-                 SIMETRÍA · {availableSymmetry}
-               </button>}
-             {specialMode==="relic" && <span className="special-instruction">ELEGÍ UNA POSICIÓN VACÍA</span>}
-           </div>}
-           {specialMode==="symmetry" && <div className="special-copy-targets">
-             {symmetryTargets.map((target,i)=><button type="button" key={target.kind+"-"+target.position+"-"+i}
-               onClick={()=>useSpecial("symmetry",undefined,target)}>
-               COPIAR {SPECIAL_NAME[target.kind]} · {positionLabels[target.position].toUpperCase()}
-             </button>)}
-           </div>}
-           {specialError&&<span className="special-error" role="alert">{specialError}</span>}
+          {specialError && <span className="special-error" role="alert">{specialError}</span>}
+          {specialMode==="relic" && <span className="manifest-special-hint">RELIQUIA · ELEGÍ UNA POSICIÓN VACÍA</span>}
+          {specialMode==="symmetry" && <span className="manifest-special-hint">
+            {symmetryTargets.length
+              ? "SIMETRÍA · TOCÁ LA CARTA RIVAL QUE QUERÉS COPIAR"
+              : "SIMETRÍA · EL RIVAL AÚN NO TIENE ESPECIALES VISIBLES"}
+          </span>}
+          <div className="hand-layout">
            <div className="hand" key={game.round}>
             {hand.map((card,index)=>(
               <button
@@ -909,7 +945,52 @@ export default function App() {
             ))}
             {hand.length===0 && <div className="empty-hand">Sin cartas disponibles.</div>}
           </div>
+          {!!specialHand.length && <aside className="manifest-hand" aria-label="Mano de cartas especiales">
+            <div className="manifest-hand-heading"><span>ESPECIALES</span><span>{specialHand.length} CARTAS</span></div>
+            <div className="manifest-hand-cards">
+              {specialHand.map((kind,index)=>{
+                const daggerNumber=kind==="dagger" ? specialHand.slice(0,index+1).filter(k=>k==="dagger").length : 0;
+                const chosen=kind==="dagger" ? daggerNumber<=daggersToUse : specialMode===kind;
+                const canUse=game.phase==="awaiting_player" && !duelPreview;
+                return <div className="manifest-hand-entry" key={kind+"-"+index}>
+                  <button type="button" draggable={kind==="relic"&&canUse}
+                    className={"manifest-hand-card"+(chosen?" is-selected":"")}
+                    disabled={!canUse}
+                    title={kind==="dagger" ? "Equipar Daga Etérea · +1 Poder con tu próxima carta"
+                      : kind==="relic" ? "Colocar Reliquia en una posición" : "Copiar una carta especial rival"}
+                    aria-pressed={chosen}
+                    aria-label={SPECIAL_NAME[kind]+(kind==="dagger"?" · "+daggerNumber+" de "+availableDaggers:"")}
+                    onDragStart={event=>{
+                      if(kind==="relic"){
+                        setSpecialMode("relic");
+                        event.dataTransfer.setData("text/plain","daggerlight-relic");
+                        event.dataTransfer.effectAllowed="move";
+                      }
+                    }}
+                    onClick={()=>{
+                      setSpecialError("");
+                      if(kind==="dagger"){
+                        setSpecialMode(null);
+                        setDaggersToUse(chosen?daggerNumber-1:daggerNumber);
+                      }else{
+                        setDaggersToUse(0);
+                        setSpecialMode(specialMode===kind?null:kind);
+                      }
+                    }}>
+                    <ManifestCard kind={kind} size="hand" selected={chosen}/>
+                  </button>
+                  <button type="button" className="manifest-info-button"
+                    title={"Inspeccionar "+SPECIAL_NAME[kind]}
+                    aria-label={"Ver habilidad de "+SPECIAL_NAME[kind]}
+                    onClick={()=>setSpecialInspection(kind)}>i</button>
+                </div>;
+              })}
+            </div>
+          </aside>}
+          </div>
         </section>
+
+        {specialInspection && <ManifestCardDialog kind={specialInspection} onClose={()=>setSpecialInspection(null)}/>}
 
         {inspection && (
           <div

@@ -16,6 +16,7 @@ import "./champion-v4.css";
 import "./site-polish-v4.css";
 import "./playtest-pvp.css";
 import "./manifestations.css";
+import "./manifest-card-ui.css";
 
 initializeTheme();
 

@@ -1,0 +1,150 @@
+/* Daggerlight Manifest Cards v0.2 — four real card faces, flat inks, no gradients */
+.manifest-card{
+  --manifest-paper:#e9dbc0;
+  --manifest-ink:#171717;
+  --manifest-accent:#ab8148;
+  --manifest-icon-ink:#e9dbc0;
+  width:100%;height:100%;aspect-ratio:63/88;
+  overflow:hidden;position:relative;isolation:isolate;
+  display:grid;grid-template-rows:8% 59% 33%;
+  border-radius:3px;color:var(--manifest-ink);
+  background:var(--manifest-paper);
+  font-family:Inter,Arial,system-ui,sans-serif;
+  box-shadow:0 3px 7px #0004;
+  user-select:none;
+}
+.manifest-card--dagger{--manifest-paper:#ded0b4;--manifest-accent:#92642e;--manifest-icon-ink:#ded0b4}
+.manifest-card--shield{--manifest-paper:#ddd5c4;--manifest-accent:#35465b;--manifest-icon-ink:#ddd5c4}
+.manifest-card--relic{--manifest-paper:#efe1c4;--manifest-accent:#8f6130;--manifest-icon-ink:#efe1c4}
+.manifest-card--symmetry{--manifest-paper:#e9e4d9;--manifest-accent:#494d51;--manifest-icon-ink:#e9e4d9}
+.manifest-card-top{background:var(--manifest-ink);color:#e7d2a8;display:flex;align-items:center;justify-content:space-between;padding:0 8%;font-weight:850;font-size:clamp(4px,.5vw,8px);letter-spacing:.06em}
+.manifest-card-top span:last-child{font-size:1.5em}
+.manifest-card-image{min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--manifest-accent)}
+.manifest-symbol{width:76%;height:74%;max-width:100%;display:block;flex:0 1 auto}
+.manifest-card-effect{font-size:clamp(5px,.6vw,10px);font-weight:900;letter-spacing:.045em}
+.manifest-card-copy{min-height:0;display:flex;flex-direction:column;gap:3px;justify-content:flex-start;background:var(--manifest-ink);color:#f2e9d9;padding:7% 7% 3%}
+.manifest-card-copy strong{font-weight:950;font-size:clamp(7px,.9vw,15px);line-height:1.05;letter-spacing:-.035em;overflow-wrap:anywhere}
+.manifest-card-copy i{width:100%;height:1px;flex:none;background:var(--manifest-accent)}
+.manifest-card-copy p{font-size:clamp(6px,.67vw,11px);font-weight:560;line-height:1.25;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.manifest-card--field{grid-template-rows:9% 63% 28%;border-radius:2px;box-shadow:0 2px 4px #0006}
+.manifest-card--field .manifest-card-top{font-size:3px;padding:0 8%}
+.manifest-card--field .manifest-card-effect{font-size:3.8px}
+.manifest-card--field .manifest-card-copy{padding:7% 4% 2%}
+.manifest-card--field .manifest-card-copy strong{font-size:clamp(4.5px,.5vw,7px)}
+.manifest-card--field .manifest-card-copy p{display:none}
+.manifest-card--field .manifest-card-copy i{margin-top:2px}
+.manifest-card--modal{width:min(72vw,270px);height:auto;aspect-ratio:63/88;border-radius:4px;box-shadow:0 12px 32px #0007}
+.manifest-card--modal .manifest-card-top{font-size:10px}
+.manifest-card--modal .manifest-card-effect{font-size:12px}
+.manifest-card--modal .manifest-card-copy{gap:9px;padding:15px 16px}
+.manifest-card--modal .manifest-card-copy strong{font-size:22px;line-height:1.05}
+.manifest-card--modal .manifest-card-copy p{display:block;overflow:visible;-webkit-line-clamp:unset;font-size:13px;line-height:1.32}
+.manifest-card--hand .manifest-card-top{font-size:clamp(4px,.49vw,7px)}
+.manifest-card--hand .manifest-card-copy strong{font-size:clamp(6px,.75vw,12px)}
+.manifest-card--hand .manifest-card-copy p{font-size:clamp(5px,.54vw,9px)}
+.manifest-card.is-armed{box-shadow:0 0 0 3px #be9454,0 6px 14px #0005}
+
+/* Real special cards stay visible beside the three-card hand. */
+.app-shell .hand-zone.has-specials{height:clamp(115px,23dvh,178px);min-height:0}
+.app-shell .hand-layout{height:calc(100% - 17px);display:flex;gap:6px;min-width:0;overflow:hidden}
+.app-shell .hand-layout>.hand{flex:1 1 0;width:auto;min-width:0;height:100%!important;padding:0;justify-content:center}
+.app-shell .hand-layout .hand-card{max-width:32%;min-width:0;height:min(100%,160px)}
+.app-shell .manifest-hand{width:clamp(120px,36%,300px);min-width:0;display:grid;grid-template-rows:17px minmax(0,1fr);background:#191919;padding:2px 4px 4px;border-radius:3px}
+.app-shell .manifest-hand-heading{display:flex;justify-content:space-between;align-items:center;color:#eadfcf;font:900 8px/1 Inter,system-ui,sans-serif;letter-spacing:.07em}
+.app-shell .manifest-hand-cards{display:flex;align-items:flex-end;gap:6px;overflow-x:auto;overflow-y:hidden;min-height:0;scrollbar-width:thin;scrollbar-color:#a78554 transparent;padding:2px 2px 4px}
+.app-shell .manifest-hand-entry{position:relative;flex:0 0 auto;height:100%;width:auto;aspect-ratio:63/88;max-width:76px;animation:manifest-card-deal .26s cubic-bezier(.23,.77,.3,1) both}
+.app-shell .manifest-hand-card{padding:0;border:0;background:none;color:inherit;display:block;width:100%;height:100%;cursor:pointer;border-radius:3px;transition:transform .15s ease}
+.app-shell .manifest-hand-card.is-selected{transform:translateY(-3px)}
+.app-shell .manifest-hand-card:focus-visible{outline:3px solid #d3b787;outline-offset:2px}
+.app-shell .manifest-info-button{position:absolute;right:2px;top:2px;z-index:10;border:0;border-radius:50%;width:16px;height:16px;background:#f0e3cc;color:#191919;font:900 11px/1 Inter,system-ui,sans-serif;cursor:pointer;padding:0;box-shadow:0 1px 3px #0007}
+.app-shell .manifest-info-button:focus-visible{outline:2px solid #e5c590;outline-offset:1px}
+.app-shell .manifest-special-hint{position:absolute;z-index:20;right:3%;bottom:calc(100% + 2px);max-width:70%;background:#191919;color:#f4e6d4;padding:5px 7px;font:850 10px/1.2 Inter,system-ui,sans-serif;border-radius:3px}
+
+/* Played manifestations are full mini cards, distinct from regular plays. */
+.app-shell .manifest-board-zone{position:absolute;bottom:3px;left:3px;z-index:8;display:flex;gap:3px;align-items:flex-end;max-width:98%;max-height:66%;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;padding:0 2px 3px;pointer-events:none}
+.app-shell .manifest-board-zone::-webkit-scrollbar{display:none}
+.app-shell .manifest-board-item{pointer-events:auto;flex:none;display:block;width:clamp(23px,3vw,39px);aspect-ratio:63/88;height:auto;border:0;background:none;padding:0;cursor:pointer;transition:transform .15s ease;animation:manifest-card-deal .2s ease-out both}
+.app-shell .manifest-board-item:focus-visible{outline:2px solid #b0854c;outline-offset:1px}
+.app-shell .manifest-board-item.is-copy-target{box-shadow:0 0 0 2px #bc985d;border-radius:3px}
+.app-shell .manifest-board-item .manifest-card{pointer-events:none}
+.app-shell .manifest-board-zone:has(.manifest-board-item) + .slot-stack .played-card{margin-inline:0}
+.app-shell .manifest-board-zone:has(.manifest-board-item) + .slot-stack .current-board-card{max-width:65%}
+.app-shell .manifest-archive-button{border:0;background:#191919;color:#e8d2ab;font:900 9px/1 Inter,system-ui,sans-serif;cursor:pointer}
+.app-shell .manifest-archive-button:focus-visible{outline:2px solid #bd9758;outline-offset:2px}
+
+/* One full-size card when you inspect special cards in hand or on board. */
+.manifest-inspect-overlay{position:fixed;z-index:13000;inset:0;display:grid;place-items:center;background:#000c;padding:20px}
+.manifest-inspect-dialog{position:relative;max-height:92dvh;overflow-y:auto;padding:24px 17px 16px;background:#1b1b1b;border-radius:6px;display:grid;place-items:center;animation:manifest-zoom .25s cubic-bezier(.2,.8,.3,1) both}
+.manifest-inspect-close{position:absolute;top:3px;right:3px;z-index:2;width:30px;height:30px;border:0;border-radius:50%;font-size:22px;background:#eae2d5;color:#191919;cursor:pointer}
+@keyframes manifest-zoom{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes manifest-card-deal{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* Shared PvP hand and field cards. */
+.pvp-manifest-hand{display:flex;gap:8px;align-items:flex-end;overflow-x:auto;overflow-y:hidden;padding:8px 4px;background:#292929;max-height:168px}
+.pvp-manifest-entry{flex:none;width:92px;aspect-ratio:63/88;position:relative}
+.pvp-manifest-entry .manifest-card--hand .manifest-card-copy strong{font-size:8px}
+.pvp-manifest-entry .manifest-card--hand .manifest-card-copy p{font-size:6px}
+.pvp-manifest-entry>.pvp-manifest-select{display:block;padding:0;border:0;background:none;width:100%;height:100%;cursor:pointer}
+.pvp-manifest-entry>.pvp-manifest-info{position:absolute;top:2px;right:2px;z-index:10;border:0;background:#eae2d5;color:#191919;width:19px;height:19px;border-radius:50%;font-weight:900;cursor:pointer}
+.pvp-manifest-entry.is-selected .manifest-card{box-shadow:0 0 0 3px #d3b787}
+.pvp-field-manifests{display:flex;gap:4px;align-items:center;overflow-x:auto;max-height:65px}
+.pvp-field-manifests>button{flex:none;padding:0;border:0;background:none;display:block;width:36px;aspect-ratio:63/88;cursor:pointer}
+.pvp-field-manifests .manifest-card{pointer-events:none}
+.pvp-field-manifests>button.is-copy-target{box-shadow:0 0 0 2px #c5a163}
+.pvp-archive-copy{display:inline-flex;align-items:center;gap:4px;border:0;background:#191919;color:#eae2d5;font:850 9px/1.1 Inter,system-ui,sans-serif;padding:4px 5px;cursor:pointer}
+.pvp-special-guidance{font-size:11px;font-weight:800;margin:6px 0 9px;color:#d3b787}
+.pvp-field-manifests .manifest-card--field .manifest-card-copy strong{font-size:5px}
+
+/* Small phone landscape and laptop screens keep the complete hand inside viewport. */
+@media(max-width:700px){
+ .app-shell .hand-zone.has-specials{height:clamp(105px,22dvh,157px)}
+ .app-shell .hand-layout{gap:3px}
+ .app-shell .manifest-hand{width:41%;grid-template-rows:13px minmax(0,1fr);padding:1px 2px 2px}
+ .app-shell .manifest-hand-heading{font-size:7px}
+ .app-shell .manifest-hand-cards{gap:3px;padding:1px 1px 3px}
+ .app-shell .manifest-hand-entry{max-width:60px}
+ .app-shell .manifest-board-item{width:clamp(19px,5.5vw,30px)}
+ .manifest-card--hand .manifest-card-copy p{display:none}
+ .manifest-card--hand .manifest-card-copy strong{font-size:clamp(5px,1vw,8px)}
+ .app-shell .manifest-info-button{width:13px;height:13px;font-size:9px}
+ .pvp-manifest-entry{width:66px}
+}
+@media(max-height:650px){
+ .app-shell .hand-zone.has-specials{height:clamp(98px,22dvh,139px)}
+ .app-shell .manifest-hand{grid-template-rows:13px minmax(0,1fr)}
+ .app-shell .manifest-board-item{width:clamp(18px,3vw,29px)}
+}
+@media(hover:hover) and (pointer:fine){
+ .app-shell .manifest-hand-card:hover,.app-shell .manifest-board-item:hover{transform:translateY(-3px) scale(1.04);z-index:12}
+ .pvp-manifest-select:hover,.pvp-field-manifests>button:hover{transform:translateY(-3px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .manifest-inspect-dialog,.app-shell .manifest-hand-entry,.app-shell .manifest-board-item{animation:none!important}
+ .app-shell .manifest-hand-card,.app-shell .manifest-board-item{transition:none!important}
+}
+
+/* PvP lane card stacks remain at normal size beneath the anchored mini cards. */
+.pvp-lane-cards{position:relative}
+.pvp-lane-cards>.pvp-field-manifests{
+  position:absolute;bottom:2px;left:3px;z-index:6;
+  display:flex;align-items:flex-end;gap:3px;flex:none!important;
+  height:auto;max-height:52px;width:auto;max-width:calc(100% - 6px);
+  min-height:0;overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:none;pointer-events:none
+}
+.pvp-lane-cards>.pvp-field-manifests::-webkit-scrollbar{display:none}
+.pvp-lane-cards>.pvp-field-manifests>button{
+  pointer-events:auto;width:clamp(20px,2.9vw,36px);
+  aspect-ratio:63/88;height:auto;max-height:52px;max-width:none;
+  display:block;padding:0;flex:none;position:relative
+}
+.pvp-lane-cards>.pvp-field-manifests>button .manifest-card{width:100%;height:100%}
+.pvp-lane-cards>.pvp-field-manifests>button:hover{transform:translateY(-2px)}
+.pvp-hand>.pvp-manifest-hand{justify-content:flex-start;align-items:flex-end;gap:8px;min-height:0}
+.pvp-hand>.pvp-manifest-hand .pvp-manifest-select{display:block;max-width:none;max-height:none}
+.pvp-hand>.pvp-manifest-hand .pvp-manifest-entry{max-width:none;height:auto;flex:none}
+@media(max-width:740px){
+ .pvp-lane-cards>.pvp-field-manifests{max-height:38px}
+ .pvp-lane-cards>.pvp-field-manifests>button{width:23px;max-height:36px}
+ .pvp-hand>.pvp-manifest-hand{gap:5px}
+}

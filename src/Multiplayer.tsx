@@ -3,7 +3,8 @@ import { positions,positionLabels } from "./data";
 import { champions } from "./engine/champions";
 import { legalPositions } from "./engine/rules";
 import { SPECIAL_NAME,SPECIAL_TEXT,copyTargets } from "./engine/manifestations";
-import type { GameState, EnginePlay } from "./engine/types";
+import type { GameState, EnginePlay, SpecialKind } from "./engine/types";
+import { ManifestCard, ManifestCardDialog } from "./ManifestCard";
 import type { CardDefinition,Position } from "./types";
 import { cardSpriteBackground } from "./cardArtwork";
 import { championImageUrl,championShortName } from "./championArtwork";
@@ -51,6 +52,7 @@ export default function Multiplayer({onBack}:{onBack:()=>void}) {
   const [daggersToUse,setDaggersToUse]=useState(0);
   const [specialMode,setSpecialMode]=useState<"relic"|"symmetry"|null>(null);
   const [inspected,setInspected]=useState<CardDefinition|null>(null);
+  const [inspectedSpecial,setInspectedSpecial]=useState<SpecialKind|null>(null);
   const [resultOpen,setResultOpen]=useState(false);
   const [fun,setFun]=useState(4),[clarity,setClarity]=useState(4),[comment,setComment]=useState("");
   const [submitted,setSubmitted]=useState(false);
@@ -101,8 +103,6 @@ export default function Multiplayer({onBack}:{onBack:()=>void}) {
   const canPlace=selected!==null&&myTurn&&game?.phase==="awaiting_player";
   const specialHand=game?.player.specialHand||[];
   const daggersAvailable=specialHand.filter(x=>x==="dagger").length;
-  const relicsAvailable=specialHand.filter(x=>x==="relic").length;
-  const symmetryAvailable=specialHand.filter(x=>x==="symmetry").length;
   const symmetryTargets=game?copyTargets(game.opponent):[];
   const invite=useMemo(()=>{
     try {const url=new URL(window.location.href);url.searchParams.set("room",code);return url.toString();}
@@ -197,19 +197,46 @@ export default function Multiplayer({onBack}:{onBack:()=>void}) {
             myTurn?(game.pendingOpponentPlay?"TE TOCA RESPONDER":"TE TOCA ABRIR"):
             "ESPERANDO LA JUGADA RIVAL"}</div>
           <div className="pvp-board">
-            {positions.map(pos=><section key={pos} className="pvp-lane">
+            {positions.map(pos=><section key={pos} className="pvp-lane"
+              onDragOver={event=>{if(event.dataTransfer.types.includes("text/plain"))event.preventDefault();}}
+              onDrop={event=>{if(event.dataTransfer.getData("text/plain")==="daggerlight-relic"){
+                event.preventDefault();
+                if(myTurn)void send({type:"special",kind:"relic",position:pos});
+              }}}>
               <h2>{positionLabels[pos]}</h2>
               <div className="pvp-lane-cards">
-                <span>{game.opponent.roundPlays.filter(p=>p.position===pos).length} / {pos==="siniestra"&&game.opponent.champion.id==="sinistral"?2:1} · ARCHIVO {game.opponent.archives[pos].length}</span>
-                <div className="pvp-token-tags">{game.opponent.manifestations?.filter(t=>t.position===pos).map((t,i)=>
-                  <span key={i} title={SPECIAL_TEXT[t.kind]}>{SPECIAL_NAME[t.kind]}</span>)}</div>
+                <span>{game.opponent.roundPlays.filter(p=>p.position===pos).length} / {pos==="siniestra"&&game.opponent.champion.id==="sinistral"?2:1} ·
+                  {specialMode==="symmetry"&&myTurn&&game.opponent.archives[pos].some(card=>card.specialArchiveKind==="dagger")
+                    ? <button className="pvp-archive-copy" title="Copiar la Daga archivada"
+                        onClick={()=>void send({type:"special",kind:"symmetry",target:{kind:"dagger",position:pos}})}>
+                        ARCHIVO {game.opponent.archives[pos].length} · DAGA
+                      </button>
+                    : <span>ARCHIVO {game.opponent.archives[pos].length}</span>}
+                </span>
+                <div className="pvp-field-manifests" aria-label="Especiales rivales">
+                  {game.opponent.manifestations?.filter(t=>t.position===pos).map((token,i)=>
+                    <button type="button" key={token.kind+"-"+i}
+                      className={specialMode==="symmetry"&&myTurn?"is-copy-target":""}
+                      title={specialMode==="symmetry"&&myTurn
+                        ? "Copiar "+SPECIAL_NAME[token.kind]:SPECIAL_TEXT[token.kind]}
+                      onClick={()=>specialMode==="symmetry"&&myTurn
+                        ? void send({type:"special",kind:"symmetry",target:{kind:token.kind,position:pos}})
+                        :setInspectedSpecial(token.kind)}>
+                      <ManifestCard kind={token.kind} size="field"/>
+                    </button>)}
+                </div>
                 <div>{game.opponent.roundPlays.filter(p=>p.position===pos).map((p,i)=><button key={i} onClick={()=>setInspected(p.card)}><BoardPlay played={p}/></button>)}
                 {game.pendingOpponentPlay?.position===pos&&<button onClick={()=>setInspected(game.pendingOpponentPlay!.card)}><BoardPlay played={game.pendingOpponentPlay}/></button>}</div>
               </div>
               <div className="pvp-lane-cards">
                 <span>{game.player.roundPlays.filter(p=>p.position===pos).length} / {legalPositions(game.player).includes(pos)?"1+":"1"} · ARCHIVO {game.player.archives[pos].length}</span>
-                <div className="pvp-token-tags">{game.player.manifestations?.filter(t=>t.position===pos).map((t,i)=>
-                  <span key={i} title={SPECIAL_TEXT[t.kind]}>{SPECIAL_NAME[t.kind]}</span>)}</div>
+                <div className="pvp-field-manifests" aria-label="Tus especiales">
+                  {game.player.manifestations?.filter(t=>t.position===pos).map((token,i)=>
+                    <button type="button" key={token.kind+"-"+i}
+                      title={SPECIAL_TEXT[token.kind]} onClick={()=>setInspectedSpecial(token.kind)}>
+                      <ManifestCard kind={token.kind} size="field"/>
+                    </button>)}
+                </div>
                 <div>{game.player.roundPlays.filter(p=>p.position===pos).map((p,i)=><button key={i} onClick={()=>setInspected(p.card)}><BoardPlay played={p}/></button>)}
                   {game.pendingPlayerPlay?.position===pos&&<button onClick={()=>setInspected(game.pendingPlayerPlay!.card)}><BoardPlay played={game.pendingPlayerPlay}/></button>}
                 </div>
@@ -231,27 +258,43 @@ export default function Multiplayer({onBack}:{onBack:()=>void}) {
           </div>}
           <section className="pvp-hand">
             <h2>TU MANO</h2>
-            {!!specialHand.length && <div className="pvp-special-hand" aria-label="Cartas especiales">
-              {daggersAvailable>0&&<button className={daggersToUse?"armed":""} disabled={!myTurn}
-                onClick={()=>{setSpecialMode(null);setDaggersToUse((daggersToUse+1)%(daggersAvailable+1));}}>
-                DAGA +1 · {daggersToUse}/{daggersAvailable}
-              </button>}
-              {relicsAvailable>0&&<button className={specialMode==="relic"?"armed":""} disabled={!myTurn}
-                onClick={()=>setSpecialMode(specialMode==="relic"?null:"relic")}>
-                RELIQUIA ×{relicsAvailable}
-              </button>}
-              {symmetryAvailable>0&&<button className={specialMode==="symmetry"?"armed":""}
-                disabled={!myTurn||!symmetryTargets.length}
-                onClick={()=>setSpecialMode(specialMode==="symmetry"?null:"symmetry")}>
-                SIMETRÍA ×{symmetryAvailable}
-              </button>}
-            </div>}
-            {specialMode==="symmetry"&&<div className="pvp-copy-menu">
-              {symmetryTargets.map((t,i)=><button key={t.kind+"-"+t.position+"-"+i}
-                onClick={()=>void send({type:"special",kind:"symmetry",target:t})}>
-                COPIAR {SPECIAL_NAME[t.kind]} · {positionLabels[t.position]}
-              </button>)}
-            </div>}
+            {!!specialHand.length && <>
+              {specialMode==="relic"&&<p className="pvp-special-guidance">RELIQUIA · ELEGÍ UNA POSICIÓN DEL CAMPO</p>}
+              {specialMode==="symmetry"&&<p className="pvp-special-guidance">
+                {symmetryTargets.length
+                  ? "SIMETRÍA · TOCÁ UNA CARTA RIVAL O DAGA ARCHIVADA"
+                  : "NO HAY ESPECIALES RIVALES VISIBLES PARA COPIAR"}
+              </p>}
+              <div className="pvp-manifest-hand" aria-label="Cartas especiales en tu mano">
+                {specialHand.map((kind,index)=>{
+                  const ordinal=kind==="dagger"
+                    ? specialHand.slice(0,index+1).filter(k=>k==="dagger").length:0;
+                  const chosen=kind==="dagger"?ordinal<=daggersToUse:specialMode===kind;
+                  return <div key={kind+"-"+index} className={"pvp-manifest-entry"+(chosen?" is-selected":"")}>
+                    <button type="button" className="pvp-manifest-select"
+                      disabled={!myTurn||game.phase!=="awaiting_player"}
+                      draggable={kind==="relic"&&myTurn}
+                      aria-pressed={chosen}
+                      aria-label={SPECIAL_NAME[kind]}
+                      onDragStart={event=>{
+                        if(kind==="relic"){
+                          setSpecialMode("relic");
+                          event.dataTransfer.setData("text/plain","daggerlight-relic");
+                        }
+                      }}
+                      onClick={()=>{
+                        if(kind==="dagger"){setSpecialMode(null);setDaggersToUse(chosen?ordinal-1:ordinal);}
+                        else{setDaggersToUse(0);setSpecialMode(specialMode===kind?null:kind);}
+                      }}>
+                      <ManifestCard kind={kind} size="hand" selected={chosen}/>
+                    </button>
+                    <button type="button" className="pvp-manifest-info"
+                      aria-label={"Ver "+SPECIAL_NAME[kind]}
+                      onClick={()=>setInspectedSpecial(kind)}>i</button>
+                  </div>;
+                })}
+              </div>
+            </>}
             <div>{game.player.hand.map((card,i)=><button key={card.id+"-"+i}
               className={selected===i?"selected":""} disabled={!myTurn||game.phase!=="awaiting_player"} onClick={()=>setSelected(i)}>
               <CardPreview card={card}/>
@@ -280,6 +323,7 @@ export default function Multiplayer({onBack}:{onBack:()=>void}) {
               <button onClick={()=>setResultOpen(false)}>CONTINUAR</button>
             </div>
           </div>}
+          {inspectedSpecial&&<ManifestCardDialog kind={inspectedSpecial} onClose={()=>setInspectedSpecial(null)}/>}
           {inspected&&<div className="pvp-result-overlay" role="dialog" aria-modal="true" aria-label={inspected.name}
             onClick={()=>setInspected(null)}>
             <div onClick={e=>e.stopPropagation()}><CardPreview card={inspected}/><p>{inspected.text}</p>
