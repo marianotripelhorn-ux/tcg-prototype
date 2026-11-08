@@ -404,7 +404,7 @@ function Slot({
           }}>
           <ManifestCard kind={token.kind} size="field"/>
         </button>)}
-      </div>}}
+      </div>}
       <div className="slot-stack">
         <>
             {cards.map((played,index)=>(
