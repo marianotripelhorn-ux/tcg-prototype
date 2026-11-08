@@ -974,7 +974,8 @@ export default function App() {
                         setDaggersToUse(chosen?daggerNumber-1:daggerNumber);
                       }else{
                         setDaggersToUse(0);
-                        setSpecialMode(specialMode===kind?null:kind);
+                        if(kind==="relic"||kind==="symmetry")setSpecialMode(specialMode===kind?null:kind);
+                        else setSpecialInspection(kind);
                       }
                     }}>
                     <ManifestCard kind={kind} size="hand" selected={chosen}/>

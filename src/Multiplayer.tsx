@@ -284,7 +284,8 @@ export default function Multiplayer({onBack}:{onBack:()=>void}) {
                       }}
                       onClick={()=>{
                         if(kind==="dagger"){setSpecialMode(null);setDaggersToUse(chosen?ordinal-1:ordinal);}
-                        else{setDaggersToUse(0);setSpecialMode(specialMode===kind?null:kind);}
+                        else{setDaggersToUse(0);if(kind==="relic"||kind==="symmetry")setSpecialMode(specialMode===kind?null:kind);
+                          else setInspectedSpecial(kind);}
                       }}>
                       <ManifestCard kind={kind} size="hand" selected={chosen}/>
                     </button>
