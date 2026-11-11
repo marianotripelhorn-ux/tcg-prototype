@@ -1,8 +1,8 @@
-name: Publish gameplay v1 prototype
+name: Publish Daggerlight Classic
 
 on:
   push:
-    branches: ["prototype/gameplay-v1"]
+    branches: ["prototype/classic"]
   workflow_dispatch:
 
 permissions:
@@ -10,7 +10,7 @@ permissions:
   actions: write
 
 concurrency:
-  group: gameplay-v1-augury-v2
+  group: daggerlight-classic
   cancel-in-progress: true
 
 jobs:
@@ -20,7 +20,7 @@ jobs:
       - name: Checkout gameplay prototype source
         uses: actions/checkout@v4
         with:
-          ref: prototype/gameplay-v1
+          ref: prototype/classic
           path: gameplay-source
 
       - name: Checkout main site
@@ -59,7 +59,7 @@ jobs:
           VITE_PVP_API_URL: ${{ vars.PVP_API_URL }}
         run: npm run build
 
-      - name: Copy preview into main
+      - name: Copy classic build into main
         run: |
           rm -rf site/gameplay-v1
           mkdir -p site/gameplay-v1
@@ -76,13 +76,18 @@ jobs:
             git fetch origin main
             git reset --mixed origin/main
             git add -A gameplay-v1
+            # Protect the experimental URL: classic publishes only gameplay-v1.
+            if git diff --cached --name-only | grep -E '^gameplay-v1-lab/'; then
+              echo "Refusing to modify the experimental laboratory."
+              exit 1
+            fi
             if git diff --cached --quiet; then
               echo "No preview changes to publish."
               exit 0
             fi
-            git commit -m "Update Daggerlight gameplay v1 prototype"
+            git commit -m "Update stable Daggerlight Classic"
             if git push origin HEAD:main; then
-              echo "Published experimental gameplay preview."
+              echo "Published Daggerlight Classic without touching the experimental lab."
               exit 0
             fi
             echo "Main changed during publish (attempt ${attempt}); rebasing preview on latest snapshot."

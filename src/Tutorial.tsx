@@ -14,7 +14,7 @@ const screens = [
   { kicker: "04 · LA RONDA", title: "Pensá en el orden de tus tres cartas", body: "Al comenzar cada ronda recibís 3 cartas. Quien gana un duelo abre el siguiente; en empate conserva la iniciativa quien abrió. Las habilidades pueden preparar tu próxima carta." },
   { kicker: "05 · QUIERO / NO QUIERO", title: "Cuando vas 0–2, decidís el riesgo", body: "Si perdés los dos primeros duelos, podés jugar el tercero para intentar ganar 1 punto o decir «No quiero» y cerrar la ronda. No hay puntos extra por ganar la ronda." },
   { kicker: "06 · EL ARCHIVO", title: "Las cartas jugadas dejan huella", body: "Al final de cada ronda, las cartas que jugaste se guardan en el Archivo de su posición. Solo importa cuántas hay en cada Archivo; algunos efectos se hacen más fuertes con esos números." },
-  { kicker: "07 · TU PRIMERA PARTIDA", title: "Ya conocés lo necesario para empezar", body: "Elegí un Campeón, mirá las tres cartas de tu mano, inspeccioná sus habilidades y decidí el orden y las posiciones. Podés volver a esta guía cuando quieras." }
+  { kicker: "07 · TU PRIMERA PARTIDA", title: "Ya conocés lo necesario para empezar", body: "Mirá las tres cartas de tu mano, inspeccioná sus habilidades y decidí el orden y las posiciones. Podés volver a esta guía cuando quieras." }
 ];
 
 export default function Tutorial({ onClose, onPlay, inGame }: TutorialProps) {
@@ -111,9 +111,9 @@ export default function Tutorial({ onClose, onPlay, inGame }: TutorialProps) {
           {step === 6 && (
             <div className="tutorial-ready">
               <span className="tutorial-ready-icon" aria-hidden="true">✦</span>
-              <strong>Tu primera decisión importa.</strong>
+              <strong>{inGame?"SEGUÍ JUGANDO":"TU PRIMERA PARTIDA: MAJESTAD CARMESÍ"}</strong>
               <p>En la partida, tocá una carta para leerla y seleccionarla. Después tocá una posición resaltada o arrastrá la carta directamente allí.</p>
-              <div className="tutorial-ready-pills"><span>Sin maná</span><span>Sin posiciones prohibidas por afinidad</span><span>Ayuda siempre disponible</span></div>
+              <div className="tutorial-ready-pills"><span>{inGame?"SIN MANÁ":"DIFICULTAD FÁCIL"}</span><span>{inGame?"SIN POSICIONES PROHIBIDAS":"RIVAL ALEATORIO"}</span><span>AYUDA SIEMPRE DISPONIBLE</span></div>
             </div>
           )}
         </div>
@@ -124,7 +124,7 @@ export default function Tutorial({ onClose, onPlay, inGame }: TutorialProps) {
             <button type="button" className="tutorial-back" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>ANTERIOR</button>
             {step < screens.length - 1
               ? <button type="button" className="tutorial-next" onClick={() => setStep(s => Math.min(screens.length - 1, s + 1))}>SIGUIENTE <span aria-hidden="true">→</span></button>
-              : <button type="button" className="tutorial-next" onClick={inGame ? onClose : onPlay}>{inGame ? "VOLVER AL DUELO" : "EMPEZAR A JUGAR"} <span aria-hidden="true">→</span></button>}
+              : <button type="button" className="tutorial-next" onClick={inGame ? onClose : onPlay}>{inGame ? "VOLVER AL DUELO" : "JUGAR CON MAJESTAD CARMESÍ"} <span aria-hidden="true">→</span></button>}
           </div>
         </div>
       </section>

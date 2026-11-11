@@ -213,3 +213,36 @@
 @media(prefers-reduced-motion:reduce){
   .dl-faction-tab,.dl-champion-card,.dl-champion-art img{transition:none!important}
 }
+
+/* Champion selection is a two-step flow, with matchup controls visible immediately. */
+.dl-champion-confirm{
+  width:min(100%,990px);margin:0 auto 28px;
+  display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);
+  align-items:center;gap:clamp(18px,3vw,48px);
+}
+.dl-champion-confirm-preview{width:100%!important;max-width:340px;cursor:default!important;pointer-events:none}
+.dl-champion-confirm-panel{min-width:0;padding:clamp(19px,3vw,38px);
+  border-radius:9px;background:#191919;color:#eae2d5}
+.dl-champion-confirm-panel h2{margin:0 0 26px;color:inherit;font:950 clamp(25px,3vw,42px)/1 Inter,Arial,sans-serif;letter-spacing:-.04em}
+.dl-champion-confirm .dl-champion-settings{width:100%;margin:0;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.dl-champion-confirm .dl-champion-settings label>span{color:#eae2d5}
+.dl-champion-confirm .dl-champion-settings select{background:#eae2d5;color:#191919;border:0}
+.dl-champion-confirm .dl-champion-start{grid-column:1/-1;min-height:55px;font-size:14px}
+.dl-champion-change{display:block;margin:17px 0 0;padding:7px 0;border:0;background:transparent;color:#eae2d5;
+  cursor:pointer;font:850 11px/1.2 Inter,Arial,sans-serif;letter-spacing:.07em;text-align:left}
+.dl-champion-change:hover{text-decoration:underline}
+.dl-champion-change:focus-visible{outline:3px solid #d3b787;outline-offset:3px}
+:root[data-theme="dark"] .dl-champion-confirm-panel{background:#eae2d5;color:#191919}
+:root[data-theme="dark"] .dl-champion-confirm .dl-champion-settings label>span,
+:root[data-theme="dark"] .dl-champion-change{color:#191919}
+:root[data-theme="dark"] .dl-champion-confirm .dl-champion-settings select{background:#191919;color:#eae2d5}
+@media(max-width:680px){
+  .dl-champion-confirm{grid-template-columns:1fr;justify-items:center;gap:16px}
+  .dl-champion-confirm-panel{order:-1;width:100%}
+  .dl-champion-confirm-preview{max-width:310px}
+}
+@media(max-width:375px){
+  .dl-champion-confirm-panel{padding:15px}
+  .dl-champion-confirm .dl-champion-settings{gap:7px}
+  .dl-champion-confirm .dl-champion-settings select{font-size:11px}
+}

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Tutorial from "./Tutorial";
+import { TUTORIAL_MATCH } from "./onboarding";
 import SplashScreen from "./SplashScreen";
 import Multiplayer from "./Multiplayer";
 import PlaytestHub from "./PlaytestHub";
@@ -684,7 +685,7 @@ export default function App() {
         {tutorialOpen && <Tutorial
           inGame={false}
           onClose={()=>setTutorialOpen(false)}
-          onPlay={()=>{setTutorialOpen(false);setScreen("champions");}}
+          onPlay={()=>{setTutorialOpen(false);startWithChampion(TUTORIAL_MATCH.championId,TUTORIAL_MATCH.opponentId,TUTORIAL_MATCH.difficulty);}}
         />}
       </>
     );
