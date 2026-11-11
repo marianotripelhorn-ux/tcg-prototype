@@ -2,8 +2,12 @@ import { champions } from "./engine/champions";
 import { byId } from "./data";
 import type { AIDifficulty, GameState } from "./engine/types";
 
-export const SAVE_KEY = "daggerlight-match-save-v1";
-export const HISTORY_KEY = "daggerlight-match-history-v1";
+// Same GitHub Pages origin, but lab and classic must not overwrite each
+// other's saved match or victory history.
+const LAB_STORAGE = typeof window !== "undefined" &&
+  window.location.pathname.includes("/gameplay-v1-lab");
+export const SAVE_KEY = LAB_STORAGE ? "daggerlight-match-save-lab-v1" : "daggerlight-match-save-v1";
+export const HISTORY_KEY = LAB_STORAGE ? "daggerlight-match-history-lab-v1" : "daggerlight-match-history-v1";
 export const SAVE_VERSION = 1;
 export const RULESET = "manifestaciones-v0.1-2026-11";
 const LEGACY_RULESET = "augurio-v2-blue-boost-2026-11";
@@ -62,7 +66,22 @@ function validGame(game:unknown):game is GameState {
 export function readSavedMatch():SavedMatch|null {
   const store=storage();if(!store)return null;
   try {
-    const saved=JSON.parse(store.getItem(SAVE_KEY)??"null") as Partial<SavedMatch>|null;
+    let json=store.getItem(SAVE_KEY);
+    // One-time recovery for experimental matches saved before the split.
+    // Never import a classic match into the laboratory.
+    if(!json && LAB_STORAGE){
+      const prior=store.getItem("daggerlight-match-save-v1");
+      if(prior){
+        try {
+          const candidate=JSON.parse(prior) as Partial<SavedMatch>;
+          if(candidate.ruleset===RULESET){
+            json=prior;
+            store.setItem(SAVE_KEY,prior);
+          }
+        }catch{/* Keep the newer slot independent of bad legacy data. */}
+      }
+    }
+    const saved=JSON.parse(json??"null") as Partial<SavedMatch>|null;
     if(!saved || saved.version!==SAVE_VERSION || ![RULESET,LEGACY_RULESET].includes(saved.ruleset??"") || typeof saved.id!=="string"
       || typeof saved.createdAt!=="string" || !validGame(saved.game))return null;
     // Saved GameState embeds Champion objects. Refresh display names from the
@@ -101,7 +120,22 @@ export function clearSavedMatch(matchId?:string):void {
 export function readMatchHistory():MatchRecord[] {
   const store=storage();if(!store)return [];
   try {
-    const arr=JSON.parse(store.getItem(HISTORY_KEY)??"[]");
+    let history=store.getItem(HISTORY_KEY);
+    if(!history && LAB_STORAGE){
+      // Previous lab tests used the same origin storage as the public game.
+      // Preserve only records belonging to the experimental ruleset.
+      try {
+        const previous=JSON.parse(store.getItem("daggerlight-match-history-v1")??"[]") as MatchRecord[];
+        if(Array.isArray(previous)){
+          const labOnly=previous.filter(record=>record?.ruleset===RULESET);
+          if(labOnly.length){
+            history=JSON.stringify(labOnly);
+            store.setItem(HISTORY_KEY,history);
+          }
+        }
+      }catch{/* Ignore old malformed histories. */}
+    }
+    const arr=JSON.parse(history??"[]");
     return Array.isArray(arr) ? arr.filter((r:unknown)=>{
       if(!r || typeof r!=="object")return false;
       const m=r as Partial<MatchRecord>;

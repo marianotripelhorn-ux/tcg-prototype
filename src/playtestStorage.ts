@@ -1,7 +1,8 @@
 import type { SavedMatch } from "./persistence";
 import type { MatchRecord } from "./persistence";
 import type { GameState } from "./engine/types";
-const KEY="daggerlight-playtest-v1";
+const KEY=typeof window!=="undefined"&&window.location.pathname.includes("/gameplay-v1-lab")
+  ?"daggerlight-playtest-lab-v1":"daggerlight-playtest-v1";
 const LIMIT=100;
 export interface Feedback { diversion:number; claridad:number; comentario:string; }
 export interface PlaytestRecord {

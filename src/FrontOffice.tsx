@@ -99,7 +99,7 @@ export function HomeScreen({
           DAGGERLIGHT
         </span>
         <div className="fo-header-actions">
-          <span className="fo-top-meta">TCG · PROTOTIPO</span>
+          <span className="fo-top-meta">{import.meta.env.VITE_DAGGERLIGHT_LAB==="true" ? "LABORATORIO · MANIFESTACIONES" : "TCG · PROTOTIPO"}</span>
           <ThemeToggle />
         </div>
       </header>
@@ -144,6 +144,7 @@ export function HomeScreen({
       <footer className="fo-footer menu-footer">
         <span className="menu-record">{summary.total} PARTIDAS · {summary.wins} VICTORIAS · {summary.losses} DERROTAS · {summary.draws} EMPATES</span>
         <div className="menu-extras">
+          {import.meta.env.VITE_DAGGERLIGHT_LAB==="true" && <a className="home-physical-link lab-classic-link" href="../gameplay-v1/">VOLVER AL JUEGO CLÁSICO</a>}
           <button type="button" className="home-physical-link" onClick={onMultiplayer}>MULTIJUGADOR · BETA</button>
           <button type="button" className="home-physical-link" onClick={onPlaytest}>PLAYTEST</button>
           <a className="home-physical-link" href="./reglamento.html" target="_blank" rel="noopener noreferrer">REGLAMENTO</a>

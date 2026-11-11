@@ -53,3 +53,14 @@
 .tutorial-manifestations strong{color:#d3b787;font-size:12px;line-height:1.15}
 .tutorial-manifestations span{font-size:12px;line-height:1.35}
 @media(max-width:500px){.tutorial-manifestations{grid-template-columns:1fr}.tutorial-manifestations>div{padding:8px;gap:3px}.tutorial-manifestations span{font-size:11px}}
+
+/* Laboratory link: quiet but clearly distinguishable from classic mode. */
+.home-screen .menu-extras .lab-classic-link{
+  background:#d1b682!important;
+  color:#191919!important;
+  border:0!important;
+  border-radius:3px;
+  font-weight:900;
+}
+.home-screen .fo-top-meta{letter-spacing:.08em}
+@media(max-width:560px){.home-screen .fo-top-meta{font-size:9px}}

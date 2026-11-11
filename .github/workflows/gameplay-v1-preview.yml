@@ -1,4 +1,4 @@
-name: Publish gameplay v1 prototype
+name: Publish Daggerlight Laboratory
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   actions: write
 
 concurrency:
-  group: gameplay-v1-augury-v2
+  group: daggerlight-manifestations-lab
   cancel-in-progress: true
 
 jobs:
@@ -57,13 +57,14 @@ jobs:
           VITE_POSTHOG_KEY: ${{ vars.POSTHOG_PROJECT_KEY }}
           VITE_POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
           VITE_PVP_API_URL: ${{ vars.PVP_API_URL }}
+          VITE_DAGGERLIGHT_LAB: "true"
         run: npm run build
 
-      - name: Copy preview into main
+      - name: Copy laboratory build into main
         run: |
-          rm -rf site/gameplay-v1
-          mkdir -p site/gameplay-v1
-          cp -R gameplay-source/dist/. site/gameplay-v1/
+          rm -rf site/gameplay-v1-lab
+          mkdir -p site/gameplay-v1-lab
+          cp -R gameplay-source/dist/. site/gameplay-v1-lab/
 
       - name: Commit preview snapshot
         working-directory: site
@@ -75,14 +76,19 @@ jobs:
           for attempt in 1 2 3 4 5; do
             git fetch origin main
             git reset --mixed origin/main
-            git add -A gameplay-v1
+            git add -A gameplay-v1-lab
+            # Never stage changes to the frozen public gameplay-v1 folder.
+            if git diff --cached --name-only | grep -E '^gameplay-v1/'; then
+              echo "Refusing to modify the public stable build."
+              exit 1
+            fi
             if git diff --cached --quiet; then
               echo "No preview changes to publish."
               exit 0
             fi
-            git commit -m "Update Daggerlight gameplay v1 prototype"
+            git commit -m "Update Daggerlight experimental laboratory"
             if git push origin HEAD:main; then
-              echo "Published experimental gameplay preview."
+              echo "Published Manifestations laboratory without touching classic gameplay."
               exit 0
             fi
             echo "Main changed during publish (attempt ${attempt}); rebasing preview on latest snapshot."
