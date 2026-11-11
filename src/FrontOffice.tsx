@@ -177,7 +177,7 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
   return (
     <main className="fo-shell picker-screen dl-picker">
       <header className="fo-topbar">
-        <button type="button" className="fo-back" onClick={onBack}>← INICIO</button>
+        <button type="button" className="fo-back" onClick={chosen?()=>setSelected(null):onBack}>{chosen?"← CAMPEONES":"← INICIO"}</button>
         <span className="fo-wordmark"><img className="menu-top-crown" src="./branding/menu/crown.svg" alt="" aria-hidden="true" /> DAGGERLIGHT</span>
         <div className="fo-header-actions">
           <button type="button" className="fo-text-button" onClick={onGallery}>VER CARTAS</button>
@@ -186,10 +186,10 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
       </header>
 
       <section className="dl-picker-header">
-        <h1>ELEGÍ TU CAMPEÓN</h1>
+        <h1>{chosen?"PREPARÁ TU PARTIDA":"ELEGÍ TU CAMPEÓN"}</h1>
       </section>
 
-      <nav className="dl-faction-switcher" aria-label="Elegí una facción">
+      {!chosen && <nav className="dl-faction-switcher" aria-label="Elegí una facción">
         {factionInfo.map((f,index)=>(
           <button type="button" key={f.id}
             className={"dl-faction-tab"+(faction===f.id?" active":"")}
@@ -199,16 +199,16 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
             <span>{factionLabels[f.id]}</span>
           </button>
         ))}
-      </nav>
+      </nav>}
 
       <section className="dl-champion-content" aria-label={"Campeones de "+factionLabels[faction]}>
-        <div className="dl-champion-grid">
+        {!chosen && <div className="dl-champion-grid">
           {activeChampions.map(c=>(
             <button type="button" key={c.id}
               className={"dl-champion-card"+(selected===c.id?" is-selected":"")}
               aria-pressed={selected===c.id}
               aria-label={championShortName(c.name)+". "+c.text}
-              onClick={()=>setSelected(c.id)}>
+              onClick={()=>{setSelected(c.id);window.scrollTo(0,0);}}>
               <span className="dl-champion-art"
                 style={{backgroundImage:`url("${championBackgroundUrl(c.faction)}")`}}>
                 <img src={championImageUrl(c.id)} alt="" loading="lazy" decoding="async"/>
@@ -221,9 +221,23 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
               {selected===c.id&&<span className="dl-champion-selected" aria-hidden="true">✓</span>}
             </button>
           ))}
-        </div>
+        </div>}
         {chosen&&(
-          <div className="dl-champion-settings">
+          <div className="dl-champion-confirm">
+            <div className="dl-champion-card dl-champion-confirm-preview">
+              <span className="dl-champion-art"
+                style={{backgroundImage:`url("${championBackgroundUrl(chosen.faction)}")`}}>
+                <img src={championImageUrl(chosen.id)} alt="" decoding="async"/>
+              </span>
+              <span className="dl-champion-panel">
+                <strong>{championShortName(chosen.name)}</strong>
+                {championSubtitle(chosen.name)&&<span className="dl-champion-subtitle">{championSubtitle(chosen.name)}</span>}
+                <span className="dl-champion-ability">{chosen.text}</span>
+              </span>
+            </div>
+            <div className="dl-champion-confirm-panel">
+              <h2>{championShortName(chosen.name).toUpperCase()}</h2>
+              <div className="dl-champion-settings">
             <label>
               <span>RIVAL</span>
               <select value={opponent} onChange={e=>setOpponent(e.target.value)}>
@@ -245,6 +259,9 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
               onClick={()=>onPlay(chosen.id,opponent,difficulty)}>
               EMPEZAR PARTIDA <span aria-hidden="true">↗</span>
             </button>
+              </div>
+              <button type="button" className="dl-champion-change" onClick={()=>setSelected(null)}>← CAMBIAR CAMPEÓN</button>
+            </div>
           </div>
         )}
       </section>
