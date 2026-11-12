@@ -32,10 +32,13 @@ class DaggerScene extends Phaser.Scene{
   private geometry!:BoardLayout;
   private selected:number|null=null;
   private used=new Map<number,Lane>();
-  private hoverPreview:Phaser.GameObjects.Container|null=null;
+  private hoveredIndex:number|null=null;
+  private draggingIndex:number|null=null;
+  private draggingPosition:{x:number;y:number}|null=null;
   private modal:Phaser.GameObjects.Container|null=null;
   private highlighted:Lane|null=null;
   private cardObjects=new Map<number,Phaser.GameObjects.Container>();
+  private playerSlots=new Map<Lane,Phaser.GameObjects.Rectangle>();
   private resizeHandler=()=>this.rebuild();
 
   constructor(){super("DaggerlightPhaserPreview");}
@@ -54,6 +57,14 @@ class DaggerScene extends Phaser.Scene{
     });
     try{
       this.rebuild();  // Draw immediately, including when every image fails.
+      // Read-only instrumentation for browser drag-and-drop acceptance tests.
+      (window as Window & {__daggerlightPhaserDebug?:()=>unknown}).__daggerlightPhaserDebug=()=>({
+        layout:this.geometry,
+        used:Array.from(this.used.entries()),
+        selectedIndex:this.selected,
+        draggingIndex:this.draggingIndex,
+        dragPosition:this.draggingPosition
+      });
     }catch(error){
       console.error("DAGGERLIGHT Phaser: first render failed",error);
       bootStatus("NO SE PUDO DIBUJAR EL TABLERO: "+String(error),true);
@@ -137,7 +148,8 @@ class DaggerScene extends Phaser.Scene{
   private drawSlot(rect:Rect,lane:Lane,side:"player"|"opponent"){
     const rectObject=this.rectangle(rect,PALETTE.slot,0x7c6a4d,.97,side==="player");
     if(side==="player"){
-      const handler=()=>{if(this.selected!==null)this.place(this.selected,lane);};
+      this.playerSlots.set(lane,rectObject);
+      const handler=()=>{if(this.selected!==null && this.draggingIndex===null)this.place(this.selected,lane);};
       rectObject.on("pointerup",handler);
     }
     const archivY=side==="player"?rect.y+12:rect.y+rect.h-12;
@@ -177,11 +189,23 @@ class DaggerScene extends Phaser.Scene{
     this.input.setDraggable(surface,true);
     surface.setDepth(12);
     let dragged=false;
+    const home={x,y};
+    const lift=this.geometry.mode==="mobile"?44:30;
+
     surface.on("pointerover",()=>{
       if(!dragged && !this.modal && this.geometry.mode==="desktop")this.showPreview(index);
     });
-    surface.on("pointerout",()=>{if(!dragged && this.selected!==index)this.hidePreview();});
+    surface.on("pointerout",()=>{
+      if(!dragged)this.hidePreview();
+    });
+    surface.on("pointerdown",()=>{
+      // The enlarged view is this SAME card, not a second card floating in the
+      // middle of the battlefield. Hide its hover expansion before dragging.
+      this.hidePreview();
+    });
     surface.on("pointerup",()=>{
+      // Phaser can fire pointerup after dragend; never mistake a completed drag
+      // for a second click that opens the inspector.
       if(dragged||this.modal)return;
       if(this.selected===index){
         this.showInspector(index);
@@ -190,43 +214,86 @@ class DaggerScene extends Phaser.Scene{
         this.time.delayedCall(0,()=>this.rebuild());
       }
     });
-    surface.on("dragstart",()=>{
+    surface.on("dragstart",(pointer:Phaser.Input.Pointer)=>{
+      if(this.modal)return;
       dragged=true;
       this.selected=index;
       this.hidePreview();
-      surface.setScale(1.2).setDepth(150);
+      this.draggingIndex=index;
+      surface.setScale(this.geometry.mode==="mobile"?1.25:1.55).setDepth(220);
+      // Move the actual source card with the pointer, rather than a static
+      // preview, and raise it slightly so the user's finger doesn't hide it.
+      surface.setPosition(pointer.x,pointer.y-lift);
+      this.draggingPosition={x:surface.x,y:surface.y};
     });
-    surface.on("drag",(_pointer:Phaser.Input.Pointer,dragX:number,dragY:number)=>{
-      surface.setPosition(dragX,dragY);
-      const target=getDropLane(this.geometry,dragX,dragY);
+    surface.on("drag",(pointer:Phaser.Input.Pointer)=>{
+      if(!dragged||this.modal)return;
+      surface.setPosition(pointer.x,pointer.y-lift);
+      this.draggingPosition={x:surface.x,y:surface.y};
+      // dragX/dragY belong to the object (including its grab offset).
+      // The pointer position is the unambiguous location the user released.
+      const target=getDropLane(this.geometry,pointer.x,pointer.y);
       if(target!==this.highlighted){
-        this.highlighted=target;
+        this.highlightLane(target);
         this.showStatus(target?"SOLTÁ PARA JUGAR EN "+LABELS[target]:"ARRASTRÁ A UNA POSICIÓN");
       }
     });
-    surface.on("dragend",(_pointer:Phaser.Input.Pointer,dragX:number,dragY:number)=>{
-      dragged=false;
-      const target=getDropLane(this.geometry,dragX,dragY);
-      if(target)this.place(index,target);
-      else this.time.delayedCall(0,()=>this.rebuild());
-      this.highlighted=null;
+    surface.on("dragend",(pointer:Phaser.Input.Pointer)=>{
+      if(!dragged)return;
+      const target=getDropLane(this.geometry,pointer.x,pointer.y);
+      this.draggingIndex=null;
+      this.draggingPosition=null;
+      this.highlightLane(null);
+      surface.disableInteractive();
+      if(target && !this.used.has(index) && !Array.from(this.used.values()).includes(target)){
+        // Animate to the selected slot before rebuilding the board. The card
+        // remains visibly attached to the pointer throughout the drag.
+        const slot=this.geometry.playerSlots[target];
+        const finalHeight=clamp(72,slot.h*.72,145);
+        this.tweens.add({
+          targets:surface,x:slot.x+slot.w/2,y:slot.y+slot.h/2,
+          scale:finalHeight/h,duration:170,ease:"Cubic.easeOut",
+          onComplete:()=>this.place(index,target)
+        });
+      }else{
+        // Invalid target: visually return to the hand without consuming a card.
+        this.tweens.add({
+          targets:surface,x:home.x,y:home.y,scale:1,
+          duration:150,ease:"Quad.easeOut",
+          onComplete:()=>{this.selected=null;this.rebuild();}
+        });
+      }
     });
     this.cardObjects.set(index,surface);
     return surface;
   }
 
   private showPreview(index:number){
+    if(this.draggingIndex!==null||this.modal)return;
     this.hidePreview();
-    const area=this.geometry.arena;
-    const h=this.geometry.mode==="desktop"?Math.min(area.h*.77,390):Math.min(area.h*.7,270);
-    const w=h*.707;
-    this.hoverPreview=this.drawCard(index,area.x+area.w/2,area.y+area.h/2,w,h,false)
-      .setDepth(95);
-    // Render preview itself is never interactive; all target hit areas remain live.
+    const card=this.cardObjects.get(index);
+    if(!card)return;
+    this.hoveredIndex=index;
+    // Zoom the actual card in place. No second, unclickable "ghost" in the
+    // center of the board that can be confused for a movable card.
+    card.setScale(1.42).setDepth(92);
   }
 
   private hidePreview(){
-    if(this.hoverPreview){this.hoverPreview.destroy();this.hoverPreview=null;}
+    if(this.hoveredIndex===null)return;
+    const index=this.hoveredIndex;
+    this.hoveredIndex=null;
+    const card=this.cardObjects.get(index);
+    if(card && this.draggingIndex!==index){
+      card.setScale(this.selected===index?1.05:1).setDepth(12);
+    }
+  }
+
+  private highlightLane(lane:Lane|null){
+    this.highlighted=lane;
+    for(const [key,rect] of this.playerSlots){
+      rect.setStrokeStyle(key===lane?4:1,key===lane?0xf5d28e:0x7c6a4d);
+    }
   }
 
   private showInspector(index:number){
@@ -266,6 +333,10 @@ class DaggerScene extends Phaser.Scene{
     this.hidePreview();
     this.modal=null;
     this.cardObjects.clear();
+    this.playerSlots.clear();
+    this.draggingIndex=null;
+    this.draggingPosition=null;
+    this.highlighted=null;
     this.children.removeAll(true);
     this.geometry=getLayout(this.scale.width,this.scale.height);
     const l=this.geometry;

@@ -39,6 +39,67 @@ try{
     ready:document.documentElement.dataset.phaserReady
   }));
   console.log("PHASER_SCENE",name,JSON.stringify(sceneSummary));
+
+  // Exercise the actual pointer path. Merely seeing a canvas is insufficient:
+  // regressions used to allow clicking slots while dragging never worked.
+  const readState=()=>page.evaluate(()=>window.__daggerlightPhaserDebug?.());
+  const initial=await readState();
+  if(!initial?.layout || initial.used.length)throw new Error(name+" missing test state or started with cards played");
+  const center=r=>({x:r.x+r.w/2,y:r.y+r.h/2});
+  const source=center(initial.layout.hand[0]);
+  const destination=center(initial.layout.playerSlots.siniestra);
+
+  if(name==="desktop"){
+    await page.mouse.move(source.x,source.y);
+    await page.mouse.down();
+    await page.mouse.move(source.x,source.y-45,{steps:7});
+    await page.mouse.move(destination.x,destination.y,{steps:14});
+    const midway=await readState();
+    if(midway.draggingIndex!==0||!midway.dragPosition ||
+       Math.abs(midway.dragPosition.y-source.y)<50){
+      throw new Error("Desktop card failed to follow pointer: "+JSON.stringify(midway));
+    }
+    await page.mouse.up();
+  }else{
+    const cdp=await page.context().newCDPSession(page);
+    const touch=(type,x,y)=>cdp.send("Input.dispatchTouchEvent",{
+      type,touchPoints:type==="touchEnd"?[]:[{x,y,id:1}]
+    });
+    await touch("touchStart",source.x,source.y);
+    for(let i=1;i<=18;i++){
+      const f=i/18;
+      await touch("touchMove",source.x+(destination.x-source.x)*f,source.y+(destination.y-source.y)*f);
+      await delay(22);
+    }
+    const midway=await readState();
+    if(midway.draggingIndex!==0||!midway.dragPosition ||
+       Math.abs(midway.dragPosition.y-source.y)<50){
+      throw new Error("Mobile card failed to follow touch: "+JSON.stringify(midway));
+    }
+    await touch("touchEnd",destination.x,destination.y);
+    await cdp.detach();
+  }
+  await page.waitForFunction(()=>
+    window.__daggerlightPhaserDebug?.().used.some(([id,lane])=>id===0&&lane==="siniestra"),
+    null,{timeout:2500});
+  const after=await readState();
+  if(after.used.length!==1)throw new Error(name+" drag placed wrong number of cards "+JSON.stringify(after.used));
+  console.log("PHASER_DRAG_OK",name,"card 0 -> siniestra");
+
+  // A second card remains selectable with click/tap, independently from drag.
+  const second=center(after.layout.hand[1]);
+  const throne=center(after.layout.playerSlots.trono);
+  if(name==="desktop"){
+    await page.mouse.click(second.x,second.y);
+    await page.mouse.click(throne.x,throne.y);
+  }else{
+    await page.touchscreen.tap(second.x,second.y);
+    await page.touchscreen.tap(throne.x,throne.y);
+  }
+  await page.waitForFunction(()=>
+    window.__daggerlightPhaserDebug?.().used.some(([id,lane])=>id===1&&lane==="trono"),
+    null,{timeout:2500});
+  console.log("PHASER_TAP_OK",name,"card 1 -> trono");
   if(runtimeErrors.some(error=>!/404|favicon|net::ERR/.test(error)))throw new Error(name+" browser errors: "+runtimeErrors.join("\n"));
   console.log("PHASER_SMOKE_OK "+name+" "+width+"x"+height+" canvas: "+Math.round(bounds.width)+"x"+Math.round(bounds.height));
   await page.close();
