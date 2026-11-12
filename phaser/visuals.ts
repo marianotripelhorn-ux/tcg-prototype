@@ -23,11 +23,11 @@ export function drawStoneAltar(scene: Phaser.Scene, layout: BoardLayout) {
   const g = scene.add.graphics();
   const narrow = layout.mode === "mobile";
   const margin = narrow ? 2 : 8;
-  g.fillStyle(0x070f17, .66);
+  g.fillStyle(0x070f17, .16);
   g.fillRoundedRect(r.x + margin, r.y + 1, r.w - margin * 2, r.h - 2, narrow ? 4 : 12);
-  g.lineStyle(3, 0x322d26, .93);
+  g.lineStyle(3, 0x322d26, .63);
   g.strokeRoundedRect(r.x + margin, r.y + 1, r.w - margin * 2, r.h - 2, narrow ? 4 : 12);
-  g.lineStyle(1.2, GOLD, .53);
+  g.lineStyle(1.2, GOLD, .35);
   g.strokeRoundedRect(r.x + margin + 4, r.y + 5, r.w - margin * 2 - 8, r.h - 10, 7);
   g.lineStyle(1, LIGHT, .17);
   g.strokeRoundedRect(r.x + margin + 9, r.y + 10, r.w - margin * 2 - 18, r.h - 20, 5);
@@ -52,11 +52,11 @@ export function drawLanePortal(scene: Phaser.Scene, upper: Rect, axis: Rect, low
   const apex = mobile ? Math.min(16, upper.h * .17) : Math.min(36, upper.h * .25);
   const cx = x + w / 2;
   // Outer shadow, pointed cathedral apex, double gold tracing.
-  g.fillStyle(SHADOW, .40);
+  g.fillStyle(SHADOW, .08);
   g.fillRoundedRect(x + 1, y + apex, w - 2, h - apex, mobile ? 5 : 14);
   for (const [offset, weight, color, alpha] of [
-    [0, 3.4, 0x5d4b33, .98],
-    [4, 1.4, GOLD, .73],
+    [0, 3.4, 0x5d4b33, .71],
+    [4, 1.4, GOLD, .46],
     [9, 1.0, LIGHT, .20]
   ] as const) {
     const left = x + offset;
@@ -95,7 +95,7 @@ export function drawRitualSlot(scene: Phaser.Scene, r: Rect, own: boolean, legal
   const cy = r.y + r.h / 2;
   const tint = own ? 0xc7a16d : 0x92b8bf;
   const inset = mobile ? 5 : 11;
-  g.fillStyle(own ? 0x1d1a19 : 0x11212a, legal ? .32 : .24);
+  g.fillStyle(own ? 0x1d1a19 : 0x11212a, legal ? .14 : .10);
   g.fillRoundedRect(r.x + inset, r.y + inset, r.w - inset * 2, r.h - inset * 2, 6);
   g.lineStyle(1.2, tint, legal ? .44 : .20);
   g.strokeRoundedRect(r.x + inset, r.y + inset, r.w - inset * 2, r.h - inset * 2, 6);
