@@ -6,7 +6,6 @@ import Multiplayer from "./Multiplayer";
 import PlaytestHub from "./PlaytestHub";
 import { saveAiMatch } from "./playtestStorage";
 import ThemeToggle from "./ThemeToggle";
-import AuguryStatus from "./AuguryStatus";
 import { factionArtUrl } from "./factionArtwork";
 import { championImageUrl,championBackgroundUrl,championShortName } from "./championArtwork";
 import { readPlayerName,writePlayerName,DEFAULT_PLAYER_NAME } from "./playerProfile";
@@ -315,7 +314,7 @@ function ChampionBar({
   active?:boolean;
 }) {
   const [expanded,setExpanded]=useState(false);
-  const label=side==="player"?(playerName||DEFAULT_PLAYER_NAME):"RIVAL";
+  const label=side==="player"?(playerName?.trim()||DEFAULT_PLAYER_NAME):"RIVAL";
   return (
     <section className={`champion-bar arena-champion ${side} faction-illustrated faction-${faction}${active?" is-active":""}`}>
       <button className="arena-champion-portrait" type="button"
@@ -327,7 +326,8 @@ function ChampionBar({
           alt="" loading="eager" decoding="async"/>
         <span className="arena-champion-ribbon">{label.toUpperCase()}</span>
         <span className="arena-life" aria-label={`${life} de 9 Vida`}>
-          <b>{life}</b><span aria-hidden="true">♥</span>
+          <img src={`${import.meta.env.BASE_URL}branding/menu/life-crown.svg`} alt="" aria-hidden="true"/>
+          <b>{life}</b>
           {healedLife>0&&<small>+{healedLife}</small>}
         </span>
         <span className="arena-initiative-ring" aria-hidden="true"/>
@@ -460,6 +460,8 @@ export default function App() {
   const [aiDifficulty,setAiDifficulty]=useState<AIDifficulty>("normal");
   const [screen,setScreen]=useState<"home"|"champions"|"arcade"|"collection"|"table"|"decklab"|"multiplayer"|"playtest">("home");
   const [playerName,setPlayerName]=useState(()=>readPlayerName());
+  const [handExpanded,setHandExpanded]=useState(false);
+  const [hoveredHandIndex,setHoveredHandIndex]=useState<number|null>(null);
   const [arcadeRun,setArcadeRun]=useState<ArcadeRun|null>(()=>readArcadeRun());
   const [hasEntered,setHasEntered]=useState(false);
   const [game,setGame]=useState<GameState|null>(null);
@@ -614,6 +616,8 @@ export default function App() {
     setMatchMeta(newMatch);
     setGame(next);
     setSelectedIndex(null);
+    setHandExpanded(false);
+    setHoveredHandIndex(null);
     setInspection(null);
     setDuelPreview(null);
     setPreDuel(null);
@@ -713,6 +717,8 @@ export default function App() {
     setGame(next);
     persistTurn(next);
     setSelectedIndex(null);
+    setHandExpanded(false);
+    setHoveredHandIndex(null);
     setInspection(null);
     setHoveredPosition(null);
     setDrag(null);
@@ -805,7 +811,7 @@ export default function App() {
           playerName={playerName}
           onPlayerNameChange={next=>{
             const value=writePlayerName(next);
-            setPlayerName(value||DEFAULT_PLAYER_NAME);
+            setPlayerName(value);
           }}
           onTutorial={()=>setTutorialOpen(true)}
           onGallery={()=>setScreen("collection")}
@@ -912,17 +918,11 @@ export default function App() {
               healedLife={displayed?.playerHealed??game.player.healedLife}
               passive={game.player.champion.text}
               playerName={playerName} active={actingSide==="player"}/>
-            <div className="arena-sidebar-footer" aria-label="Marcador del duelo">
-              <span>RIVAL</span>
-              <strong>{displayed?.score.opponent??game.duelScore.opponent} — {displayed?.score.player??game.duelScore.player}</strong>
-              <span>{playerName.toUpperCase()}</span>
-            </div>
+            <div className="arena-sidebar-hand-art" aria-hidden="true"
+              style={{backgroundImage:`linear-gradient(0deg,#171816a8,#17181670),url("${championBackgroundUrl(game.player.champion.faction)}")`}}/>
           </aside>
           <div className="arena-stage">
-            <div className="game-hint arena-augury-bar">
-              <span className="arena-visually-hidden" role="status">{turnText}</span>
-              {!duelPreview && <AuguryStatus player={game.player} opponent={game.opponent}/>}
-            </div>
+            <span className="arena-visually-hidden" role="status">{turnText}</span>
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
           {duelPreview && (duelStep==="cards"
             ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries} onAdvance={showDuelResult}/>
@@ -958,9 +958,10 @@ export default function App() {
                 onInspect={inspectPlay}
               />
 
-              <div className="lane-axis">
+              <div className="lane-axis" aria-label={positionLabels[position]}>
+                <i aria-hidden="true"/>
                 <span>{positionLabels[position]}</span>
-                <i />
+                <i aria-hidden="true"/>
               </div>
 
               <Slot
@@ -995,7 +996,23 @@ export default function App() {
               : latestEvent}
         </div>
 
-        <section className={"hand-zone"+(specialHand.length?" has-specials":"")} aria-label="Tu mano">
+        <section
+          className={"hand-zone"+(specialHand.length?" has-specials":"")+(handExpanded?" is-open":"")}
+          aria-label="Tu mano"
+          style={{backgroundImage:`linear-gradient(0deg,#111713e8,#1d241bd9),url("${championBackgroundUrl(game.player.champion.faction)}")`}}
+        >
+          <button type="button" className="arena-hand-toggle" aria-expanded={handExpanded}
+            aria-label={handExpanded?"Contraer mano":"Desplegar mano"}
+            onClick={()=>{setHandExpanded(!handExpanded);setHoveredHandIndex(null);}}>
+            <span className="arena-hand-toggle-handle" aria-hidden="true"/>
+            <span>{handExpanded?"CERRAR MANO":"ABRIR MANO"}</span>
+            <span className="arena-hand-toggle-chevron" aria-hidden="true">{handExpanded?"⌄":"⌃"}</span>
+          </button>
+          {hoveredHandIndex!==null && hand[hoveredHandIndex] && !drag && (
+            <div className="arena-card-hover-preview" aria-hidden="true">
+              <CardFace card={hand[hoveredHandIndex]}/>
+            </div>
+          )}
           <div className="hand-label">
             <span>TU MANO</span>
             <small>{hand.length} cartas</small>
@@ -1016,7 +1033,21 @@ export default function App() {
                 key={`${card.id}-${index}`}
                 style={{animationDelay:`${index*115}ms`}}
                 disabled={game.phase!=="awaiting_player" || !!duelPreview}
-                onPointerDown={event=>handlePointerDown(event,index)}
+                onPointerEnter={()=>setHoveredHandIndex(index)}
+
+                onPointerLeave={()=>setHoveredHandIndex(current=>current===index?null:current)}
+
+                onFocus={()=>setHoveredHandIndex(index)}
+
+                onBlur={()=>setHoveredHandIndex(current=>current===index?null:current)}
+
+                onPointerDown={event=>{
+
+                  if(!handExpanded && event.pointerType!=="mouse"){setHandExpanded(true);return;}
+
+                  handlePointerDown(event,index);
+
+                }}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
                 onPointerCancel={()=>{
