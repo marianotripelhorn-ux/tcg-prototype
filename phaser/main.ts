@@ -16,7 +16,7 @@ const LABELS: Record<Lane, string> = { siniestra: "SINIESTRA", trono: "TRONO", d
 const C = {
   ink: 0x0b1115, panel: 0x131c20, slot: 0x172329, gold: 0xc7aa70,
   pale: 0xf6e9d5, line: 0x6a604c, red: 0xac604b, teal: 0x83b3b0,
-  black: 0x070c0e
+  black: 0x070c0e, ivory: 0xe8d6b1, ember: 0x9b5945, midnight: 0x071116
 };
 const ASSETS = new URL("./", window.location.href).href;
 const spriteSources = [...new Set([...redCards, ...blueCards].map(card => card.art?.sprite).filter((path): path is string => Boolean(path)))];
@@ -136,30 +136,52 @@ class DaggerScene extends Phaser.Scene {
     g.lineBetween(x1, y1, x2, y2);
   }
 
+  /** Painterly atmospheric layers stay below every interactive card and hit area. */
   private backdrop() {
     const { width: w, height: h, mode } = this.layout;
-    this.add.rectangle(w / 2, h / 2, w, h, C.ink);
+    this.add.rectangle(w / 2, h / 2, w, h, C.midnight);
     if (this.textures.exists("backdrop")) {
-      this.add.image(w / 2, h / 2, "backdrop").setDisplaySize(w, h).setAlpha(.58);
+      const art = this.add.image(w / 2, h / 2, "backdrop");
+      const source = art.texture.getSourceImage() as HTMLImageElement;
+      const scale = Math.max(w / Math.max(1, source.width), h / Math.max(1, source.height));
+      art.setScale(scale).setAlpha(.58);
     }
-    this.add.rectangle(w / 2, h / 2, w, h, 0x061016, .64);
-    const g = this.add.graphics();
-    g.fillStyle(C.gold, .025);
-    for (let n = 0; n < 10; n++) {
-      const y = h * (n + .3) / 10;
-      g.fillEllipse(w * .67, y, w * .85, 12);
+    const atmosphere = this.add.graphics();
+    atmosphere.fillGradientStyle(0x09131b, 0x09131b, 0x182027, 0x182027, .72, .72, .9, .9);
+    atmosphere.fillRect(0, 0, w, h);
+    // Soft light pools, concentric seals and dark framing establish a tabletop.
+    const cx = mode === "desktop" ? w * .66 : w * .5;
+    const cy = h * .48;
+    for (let i = 9; i >= 1; i--) {
+      atmosphere.fillStyle(0xb18b57, .006 + (10 - i) * .0015);
+      atmosphere.fillEllipse(cx, cy, w * (.40 + i * .085), h * (.24 + i * .068));
     }
-    if (mode === "desktop") {
-      g.fillStyle(0xa48a58, .08);
-      g.fillCircle(w * .73, h * .47, h * .38);
-      g.lineStyle(1, C.gold, .075);
-      for (let k = 0; k < 5; k++) g.strokeCircle(w * .73, h * .47, h * (.20 + k * .054));
+    for (let i = 0; i < 7; i++) {
+      atmosphere.lineStyle(i % 2 === 0 ? 1.4 : .7, C.gold, .028 + (i % 2) * .014);
+      atmosphere.strokeEllipse(cx, cy, h * (.36 + i * .115), h * (.36 + i * .115));
     }
+    // Tiny fixed motes add material depth without a permanent animation cost.
+    for (let i = 0; i < 82; i++) {
+      const px = ((i * 7919 + 149) % 997) / 997 * w;
+      const py = ((i * 4211 + 337) % 991) / 991 * h;
+      atmosphere.fillStyle(i % 4 ? 0xc4ad81 : 0x8ca9ad, .065 + (i % 5) * .015);
+      atmosphere.fillCircle(px, py, i % 9 === 0 ? 1.4 : .65);
+    }
+    atmosphere.fillGradientStyle(0x020608, 0x020608, 0x020608, 0x020608, .14, .14, .42, .42);
+    atmosphere.fillRect(0, 0, w, h);
+    const trim = this.add.graphics();
+    trim.lineStyle(2, C.gold, .16);
+    trim.strokeRect(7, 7, w - 14, h - 14);
+    trim.lineStyle(1, C.gold, .12);
+    trim.strokeRect(11, 11, w - 22, h - 22);
   }
 
   private drawTopbar() {
     const { topbar: t, width: w, mode } = this.layout;
-    this.add.rectangle(w / 2, t.h / 2, w, t.h, 0x0c1419, .96);
+    const bar = this.add.graphics();
+    bar.fillGradientStyle(0x0b1318, 0x0b1318, 0x1c2428, 0x1c2428, .98, .98, .95, .95);
+    bar.fillRect(0, 0, w, t.h);
+    this.hairline(16, 6, w - 16, 6, C.gold, .16);
     this.hairline(0, t.h - 1, w, t.h - 1, C.gold, .6);
     this.label("D A G G E R L I G H T", mode === "mobile" ? 93 : 153, t.h / 2,
       mode === "mobile" ? 11 : 17, "#edd9af", "serif");
@@ -177,7 +199,12 @@ class DaggerScene extends Phaser.Scene {
     const name = champion.champion.name.split(",")[0].toUpperCase();
     const color = me ? C.gold : C.teal;
     const mobile = this.layout.mode === "mobile";
-    this.panel(rect, me ? 0x242019 : 0x141f24, color, .92, mobile ? 3 : 9);
+    this.panel(rect, me ? 0x242019 : 0x141f24, color, .85, mobile ? 3 : 9);
+    const edge = this.add.graphics();
+    edge.lineStyle(2, color, .24);
+    edge.strokeRoundedRect(rect.x + 5, rect.y + 5, rect.w - 10, rect.h - 10, mobile ? 3 : 7);
+    edge.lineStyle(1, C.ivory, .13);
+    edge.lineBetween(rect.x + 12, rect.y + 12, rect.x + Math.min(rect.w * .42, 92), rect.y + 12);
     if (!mobile) {
       const atmosphere = me ? "redAtmosphere" : "blueAtmosphere";
       if (this.textures.exists(atmosphere)) {
@@ -225,7 +252,7 @@ class DaggerScene extends Phaser.Scene {
     const count = (own ? this.state.player : this.state.opponent).archives[lane].length;
     const legal = own && this.state.phase === "awaiting_player" && legalPositions(this.state.player).includes(lane);
     const border = legal ? 0x897a58 : 0x47565a;
-    const panel = this.panel(rect, own ? 0x162229 : 0x122027, border, own ? .84 : .70, 8, own);
+    const panel = this.panel(rect, own ? 0x162229 : 0x122027, border, own ? .78 : .62, 8, own);
     if (own && panel instanceof Phaser.GameObjects.Rectangle) {
       this.playerSlots.set(lane, panel);
       panel.on("pointerup", () => {
@@ -237,6 +264,16 @@ class DaggerScene extends Phaser.Scene {
     decoration.lineStyle(1, C.gold, .13);
     decoration.strokeCircle(cx, cy, Math.min(rect.w * .28, rect.h * .40));
     decoration.strokeCircle(cx, cy, Math.min(rect.w * .24, rect.h * .35));
+    decoration.lineStyle(1, own ? C.gold : C.teal, .11);
+    const crest = Math.min(rect.w * .23, rect.h * .38);
+    decoration.lineBetween(cx - crest, cy, cx + crest, cy);
+    decoration.lineBetween(cx, cy - crest, cx, cy + crest);
+    decoration.strokeDiamond(cx, cy, crest * 1.15, crest * 1.15);
+    decoration.lineStyle(1.5, own ? C.gold : C.teal, .25);
+    decoration.lineBetween(rect.x + 8, rect.y + 8, rect.x + 30, rect.y + 8);
+    decoration.lineBetween(rect.x + 8, rect.y + 8, rect.x + 8, rect.y + 30);
+    decoration.lineBetween(rect.x + rect.w - 30, rect.y + rect.h - 8, rect.x + rect.w - 8, rect.y + rect.h - 8);
+    decoration.lineBetween(rect.x + rect.w - 8, rect.y + rect.h - 30, rect.x + rect.w - 8, rect.y + rect.h - 8);
     this.hairline(rect.x + 14, rect.y + 13, rect.x + 38, rect.y + 13, C.gold, .4);
     this.hairline(rect.x + rect.w - 38, rect.y + rect.h - 14, rect.x + rect.w - 14, rect.y + rect.h - 14, C.gold, .4);
     if (!legal && own && this.state.phase === "awaiting_player") {
@@ -273,10 +310,14 @@ class DaggerScene extends Phaser.Scene {
 
   private drawCard(card: CardDefinition, x: number, y: number, w: number, h: number, interactive = false, index = -1) {
     const surface = this.add.container(x, y);
-    const shadow = this.add.rectangle(0, 3, w + 5, h + 6, 0x040708, .55);
+    const shadow = this.add.rectangle(3, 8, w + 11, h + 12, 0x010406, .42);
+    surface.add(this.add.rectangle(1, 4, w + 7, h + 8, 0x040708, .32));
     const frame = this.add.rectangle(0, 0, w + 3, h + 3, 0x171718)
       .setStrokeStyle(1.5, C.gold, .92);
     surface.add([shadow, frame]);
+    const innerFrame = this.add.rectangle(0, 0, w - 2, h - 2, 0x000000, 0)
+      .setStrokeStyle(1, C.ivory, .23);
+    surface.add(innerFrame);
     const sheet = card.art && sheetKeys.get(card.art.sprite);
     if (sheet && this.textures.exists(sheet + "-cells")) {
       const frameIndex = card.art!.row * 3 + card.art!.column;
@@ -512,7 +553,11 @@ class DaggerScene extends Phaser.Scene {
     this.drawPortrait(l.playerBanner, "player");
 
     const arena = l.arena;
-    this.panel(arena, 0x0c171d, 0x7a705a, .56, 5);
+    this.panel(arena, 0x0c171d, 0x7a705a, .28, 5);
+    const arenaTrim = this.add.graphics();
+    arenaTrim.lineStyle(1, C.gold, .25);
+    arenaTrim.lineBetween(arena.x + 18, arena.y + 7, arena.x + arena.w - 18, arena.y + 7);
+    arenaTrim.lineBetween(arena.x + 18, arena.y + arena.h - 7, arena.x + arena.w - 18, arena.y + arena.h - 7);
     for (const lane of lanes) {
       this.drawLane(l.opponentSlots[lane], lane, "opponent");
       const labelRect = l.labels[lane];
@@ -534,7 +579,10 @@ class DaggerScene extends Phaser.Scene {
         markerX, axisY - l.labels.trono.h * .39, 10, "#c7c6b7");
     }
 
-    this.panel(l.dock, 0x0e171b, 0xa68d5c, .95, 5);
+    this.panel(l.dock, 0x0e171b, 0xa68d5c, .84, 5);
+    const dockLight = this.add.graphics();
+    dockLight.fillGradientStyle(0x735a35, 0x735a35, 0x0c1419, 0x0c1419, .12, .12, 0, 0);
+    dockLight.fillRect(l.dock.x + 4, l.dock.y + 5, l.dock.w - 8, Math.min(44, l.dock.h - 9));
     this.hairline(l.dock.x + 8, l.dock.y + 4, l.dock.x + l.dock.w - 8, l.dock.y + 4, C.gold, .45);
     if (this.state.phase === "awaiting_player") {
       this.state.player.hand.forEach((card, index) => {
