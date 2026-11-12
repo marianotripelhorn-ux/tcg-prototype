@@ -7,6 +7,7 @@ import type { EnginePlay, GameState } from "../src/engine/types";
 import type { CardDefinition, Position } from "../src/types";
 import { getLayout, getDropLane, lanes, clamp, type BoardLayout, type Lane, type Rect } from "./layout";
 import { drawStoneAltar, drawLanePortal, drawRitualSlot, drawPositionPlaque, drawArchivePlate, drawVelvetDock, drawFrameCorners } from "./visuals";
+import cathedralImageB64 from "./art/cathedral-backdrop.base64?raw";
 import "./style.css";
 
 /**
@@ -68,7 +69,8 @@ class DaggerScene extends Phaser.Scene {
         opponentPlays: this.state.opponent.roundPlays.map(play => [play.card.id, play.position]),
         lastDuel: this.state.lastDuel?.turn ?? null,
         roundsCompleted: this.state.rounds.length,
-        ceremonialBackdropLoaded: this.textures.exists("sanctum")
+        ceremonialBackdropLoaded: this.textures.exists("paintedSanctum"),
+        artworkMode: this.textures.exists("paintedSanctum") ? "illustrated" : "fallback"
       }
     });
     try {
@@ -107,6 +109,8 @@ class DaggerScene extends Phaser.Scene {
     ];
     portraits.forEach(([key, url]) => this.load.image(key, new URL(url, ASSETS).href));
     // Decorative scene art is separate from the actual card and Champion graphics.
+    // The painterly art is a separate, compressed static resource. Game UI remains live.
+    this.load.image("paintedSanctum", "data:image/avif;base64," + cathedralImageB64.trim());
     this.load.svg("sanctum", new URL("./art/sanctum.svg", import.meta.url).href, { width: 1600, height: 1000 });
     sheetKeys.forEach((key, source) => this.load.image(key, new URL(source, ASSETS).href));
     this.load.start();
@@ -144,7 +148,13 @@ class DaggerScene extends Phaser.Scene {
   private backdrop() {
     const { width: w, height: h, mode } = this.layout;
     this.add.rectangle(w / 2, h / 2, w, h, C.midnight);
-    if (this.textures.exists("sanctum")) {
+    if (this.textures.exists("paintedSanctum")) {
+      const art = this.add.image(w / 2, h / 2, "paintedSanctum");
+      const source = art.texture.getSourceImage() as HTMLImageElement;
+      // Portrait screens crop the painterly stage without stretching the artwork.
+      const scale = Math.max(w / Math.max(1, source.width), h / Math.max(1, source.height));
+      art.setScale(scale).setAlpha(.98);
+    } else if (this.textures.exists("sanctum")) {
       const art = this.add.image(w / 2, h / 2, "sanctum");
       const src = art.texture.getSourceImage() as HTMLImageElement;
       const scale = Math.max(w / Math.max(1, src.width), h / Math.max(1, src.height));
