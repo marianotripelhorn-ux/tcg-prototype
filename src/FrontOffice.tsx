@@ -120,7 +120,7 @@ export function HomeScreen({
             <h1 className="home-title">DAGGERLIGHT</h1>
             <p className="home-tagline">La mano que elegís determina el poder que ejercés.</p>
             <label className="home-player-identity">
-              <span className="home-player-label">JUGADOR</span>
+              <span className="home-player-label">TU NOMBRE</span>
               <input aria-label="Tu nombre de jugador" maxLength={20}
                 autoComplete="nickname" spellCheck={false}
                 value={playerName==="JUGADOR"?"":playerName}

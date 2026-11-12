@@ -1043,7 +1043,9 @@ export default function App() {
 
                 onPointerDown={event=>{
 
-                  if(!handExpanded && event.pointerType!=="mouse"){setHandExpanded(true);return;}
+                  if(!handExpanded && event.pointerType!=="mouse" && window.matchMedia("(min-width:761px)").matches){
+                     setHandExpanded(true);return;
+                   }
 
                   handlePointerDown(event,index);
 
