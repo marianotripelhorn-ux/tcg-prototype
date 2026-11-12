@@ -418,6 +418,8 @@ class DaggerScene extends Phaser.Scene {
   private choiceButton(text: string, x: number, y: number, w: number, onClick: () => void, primary: boolean) {
     const r = { x: x - w / 2, y: y - 22, w, h: 44 };
     this.panel(r, primary ? 0x9b8053 : 0x1b252a, primary ? 0xf0c98b : 0x8c8e88, 1, 5);
+    const frame = this.add.rectangle(x, y, w, 44, 0x000000, 0)
+      .setStrokeStyle(1, primary ? 0xf0c98b : 0x8c8e88);
     const hit = this.add.rectangle(x, y, w, 44, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
     const title = this.label(text, x, y, 14, primary ? "#11171b" : "#f4e8d8");
@@ -425,7 +427,7 @@ class DaggerScene extends Phaser.Scene {
       title.setAlpha(.5);
       onClick();
     });
-    return [hit, title];
+    return [frame, hit, title];
   }
 
   private drawDecision() {
