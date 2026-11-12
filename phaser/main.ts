@@ -41,31 +41,45 @@ class DaggerScene extends Phaser.Scene{
   constructor(){super("DaggerlightPhaserPreview");}
 
   preload(){
-    this.load.image("playerFace",assetBase+"champions/faces/dextral.webp");
-    this.load.image("rivalFace",assetBase+"champions/faces/sinistral.webp");
-    this.load.image("redBackground",assetBase+"champions/backgrounds/red.webp");
-    this.load.image("blueBackground",assetBase+"champions/backgrounds/blue.webp");
-    this.load.image("redSheet",assetBase+"cards/v4/red-1.webp");
+    // Never block the initial board on image downloads. The preview can draw
+    // placeholder cards and survive missing assets or slow connections.
   }
 
   create(){
     console.info("DAGGERLIGHT Phaser: create scene",this.scale.width,this.scale.height);
-    if(this.textures.exists("redSheet")){
-      try{
-        const img=this.textures.get("redSheet").getSourceImage() as HTMLImageElement;
-        this.textures.addSpriteSheet("redCells",img,{
-          frameWidth:Math.floor(img.width/3),
-          frameHeight:Math.floor(img.height/2),
-          endFrame:5
-        });
-      }catch(error){console.warn("Card sprite preview unavailable:",error);}
-    }
     this.input.dragDistanceThreshold=8;
     this.scale.on(Phaser.Scale.Events.RESIZE,this.resizeHandler);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>{
       this.scale.off(Phaser.Scale.Events.RESIZE,this.resizeHandler);
     });
-    this.rebuild();
+    try{
+      this.rebuild();  // Draw immediately, including when every image fails.
+    }catch(error){
+      console.error("DAGGERLIGHT Phaser: first render failed",error);
+      bootStatus("NO SE PUDO DIBUJAR EL TABLERO: "+String(error),true);
+      return;
+    }
+
+    // Decorative assets are progressive enhancements, not startup dependencies.
+    this.load.once(Phaser.Loader.Events.COMPLETE,()=>{
+      if(this.textures.exists("redSheet")){
+        try{
+          const img=this.textures.get("redSheet").getSourceImage() as HTMLImageElement;
+          if(!this.textures.exists("redCells"))this.textures.addSpriteSheet("redCells",img,{
+            frameWidth:Math.floor(img.width/3),
+            frameHeight:Math.floor(img.height/2),
+            endFrame:5
+          });
+        }catch(error){console.warn("Card sprite preview unavailable:",error);}
+      }
+      this.rebuild();
+    });
+    this.load.image("playerFace",assetBase+"champions/faces/dextral.webp");
+    this.load.image("rivalFace",assetBase+"champions/faces/sinistral.webp");
+    this.load.image("redBackground",assetBase+"champions/backgrounds/red.webp");
+    this.load.image("blueBackground",assetBase+"champions/backgrounds/blue.webp");
+    this.load.image("redSheet",assetBase+"cards/v4/red-1.webp");
+    this.load.start();
   }
 
   private rectangle(rect:Rect,fill:number,stroke=0x8a7651,opacity=1,interactive=false){

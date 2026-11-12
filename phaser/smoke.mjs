@@ -24,7 +24,7 @@ try{
   page.on("console",msg=>{if(msg.type()==="error")runtimeErrors.push("console: "+msg.text());});
   await page.goto("http://127.0.0.1:"+port+"/",{waitUntil:"load",timeout:20000});
   try{
-   await page.waitForFunction(()=>document.documentElement.dataset.phaserReady==="true",{timeout:16000});
+   await page.waitForFunction(()=>document.documentElement.dataset.phaserReady==="true",null,{timeout:12000});
   }catch(e){
    const status=await page.locator("#boot-status").textContent();
    throw new Error(name+" never rendered. Status: "+status+"\n"+runtimeErrors.join("\n")+"\n"+logs);

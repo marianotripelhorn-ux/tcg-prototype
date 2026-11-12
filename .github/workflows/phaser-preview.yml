@@ -44,6 +44,7 @@ jobs:
         working-directory: source
         run: npx playwright install --with-deps chromium
       - name: Verify canvas render in desktop and portrait browsers
+        timeout-minutes: 3
         working-directory: source
         run: npm run test:phaser:smoke
       - name: Copy Phaser preview ONLY
