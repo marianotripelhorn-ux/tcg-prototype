@@ -40,7 +40,7 @@ try{
   if(await canvas.count()!==1)throw new Error(name+" has no Phaser canvas");
   const bounds=await canvas.boundingBox();
   if(!bounds||bounds.width<width*.75||bounds.height<height*.75)throw new Error(name+" canvas has incorrect dimensions: "+JSON.stringify(bounds));
-  await page.screenshot({path:"phaser-"+name+".png",fullPage:true});
+  await page.screenshot({path:"phaser-"+name+".jpg",type:"jpeg",quality:74,fullPage:true});
   const sceneSummary=await page.evaluate(()=>({
     canvas:Array.from(document.querySelectorAll("canvas")).map(node=>[node.width,node.height]),
     ready:document.documentElement.dataset.phaserReady
