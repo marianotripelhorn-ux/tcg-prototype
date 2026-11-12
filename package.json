@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "audit": "vitest run src/engine/effect-audit.test.ts src/engine/champion-audit.test.ts src/engine/core-rules-audit.test.ts",
     "test": "vitest run",
-    "build:phaser": "tsc -p tsconfig.phaser.json && vite build --config vite.phaser.config.ts"
+    "build:phaser": "tsc -p tsconfig.phaser.json && vite build --config vite.phaser.config.ts",
+    "test:phaser:smoke": "node phaser/smoke.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -22,6 +23,7 @@
     "@vitejs/plugin-react": "^4.3.3",
     "typescript": "^5.6.3",
     "vite": "^5.4.10",
-    "vitest": "^2.1.9"
+    "vitest": "^2.1.9",
+    "playwright": "^1.58.2"
   }
 }

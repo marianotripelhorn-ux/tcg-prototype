@@ -40,6 +40,12 @@ jobs:
       - name: Build Phaser preview
         working-directory: source
         run: npm run build:phaser
+      - name: Install Chromium for real-browser smoke testing
+        working-directory: source
+        run: npx playwright install --with-deps chromium
+      - name: Verify canvas render in desktop and portrait browsers
+        working-directory: source
+        run: npm run test:phaser:smoke
       - name: Copy Phaser preview ONLY
         run: |
           rm -rf site/gameplay-phaser

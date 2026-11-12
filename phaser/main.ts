@@ -5,6 +5,20 @@ import type {CardDefinition} from "../src/types";
 import {getLayout,getDropLane,lanes,clamp,type BoardLayout,type Lane,type Rect} from "./layout";
 import "./style.css";
 
+function bootStatus(message:string,failed=false){
+ const el=document.getElementById("boot-status");
+ if(!el)return;
+ el.textContent=message;
+ el.dataset.status=failed?"failed":"ready";
+}
+window.addEventListener("error",event=>{
+ bootStatus("ERROR DE INICIO: "+(event.error?.message||event.message||"desconocido"),true);
+});
+window.addEventListener("unhandledrejection",event=>{
+ const error=event.reason;
+ bootStatus("ERROR DE PHASER: "+(error?.message||String(error)),true);
+});
+
 // A deliberately isolated vertical slice: the engine, rules, IA and tokens
 // will be connected only after touch+mouse dragging passes real-browser QA.
 const CARDS=redCards.slice(0,3);
@@ -283,6 +297,8 @@ class DaggerScene extends Phaser.Scene{
       l.arena.y+Math.min(24,l.arena.h*.08),
       l.mode==="mobile"?10:12,"#dfc391");
     this.statusText.setDepth(12);
+    bootStatus("Campo listo");
+    document.documentElement.dataset.phaserReady="true";
   }
 }
 
