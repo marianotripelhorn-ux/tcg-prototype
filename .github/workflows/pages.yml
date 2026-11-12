@@ -2,7 +2,7 @@ name: Deploy static site to Pages
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "prototype/phaser-v1"]
   workflow_dispatch:
 
 permissions:
@@ -21,10 +21,35 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout published site
         uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Run effect audit
         run: node tests/effect-audit.mjs
+      - name: Run scenario audit
+        run: node tests/effect-scenarios.mjs
+      - name: Checkout Phaser source
+        uses: actions/checkout@v4
+        with:
+          ref: prototype/phaser-v1
+          path: .phaser-source
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build Phaser preview
+        working-directory: .phaser-source
+        run: |
+          npm install --no-audit --no-fund
+          npm run build:phaser
+      - name: Stage Phaser preview
+        run: |
+          test -f .phaser-source/dist-phaser/index.html
+          mkdir -p gameplay-phaser
+          find gameplay-phaser -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+          cp -a .phaser-source/dist-phaser/. gameplay-phaser/
+          rm -rf .phaser-source
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
