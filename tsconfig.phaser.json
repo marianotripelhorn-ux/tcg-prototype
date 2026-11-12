@@ -1,0 +1,5 @@
+{
+  "extends":"./tsconfig.app.json",
+  "compilerOptions":{"noEmit":true},
+  "include":["phaser/**/*.ts","src/data.ts","src/types.ts","src/engine/champions.ts"]
+}
