@@ -6,6 +6,7 @@ import { legalPositions } from "../src/engine/rules";
 import type { EnginePlay, GameState } from "../src/engine/types";
 import type { CardDefinition, Position } from "../src/types";
 import { getLayout, getDropLane, lanes, clamp, type BoardLayout, type Lane, type Rect } from "./layout";
+import { drawStoneAltar, drawLanePortal, drawRitualSlot, drawPositionPlaque, drawArchivePlate, drawVelvetDock, drawFrameCorners } from "./visuals";
 import "./style.css";
 
 /**
@@ -66,7 +67,8 @@ class DaggerScene extends Phaser.Scene {
         playerPlays: this.state.player.roundPlays.map(play => [play.card.id, play.position]),
         opponentPlays: this.state.opponent.roundPlays.map(play => [play.card.id, play.position]),
         lastDuel: this.state.lastDuel?.turn ?? null,
-        roundsCompleted: this.state.rounds.length
+        roundsCompleted: this.state.rounds.length,
+        ceremonialBackdropLoaded: this.textures.exists("sanctum")
       }
     });
     try {
@@ -104,6 +106,8 @@ class DaggerScene extends Phaser.Scene {
       ["logo", "branding/logo.png"]
     ];
     portraits.forEach(([key, url]) => this.load.image(key, new URL(url, ASSETS).href));
+    // Decorative scene art is separate from the actual card and Champion graphics.
+    this.load.svg("sanctum", new URL("./art/sanctum.svg", import.meta.url).href, { width: 1600, height: 1000 });
     sheetKeys.forEach((key, source) => this.load.image(key, new URL(source, ASSETS).href));
     this.load.start();
   }
@@ -136,60 +140,66 @@ class DaggerScene extends Phaser.Scene {
     g.lineBetween(x1, y1, x2, y2);
   }
 
-  /** Painterly atmospheric layers stay below every interactive card and hit area. */
+  /** A separate ornamental SVG never contains game-state UI or cards. */
   private backdrop() {
     const { width: w, height: h, mode } = this.layout;
     this.add.rectangle(w / 2, h / 2, w, h, C.midnight);
-    if (this.textures.exists("backdrop")) {
+    if (this.textures.exists("sanctum")) {
+      const art = this.add.image(w / 2, h / 2, "sanctum");
+      const src = art.texture.getSourceImage() as HTMLImageElement;
+      const scale = Math.max(w / Math.max(1, src.width), h / Math.max(1, src.height));
+      art.setScale(scale).setAlpha(.94);
+    } else if (this.textures.exists("backdrop")) {
       const art = this.add.image(w / 2, h / 2, "backdrop");
-      const source = art.texture.getSourceImage() as HTMLImageElement;
-      const scale = Math.max(w / Math.max(1, source.width), h / Math.max(1, source.height));
-      art.setScale(scale).setAlpha(.58);
+      const src = art.texture.getSourceImage() as HTMLImageElement;
+      art.setScale(Math.max(w / Math.max(1, src.width), h / Math.max(1, src.height))).setAlpha(.6);
     }
     const atmosphere = this.add.graphics();
-    atmosphere.fillGradientStyle(0x09131b, 0x09131b, 0x182027, 0x182027, .72, .72, .9, .9);
+    // Desaturated stone in the center reserves contrast for the actual cards.
+    atmosphere.fillGradientStyle(0x070b0f, 0x070b0f, 0x15121b, 0x15121b, .26, .26, .42, .42);
     atmosphere.fillRect(0, 0, w, h);
-    // Soft light pools, concentric seals and dark framing establish a tabletop.
-    const cx = mode === "desktop" ? w * .66 : w * .5;
+    const cx = mode === "desktop" ? w * .67 : w * .5;
     const cy = h * .48;
-    for (let i = 9; i >= 1; i--) {
-      atmosphere.fillStyle(0xb18b57, .006 + (10 - i) * .0015);
-      atmosphere.fillEllipse(cx, cy, w * (.40 + i * .085), h * (.24 + i * .068));
+    for (let i = 6; i >= 1; i--) {
+      atmosphere.fillStyle(0xe6b974, .004 + (7 - i) * .002);
+      atmosphere.fillEllipse(cx, cy, w * (.25 + i * .10), h * (.17 + i * .07));
     }
-    for (let i = 0; i < 7; i++) {
-      atmosphere.lineStyle(i % 2 === 0 ? 1.4 : .7, C.gold, .028 + (i % 2) * .014);
-      atmosphere.strokeEllipse(cx, cy, h * (.36 + i * .115), h * (.36 + i * .115));
-    }
-    // Tiny fixed motes add material depth without a permanent animation cost.
-    for (let i = 0; i < 82; i++) {
+    for (let i = 0; i < 55; i++) {
       const px = ((i * 7919 + 149) % 997) / 997 * w;
       const py = ((i * 4211 + 337) % 991) / 991 * h;
-      atmosphere.fillStyle(i % 4 ? 0xc4ad81 : 0x8ca9ad, .065 + (i % 5) * .015);
-      atmosphere.fillCircle(px, py, i % 9 === 0 ? 1.4 : .65);
+      atmosphere.fillStyle(i % 4 ? 0xc4ad81 : 0x8ca9ad, .05 + (i % 5) * .018);
+      atmosphere.fillCircle(px, py, i % 9 === 0 ? 1.3 : .65);
     }
-    atmosphere.fillGradientStyle(0x020608, 0x020608, 0x020608, 0x020608, .14, .14, .42, .42);
-    atmosphere.fillRect(0, 0, w, h);
-    const trim = this.add.graphics();
-    trim.lineStyle(2, C.gold, .16);
-    trim.strokeRect(7, 7, w - 14, h - 14);
-    trim.lineStyle(1, C.gold, .12);
-    trim.strokeRect(11, 11, w - 22, h - 22);
+    atmosphere.lineStyle(2, C.gold, .27);
+    atmosphere.strokeRect(6, 6, w - 12, h - 12);
+    atmosphere.lineStyle(1, C.ivory, .11);
+    atmosphere.strokeRect(11, 11, w - 22, h - 22);
   }
 
   private drawTopbar() {
     const { topbar: t, width: w, mode } = this.layout;
+    const mobile = mode === "mobile";
+    const g = this.add.graphics();
+    g.fillGradientStyle(0x090d13, 0x090d13, 0x201c1a, 0x201c1a, .98, .98, .90, .90);
+    g.fillRect(0, 0, w, t.h);
+    g.lineStyle(2, C.gold, .64);
+    g.lineBetween(10, t.h - 2, w - 10, t.h - 2);
+    g.lineStyle(1, C.ivory, .22);
+    g.lineBetween(14, 6, w - 14, 6);
+    const topY = mobile ? 19 : 26;
+    const heading = this.label("DAGGERLIGHT", w / 2, topY, mobile ? 21 : 30, "#f3d9a0", "serif");
+    heading.setShadow(0, 2, "#0b0805", 5, true, true);
+    const round = this.label("RONDA " + this.state.round + "   ·   DUELO " + this.state.turn,
+      w / 2, mobile ? 43 : 58, mobile ? 10 : 13, "#e8d2ab", "serif");
+    round.setShadow(0, 1, "#000000", 2, true, true);
     const bar = this.add.graphics();
-    bar.fillGradientStyle(0x0b1318, 0x0b1318, 0x1c2428, 0x1c2428, .98, .98, .95, .95);
-    bar.fillRect(0, 0, w, t.h);
-    this.hairline(16, 6, w - 16, 6, C.gold, .16);
-    this.hairline(0, t.h - 1, w, t.h - 1, C.gold, .6);
-    this.label("D A G G E R L I G H T", mode === "mobile" ? 93 : 153, t.h / 2,
-      mode === "mobile" ? 11 : 17, "#edd9af", "serif");
-    this.label("RONDA " + this.state.round + "  ·  DUELO " + this.state.turn,
-      mode === "mobile" ? w - 93 : w / 2, t.h / 2,
-      mode === "mobile" ? 10 : 13, "#f8eddd");
-    if (mode === "desktop") {
-      this.label("PHASER  /  ARENA", w - 117, t.h / 2, 10, "#a6b8b6");
+    const wing = mobile ? 110 : 195;
+    bar.lineStyle(1, C.gold, .53);
+    bar.lineBetween(w / 2 - wing, topY, w / 2 - (mobile ? 88 : 151), topY);
+    bar.lineBetween(w / 2 + (mobile ? 88 : 151), topY, w / 2 + wing, topY);
+    if (!mobile) {
+      this.label("✦", w / 2 - wing - 12, topY, 18, "#cba86e", "serif");
+      this.label("✦", w / 2 + wing + 12, topY, 18, "#cba86e", "serif");
     }
   }
 
@@ -197,90 +207,94 @@ class DaggerScene extends Phaser.Scene {
     const me = who === "player";
     const champion = me ? this.state.player : this.state.opponent;
     const name = champion.champion.name.split(",")[0].toUpperCase();
-    const color = me ? C.gold : C.teal;
+    const color = me ? 0xc19a60 : 0x82b1bd;
     const mobile = this.layout.mode === "mobile";
-    this.panel(rect, me ? 0x242019 : 0x141f24, color, .85, mobile ? 3 : 9);
-    const edge = this.add.graphics();
-    edge.lineStyle(2, color, .24);
-    edge.strokeRoundedRect(rect.x + 5, rect.y + 5, rect.w - 10, rect.h - 10, mobile ? 3 : 7);
-    edge.lineStyle(1, C.ivory, .13);
-    edge.lineBetween(rect.x + 12, rect.y + 12, rect.x + Math.min(rect.w * .42, 92), rect.y + 12);
-    if (!mobile) {
-      const atmosphere = me ? "redAtmosphere" : "blueAtmosphere";
-      if (this.textures.exists(atmosphere)) {
-        this.add.image(rect.x + rect.w / 2, rect.y + rect.h / 2, atmosphere)
-          .setDisplaySize(rect.w - 8, rect.h - 8).setAlpha(.22);
-      }
+    // Portrait plates echo book covers, but their content is always live game state.
+    const g = this.add.graphics();
+    g.fillGradientStyle(me ? 0x27151a : 0x10242c, me ? 0x27151a : 0x10242c, 0x0b1016, 0x0b1016,
+      .95, .95, .98, .98);
+    g.fillRoundedRect(rect.x + 1, rect.y + 1, rect.w - 2, rect.h - 2, mobile ? 4 : 9);
+    g.lineStyle(2.3, color, .77);
+    g.strokeRoundedRect(rect.x + 1, rect.y + 1, rect.w - 2, rect.h - 2, mobile ? 4 : 9);
+    g.lineStyle(1, C.ivory, .24);
+    g.strokeRoundedRect(rect.x + 5, rect.y + 5, rect.w - 10, rect.h - 10, mobile ? 2 : 7);
+    const atmosphere = me ? "redAtmosphere" : "blueAtmosphere";
+    if (!mobile && this.textures.exists(atmosphere)) {
+      this.add.image(rect.x + rect.w / 2, rect.y + rect.h / 2, atmosphere)
+        .setDisplaySize(rect.w - 12, rect.h - 12).setAlpha(.15);
     }
     const faceKey = me ? "playerFace" : "rivalFace";
-    const portraitSize = mobile ? rect.h - 10 : Math.min(rect.w - 26, rect.h * .47);
-    const portraitX = mobile ? rect.x + portraitSize / 2 + 6 : rect.x + rect.w / 2;
-    const portraitY = mobile ? rect.y + rect.h / 2 : rect.y + rect.h * .31;
+    const portraitSize = mobile ? rect.h - 10 : Math.min(rect.w * .47, rect.h * .66);
+    const portraitX = mobile ? rect.x + portraitSize / 2 + 7 : rect.x + portraitSize / 2 + 13;
+    const portraitY = mobile ? rect.y + rect.h / 2 : rect.y + rect.h * .46;
     if (this.textures.exists(faceKey)) {
       this.add.image(portraitX, portraitY, faceKey).setDisplaySize(portraitSize, portraitSize);
     } else {
       this.add.circle(portraitX, portraitY, portraitSize * .43, color, .18).setStrokeStyle(1, color, .65);
-      this.label(me ? "D" : "S", portraitX, portraitY, 30, "#e9ddbd", "serif");
+      this.label(me ? "D" : "S", portraitX, portraitY, mobile ? 26 : 42, "#e9ddbd", "serif");
     }
-    const titleX = mobile ? rect.x + portraitSize + 15 : rect.x + rect.w / 2;
-    const titleY = mobile ? rect.y + rect.h / 2 - 8 : rect.y + rect.h * .64;
-    const titleSize = mobile ? clamp(10, rect.w / 30, 14) : clamp(13, rect.w / 17, 18);
-    const nameText = this.label(name, titleX, titleY, titleSize, "#f9ead0", "serif");
+    const rim = this.add.graphics();
+    rim.lineStyle(2.2, C.gold, .58);
+    rim.strokeRoundedRect(portraitX - portraitSize / 2, portraitY - portraitSize / 2,
+      portraitSize, portraitSize, mobile ? 3 : 7);
+    rim.lineStyle(1, 0xffe8b6, .25);
+    rim.strokeRoundedRect(portraitX - portraitSize / 2 + 3, portraitY - portraitSize / 2 + 3,
+      portraitSize - 6, portraitSize - 6, 3);
+    drawFrameCorners(this, rect, color, mobile);
+
+    const titleX = mobile ? rect.x + portraitSize + 15 : rect.x + rect.w * .70;
+    const titleY = mobile ? rect.y + rect.h * .37 : rect.y + rect.h * .23;
+    const nameFont = mobile ? clamp(10, rect.w / 32, 13) : clamp(12, rect.w / 19, 17);
+    const nameText = this.label(name, titleX, titleY, nameFont, "#fae6be", "serif");
     if (mobile) nameText.setOrigin(0, .5);
     if (!mobile) {
-      const ability = this.add.text(rect.x + 15, rect.y + rect.h * .73, champion.champion.text, {
-        fontFamily: "Arial, sans-serif", fontSize: Math.max(11, rect.w / 23) + "px",
-        color: "#c1b5a2", align: "center", wordWrap: { width: rect.w - 30 }, lineSpacing: 3
-      }).setOrigin(.0, 0);
-      ability.setAlpha(.94);
+      nameText.setWordWrapWidth(rect.w * .51);
+      const ability = this.add.text(rect.x + rect.w * .48, rect.y + rect.h * .66, champion.champion.text, {
+        fontFamily: "Georgia, serif", fontSize: clamp(10, rect.w / 26, 13) + "px",
+        color: "#d2c2a6", align: "left", wordWrap: { width: rect.w * .47 }, lineSpacing: 3,
+        fontStyle: "italic"
+      }).setOrigin(0, 0);
+      ability.setAlpha(.95);
+      g.lineStyle(1, color, .38);
+      g.lineBetween(rect.x + rect.w * .50, rect.y + rect.h * .62,
+        rect.x + rect.w - 15, rect.y + rect.h * .62);
     } else {
       const sub = this.label(me ? "TU CHAMPION" : "CHAMPION RIVAL",
-        titleX, titleY + 19, 9, me ? "#cbb17e" : "#a6c6c3");
+        titleX, titleY + 18, 9, me ? "#cbb17e" : "#9ac6c8");
       sub.setOrigin(0, .5);
     }
-    const lifeX = rect.x + rect.w - (mobile ? 28 : 37);
-    const lifeY = mobile ? rect.y + rect.h / 2 : rect.y + rect.h * .55;
-    const radius = mobile ? 22 : 29;
-    this.add.circle(lifeX, lifeY, radius + 3, 0x0a0e12, .95).setStrokeStyle(2, color, .7);
-    this.add.circle(lifeX, lifeY, radius - 4, 0x233034, .9).setStrokeStyle(1, color, .55);
-    this.label(String(champion.life), lifeX, lifeY - 1, mobile ? 22 : 29, "#fff0d3", "serif");
-    if (!mobile) this.label("VIDA", lifeX, lifeY + 35, 9, "#c1b18d");
+    const lifeX = rect.x + rect.w - (mobile ? 29 : 38);
+    const lifeY = mobile ? rect.y + rect.h / 2 : rect.y + rect.h * .45;
+    const radius = mobile ? 20 : 28;
+    for (const [r, fill, stroke, alpha] of [
+      [radius + 5, 0x080b0e, color, .58],
+      [radius, me ? 0x58222a : 0x1c4348, C.gold, .83],
+      [radius - 6, me ? 0x421b21 : 0x122931, C.ivory, .28]
+    ] as const) {
+      this.add.circle(lifeX, lifeY, r, fill, .97).setStrokeStyle(r === radius ? 2 : 1, stroke, alpha);
+    }
+    this.label(String(champion.life), lifeX, lifeY - (mobile ? 1 : 3),
+      mobile ? 21 : 27, "#fff0d6", "serif");
+    if (!mobile) this.label("VIDA", lifeX, lifeY + 30, 9, "#cdb58b");
   }
 
   private drawLane(rect: Rect, lane: Lane, side: "player" | "opponent") {
     const own = side === "player";
     const count = (own ? this.state.player : this.state.opponent).archives[lane].length;
     const legal = own && this.state.phase === "awaiting_player" && legalPositions(this.state.player).includes(lane);
-    const border = legal ? 0x897a58 : 0x47565a;
-    const panel = this.panel(rect, own ? 0x162229 : 0x122027, border, own ? .78 : .62, 8, own);
-    if (own && panel instanceof Phaser.GameObjects.Rectangle) {
-      this.playerSlots.set(lane, panel);
-      panel.on("pointerup", () => {
+    drawRitualSlot(this, rect, own, legal, this.layout.mode === "mobile");
+    // Unobtrusive transparent input zone: all real placement rules still come from legalPositions.
+    if (own) {
+      const hit = this.add.rectangle(rect.x + rect.w / 2, rect.y + rect.h / 2,
+        rect.w, rect.h, 0x000000, 0).setInteractive({ useHandCursor: true });
+      this.playerSlots.set(lane, hit);
+      hit.on("pointerup", () => {
         if (this.selected !== null && this.draggingIndex === null) this.play(this.selected, lane);
       });
     }
     const cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2;
-    const decoration = this.add.graphics();
-    decoration.lineStyle(1, C.gold, .13);
-    decoration.strokeCircle(cx, cy, Math.min(rect.w * .28, rect.h * .40));
-    decoration.strokeCircle(cx, cy, Math.min(rect.w * .24, rect.h * .35));
-    decoration.lineStyle(1, own ? C.gold : C.teal, .11);
-    const crest = Math.min(rect.w * .23, rect.h * .38);
-    decoration.lineBetween(cx - crest, cy, cx + crest, cy);
-    decoration.lineBetween(cx, cy - crest, cx, cy + crest);
-    decoration.lineBetween(cx, cy - crest * .58, cx + crest * .58, cy);
-    decoration.lineBetween(cx + crest * .58, cy, cx, cy + crest * .58);
-    decoration.lineBetween(cx, cy + crest * .58, cx - crest * .58, cy);
-    decoration.lineBetween(cx - crest * .58, cy, cx, cy - crest * .58);
-    decoration.lineStyle(1.5, own ? C.gold : C.teal, .25);
-    decoration.lineBetween(rect.x + 8, rect.y + 8, rect.x + 30, rect.y + 8);
-    decoration.lineBetween(rect.x + 8, rect.y + 8, rect.x + 8, rect.y + 30);
-    decoration.lineBetween(rect.x + rect.w - 30, rect.y + rect.h - 8, rect.x + rect.w - 8, rect.y + rect.h - 8);
-    decoration.lineBetween(rect.x + rect.w - 8, rect.y + rect.h - 30, rect.x + rect.w - 8, rect.y + rect.h - 8);
-    this.hairline(rect.x + 14, rect.y + 13, rect.x + 38, rect.y + 13, C.gold, .4);
-    this.hairline(rect.x + rect.w - 38, rect.y + rect.h - 14, rect.x + rect.w - 14, rect.y + rect.h - 14, C.gold, .4);
     if (!legal && own && this.state.phase === "awaiting_player") {
-      this.add.rectangle(cx, cy, rect.w - 9, rect.h - 9, 0x000000, .18);
+      this.add.rectangle(cx, cy, rect.w - 14, rect.h - 14, 0x000000, .14);
     }
 
     const stack: EnginePlay[] = (own ? this.state.player : this.state.opponent).roundPlays
@@ -306,9 +320,10 @@ class DaggerScene extends Phaser.Scene {
     } else {
       this.label(own ? "◇" : "·", cx, cy - 7, this.layout.mode === "mobile" ? 26 : 40, "#5f716f", "serif");
     }
+    drawArchivePlate(this, rect, own, this.layout.mode === "mobile");
     const archivText = "ARCHIVO  " + String(count).padStart(2, "0");
-    this.label(archivText, rect.x + rect.w / 2, own ? rect.y + rect.h - 15 : rect.y + 15,
-      this.layout.mode === "mobile" ? 8 : 10, own ? "#b9a079" : "#8fa9a9");
+    this.label(archivText, rect.x + rect.w / 2, own ? rect.y + rect.h - 14 : rect.y + 15,
+      this.layout.mode === "mobile" ? 8 : 10, own ? "#e3c18b" : "#b1cfce");
   }
 
   private drawCard(card: CardDefinition, x: number, y: number, w: number, h: number, interactive = false, index = -1) {
@@ -318,9 +333,7 @@ class DaggerScene extends Phaser.Scene {
     const frame = this.add.rectangle(0, 0, w + 3, h + 3, 0x171718)
       .setStrokeStyle(1.5, C.gold, .92);
     surface.add([shadow, frame]);
-    const innerFrame = this.add.rectangle(0, 0, w - 2, h - 2, 0x000000, 0)
-      .setStrokeStyle(1, C.ivory, .23);
-    surface.add(innerFrame);
+    // A second rim is placed *after* the art below so actual card illustrations remain visible.
     const sheet = card.art && sheetKeys.get(card.art.sprite);
     if (sheet && this.textures.exists(sheet + "-cells")) {
       const frameIndex = card.art!.row * 3 + card.art!.column;
@@ -339,6 +352,24 @@ class DaggerScene extends Phaser.Scene {
         wordWrap: { width: w * .83 }
       }));
     }
+    // Hairline metallic foil + small corner engraving, above the existing real Card Studio art.
+    const foil = this.add.graphics();
+    foil.lineStyle(2.0, interactive ? 0xe0bf82 : C.gold, interactive ? .92 : .66);
+    foil.strokeRoundedRect(-w / 2 + 1.5, -h / 2 + 1.5, w - 3, h - 3, 3);
+    foil.lineStyle(.9, C.ivory, .25);
+    foil.strokeRoundedRect(-w / 2 + 5, -h / 2 + 5, w - 10, h - 10, 2);
+    const corner = Math.min(15, w * .16);
+    for (const [px, py, dx, dy] of [
+      [-w / 2 + 5, -h / 2 + 5, 1, 1],
+      [w / 2 - 5, -h / 2 + 5, -1, 1],
+      [-w / 2 + 5, h / 2 - 5, 1, -1],
+      [w / 2 - 5, h / 2 - 5, -1, -1]
+    ]) {
+      foil.lineStyle(1, 0xe8c58b, .48);
+      foil.lineBetween(px, py, px + corner * dx, py);
+      foil.lineBetween(px, py, px, py + corner * dy);
+    }
+    surface.add(foil);
     if (!interactive) { surface.setDepth(8); return surface; }
     surface.setDepth(18).setInteractive(
       new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h), Phaser.Geom.Rectangle.Contains
@@ -558,19 +589,18 @@ class DaggerScene extends Phaser.Scene {
     this.drawPortrait(l.playerBanner, "player");
 
     const arena = l.arena;
-    this.panel(arena, 0x0c171d, 0x7a705a, .28, 5);
-    const arenaTrim = this.add.graphics();
-    arenaTrim.lineStyle(1, C.gold, .25);
-    arenaTrim.lineBetween(arena.x + 18, arena.y + 7, arena.x + arena.w - 18, arena.y + 7);
-    arenaTrim.lineBetween(arena.x + 18, arena.y + arena.h - 7, arena.x + arena.w - 18, arena.y + arena.h - 7);
+    drawStoneAltar(this, l);
     for (const lane of lanes) {
+      drawLanePortal(this, l.opponentSlots[lane], l.labels[lane], l.playerSlots[lane],
+        lane, l.mode === "mobile");
       this.drawLane(l.opponentSlots[lane], lane, "opponent");
       const labelRect = l.labels[lane];
-      this.panel(labelRect, 0x10191d, 0x6b6656, .92, 3);
-      this.label(LABELS[lane], labelRect.x + labelRect.w / 2,
+      drawPositionPlaque(this, labelRect, lane, l.mode === "mobile");
+      const name = this.label(LABELS[lane], labelRect.x + labelRect.w / 2,
         labelRect.y + labelRect.h / 2,
-        l.mode === "mobile" ? clamp(11, l.width / 33, 14) : clamp(14, arena.w / 50, 19),
-        "#dac393", "serif");
+        l.mode === "mobile" ? clamp(10, l.width / 37, 12) : clamp(14, arena.w / 53, 18),
+        "#ead1a0", "serif");
+      name.setShadow(0, 1, "#000000", 2, true, true);
       this.drawLane(l.playerSlots[lane], lane, "player");
     }
 
@@ -584,11 +614,7 @@ class DaggerScene extends Phaser.Scene {
         markerX, axisY - l.labels.trono.h * .39, 10, "#c7c6b7");
     }
 
-    this.panel(l.dock, 0x0e171b, 0xa68d5c, .84, 5);
-    const dockLight = this.add.graphics();
-    dockLight.fillGradientStyle(0x735a35, 0x735a35, 0x0c1419, 0x0c1419, .12, .12, 0, 0);
-    dockLight.fillRect(l.dock.x + 4, l.dock.y + 5, l.dock.w - 8, Math.min(44, l.dock.h - 9));
-    this.hairline(l.dock.x + 8, l.dock.y + 4, l.dock.x + l.dock.w - 8, l.dock.y + 4, C.gold, .45);
+    drawVelvetDock(this, l.dock, l.mode === "mobile");
     if (this.state.phase === "awaiting_player") {
       this.state.player.hand.forEach((card, index) => {
         const rect = l.hand[index];
