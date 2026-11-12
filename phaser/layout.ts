@@ -20,10 +20,10 @@ export function contains(r:Rect,x:number,y:number):boolean{
 export function getLayout(w:number,h:number):BoardLayout{
  const width=Math.max(300,Math.round(w)),height=Math.max(480,Math.round(h));
  const mobile=width<760||width/height<1.04;
- const top=mobile?44:48;
+ const top=mobile?56:74;
  const sidebar=mobile?null:{x:0,y:top,w:clamp(218,width*.237,352),h:height-top};
  const availableW=width-(sidebar?.w||0);
- const dockH=mobile?clamp(148,height*.23,204):clamp(140,height*.245,250);
+ const dockH=mobile?clamp(148,height*.235,204):clamp(150,height*.25,245);
  const bannerH=mobile?clamp(70,height*.109,103):0;
  const playLeft=sidebar?sidebar.w:0;
  const gap=mobile?4:clamp(6,width*.008,17);
@@ -31,7 +31,7 @@ export function getLayout(w:number,h:number):BoardLayout{
  const arenaBottom=height-dockH-bannerH;
  const arenaH=arenaBottom-arenaTop;
  const arena={x:playLeft,y:arenaTop,w:availableW,h:arenaH};
- const axisHeight=mobile?30:clamp(35,arenaH*.11,57);
+ const axisHeight=mobile?32:clamp(41,arenaH*.105,56);
  const slotH=(arenaH-axisHeight-2*gap)/2;
  const laneW=(availableW-4*gap)/3;
  const labelY=arenaTop+slotH+gap;
