@@ -268,7 +268,10 @@ class DaggerScene extends Phaser.Scene {
     const crest = Math.min(rect.w * .23, rect.h * .38);
     decoration.lineBetween(cx - crest, cy, cx + crest, cy);
     decoration.lineBetween(cx, cy - crest, cx, cy + crest);
-    decoration.strokeDiamond(cx, cy, crest * 1.15, crest * 1.15);
+    decoration.lineBetween(cx, cy - crest * .58, cx + crest * .58, cy);
+    decoration.lineBetween(cx + crest * .58, cy, cx, cy + crest * .58);
+    decoration.lineBetween(cx, cy + crest * .58, cx - crest * .58, cy);
+    decoration.lineBetween(cx - crest * .58, cy, cx, cy - crest * .58);
     decoration.lineStyle(1.5, own ? C.gold : C.teal, .25);
     decoration.lineBetween(rect.x + 8, rect.y + 8, rect.x + 30, rect.y + 8);
     decoration.lineBetween(rect.x + 8, rect.y + 8, rect.x + 8, rect.y + 30);
