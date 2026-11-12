@@ -452,7 +452,9 @@ class DaggerScene extends Phaser.Scene {
       this.toast = outcome + "   ·   " + duel.playerPlay.finalPower + "  —  " + duel.opponentPlay.finalPower;
     }
     if (this.state.round > previousRound) this.toast = "RONDA " + this.state.round + "  ·  EL COMBATE CONTINÚA";
-    if (this.state.phase === "finished") this.toast = this.state.winner === "player" ? "VICTORIA" : "DERROTA";
+    // submitPlayerPlay mutates the state synchronously; refresh the narrowed phase after the call.
+    const phaseAfterPlay = this.state.phase as GameState["phase"];
+    if (phaseAfterPlay === "finished") this.toast = this.state.winner === "player" ? "VICTORIA" : "DERROTA";
     if (previousLife[0] !== this.state.player.life || previousLife[1] !== this.state.opponent.life) {
       this.cameras.main.shake(110, .0015);
     }
