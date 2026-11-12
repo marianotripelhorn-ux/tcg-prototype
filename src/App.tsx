@@ -6,6 +6,7 @@ import Multiplayer from "./Multiplayer";
 import PlaytestHub from "./PlaytestHub";
 import { saveAiMatch } from "./playtestStorage";
 import ThemeToggle from "./ThemeToggle";
+import AuguryStatus from "./AuguryStatus";
 import { factionArtUrl } from "./factionArtwork";
 import { championImageUrl,championBackgroundUrl,championShortName } from "./championArtwork";
 import { readPlayerName,writePlayerName,DEFAULT_PLAYER_NAME } from "./playerProfile";
