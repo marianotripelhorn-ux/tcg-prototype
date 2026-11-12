@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
 
 const port=4177;
-const server=spawn("npx",["vite","preview","--config","vite.phaser.config.ts","--host","127.0.0.1","--port",String(port),"--strictPort"],{
+const server=spawn(process.execPath,["./node_modules/vite/bin/vite.js","preview","--config","vite.phaser.config.ts","--host","127.0.0.1","--port",String(port),"--strictPort"],{
   stdio:["ignore","pipe","pipe"]
 });
 let logs="";
@@ -43,4 +43,9 @@ try{
   console.log("PHASER_SMOKE_OK "+name+" "+width+"x"+height+" canvas: "+Math.round(bounds.width)+"x"+Math.round(bounds.height));
   await page.close();
  }
-}finally{await browser.close();server.kill("SIGTERM");}
+ }finally{
+  await browser.close();
+  server.kill("SIGTERM");
+  server.stdout.destroy();
+  server.stderr.destroy();
+}
