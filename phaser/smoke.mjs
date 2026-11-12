@@ -29,6 +29,13 @@ try{
    const status=await page.locator("#boot-status").textContent();
    throw new Error(name+" never rendered. Status: "+status+"\n"+runtimeErrors.join("\n")+"\n"+logs);
   }
+  // Guard against silently falling back to vector geometry: the actual painted
+  // cathedral scene must decode and be present before we accept the preview.
+  await page.waitForFunction(() =>
+    window.__daggerlightPhaserDebug?.()?.state?.artworkMode === "illustrated",
+    null, { timeout: 14000 }
+  );
+
   const canvas=page.locator("#game canvas");
   if(await canvas.count()!==1)throw new Error(name+" has no Phaser canvas");
   const bounds=await canvas.boundingBox();
