@@ -166,7 +166,7 @@ class DaggerScene extends Phaser.Scene {
     }
     const atmosphere = this.add.graphics();
     // Desaturated stone in the center reserves contrast for the actual cards.
-    atmosphere.fillGradientStyle(0x070b0f, 0x070b0f, 0x15121b, 0x15121b, .26, .26, .42, .42);
+    atmosphere.fillGradientStyle(0x070b0f, 0x070b0f, 0x15121b, 0x15121b, .06, .06, .14, .14);
     atmosphere.fillRect(0, 0, w, h);
     const cx = mode === "desktop" ? w * .67 : w * .5;
     const cy = h * .48;
@@ -252,22 +252,22 @@ class DaggerScene extends Phaser.Scene {
       portraitSize - 6, portraitSize - 6, 3);
     drawFrameCorners(this, rect, color, mobile);
 
-    const titleX = mobile ? rect.x + portraitSize + 15 : rect.x + rect.w * .70;
+    const titleX = mobile ? rect.x + portraitSize + 15 : rect.x + rect.w * .68;
     const titleY = mobile ? rect.y + rect.h * .37 : rect.y + rect.h * .23;
     const nameFont = mobile ? clamp(10, rect.w / 32, 13) : clamp(12, rect.w / 19, 17);
     const nameText = this.label(name, titleX, titleY, nameFont, "#fae6be", "serif");
     if (mobile) nameText.setOrigin(0, .5);
     if (!mobile) {
-      nameText.setWordWrapWidth(rect.w * .51);
-      const ability = this.add.text(rect.x + rect.w * .48, rect.y + rect.h * .66, champion.champion.text, {
+      nameText.setWordWrapWidth(rect.w * .40);
+      const ability = this.add.text(rect.x + rect.w * .55, rect.y + rect.h * .63, champion.champion.text, {
         fontFamily: "Georgia, serif", fontSize: clamp(10, rect.w / 26, 13) + "px",
-        color: "#d2c2a6", align: "left", wordWrap: { width: rect.w * .47 }, lineSpacing: 3,
+        color: "#d2c2a6", align: "left", wordWrap: { width: rect.w * .40 }, lineSpacing: 3,
         fontStyle: "italic"
       }).setOrigin(0, 0);
       ability.setAlpha(.95);
       g.lineStyle(1, color, .38);
-      g.lineBetween(rect.x + rect.w * .50, rect.y + rect.h * .62,
-        rect.x + rect.w - 15, rect.y + rect.h * .62);
+      g.lineBetween(rect.x + rect.w * .55, rect.y + rect.h * .58,
+        rect.x + rect.w - 15, rect.y + rect.h * .58);
     } else {
       const sub = this.label(me ? "TU CHAMPION" : "CHAMPION RIVAL",
         titleX, titleY + 18, 9, me ? "#cbb17e" : "#9ac6c8");
@@ -640,13 +640,12 @@ class DaggerScene extends Phaser.Scene {
         }
       });
     }
-    const bottomNote = this.state.phase === "awaiting_player"
-      ? (this.selected === null ? "ARRASTRÁ UNA CARTA O TOCÁ PARA ELEGIR" : "CARTA SELECCIONADA · ELEGÍ POSICIÓN")
-      : (this.state.phase === "finished" ? "PARTIDA FINALIZADA" : "DECISIÓN DE RONDA");
-    const statusY = arena.y + Math.min(21, arena.h * .07);
-    this.statusText = this.label(this.toast || bottomNote, arena.x + arena.w / 2,
-      statusY, l.mode === "mobile" ? 9 : 12,
-      this.toast ? "#ffe2a7" : "#c2b6a1");
+    // Never paint instructional text across the Archive plaques. Only actual
+    // duel results and drag feedback appear as overlays.
+    const statusY = l.mode === "mobile" ? l.arena.y + 24 : l.arena.y + l.arena.h * .52;
+    this.statusText = this.label(this.toast, l.arena.x + l.arena.w / 2,
+      statusY, l.mode === "mobile" ? 10 : 14,
+      "#ffe2a7");
     this.statusText.setDepth(40);
     this.drawDecision();
     bootStatus("Campo listo");
