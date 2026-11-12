@@ -23,17 +23,17 @@ export function drawStoneAltar(scene: Phaser.Scene, layout: BoardLayout) {
   const g = scene.add.graphics();
   const narrow = layout.mode === "mobile";
   const margin = narrow ? 2 : 8;
-  g.fillStyle(0x070f17, .16);
+  g.fillStyle(0x070f17, .055);
   g.fillRoundedRect(r.x + margin, r.y + 1, r.w - margin * 2, r.h - 2, narrow ? 4 : 12);
-  g.lineStyle(3, 0x322d26, .63);
+  g.lineStyle(2, 0x322d26, .26);
   g.strokeRoundedRect(r.x + margin, r.y + 1, r.w - margin * 2, r.h - 2, narrow ? 4 : 12);
-  g.lineStyle(1.2, GOLD, .35);
+  g.lineStyle(1.2, GOLD, .25);
   g.strokeRoundedRect(r.x + margin + 4, r.y + 5, r.w - margin * 2 - 8, r.h - 10, 7);
-  g.lineStyle(1, LIGHT, .17);
+  g.lineStyle(1, LIGHT, .09);
   g.strokeRoundedRect(r.x + margin + 9, r.y + 10, r.w - margin * 2 - 18, r.h - 20, 5);
   const center = r.x + r.w / 2;
   const radius = Math.min(r.w * .34, r.h * .39);
-  g.lineStyle(1.1, GOLD, .12);
+  g.lineStyle(1, GOLD, .025);
   for (let i = 0; i < 4; i++) g.strokeCircle(center, r.y + r.h / 2, radius * (.45 + i * .22));
   g.lineStyle(1, GOLD, .30);
   g.lineBetween(r.x + 18, r.y + 6, r.x + r.w - 18, r.y + 6);
@@ -52,12 +52,12 @@ export function drawLanePortal(scene: Phaser.Scene, upper: Rect, axis: Rect, low
   const apex = mobile ? Math.min(16, upper.h * .17) : Math.min(36, upper.h * .25);
   const cx = x + w / 2;
   // Outer shadow, pointed cathedral apex, double gold tracing.
-  g.fillStyle(SHADOW, .08);
+  g.fillStyle(SHADOW, .025);
   g.fillRoundedRect(x + 1, y + apex, w - 2, h - apex, mobile ? 5 : 14);
   for (const [offset, weight, color, alpha] of [
-    [0, 3.4, 0x5d4b33, .71],
-    [4, 1.4, GOLD, .46],
-    [9, 1.0, LIGHT, .20]
+    [0, 2.8, 0x5d4b33, .40],
+    [4, 1.4, GOLD, .26],
+    [9, 1.0, LIGHT, .09]
   ] as const) {
     const left = x + offset;
     const right = x + w - offset;
@@ -79,8 +79,8 @@ export function drawLanePortal(scene: Phaser.Scene, upper: Rect, axis: Rect, low
     g.strokePath();
   }
   const mark = lane === "trono" ? GOLD : lane === "siniestra" ? 0x85abb6 : 0xb8876c;
-  diamond(g, cx, y + Math.max(5, apex * .36), mobile ? 3.6 : 8, mark, .85);
-  g.lineStyle(1, GOLD, .32);
+  diamond(g, cx, y + Math.max(5, apex * .36), mobile ? 3.6 : 8, mark, .55);
+  g.lineStyle(1, GOLD, .18);
   g.lineBetween(x + 12, axis.y + axis.h / 2, x + w - 12, axis.y + axis.h / 2);
   // Tiny finials echo carved altar architecture.
   for (const yy of [axis.y - 3, axis.y + axis.h + 3]) {
@@ -93,33 +93,28 @@ export function drawRitualSlot(scene: Phaser.Scene, r: Rect, own: boolean, legal
   const g = scene.add.graphics();
   const cx = r.x + r.w / 2;
   const cy = r.y + r.h / 2;
-  const tint = own ? 0xc7a16d : 0x92b8bf;
-  const inset = mobile ? 5 : 11;
-  g.fillStyle(own ? 0x1d1a19 : 0x11212a, legal ? .14 : .10);
-  g.fillRoundedRect(r.x + inset, r.y + inset, r.w - inset * 2, r.h - inset * 2, 6);
-  g.lineStyle(1.2, tint, legal ? .44 : .20);
-  g.strokeRoundedRect(r.x + inset, r.y + inset, r.w - inset * 2, r.h - inset * 2, 6);
-  const rad = Math.min(r.w * .36, r.h * .33);
-  for (const [ratio, opacity] of [[1, .21], [.75, .16], [.35, .13]] as const) {
-    g.lineStyle(1, tint, opacity);
-    g.strokeCircle(cx, cy, rad * ratio);
-  }
-  g.lineStyle(1.1, tint, .22);
-  g.lineBetween(cx - rad * 1.10, cy, cx + rad * 1.10, cy);
-  g.lineBetween(cx, cy - rad * 1.10, cx, cy + rad * 1.10);
-  diamond(g, cx, cy, rad * .48, tint, .22);
-  // The carved points remain visible when the center fills with a card.
-  const x0 = r.x + inset + 5;
-  const x1 = r.x + r.w - inset - 5;
-  for (const [x, dir] of [[x0, 1], [x1, -1]]) {
-    g.lineStyle(1.3, tint, .43);
+  const tint = own ? 0xd4b379 : 0x8faab0;
+  const inset = mobile ? 5 : 12;
+  // Subtle legibility surfaces, never flat panels hiding the painted stone.
+  g.fillStyle(0x080d12, legal ? .035 : .025);
+  g.fillRoundedRect(r.x + inset, r.y + inset, r.w - inset * 2, r.h - inset * 2, 5);
+  g.lineStyle(1, tint, legal ? .21 : .085);
+  g.strokeRoundedRect(r.x + inset, r.y + inset, r.w - inset * 2, r.h - inset * 2, 5);
+  // Only a small carved seal where the card will rest.
+  const rad = Math.min(r.w * .20, r.h * .20);
+  g.lineStyle(1, tint, legal ? .15 : .08);
+  g.strokeCircle(cx, cy, rad);
+  diamond(g, cx, cy, Math.min(9, rad * .30), tint, legal ? .35 : .14);
+  // Sconces on slot edges make a legal drop target perceptible without grids.
+  for (const [x, dir] of [[r.x + inset, 1], [r.x + r.w - inset, -1]]) {
+    g.lineStyle(1.4, tint, legal ? .35 : .18);
     g.lineBetween(x, cy - 12, x + dir * 8, cy);
     g.lineBetween(x + dir * 8, cy, x, cy + 12);
   }
   if (legal) {
-    g.lineStyle(1.5, GOLD, .35);
-    g.lineBetween(r.x + inset, r.y + inset, r.x + inset + 23, r.y + inset);
-    g.lineBetween(r.x + r.w - inset - 23, r.y + r.h - inset, r.x + r.w - inset, r.y + r.h - inset);
+    g.lineStyle(1.5, GOLD, .29);
+    g.lineBetween(r.x + inset, r.y + inset, r.x + inset + 19, r.y + inset);
+    g.lineBetween(r.x + r.w - inset - 19, r.y + r.h - inset, r.x + r.w - inset, r.y + r.h - inset);
   }
 }
 
