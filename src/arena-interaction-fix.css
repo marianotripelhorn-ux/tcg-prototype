@@ -1,0 +1,87 @@
+/* LAB safe-hand interaction fix: no translated hand above the battlefield.
+   Collapsed cards peek from a real bottom dock. Explicitly opening the hand
+   allocates space and shrinks the board, preserving all legal drop targets. */
+@media(min-width:761px){
+ .app-shell.arena-v2 .arena-main{--lab-dock:62px}
+ .app-shell.arena-v2 .arena-main.hand-expanded{--lab-dock:clamp(235px,35dvh,345px)}
+ .app-shell.arena-v2 .arena-sidebar{
+   grid-template-rows:minmax(0,1fr) 42px minmax(0,1fr) var(--lab-dock)!important
+ }
+ .app-shell.arena-v2 .arena-sidebar-hand-art{height:100%!important;min-height:0}
+ .app-shell.arena-v2 .arena-stage{
+   grid-template-rows:minmax(0,1fr) 0px var(--lab-dock)!important
+ }
+ .app-shell.arena-v2 .hand-zone,
+ .app-shell.arena-v2 .hand-zone.is-open{
+   position:relative!important;grid-row:3!important;
+   height:100%!important;min-height:0!important;
+   padding:8px 10px!important;
+   overflow:hidden!important;
+   z-index:15!important;
+   border-top:1px solid #ac8b59!important
+ }
+ .app-shell.arena-v2 .hand-zone .hand-layout,
+ .app-shell.arena-v2 .hand-zone:hover .hand-layout,
+ .app-shell.arena-v2 .hand-zone:focus-within .hand-layout,
+ .app-shell.arena-v2 .hand-zone.is-open .hand-layout{
+   position:relative!important;
+   top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;
+   height:100%!important;width:100%!important;min-height:0!important;
+   transform:none!important;translate:none!important;transition:none!important;
+   overflow:hidden!important;align-items:flex-start!important
+ }
+ .app-shell.arena-v2 .hand-zone .hand{
+   display:flex!important;height:100%!important;min-height:0!important;
+   align-items:flex-start!important;justify-content:center!important;
+   gap:clamp(7px,1.4vw,20px)!important;overflow:visible!important
+ }
+ .app-shell.arena-v2 .hand-zone .hand-card{
+   height:clamp(208px,31dvh,313px)!important;width:auto!important;
+   max-width:min(31%,245px)!important;max-height:none!important;
+   flex:0 1 auto!important;
+   transform:none!important;translate:none!important;
+   filter:drop-shadow(0 5px 10px #0009)!important;
+   transform-origin:center top!important
+ }
+ .app-shell.arena-v2 .hand-zone .hand-card.is-selected{
+   transform:translateY(-7px) scale(1.025)!important
+ }
+ .app-shell.arena-v2 .hand-zone .arena-hand-toggle{
+   z-index:90!important;right:10px;top:2px
+ }
+ .app-shell.arena-v2 .hand-zone.is-open .arena-hand-toggle{
+   background:#bfa171!important;color:#191919!important
+ }
+ .app-shell.arena-v2 .hand-zone .manifest-hand{
+   position:relative!important;top:auto!important;right:auto!important;
+   height:100%!important;max-height:100%;width:min(31%,190px)!important;
+   min-width:90px!important;overflow:hidden!important;
+   flex:0 1 190px;align-self:stretch
+ }
+ .app-shell.arena-v2 .hand-zone .manifest-hand-cards{
+   overflow-x:auto!important;overflow-y:hidden!important
+ }
+ .app-shell.arena-v2 .hand-zone .manifest-hand-entry{
+   height:min(100%,180px)!important;max-width:115px!important
+ }
+ .app-shell.arena-v2 .arena-card-hover-preview{
+   position:absolute!important;top:48%!important;bottom:auto!important;
+   left:50%!important;z-index:65!important;
+   width:clamp(210px,24vw,340px)!important;
+   transform:translate(-50%,-50%)!important;
+   aspect-ratio:63/88;pointer-events:none!important;
+   filter:drop-shadow(0 15px 28px #000c)
+ }
+ .app-shell.arena-v2 .arena-card-hover-preview .game-card{
+   height:100%!important;width:100%!important
+ }
+ .app-shell.arena-v2 .arena-card-board-preview{pointer-events:none!important}
+ .app-shell.arena-v2 .drag-layer{pointer-events:none!important;z-index:20000!important}
+}
+@media(max-width:760px){
+ .app-shell.arena-v2 .hand-zone{overflow:visible!important}
+ .app-shell.arena-v2 .hand-zone .hand-layout{overflow:visible!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .app-shell.arena-v2 .hand-zone .hand-layout{transition:none!important}
+}

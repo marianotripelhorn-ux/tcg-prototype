@@ -923,7 +923,7 @@ export default function App() {
           </div>
         </section>
 
-        <div className="arena-main">
+        <div className={"arena-main"+(handExpanded?" hand-expanded":"")}>
           <aside className="arena-sidebar" aria-label="Campeones y marcador">
             <ChampionBar side="opponent" championId={game.opponent.champion.id}
               faction={game.opponent.champion.faction} name={game.opponent.champion.name}
@@ -950,6 +950,11 @@ export default function App() {
             {hoveredBoardCard && !duelPreview && (
               <div className="arena-card-board-preview" aria-hidden="true">
                 <CardFace card={hoveredBoardCard}/>
+              </div>
+            )}
+            {hoveredHandIndex!==null && hand[hoveredHandIndex] && !drag && !handExpanded && (
+              <div className="arena-card-hover-preview" aria-hidden="true">
+                <CardFace card={hand[hoveredHandIndex]}/>
               </div>
             )}
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
@@ -1039,11 +1044,7 @@ export default function App() {
             <span>{handExpanded?"CERRAR MANO":"ABRIR MANO"}</span>
             <span className="arena-hand-toggle-chevron" aria-hidden="true">{handExpanded?"⌄":"⌃"}</span>
           </button>
-          {hoveredHandIndex!==null && hand[hoveredHandIndex] && !drag && (
-            <div className="arena-card-hover-preview" aria-hidden="true">
-              <CardFace card={hand[hoveredHandIndex]}/>
-            </div>
-          )}
+
           <div className="hand-label">
             <span>TU MANO</span>
             <small>{hand.length} cartas</small>
@@ -1074,8 +1075,10 @@ export default function App() {
 
                 onPointerDown={event=>{
 
-                  if(!handExpanded && event.pointerType!=="mouse" && window.matchMedia("(min-width:761px)").matches){
-                     setHandExpanded(true);return;
+                  if(!handExpanded && window.matchMedia("(min-width:761px)").matches){
+                     setHandExpanded(true);
+                     setHoveredHandIndex(null);
+                     return;
                    }
 
                   handlePointerDown(event,index);

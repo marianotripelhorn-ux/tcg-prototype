@@ -19,6 +19,7 @@ import "./manifestations.css";
 import "./manifest-card-ui.css";
 import "./arena-v2.css";
 import "./arena-v2-overrides.css";
+import "./arena-interaction-fix.css";
 
 initializeTheme();
 
