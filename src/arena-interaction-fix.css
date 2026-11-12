@@ -85,3 +85,7 @@
 @media(prefers-reduced-motion:reduce){
  .app-shell.arena-v2 .hand-zone .hand-layout{transition:none!important}
 }
+/* Stop rendering a second oversized hand card over the field.
+   The original card itself expands inside the reserved dock; clicking
+   it opens the existing single-card inspection overlay. */
+.app-shell.arena-v2 .arena-card-hover-preview{display:none!important}
