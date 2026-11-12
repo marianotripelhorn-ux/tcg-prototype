@@ -298,3 +298,21 @@
  .app-shell.arena-v2 .hand-layout{transition:none!important}
  .app-shell.arena-v2 .hand-card{transition:none!important}
 }
+
+/* Card hover uses the complete card art at reading size, not a scaled miniature. */
+@media(min-width:761px) and (hover:hover) and (pointer:fine){
+  .app-shell.arena-v2 .arena-card-board-preview{
+    position:absolute;z-index:95;pointer-events:none;
+    top:44%;left:50%;transform:translate(-50%,-50%);
+    width:min(320px,31vw,43vh);aspect-ratio:63/88;
+    filter:drop-shadow(0 15px 30px #000d);
+  }
+  .app-shell.arena-v2 .arena-card-board-preview .game-card{
+    width:100%!important;height:100%!important;
+    border:2px solid #d7b989!important;border-radius:11px;
+  }
+  .app-shell.arena-v2 .arena-card-board-preview .manifest-keyword{font-size:12px!important}
+}
+@media(max-width:760px){
+  .app-shell.arena-v2 .arena-card-board-preview{display:none!important}
+}

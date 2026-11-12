@@ -358,6 +358,7 @@ function Slot({
   archiveCards,
   onTap,
   onInspect,
+  onPreview,
   onManifestInspect,
   onCopyTarget,
   onCopyArchive,
@@ -375,6 +376,7 @@ function Slot({
   archiveCards?: CardDefinition[];
   onTap?: () => void;
   onInspect: (played:EnginePlay)=>void;
+  onPreview?: (card:CardDefinition|null)=>void;
   onManifestInspect: (kind:SpecialKind)=>void;
   onCopyTarget?: (target:CopyTarget)=>void;
   onCopyArchive?: ()=>void;
@@ -429,7 +431,11 @@ function Slot({
       <div className="slot-stack">
         <>
             {cards.map((played,index)=>(
-              <div className="played-card" key={`${played.card.id}-${index}`}>
+              <div className="played-card" key={`${played.card.id}-${index}`}
+                onMouseEnter={()=>onPreview?.(played.card)}
+                onMouseLeave={()=>onPreview?.(null)}
+                onFocusCapture={()=>onPreview?.(played.card)}
+                onBlurCapture={()=>onPreview?.(null)}>
                 {samePlay(played,focusPlay) ? (
                   <CurrentBoardCard played={played} onInspect={onInspect} />
                 ) : (
@@ -438,12 +444,16 @@ function Slot({
               </div>
             ))}
             {focusPlay && !focusAlreadyInCards && (
-              <div className="played-card current-play">
+              <div className="played-card current-play"
+                onMouseEnter={()=>onPreview?.(focusPlay.card)}
+                onMouseLeave={()=>onPreview?.(null)}>
                 <CurrentBoardCard played={focusPlay} onInspect={onInspect} pending={!!pendingCard} />
               </div>
             )}
             {pendingCard && !samePlay(pendingCard,focusPlay) && (
-              <div className="played-card pending-play">
+              <div className="played-card pending-play"
+                onMouseEnter={()=>onPreview?.(pendingCard.card)}
+                onMouseLeave={()=>onPreview?.(null)}>
                 <CurrentBoardCard played={pendingCard} onInspect={onInspect} pending />
               </div>
             )}
@@ -462,6 +472,7 @@ export default function App() {
   const [playerName,setPlayerName]=useState(()=>readPlayerName());
   const [handExpanded,setHandExpanded]=useState(false);
   const [hoveredHandIndex,setHoveredHandIndex]=useState<number|null>(null);
+  const [hoveredBoardCard,setHoveredBoardCard]=useState<CardDefinition|null>(null);
   const [arcadeRun,setArcadeRun]=useState<ArcadeRun|null>(()=>readArcadeRun());
   const [hasEntered,setHasEntered]=useState(false);
   const [game,setGame]=useState<GameState|null>(null);
@@ -618,6 +629,7 @@ export default function App() {
     setSelectedIndex(null);
     setHandExpanded(false);
     setHoveredHandIndex(null);
+    setHoveredBoardCard(null);
     setInspection(null);
     setDuelPreview(null);
     setPreDuel(null);
@@ -923,6 +935,11 @@ export default function App() {
           </aside>
           <div className="arena-stage">
             <span className="arena-visually-hidden" role="status">{turnText}</span>
+            {hoveredBoardCard && !duelPreview && (
+              <div className="arena-card-board-preview" aria-hidden="true">
+                <CardFace card={hoveredBoardCard}/>
+              </div>
+            )}
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
           {duelPreview && (duelStep==="cards"
             ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries} onAdvance={showDuelResult}/>
@@ -955,6 +972,7 @@ export default function App() {
                   ? ()=>useSpecial("symmetry",undefined,{kind:"dagger",position}):undefined}
                 active={false}
                 capacityValue={capacity(game.opponent,position)}
+                onPreview={setHoveredBoardCard}
                 onInspect={inspectPlay}
               />
 
@@ -982,6 +1000,7 @@ export default function App() {
                    if(specialMode==="relic"){useSpecial("relic",position);return;}
                    if(selectedIndex!==null && legal.includes(position))playCard(selectedIndex,position);
                  }}
+                onPreview={setHoveredBoardCard}
                 onInspect={inspectPlay}
               />
             </div>
