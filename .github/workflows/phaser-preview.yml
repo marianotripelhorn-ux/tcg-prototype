@@ -53,8 +53,8 @@ jobs:
           mkdir -p site/gameplay-phaser
           cp -R source/dist-phaser/. site/gameplay-phaser/
           # Real rendered screenshots for visual regression review, not mockups.
-          cp source/phaser-desktop.png site/gameplay-phaser/_preview-desktop.png
-          cp source/phaser-mobile.png site/gameplay-phaser/_preview-mobile.png
+          cp source/phaser-desktop.jpg site/gameplay-phaser/_preview-desktop.jpg
+          cp source/phaser-mobile.jpg site/gameplay-phaser/_preview-mobile.jpg
       - name: Publish isolated Phaser site
         working-directory: site
         run: |
