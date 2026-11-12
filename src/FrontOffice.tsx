@@ -4,6 +4,7 @@ import ThemeToggle from "./ThemeToggle";
 import { championBackgroundUrl,championImageUrl,championShortName,championSubtitle } from "./championArtwork";
 import { allCards, factionLabels } from "./data";
 import { champions } from "./engine/champions";
+import { DEFAULT_PLAYER_NAME } from "./playerProfile";
 import { SPECIAL_TEXT,specialKindFor } from "./engine/manifestations";
 import type { AIDifficulty } from "./engine/types";
 import type { SavedMatch } from "./persistence";
@@ -123,7 +124,7 @@ export function HomeScreen({
               <span className="home-player-label">TU NOMBRE</span>
               <input aria-label="Tu nombre de jugador" maxLength={20}
                 autoComplete="nickname" spellCheck={false}
-                value={playerName==="JUGADOR"?"":playerName}
+                 value={playerName===DEFAULT_PLAYER_NAME?"":playerName}
                 onChange={event=>onPlayerNameChange(event.target.value)}
                 placeholder="ELEGÍ TU NOMBRE" />
               <span className="home-player-edit" aria-hidden="true">✎</span>

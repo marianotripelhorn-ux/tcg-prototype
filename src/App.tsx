@@ -314,7 +314,7 @@ function ChampionBar({
   active?:boolean;
 }) {
   const [expanded,setExpanded]=useState(false);
-  const label=side==="player"?(playerName?.trim()||DEFAULT_PLAYER_NAME):"RIVAL";
+  const label=side==="player"?(playerName?.trim()&&playerName!=="JUGADOR"?playerName.trim():DEFAULT_PLAYER_NAME):"RIVAL";
   return (
     <section className={`champion-bar arena-champion ${side} faction-illustrated faction-${faction}${active?" is-active":""}`}>
       <button className="arena-champion-portrait" type="button"
@@ -322,7 +322,7 @@ function ChampionBar({
         aria-label={`${label}: ${championShortName(name)}. ${life} Vida. Tocá para ver la habilidad.`}
         aria-expanded={expanded}
         onClick={()=>setExpanded(!expanded)}>
-        <img className="arena-champion-figure" src={championImageUrl(championId)}
+        <img className="arena-champion-figure" src={championImageUrl(championId,true)}
           alt="" loading="eager" decoding="async"/>
         <span className="arena-champion-ribbon">{label.toUpperCase()}</span>
         <span className="arena-life" aria-label={`${life} de 9 Vida`}>
@@ -473,6 +473,7 @@ export default function App() {
   const [handExpanded,setHandExpanded]=useState(false);
   const [hoveredHandIndex,setHoveredHandIndex]=useState<number|null>(null);
   const [hoveredBoardCard,setHoveredBoardCard]=useState<CardDefinition|null>(null);
+  const [auguryOpen,setAuguryOpen]=useState(false);
   const [arcadeRun,setArcadeRun]=useState<ArcadeRun|null>(()=>readArcadeRun());
   const [hasEntered,setHasEntered]=useState(false);
   const [game,setGame]=useState<GameState|null>(null);
@@ -903,6 +904,16 @@ export default function App() {
               {game.aiDifficulty==="easy"?"FÁCIL":game.aiDifficulty==="hard"?"DIFÍCIL":"NORMAL"}
             </span>
             <ThemeToggle compact/>
+            {(game.player.champion.faction==="ivory"||game.opponent.champion.faction==="ivory") &&
+              <div className="arena-augury-control">
+                <button className="arena-icon-button" type="button" title="Consultar Augurio"
+                  aria-label="Consultar estado de Augurio" aria-expanded={auguryOpen}
+                  onClick={()=>setAuguryOpen(!auguryOpen)}><ArenaIcon name="log"/></button>
+                {auguryOpen && <div className="arena-augury-popover" role="region" aria-label="Estado de Augurio">
+                  <AuguryStatus player={game.player} opponent={game.opponent}/>
+                </div>}
+              </div>
+            }
             <button className="arena-icon-button" type="button" aria-label="Abrir tutorial"
               title="Ayuda" onClick={()=>setTutorialOpen(true)}><ArenaIcon name="help"/></button>
             <button className="arena-icon-button" type="button" aria-label="Volver al menú"
