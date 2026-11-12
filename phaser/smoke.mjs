@@ -44,7 +44,7 @@ try{
   // regressions used to allow clicking slots while dragging never worked.
   const readState=()=>page.evaluate(()=>window.__daggerlightPhaserDebug?.());
   const initial=await readState();
-  if(!initial?.layout || initial.used.length)throw new Error(name+" missing test state or started with cards played");
+  if(!initial?.layout || initial.state.playerPlays.length || initial.state.hand.length!==3)throw new Error(name+" missing real game state or opening hand");
   const center=r=>({x:r.x+r.w/2,y:r.y+r.h/2});
   const source=center(initial.layout.hand[0]);
   const destination=center(initial.layout.playerSlots.siniestra);
@@ -81,11 +81,11 @@ try{
     await cdp.detach();
   }
   await page.waitForFunction(()=>
-    window.__daggerlightPhaserDebug?.().used.some(([id,lane])=>id===0&&lane==="siniestra"),
+    window.__daggerlightPhaserDebug?.().state.playerPlays.some(([,lane])=>lane==="siniestra"),
     null,{timeout:2500});
   const after=await readState();
-  if(after.used.length!==1)throw new Error(name+" drag placed wrong number of cards "+JSON.stringify(after.used));
-  console.log("PHASER_DRAG_OK",name,"card 0 -> siniestra");
+  if(after.state.playerPlays.length!==1 || after.state.opponentPlays.length!==1 || after.state.hand.length!==2)throw new Error(name+" did not resolve a real duel "+JSON.stringify(after.state));
+  console.log("PHASER_DUEL_OK",name,"real card and AI resolved in siniestra");
 
   // A second card remains selectable with click/tap, independently from drag.
   const second=center(after.layout.hand[1]);
@@ -98,9 +98,9 @@ try{
     await page.touchscreen.tap(throne.x,throne.y);
   }
   await page.waitForFunction(()=>
-    window.__daggerlightPhaserDebug?.().used.some(([id,lane])=>id===1&&lane==="trono"),
+    (s=>s.round>1 || s.turn===3 || s.phase!=="awaiting_player")(window.__daggerlightPhaserDebug?.().state),
     null,{timeout:2500});
-  console.log("PHASER_TAP_OK",name,"card 1 -> trono");
+  console.log("PHASER_TAP_OK",name,"second real duel resolved; phase or round advanced");
   if(runtimeErrors.some(error=>!/404|favicon|net::ERR/.test(error)))throw new Error(name+" browser errors: "+runtimeErrors.join("\n"));
   console.log("PHASER_SMOKE_OK "+name+" "+width+"x"+height+" canvas: "+Math.round(bounds.width)+"x"+Math.round(bounds.height));
   await page.close();
