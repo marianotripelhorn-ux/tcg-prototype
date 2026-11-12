@@ -897,7 +897,7 @@ export default function App() {
               life={displayed?.opponentLife??game.opponent.life}
               healedLife={displayed?.opponentHealed??game.opponent.healedLife}
               passive={game.opponent.champion.text}
-              active={actingSide==="opponent"}/>
+              active={false}/>
             <div className="arena-score" aria-label={`Duelos ganados: ${game.duelScore.player} a ${game.duelScore.opponent}`}>
               <b>{displayed?.score.opponent??game.duelScore.opponent}</b>
               <span>DUELOS</span>
