@@ -24,9 +24,9 @@ window.addEventListener("unhandledrejection",event=>{
 const CARDS=redCards.slice(0,3);
 const LABELS:Record<Lane,string>={siniestra:"SINIESTRA",trono:"TRONO",diestra:"DIESTRA"};
 const PALETTE={dark:0x191a18,board:0x2a302c,slot:0x31362f,gold:0xd6b77d,cream:0xf1e4cc,black:0x121412};
-const assetBase=window.location.pathname.includes("/gameplay-phaser/")
-  ?new URL("../gameplay-v1-lab/",window.location.href).href
-  :new URL("../gameplay-v1-lab/",window.location.href).href;
+// Assets are bundled with this isolated preview. A broken LAB link
+// must never block Phaser from creating the canvas.
+const assetBase=new URL("./",window.location.href).href;
 
 class DaggerScene extends Phaser.Scene{
   private geometry!:BoardLayout;
@@ -49,6 +49,7 @@ class DaggerScene extends Phaser.Scene{
   }
 
   create(){
+    console.info("DAGGERLIGHT Phaser: create scene",this.scale.width,this.scale.height);
     if(this.textures.exists("redSheet")){
       try{
         const img=this.textures.get("redSheet").getSourceImage() as HTMLImageElement;
@@ -246,7 +247,8 @@ class DaggerScene extends Phaser.Scene{
   }
 
   private rebuild(){
-    if(!this.scene.isActive())return;
+    // create() may run while the scene is still in CREATING, before RUNNING.
+    // Do not skip the initial draw based on a lifecycle-status check.
     this.hidePreview();
     this.modal=null;
     this.cardObjects.clear();

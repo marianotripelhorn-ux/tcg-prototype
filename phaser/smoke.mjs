@@ -34,6 +34,11 @@ try{
   const bounds=await canvas.boundingBox();
   if(!bounds||bounds.width<width*.75||bounds.height<height*.75)throw new Error(name+" canvas has incorrect dimensions: "+JSON.stringify(bounds));
   await page.screenshot({path:"phaser-"+name+".png",fullPage:true});
+  const sceneSummary=await page.evaluate(()=>({
+    canvas:Array.from(document.querySelectorAll("canvas")).map(node=>[node.width,node.height]),
+    ready:document.documentElement.dataset.phaserReady
+  }));
+  console.log("PHASER_SCENE",name,JSON.stringify(sceneSummary));
   if(runtimeErrors.some(error=>!/404|favicon|net::ERR/.test(error)))throw new Error(name+" browser errors: "+runtimeErrors.join("\n"));
   console.log("PHASER_SMOKE_OK "+name+" "+width+"x"+height+" canvas: "+Math.round(bounds.width)+"x"+Math.round(bounds.height));
   await page.close();
