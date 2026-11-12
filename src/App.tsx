@@ -875,6 +875,9 @@ export default function App() {
             <span>RONDA <b>{displayed?.round??game.round}</b></span>
             <i aria-hidden="true"/>
             <span>DUELO <b>{duelPreview?.turn??game.turn}</b></span>
+            <span className="arena-top-score" title="Duelos ganados, rival y jugador">
+              {displayed?.score.opponent??game.duelScore.opponent}—{displayed?.score.player??game.duelScore.player}
+            </span>
             {arcadeRun && <em>ARCADE · {arcadeRun.index+1}/{arcadeRun.opponents.length}</em>}
           </div>
           <div className="game-tools">
