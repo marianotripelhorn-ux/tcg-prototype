@@ -18,7 +18,7 @@ async function waitReady(url){
 try{
  await waitReady("http://127.0.0.1:"+port+"/");
  for(const [name,width,height] of [["desktop",1440,900],["mobile",390,844]]){
-  const page=await browser.newPage({viewport:{width,height}});
+  const page=await browser.newPage({viewport:{width,height},isMobile:name==="mobile",hasTouch:name==="mobile",deviceScaleFactor:1});
   const runtimeErrors=[];
   page.on("pageerror",err=>runtimeErrors.push(err.stack||err.message));
   page.on("console",msg=>{if(msg.type()==="error")runtimeErrors.push("console: "+msg.text());});
@@ -66,6 +66,7 @@ try{
       type,touchPoints:type==="touchEnd"?[]:[{x,y,id:1}]
     });
     await touch("touchStart",source.x,source.y);
+    await delay(70);
     for(let i=1;i<=18;i++){
       const f=i/18;
       await touch("touchMove",source.x+(destination.x-source.x)*f,source.y+(destination.y-source.y)*f);
