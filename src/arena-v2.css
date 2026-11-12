@@ -1,0 +1,320 @@
+/* DAGGERLIGHT LAB · Arena v2.1 · desktop champion banners + native mobile layout
+   Built on the existing playable card components, not a mockup. */
+.app-shell.arena-v2{
+  --arena-ink:#171816;--arena-stone:#292e2b;--arena-gold:#d3b787;--arena-cream:#eae2d5;
+  padding:0!important;background:#161918!important;
+}
+.app-shell.arena-v2 .ambient{display:none}
+.app-shell.arena-v2 .game-frame.arena-game-frame{
+  width:100%;height:100dvh;max-height:100dvh;min-height:0!important;
+  margin:0;display:grid;grid-template-columns:minmax(0,1fr);
+  grid-template-rows:48px minmax(0,1fr)!important;
+  border:0;border-radius:0;overflow:hidden;
+  background:#1d211e!important;box-shadow:none;backdrop-filter:none;
+}
+.app-shell.arena-v2 .match-strip.arena-topbar{
+  height:48px;min-height:48px;display:grid;align-items:center;
+  grid-template-columns:minmax(140px,1fr) auto minmax(240px,1fr);
+  gap:12px;padding:0 clamp(11px,1.8vw,30px);
+  background:#151615!important;color:#f0e6d6;border:0;border-bottom:1px solid #6b563b;
+}
+.app-shell.arena-v2 .arena-top-wordmark{font:950 clamp(14px,1.35vw,21px)/1 Inter,Arial,sans-serif;letter-spacing:-.05em;color:#ece0ca}
+.app-shell.arena-v2 .arena-top-center{display:flex;align-items:center;justify-content:center;gap:12px;white-space:nowrap}
+.app-shell.arena-v2 .arena-top-center>span{font:800 10px/1 Inter,Arial,sans-serif;letter-spacing:.09em;color:#b9a88a}
+.app-shell.arena-v2 .arena-top-center b{font-size:16px;color:#edd0a0}
+.app-shell.arena-v2 .arena-top-center>i{width:4px;height:4px;border-radius:50%;background:#c8a067}
+.app-shell.arena-v2 .arena-top-center em{font:900 10px/1 Inter,Arial,sans-serif;letter-spacing:.06em;font-style:normal;color:#191919;background:#d3b787;padding:5px 8px;border-radius:3px}
+.app-shell.arena-v2 .arena-topbar .game-tools{display:flex;justify-content:flex-end;align-items:center;gap:9px;min-width:0}
+.app-shell.arena-v2 .game-difficulty-label{color:#bfb49f;font:800 10px/1 Inter,Arial,sans-serif;letter-spacing:.04em}
+.app-shell.arena-v2 .arena-icon-button{display:grid;place-items:center;width:31px;height:31px;flex:none;
+  background:transparent;color:#e7d7bd;border:0;border-radius:4px;cursor:pointer}
+.app-shell.arena-v2 .arena-icon-button:hover,.app-shell.arena-v2 .arena-icon-button:focus-visible{background:#443b2e;color:#f7e8cd}
+.app-shell.arena-v2 .arena-main{
+  display:grid;grid-template-columns:clamp(250px,23.5vw,355px) minmax(0,1fr);
+  min-height:0;min-width:0;height:100%;position:relative;
+}
+.app-shell.arena-v2 .arena-sidebar{
+  display:flex;flex-direction:column;min-height:0;min-width:0;
+  padding:clamp(8px,1.15vw,16px);gap:clamp(6px,1vh,12px);
+  background:#22221e;border-right:1px solid #685638;
+}
+.app-shell.arena-v2 .arena-sidebar .arena-champion{
+  position:relative;min-height:0!important;height:auto!important;
+  flex:1 1 0;display:flex!important;flex-direction:column;
+  align-items:stretch;gap:0;padding:0!important;border:0;border-radius:7px;
+  background:#171816;overflow:hidden;isolation:isolate;
+}
+.app-shell.arena-v2 .arena-champion.faction-illustrated::before{display:none!important}
+.app-shell.arena-v2 .arena-champion-portrait{
+  position:relative;z-index:2;display:block;width:100%;height:66%;min-height:0;flex:1 1 auto;
+  padding:0;border:0;border-radius:0;
+  background:#4b352c center center/cover no-repeat;overflow:hidden;
+  cursor:pointer;isolation:isolate;
+}
+.app-shell.arena-v2 .arena-champion-portrait:before{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(0deg,#12121280,transparent 53%);
+}
+.app-shell.arena-v2 .arena-champion-figure{
+  position:absolute;z-index:1;bottom:-16%;left:0;width:100%;height:132%;
+  object-fit:contain;object-position:center bottom;filter:drop-shadow(0 9px 8px #000a);
+  transition:transform .25s ease;
+}
+.app-shell.arena-v2 .arena-champion-portrait:hover .arena-champion-figure{transform:scale(1.04)}
+.app-shell.arena-v2 .arena-champion-ribbon{
+  position:absolute;z-index:4;top:14px;left:0;max-width:75%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  background:#e6d5b4;color:#181818;padding:8px 23px 8px 13px;
+  clip-path:polygon(0 0,100% 0,91% 50%,100% 100%,0 100%);
+  font:950 11px/1 Inter,Arial,sans-serif;letter-spacing:.08em;text-align:left;
+}
+.app-shell.arena-v2 .arena-champion.player .arena-champion-ribbon{background:#d4ae73;color:#191919}
+.app-shell.arena-v2 .arena-life{
+  position:absolute;z-index:4;right:10px;bottom:10px;display:flex;align-items:center;justify-content:center;
+  gap:6px;padding:6px 12px;min-width:68px;border:1px solid #c49a63;border-radius:40px;
+  background:#191919;color:#f4e8d7;font:950 22px/1 Inter,Arial,sans-serif;
+  box-shadow:0 3px 8px #0009;
+}
+.app-shell.arena-v2 .arena-life>span{color:#bd877a;font-size:15px}
+.app-shell.arena-v2 .arena-life>small{font-size:9px;color:#e4c79e}
+.app-shell.arena-v2 .arena-initiative-ring{position:absolute;inset:3px;border:2px solid transparent;border-radius:4px;z-index:4;pointer-events:none}
+.app-shell.arena-v2 .arena-champion.is-active .arena-initiative-ring{
+  border-color:#e8c281;box-shadow:inset 0 0 18px #caa56388,0 0 15px #d3b78790;
+  animation:arena-initiative 1.8s ease-in-out infinite alternate;
+}
+@keyframes arena-initiative{
+  from{opacity:.4;box-shadow:inset 0 0 7px #b08b51,0 0 3px #e5bc77}
+  to{opacity:1;box-shadow:inset 0 0 24px #e5b96e99,0 0 22px #e5bc7799}
+}
+.app-shell.arena-v2 .arena-champion-details{
+  position:relative;z-index:2;display:flex;flex-direction:column;gap:6px;
+  flex:0 0 auto;padding:12px 14px 13px;color:#f2e5d0;background:#171816;
+}
+.app-shell.arena-v2 .arena-champion-details strong{
+  font:950 clamp(15px,1.5vw,22px)/1.1 Inter,Arial,sans-serif;
+  text-transform:uppercase;letter-spacing:-.035em;
+}
+.app-shell.arena-v2 .arena-champion-passive{font:550 clamp(10px,.83vw,12px)/1.35 Inter,Arial,sans-serif;color:#d2c2aa}
+.app-shell.arena-v2 .arena-score{display:flex;align-items:center;justify-content:center;gap:17px;
+  flex:0 0 53px;background:#34312b;color:#d9bf8d;border-radius:5px}
+.app-shell.arena-v2 .arena-score b{font:950 27px/1 Inter,Arial,sans-serif;color:#f3dfb8;min-width:33px;text-align:center}
+.app-shell.arena-v2 .arena-score span{font:900 10px/1 Inter,Arial,sans-serif;letter-spacing:.16em;color:#c4b499}
+.app-shell.arena-v2 .arena-sidebar-footer{display:flex;justify-content:center;align-items:center;gap:8px;
+  color:#c6b594;flex:0 0 21px;font:900 9px/1 Inter,Arial,sans-serif;letter-spacing:.02em}
+.app-shell.arena-v2 .arena-sidebar-footer strong{font-size:11px;color:#ecdbb5}
+.app-shell.arena-v2 .arena-stage{
+  display:grid;grid-template-rows:minmax(0,1fr) 0px clamp(170px,26dvh,245px);
+  min-width:0;min-height:0;height:100%;position:relative;overflow:visible;
+  background:#282e2b;
+}
+.app-shell.arena-v2 .arena-visually-hidden,.app-shell.arena-v2 .action-line,.app-shell.arena-v2 .hand-label{
+  position:absolute!important;width:1px!important;height:1px!important;
+  padding:0!important;margin:-1px!important;overflow:hidden!important;
+  clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important;
+}
+.app-shell.arena-v2 .game-hint.arena-augury-bar{
+  display:flex;align-items:center;justify-content:flex-end;
+  position:absolute!important;top:6px;right:12px;z-index:6;
+  min-height:0!important;height:auto!important;max-height:27px;
+  background:transparent!important;border:0!important;padding:0!important;
+  pointer-events:none;max-width:60%;
+}
+.app-shell.arena-v2 .battlefield{
+  grid-row:1;min-height:0!important;height:100%!important;
+  padding:clamp(12px,2vw,27px);gap:clamp(8px,1.7vw,22px);
+  background-color:#28302b!important;background-image:none!important;
+  position:relative;overflow:visible;
+}
+.app-shell.arena-v2 .battlefield:before,.app-shell.arena-v2 .battlefield:after{
+  content:"";position:absolute;z-index:0;pointer-events:none;
+  border-radius:50%;border:1px solid #ae8c5d38;left:50%;top:46%;transform:translate(-50%,-50%);
+  width:min(72%,720px);aspect-ratio:1;
+}
+.app-shell.arena-v2 .battlefield:after{width:min(49%,490px);border-color:#e9c68827}
+.app-shell.arena-v2 .battlefield .lane{position:relative;z-index:1;gap:clamp(6px,1vh,12px);
+  grid-template-rows:minmax(0,1fr) 31px minmax(0,1fr)}
+.app-shell.arena-v2 .lane-axis{display:flex;align-items:center;gap:5px}
+.app-shell.arena-v2 .lane-axis span{
+  display:grid;place-items:center;background:#191919;color:#e5c795!important;
+  border:0;padding:7px 15px;font:950 clamp(9px,.85vw,12px)/1 Inter,Arial,sans-serif;
+  letter-spacing:.08em;clip-path:polygon(9% 0,91% 0,100% 50%,91% 100%,9% 100%,0 50%);
+}
+.app-shell.arena-v2 .lane-axis i{background:#9e815c65}
+.app-shell.arena-v2 .board-slot{min-height:0!important;padding:6px!important;
+  border:1px solid #79694d;border-radius:8px;overflow:visible;
+  background-color:#323b34!important;background-image:none!important;
+}
+.app-shell.arena-v2 .board-slot.drop-active{
+  border-color:#e7ba73;background-color:#3b3d31!important;box-shadow:inset 0 0 17px #d7b87946;
+}
+.app-shell.arena-v2 .slot-stack{min-height:0!important;max-height:100%;overflow:visible;padding:20px 2px 5px}
+.app-shell.arena-v2 .slot-empty{border-color:#92784b66;background:transparent}
+.app-shell.arena-v2 .archive-count{background:#171817;border-color:#8d7554;color:#e8d3a7;
+  min-width:23px;height:23px;border-radius:3px;right:4px;top:4px;font-size:11px;z-index:8}
+.app-shell.arena-v2 .current-board-card{
+  height:min(100%,175px);max-width:78%;width:auto!important;position:relative;z-index:2;
+  filter:drop-shadow(0 5px 8px #0008);
+}
+.app-shell.arena-v2 .battle-card{height:clamp(24px,5.4vh,53px);z-index:1}
+.app-shell.arena-v2 .hand-zone{
+  grid-row:3;height:100%!important;max-height:none!important;min-height:0!important;
+  padding:7px clamp(9px,2vw,25px) 9px;
+  border:0;border-top:1px solid #8b754d75;
+  background:#1c211e!important;position:relative;overflow:visible;
+}
+.app-shell.arena-v2 .hand-layout{display:flex;height:100%;min-height:0;overflow:visible;align-items:flex-end}
+.app-shell.arena-v2 .hand{height:100%!important;min-height:0!important;gap:clamp(10px,2vw,26px);align-items:center}
+.app-shell.arena-v2 .hand-card{
+  width:auto!important;height:min(95%,220px)!important;max-width:31%;border-radius:5px;z-index:4;
+  filter:drop-shadow(0 4px 8px #0007);
+}
+.app-shell.arena-v2 .hand-card.is-selected{transform:translateY(-12px) scale(1.04)!important;z-index:8}
+@media(hover:hover) and (pointer:fine){
+  .app-shell.arena-v2 .hand-card:not(:disabled):hover,
+  .app-shell.arena-v2 .hand-card:not(:disabled).is-selected:hover{
+    transform:translateY(-33px) scale(1.55)!important;z-index:30;filter:drop-shadow(0 14px 22px #000c);
+  }
+  .app-shell.arena-v2 .current-board-card:hover{transform:scale(1.55)!important;z-index:30}
+  .app-shell.arena-v2 .battle-card:hover{transform:scale(1.15)!important;z-index:30}
+}
+.app-shell.arena-v2 .arena-stage .manifest-hand{align-self:stretch;background:#191919}
+.app-shell.arena-v2 .arcade-progress-dots{display:flex;align-items:center;justify-content:center;gap:7px;margin:10px 0 17px}
+.app-shell.arena-v2 .arcade-progress-dots span{width:16px;height:16px;border-radius:50%;border:2px solid #9c886e}
+.app-shell.arena-v2 .arcade-progress-dots span.is-won{background:#d3b787;border-color:#d3b787}
+.app-shell.arena-v2 .arcade-progress-dots span.is-current{border-color:#fff1d2;box-shadow:0 0 10px #d5b476}
+.app-shell.arena-v2 .decision-overlay{z-index:900}
+.app-shell.arena-v2 .match-postgame-actions button{min-height:45px}
+.home-screen .home-player-identity{
+  display:flex;align-items:center;gap:9px;margin-top:15px;max-width:360px;min-width:230px;
+  border-radius:5px;background:#191919;color:#ead9bc;padding:9px 12px;
+  border:1px solid #947347;
+}
+.home-screen .home-player-label{font:900 10px/1 Inter,Arial,sans-serif;letter-spacing:.12em;color:#d3b787}
+.home-screen .home-player-identity input{background:transparent;color:#fff5e4;outline:0;
+  border:0;min-width:0;width:100%;font:850 13px/1.2 Inter,Arial,sans-serif;letter-spacing:.02em}
+.home-screen .home-player-identity input::placeholder{color:#a99b84}
+.home-screen .home-player-edit{font-size:17px;color:#d3b787}
+.home-screen .home-player-identity:focus-within{outline:2px solid #c9a368;outline-offset:2px}
+.home-screen .home-action.action-arcade{background:#342c22;color:#f5e9d7;border-color:#a98453}
+.home-screen .home-action.action-arcade-continue{background:#4b3823;color:#f5e9d7}
+.home-screen .home-actions{gap:clamp(7px,1vh,12px)}
+.home-screen .home-action{min-height:clamp(81px,11vh,108px);padding:12px 20px}
+.home-screen .home-action strong{font-size:clamp(17px,1.9vw,24px)}
+.home-screen .home-hero-art{height:clamp(185px,30vh,340px)}
+.home-screen{min-height:100dvh;overflow-y:auto}
+.arcade-picker-intro{font:800 11px/1.3 Inter,Arial,sans-serif;letter-spacing:.11em;color:#8d7048;margin:8px 0}
+@media(min-width:761px) and (max-height:730px){
+  .app-shell.arena-v2 .arena-champion-details{padding:8px 11px}
+  .app-shell.arena-v2 .arena-champion-details strong{font-size:15px}
+  .app-shell.arena-v2 .arena-champion-passive{font-size:9px}
+  .app-shell.arena-v2 .arena-score{flex-basis:39px}
+  .app-shell.arena-v2 .arena-stage{grid-template-rows:minmax(0,1fr) 0px clamp(135px,25dvh,185px)}
+  .app-shell.arena-v2 .battlefield{padding:9px 15px}
+  .app-shell.arena-v2 .battlefield .lane{grid-template-rows:minmax(0,1fr) 23px minmax(0,1fr)}
+}
+@media(max-width:760px){
+  .app-shell.arena-v2 .game-frame.arena-game-frame{grid-template-rows:43px minmax(0,1fr)!important}
+  .app-shell.arena-v2 .match-strip.arena-topbar{height:43px;min-height:43px;grid-template-columns:minmax(92px,1fr) auto minmax(102px,1fr);padding:0 7px;gap:3px}
+  .app-shell.arena-v2 .arena-top-wordmark{font-size:12px}
+  .app-shell.arena-v2 .arena-top-center{gap:4px}
+  .app-shell.arena-v2 .arena-top-center>span{font-size:7px;letter-spacing:0}
+  .app-shell.arena-v2 .arena-top-center b{font-size:11px}
+  .app-shell.arena-v2 .arena-top-center em{font-size:7px;padding:3px 4px}
+  .app-shell.arena-v2 .arena-topbar .game-tools{gap:1px}
+  .app-shell.arena-v2 .arena-icon-button{height:28px;width:27px}
+  .app-shell.arena-v2 .game-difficulty-label{display:none}
+  .app-shell.arena-v2 .arena-main{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:clamp(65px,11dvh,90px) minmax(0,1fr) clamp(65px,11dvh,90px) clamp(123px,23dvh,170px);
+    height:100%;min-height:0;position:relative;overflow:hidden;
+  }
+  .app-shell.arena-v2 .arena-sidebar,.app-shell.arena-v2 .arena-stage{display:contents}
+  .app-shell.arena-v2 .arena-score,.app-shell.arena-v2 .arena-sidebar-footer{display:none}
+  .app-shell.arena-v2 .arena-sidebar .arena-champion{
+    display:grid!important;grid-template-columns:clamp(84px,24vw,108px) minmax(0,1fr);
+    grid-template-rows:minmax(0,1fr);gap:0;
+    margin:3px 8px;border-radius:5px;flex:none;
+    height:auto!important;min-height:0!important;max-height:none;
+    overflow:visible;
+  }
+  .app-shell.arena-v2 .arena-sidebar .arena-champion.opponent{grid-row:1}
+  .app-shell.arena-v2 .arena-sidebar .arena-champion.player{grid-row:3}
+  .app-shell.arena-v2 .arena-champion-portrait{
+    width:100%;height:100%;min-height:0;flex:none;overflow:visible;
+    background-size:cover;border-radius:4px;border:1px solid #8f714b;
+  }
+  .app-shell.arena-v2 .arena-champion-portrait:before{border-radius:4px}
+  .app-shell.arena-v2 .arena-champion-figure{
+    height:126%;width:100%;left:0;bottom:-9%;object-position:center bottom;
+  }
+  .app-shell.arena-v2 .arena-champion-ribbon{
+    top:4px;left:-1px;max-width:110%;padding:5px 14px 5px 5px;
+    font-size:clamp(7px,2vw,9px);letter-spacing:.02em;
+  }
+  .app-shell.arena-v2 .arena-life{
+    right:0;bottom:-7px;min-width:44px;padding:3px 7px;gap:3px;
+    font-size:15px;border-width:1px;
+  }
+  .app-shell.arena-v2 .arena-life>span{font-size:11px}
+  .app-shell.arena-v2 .arena-champion-details{
+    justify-content:center;min-height:0;gap:3px;padding:7px 12px;
+    background:#1d201e;border-radius:0 4px 4px 0;
+  }
+  .app-shell.arena-v2 .arena-champion-details strong{
+    font-size:clamp(12px,3.3vw,16px);line-height:1.15;
+  }
+  .app-shell.arena-v2 .arena-champion-passive{display:none}
+  .app-shell.arena-v2 .arena-champion-details.is-expanded .arena-champion-passive{
+    display:block;font-size:10px;line-height:1.2;max-height:40px;overflow-y:auto;
+  }
+  .app-shell.arena-v2 .arena-champion.is-active .arena-initiative-ring{inset:1px}
+  .app-shell.arena-v2 .game-hint.arena-augury-bar{
+    position:absolute!important;top:clamp(73px,12dvh,99px);right:8px;
+    z-index:6;max-width:78%;
+  }
+  .app-shell.arena-v2 .battlefield{
+    grid-row:2;position:relative;padding:clamp(4px,1.5vh,9px) 5px!important;
+    min-height:0;gap:4px;height:100%!important;
+    background:#29302c!important;
+  }
+  .app-shell.arena-v2 .battlefield .lane{
+    grid-template-rows:minmax(0,1fr) 19px minmax(0,1fr);gap:4px;
+  }
+  .app-shell.arena-v2 .board-slot{padding:2px!important;border-radius:5px}
+  .app-shell.arena-v2 .archive-count{font-size:8px;min-width:17px;height:17px;padding:0 3px;top:2px;right:2px}
+  .app-shell.arena-v2 .lane-axis span{font-size:8px;letter-spacing:0;padding:5px 4px}
+  .app-shell.arena-v2 .slot-stack{padding:16px 2px 2px}
+  .app-shell.arena-v2 .current-board-card{height:min(100%,135px);max-width:90%}
+  .app-shell.arena-v2 .battle-card{height:clamp(19px,3.5vh,34px)}
+  .app-shell.arena-v2 .hand-zone{
+    grid-row:4;min-height:0!important;height:100%!important;
+    padding:7px 4px max(6px,env(safe-area-inset-bottom));
+    overflow:visible;border-top:1px solid #8c704b;
+  }
+  .app-shell.arena-v2 .hand{min-height:0!important;height:100%!important;gap:clamp(5px,1.8vw,10px)}
+  .app-shell.arena-v2 .hand-card{height:min(98%,157px)!important;max-width:31%;filter:none}
+  .app-shell.arena-v2 .hand-card.is-selected{transform:translateY(-9px) scale(1.06)!important}
+  .app-shell.arena-v2 .manifest-hand{min-width:0}
+  .home-screen .home-layout{gap:10px}
+  .home-screen .home-action{min-height:68px;padding:10px 14px}
+  .home-screen .home-hero-art{height:clamp(130px,21dvh,220px)}
+  .home-screen .home-player-identity{margin:11px auto 0}
+}
+@media(max-width:390px){
+  .app-shell.arena-v2 .arena-top-wordmark{font-size:10px}
+  .app-shell.arena-v2 .arena-top-center>span{font-size:6px}
+  .app-shell.arena-v2 .arena-topbar .game-tools{gap:0}
+  .app-shell.arena-v2 .arena-icon-button{width:24px}
+  .app-shell.arena-v2 .arena-champion-ribbon{font-size:7px}
+}
+@media(prefers-reduced-motion:reduce){
+  .app-shell.arena-v2 .arena-initiative-ring{animation:none!important;opacity:1}
+  .app-shell.arena-v2 .arena-champion-figure{transition:none!important}
+}
+
+@media(min-width:761px){.app-shell.arena-v2 .arena-top-score{display:none}}
+@media(max-width:760px){
+ .app-shell.arena-v2 .arena-top-score{display:inline;font-size:9px;font-weight:900;color:#d3b787}
+ .app-shell.arena-v2 .arena-top-center{gap:3px}
+ .app-shell.arena-v2 .arena-top-center em{display:none}
+}
+.pvp-player-champion{display:block;font-size:9px;font-weight:700;opacity:.7}

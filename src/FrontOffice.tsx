@@ -15,6 +15,7 @@ type ChampionPickerProps = {
   onBack: GoHome;
   onPlay: (championId: string, opponentId: string, difficulty: AIDifficulty) => void;
   onGallery: () => void;
+  mode?:"standard"|"arcade";
 };
 
 type GalleryProps = {
@@ -53,11 +54,14 @@ function Sprite({card, crop=false}: {card: CardDefinition; crop?: boolean}) {
 }
 
 export function HomeScreen({
-  onPlay,onTutorial,onGallery,onPhysical,onDeckLab,onMultiplayer,onPlaytest,onContinue,saved,summary,
+  onPlay,onTutorial,onGallery,onPhysical,onDeckLab,onMultiplayer,onPlaytest,onArcade,onContinueArcade,arcadeResume,
+  playerName,onPlayerNameChange,onContinue,saved,summary,
   analyticsReady,analyticsConsent,onChangeAnalytics
 }: {
   onPlay:()=>void;onTutorial:()=>void;onGallery:()=>void;onPhysical:()=>void;onDeckLab:()=>void;
-  onMultiplayer:()=>void;onPlaytest:()=>void;
+  onMultiplayer:()=>void;onPlaytest:()=>void;onArcade:()=>void;
+  onContinueArcade:()=>void;arcadeResume:string|null;
+  playerName:string;onPlayerNameChange:(next:string)=>void;
   onContinue:()=>void;saved:SavedMatch|null;
   summary:{total:number;wins:number;losses:number;draws:number;winRate:number};
   analyticsReady:boolean;analyticsConsent:boolean;onChangeAnalytics:(value:boolean)=>void;
@@ -82,13 +86,19 @@ export function HomeScreen({
 
   const buttons = [
     {id:"play", index:"01", title:"EMPEZAR PARTIDA", subtitle:"Elegí tu Campeón y enfrentate a la IA.", image:"dagger.webp", fallback:"./factions/red-portrait.webp", action:onPlay},
+    ...(arcadeResume ? [{
+      id:"arcade-continue", index:"↳", title:"CONTINUAR ARCADE", subtitle:arcadeResume,
+      image:"banner.webp",fallback:"./factions/saints-portrait.webp",action:onContinueArcade
+    }] : []),
+    {id:"arcade", index:"02", title:"MODO ARCADE", subtitle:"Un Campeón. Todos los rivales. Una racha.",
+      image:"banner.webp",fallback:"./factions/saints-portrait.webp",action:onArcade},
     ...(saved ? [{
       id:"continue", index:"↳", title:"CONTINUAR PARTIDA",
       subtitle:`${championShortName(saved.game.player.champion.name)} vs. ${championShortName(saved.game.opponent.champion.name)} · Ronda ${saved.game.round}`,
       image:"banner.webp", fallback:"./factions/saints-portrait.webp", action:onContinue
     }] : []),
-    {id:"learn", index:"02", title:"APRENDER A JUGAR", subtitle:"Conocé las reglas en un tutorial interactivo.", image:"egg.webp", fallback:"./factions/white-portrait.webp", action:onTutorial},
-    {id:"library", index:"03", title:"VER CARTAS", subtitle:"Explorá las cartas y sus habilidades.", image:"book.webp", fallback:"./factions/ivory-portrait.webp", action:onGallery}
+    {id:"learn", index:"03", title:"APRENDER A JUGAR", subtitle:"Conocé las reglas en un tutorial interactivo.", image:"egg.webp", fallback:"./factions/white-portrait.webp", action:onTutorial},
+    {id:"library", index:"04", title:"VER CARTAS", subtitle:"Explorá las cartas y sus habilidades.", image:"book.webp", fallback:"./factions/ivory-portrait.webp", action:onGallery}
   ];
 
   return (
@@ -109,6 +119,15 @@ export function HomeScreen({
             <img className="home-hero-crown" src="./branding/menu/crown.svg" alt="" aria-hidden="true" />
             <h1 className="home-title">DAGGERLIGHT</h1>
             <p className="home-tagline">La mano que elegís determina el poder que ejercés.</p>
+            <label className="home-player-identity">
+              <span className="home-player-label">JUGADOR</span>
+              <input aria-label="Tu nombre de jugador" maxLength={20}
+                autoComplete="nickname" spellCheck={false}
+                value={playerName==="JUGADOR"?"":playerName}
+                onChange={event=>onPlayerNameChange(event.target.value)}
+                placeholder="ELEGÍ TU NOMBRE" />
+              <span className="home-player-edit" aria-hidden="true">✎</span>
+            </label>
           </div>
           <div className="home-hero-art" aria-hidden="true">
             <span className="hero-art-halo" />
@@ -160,7 +179,8 @@ export function HomeScreen({
   );
 }
 
-export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
+export function ChampionPicker({onBack,onPlay,onGallery,mode="standard"}:ChampionPickerProps) {
+  const arcade=mode==="arcade";
   const [faction,setFaction]=useState<Faction>("red");
   const [selected,setSelected]=useState<string|null>(null);
   const [opponent,setOpponent]=useState("random");
@@ -186,7 +206,8 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
       </header>
 
       <section className="dl-picker-header">
-        <h1>{chosen?"PREPARÁ TU PARTIDA":"ELEGÍ TU CAMPEÓN"}</h1>
+        <h1>{chosen?(arcade?"PREPARÁ TU ARCADE":"PREPARÁ TU PARTIDA"):(arcade?"ARCADE · ELEGÍ TU CAMPEÓN":"ELEGÍ TU CAMPEÓN")}</h1>
+        {arcade && <p className="arcade-picker-intro">UN CAMPEÓN · OCHO RIVALES · SEGUÍ HASTA PERDER</p>}
       </section>
 
       {!chosen && <nav className="dl-faction-switcher" aria-label="Elegí una facción">
@@ -238,7 +259,7 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
             <div className="dl-champion-confirm-panel">
               <h2>{championShortName(chosen.name).toUpperCase()}</h2>
               <div className="dl-champion-settings">
-            <label>
+            {!arcade && <label>
               <span>RIVAL</span>
               <select value={opponent} onChange={e=>setOpponent(e.target.value)}>
                 <option value="random">ALEATORIO</option>
@@ -246,7 +267,7 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
                   <option key={c.id} value={c.id}>{championShortName(c.name).toUpperCase()}</option>
                 )}
               </select>
-            </label>
+            </label>}
             <label>
               <span>DIFICULTAD</span>
               <select value={difficulty} onChange={e=>setDifficulty(e.target.value as AIDifficulty)}>
@@ -257,7 +278,7 @@ export function ChampionPicker({onBack,onPlay,onGallery}:ChampionPickerProps) {
             </label>
             <button type="button" className="dl-champion-start"
               onClick={()=>onPlay(chosen.id,opponent,difficulty)}>
-              EMPEZAR PARTIDA <span aria-hidden="true">↗</span>
+              {arcade?"INICIAR ARCADE · 8 RIVALES":"EMPEZAR PARTIDA"} <span aria-hidden="true">↗</span>
             </button>
               </div>
               <button type="button" className="dl-champion-change" onClick={()=>setSelected(null)}>← CAMBIAR CAMPEÓN</button>

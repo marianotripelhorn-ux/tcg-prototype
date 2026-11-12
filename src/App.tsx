@@ -8,7 +8,10 @@ import { saveAiMatch } from "./playtestStorage";
 import ThemeToggle from "./ThemeToggle";
 import AuguryStatus from "./AuguryStatus";
 import { factionArtUrl } from "./factionArtwork";
-import { championImageUrl,championShortName } from "./championArtwork";
+import { championImageUrl,championBackgroundUrl,championShortName } from "./championArtwork";
+import { readPlayerName,writePlayerName,DEFAULT_PLAYER_NAME } from "./playerProfile";
+import { newArcadeRun,readArcadeRun,writeArcadeRun,arcadeOpponent,markArcadeResult,advanceArcade } from "./arcade";
+import type { ArcadeRun } from "./arcade";
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import { HomeScreen, ChampionPicker, CardCollection } from "./FrontOffice";
 import PhysicalTable from "./PhysicalTable";
@@ -286,35 +289,52 @@ function CurrentBoardCard({
   );
 }
 
+function ArenaIcon({name}:{name:"help"|"exit"|"log"}) {
+  return <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"
+    fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    {name==="help"
+      ? <><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.7 2.7 0 1 1 4.3 2.2c-1.2.9-1.9 1.4-1.9 3"/><path d="M12 17h.01"/></>
+      :name==="log"
+      ? <><path d="M4 4h16v16H4z M8 8h8 M8 12h8 M8 16h5"/></>
+      : <><path d="M4 12h13 M12 7l5 5-5 5 M20 4v16"/></>}
+  </svg>;
+}
+
 function ChampionBar({
-  side,
-  faction,
-  championId,
-  name,
-  life,
-  passive,
-  healedLife=0
+  side,faction,championId,name,life,passive,healedLife=0,
+  playerName,active=false
 }: {
-  side: "player" | "opponent";
-  faction: Faction;
-  championId: string;
-  name: string;
-  life: number;
-  passive: string;
-  healedLife?: number;
+  side:"player"|"opponent";
+  faction:Faction;
+  championId:string;
+  name:string;
+  life:number;
+  passive:string;
+  healedLife?:number;
+  playerName?:string;
+  active?:boolean;
 }) {
+  const [expanded,setExpanded]=useState(false);
+  const label=side==="player"?(playerName||DEFAULT_PLAYER_NAME):"RIVAL";
   return (
-    <section className={`champion-bar ${side} faction-illustrated faction-${faction}`}>
-      <img className="champion-faction-image" src={factionArtUrl(faction,"banner")} alt="" aria-hidden="true" decoding="async" />
-      <div className="champion-medallion dl-champion-avatar"><img src={championImageUrl(championId,true)} alt={championShortName(name)} loading="eager" decoding="async" /></div>
-      <div className="champion-copy">
-        <span className="champion-eyebrow">{side === "player" ? "VOS" : "RIVAL"}</span>
+    <section className={`champion-bar arena-champion ${side} faction-illustrated faction-${faction}${active?" is-active":""}`}>
+      <button className="arena-champion-portrait" type="button"
+        style={{backgroundImage:`url("${championBackgroundUrl(faction)}")`}}
+        aria-label={`${label}: ${championShortName(name)}. ${life} Vida. Tocá para ver la habilidad.`}
+        aria-expanded={expanded}
+        onClick={()=>setExpanded(!expanded)}>
+        <img className="arena-champion-figure" src={championImageUrl(championId)}
+          alt="" loading="eager" decoding="async"/>
+        <span className="arena-champion-ribbon">{label.toUpperCase()}</span>
+        <span className="arena-life" aria-label={`${life} de 9 Vida`}>
+          <b>{life}</b><span aria-hidden="true">♥</span>
+          {healedLife>0&&<small>+{healedLife}</small>}
+        </span>
+        <span className="arena-initiative-ring" aria-hidden="true"/>
+      </button>
+      <div className={`arena-champion-details${expanded?" is-expanded":""}`}>
         <strong>{championShortName(name)}</strong>
-        <span className="champion-passive">{passive}</span>
-      </div>
-      <div className="life-block" aria-label={`${life} de 9 de Vida${healedLife>0?`, ${healedLife} Vida recuperada`: ""}`}>
-        <b>{life}</b><span>♥</span>
-        {healedLife>0&&<span className="life-recovered" title="Vida recuperada por la Prioresa">{`+${healedLife}`}</span>}
+        <span className="arena-champion-passive">{passive}</span>
       </div>
     </section>
   );
@@ -438,7 +458,9 @@ export default function App() {
   const [playerChampion,setPlayerChampion]=useState("dextral");
   const [opponentChampion,setOpponentChampion]=useState("random");
   const [aiDifficulty,setAiDifficulty]=useState<AIDifficulty>("normal");
-  const [screen,setScreen]=useState<"home"|"champions"|"collection"|"table"|"decklab"|"multiplayer"|"playtest">("home");
+  const [screen,setScreen]=useState<"home"|"champions"|"arcade"|"collection"|"table"|"decklab"|"multiplayer"|"playtest">("home");
+  const [playerName,setPlayerName]=useState(()=>readPlayerName());
+  const [arcadeRun,setArcadeRun]=useState<ArcadeRun|null>(()=>readArcadeRun());
   const [hasEntered,setHasEntered]=useState(false);
   const [game,setGame]=useState<GameState|null>(null);
   const [savedMatch,setSavedMatch]=useState<SavedMatch|null>(()=>readSavedMatch());
@@ -517,6 +539,14 @@ export default function App() {
     if(!matchMeta)return;
     const updated:SavedMatch={...matchMeta,game:next,updatedAt:new Date().toISOString()};
     if(next.phase==="finished") {
+      // Arcade records every beaten champion; only a victory unlocks the next one.
+      if(arcadeRun && arcadeRun.status==="active" &&
+         arcadeRun.championId===next.player.champion.id &&
+         arcadeOpponent(arcadeRun)===next.opponent.champion.id){
+        const after=markArcadeResult(arcadeRun,next.opponent.champion.id,next.winner==="player");
+        setArcadeRun(after);
+        writeArcadeRun(after);
+      }
       const record=completedMatch(updated);
       if(record && appendMatchHistory(record)){
         saveAiMatch(updated,record);
@@ -561,7 +591,12 @@ export default function App() {
     setDuelAuguries([]);
   }
 
-  function startWithChampion(championId:string, rivalSelection:string, difficulty:AIDifficulty=aiDifficulty, deck?:DeckDefinition|null) {
+  function startWithChampion(championId:string, rivalSelection:string, difficulty:AIDifficulty=aiDifficulty,
+    deck?:DeckDefinition|null, fromArcade=false) {
+    if(!fromArcade){
+      setArcadeRun(null);
+      writeArcadeRun(null);
+    }
     clearPreviewTimer();
     clearFinalTimer();
     finishingMatch.current=false;
@@ -593,11 +628,37 @@ export default function App() {
     setSpecialError("");
   }
 
+  function startArcade(championId:string,difficulty:AIDifficulty){
+    const run=newArcadeRun(championId,difficulty);
+    writeArcadeRun(run);
+    setArcadeRun(run);
+    startWithChampion(championId,run.opponents[0],difficulty,null,true);
+  }
+  function continueArcade(){
+    if(!arcadeRun||arcadeRun.status!=="active")return;
+    const opponent=arcadeOpponent(arcadeRun);
+    const saved=readSavedMatch();
+    if(saved && saved.game.phase!=="finished" &&
+       saved.game.player.champion.id===arcadeRun.championId &&
+       saved.game.opponent.champion.id===opponent){
+      continueMatch();
+      return;
+    }
+    const next=advanceArcade(arcadeRun);
+    if(next){
+      writeArcadeRun(next);
+      setArcadeRun(next);
+      startWithChampion(next.championId,next.opponents[next.index],next.difficulty,null,true);
+    }else if(opponent && !arcadeRun.victories.includes(opponent)){
+      startWithChampion(arcadeRun.championId,opponent,arcadeRun.difficulty,null,true);
+    }
+  }
   function beginMatch() {
+    if(arcadeRun){startArcade(arcadeRun.championId,arcadeRun.difficulty);return;}
     startWithChampion(playerChampion,opponentChampion,aiDifficulty,currentDeck);
   }
 
-  function goToMenu(destination:"home"|"champions"|"collection"|"table"|"decklab") {
+  function goToMenu(destination:"home"|"champions"|"arcade"|"collection"|"table"|"decklab") {
     clearPreviewTimer();
     clearFinalTimer();
     finishingMatch.current=false;
@@ -736,6 +797,16 @@ export default function App() {
       <>
         {screen==="home" && <HomeScreen
           onPlay={()=>setScreen("champions")}
+          onArcade={()=>setScreen("arcade")}
+          onContinueArcade={continueArcade}
+          arcadeResume={arcadeRun?.status==="active"
+            ? `ETAPA ${arcadeRun.index+1}/${arcadeRun.opponents.length} · ${championShortName(champions[arcadeOpponent(arcadeRun)!].name)}`
+            : null}
+          playerName={playerName}
+          onPlayerNameChange={next=>{
+            const value=writePlayerName(next);
+            setPlayerName(value||DEFAULT_PLAYER_NAME);
+          }}
           onTutorial={()=>setTutorialOpen(true)}
           onGallery={()=>setScreen("collection")}
           onPhysical={()=>setScreen("table")}
@@ -743,7 +814,7 @@ export default function App() {
           onMultiplayer={()=>setScreen("multiplayer")}
           onPlaytest={()=>setScreen("playtest")}
           onContinue={continueMatch}
-          saved={savedMatch}
+          saved={arcadeRun?.status==="active"?null:savedMatch}
           summary={summarizeHistory(history)}
           analyticsReady={analyticsAvailable()}
           analyticsConsent={analyticsConsent}
@@ -754,12 +825,18 @@ export default function App() {
           onPlay={startWithChampion}
           onGallery={()=>setScreen("collection")}
         />}
+        {screen==="arcade" && <ChampionPicker
+          mode="arcade"
+          onBack={()=>setScreen("home")}
+          onPlay={(championId,_rival,difficulty)=>startArcade(championId,difficulty)}
+          onGallery={()=>setScreen("collection")}
+        />}
         {screen==="collection" && <CardCollection
           onBack={()=>setScreen("home")}
           onPlay={()=>setScreen("champions")}
         />}
         {screen==="table" && <PhysicalTable onBack={()=>setScreen("home")}/> }
-        {screen==="multiplayer" && <Multiplayer onBack={()=>setScreen("home")}/>}
+        {screen==="multiplayer" && <Multiplayer onBack={()=>setScreen("home")} playerName={playerName}/>} 
         {screen==="playtest" && <PlaytestHub onBack={()=>setScreen("home")}/>}
         {screen==="decklab" && <DeckLab onBack={()=>setScreen("home")} onPlay={(deck,rival,difficulty)=>startWithChampion(deck.championId,rival,difficulty,deck)}/> }
         {tutorialOpen && <Tutorial
@@ -777,6 +854,7 @@ export default function App() {
   const focusPlayer=duelPreview?.playerPlay ?? null;
   const focusOpponent=duelPreview?.opponentPlay ?? pendingOpponent;
   const latestEvent=game.events.at(-1)?.text ?? "";
+  const actingSide=game.phase==="awaiting_player" && !duelPreview ? "player" : null;
   const turnText=duelPreview
     ? `DUELO ${duelPreview.turn} · ${duelStep==="cards"?"PODER":"RESULTADO"}`
     : game.phase==="awaiting_quiero"
@@ -786,50 +864,62 @@ export default function App() {
         : `DUELO ${game.turn} · ${game.initiative==="player"?"VOS ABRÍS":"IA ABRE"}`;
 
   return (
-    <main className="app-shell">
+    <main className="app-shell arena-v2">
       <div className="ambient ambient-one" />
       <div className="ambient ambient-two" />
 
-      <div className="game-frame">
-        <ChampionBar
-          side="opponent"
-          championId={game.opponent.champion.id}
-          faction={game.opponent.champion.faction}
-          name={game.opponent.champion.name}
-          life={displayed?.opponentLife??game.opponent.life}
-          healedLife={displayed?.opponentHealed??game.opponent.healedLife}
-          passive={game.opponent.champion.text}
-        />
-
-        <section className="match-strip has-guide">
-          <div>
-            <span>RONDA</span>
-            <b>{displayed?.round??game.round}</b>
-          </div>
-          <div className="duel-status">
-            <strong>{displayed?.score.player??game.duelScore.player} — {displayed?.score.opponent??game.duelScore.opponent}</strong>
-            <span>{turnText}</span>
+      <div className="game-frame arena-game-frame">
+        <section className="match-strip has-guide arena-topbar">
+          <span className="arena-top-wordmark">DAGGERLIGHT</span>
+          <div className="arena-top-center">
+            <span>RONDA <b>{displayed?.round??game.round}</b></span>
+            <i aria-hidden="true"/>
+            <span>DUELO <b>{duelPreview?.turn??game.turn}</b></span>
+            {arcadeRun && <em>ARCADE · {arcadeRun.index+1}/{arcadeRun.opponents.length}</em>}
           </div>
           <div className="game-tools">
-            <span className="game-difficulty-label" title="Dificultad de la IA">IA: {game.aiDifficulty==="easy"?"Fácil":game.aiDifficulty==="hard"?"Difícil":"Normal"}</span>
-            <ThemeToggle compact />
-            <button className="academy-utility" type="button" onClick={()=>setTutorialOpen(true)} aria-label="Abrir tutorial">? AYUDA</button>
+            <span className="game-difficulty-label" title="Dificultad de la IA">
+              {game.aiDifficulty==="easy"?"FÁCIL":game.aiDifficulty==="hard"?"DIFÍCIL":"NORMAL"}
+            </span>
+            <ThemeToggle compact/>
+            <button className="arena-icon-button" type="button" aria-label="Abrir tutorial"
+              title="Ayuda" onClick={()=>setTutorialOpen(true)}><ArenaIcon name="help"/></button>
+            <button className="arena-icon-button" type="button" aria-label="Volver al menú"
+              title="Volver al inicio" onClick={()=>{clearPreviewTimer();goToMenu("home");}}>
+              <ArenaIcon name="exit"/></button>
           </div>
-          <button
-            className="utility-button"
-            type="button"
-            aria-label="Nueva partida"
-            onClick={()=>{
-              clearPreviewTimer();
-              goToMenu("home");
-            }}
-          >×</button>
         </section>
 
-        <div className="game-hint">
-          <span className="game-hint-instruction">{game.phase==="awaiting_player" && !duelPreview ? (game.initiative==="player" ? <><b>Tu turno:</b> elegí una carta y tocá una posición libre.</> : <><b>Tu respuesta:</b> mirá la carta rival y elegí cómo enfrentarla.</>) : <><b>Compará Poderes:</b> cada duelo ganado quita 1 Vida rival.</>}</span>
-          {!duelPreview && <AuguryStatus player={game.player} opponent={game.opponent} />}
-        </div>
+        <div className="arena-main">
+          <aside className="arena-sidebar" aria-label="Campeones y marcador">
+            <ChampionBar side="opponent" championId={game.opponent.champion.id}
+              faction={game.opponent.champion.faction} name={game.opponent.champion.name}
+              life={displayed?.opponentLife??game.opponent.life}
+              healedLife={displayed?.opponentHealed??game.opponent.healedLife}
+              passive={game.opponent.champion.text}
+              active={actingSide==="opponent"}/>
+            <div className="arena-score" aria-label={`Duelos ganados: ${game.duelScore.player} a ${game.duelScore.opponent}`}>
+              <b>{displayed?.score.opponent??game.duelScore.opponent}</b>
+              <span>DUELOS</span>
+              <b>{displayed?.score.player??game.duelScore.player}</b>
+            </div>
+            <ChampionBar side="player" championId={game.player.champion.id}
+              faction={game.player.champion.faction} name={game.player.champion.name}
+              life={displayed?.playerLife??game.player.life}
+              healedLife={displayed?.playerHealed??game.player.healedLife}
+              passive={game.player.champion.text}
+              playerName={playerName} active={actingSide==="player"}/>
+            <div className="arena-sidebar-footer" aria-label="Marcador del duelo">
+              <span>RIVAL</span>
+              <strong>{displayed?.score.opponent??game.duelScore.opponent} — {displayed?.score.player??game.duelScore.player}</strong>
+              <span>{playerName.toUpperCase()}</span>
+            </div>
+          </aside>
+          <div className="arena-stage">
+            <div className="game-hint arena-augury-bar">
+              <span className="arena-visually-hidden" role="status">{turnText}</span>
+              {!duelPreview && <AuguryStatus player={game.player} opponent={game.opponent}/>}
+            </div>
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
           {duelPreview && (duelStep==="cards"
             ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries} onAdvance={showDuelResult}/>
@@ -901,16 +991,6 @@ export default function App() {
               ? `IA jugó ${pendingOpponent.card.name} en ${positionLabels[pendingOpponent.position]} · Poder ${pendingOpponent.powerExact===false?"?":pendingOpponent.finalPower ?? pendingOpponent.card.power}. Respondé.`
               : latestEvent}
         </div>
-
-        <ChampionBar
-          side="player"
-          championId={game.player.champion.id}
-          faction={game.player.champion.faction}
-          name={game.player.champion.name}
-          life={displayed?.playerLife??game.player.life}
-          healedLife={displayed?.playerHealed??game.player.healedLife}
-          passive={game.player.champion.text}
-        />
 
         <section className={"hand-zone"+(specialHand.length?" has-specials":"")} aria-label="Tu mano">
           <div className="hand-label">
@@ -992,6 +1072,9 @@ export default function App() {
           </div>
         </section>
 
+          </div>
+        </div>
+
         {specialInspection && <ManifestCardDialog kind={specialInspection} onClose={()=>setSpecialInspection(null)}/>}
 
         {inspection && (
@@ -1070,20 +1153,39 @@ export default function App() {
             {finalStep==="ceremony" ? (
               <div className={"match-conclusion-ceremony match-final-"+game.winner} role="status" aria-live="polite">
                 <span className="match-conclusion-symbol" aria-hidden="true">{game.winner==="player"?"✦":game.winner==="opponent"?"◇":"◈"}</span>
-                <span className="match-conclusion-kicker">FIN DE PARTIDA</span>
-                <strong>{game.winner==="player"?"VICTORIA":game.winner==="opponent"?"DERROTA":"EMPATE"}</strong>
+                <span className="match-conclusion-kicker">{arcadeRun
+                  ? arcadeRun.status==="complete"?"ARCADE COMPLETADO"
+                    : `ARCADE · ${arcadeRun.index+1}/${arcadeRun.opponents.length}`
+                  : "FIN DE PARTIDA"}</span>
+                <strong>{arcadeRun?.status==="complete"?"TODOS DERROTADOS":game.winner==="player"?"VICTORIA":game.winner==="opponent"?"DERROTA":"EMPATE"}</strong>
                 <span className="match-conclusion-score">{game.player.life} — {game.opponent.life} VIDA</span>
                 <button type="button" className="match-conclusion-continue" onClick={()=>{clearFinalTimer();setFinalStep("actions");}}>CONTINUAR →</button>
               </div>
             ) : (
               <div className="decision-card match-postgame" role="group" aria-label="Opciones después de la partida">
-                <span>PARTIDA FINALIZADA</span>
-                <strong>{game.winner==="player"?"GANASTE":game.winner==="opponent"?"GANÓ LA IA":"EMPATE"}</strong>
-                <p>{game.player.life}–{game.opponent.life} de Vida · {game.round} ronda{game.round===1?"":"s"}.</p>
-                <div className="match-postgame-actions">
-                  <button className="secondary-button" type="button" onClick={()=>goToMenu("champions")}>CAMBIAR CAMPEÓN</button>
-                  <button className="primary-button" type="button" onClick={beginMatch}>REVANCHA</button>
-                </div>
+                <span>{arcadeRun?"MODO ARCADE":"PARTIDA FINALIZADA"}</span>
+                <strong>{arcadeRun?.status==="complete"?"ARCADE COMPLETADO":game.winner==="player"?"GANASTE":game.winner==="opponent"?"GANÓ LA IA":"EMPATE"}</strong>
+                {arcadeRun ? <>
+                  <p>Derrotaste {arcadeRun.victories.length} de {arcadeRun.opponents.length} rivales.
+                    {arcadeRun.status==="active"?" Prepará el siguiente enfrentamiento.":arcadeRun.status==="lost"?" Tu racha terminó.":" ¡Conquistaste el Arcade!"}</p>
+                  <div className="arcade-progress-dots" aria-label="Progreso arcade">
+                    {arcadeRun.opponents.map((id,index)=><span key={id}
+                      className={arcadeRun.victories.includes(id)?"is-won":index===arcadeRun.index?"is-current":""}
+                      title={championShortName(champions[id].name)} aria-hidden="true"/>)}
+                  </div>
+                  <div className="match-postgame-actions">
+                    <button className="secondary-button" type="button" onClick={()=>goToMenu("home")}>MENÚ</button>
+                    {arcadeRun.status==="active" && game.winner==="player"
+                      ? <button className="primary-button" type="button" onClick={continueArcade}>SIGUIENTE RIVAL →</button>
+                      : <button className="primary-button" type="button" onClick={beginMatch}>REINICIAR ARCADE</button>}
+                  </div>
+                </> : <>
+                  <p>{game.player.life}–{game.opponent.life} de Vida · {game.round} ronda{game.round===1?"":"s"}.</p>
+                  <div className="match-postgame-actions">
+                    <button className="secondary-button" type="button" onClick={()=>goToMenu("champions")}>CAMBIAR CAMPEÓN</button>
+                    <button className="primary-button" type="button" onClick={beginMatch}>REVANCHA</button>
+                  </div>
+                </>}
               </div>
             )}
           </div>

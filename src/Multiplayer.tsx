@@ -41,7 +41,7 @@ function CardPreview({card,small=false}:{card:CardDefinition;small?:boolean}) {
 function BoardPlay({played}:{played:EnginePlay}){
   return <div className="pvp-board-play"><CardPreview card={played.card} small/></div>;
 }
-export default function Multiplayer({onBack}:{onBack:()=>void}) {
+export default function Multiplayer({onBack,playerName="JUGADOR"}:{onBack:()=>void;playerName?:string}) {
   const [code,setCode]=useState(()=>roomFromLink());
   const [credentials,setCredentials]=useState<Credentials|null>(()=>stored(roomFromLink()));
   const [champion,setChampion]=useState("dextral");
@@ -190,7 +190,7 @@ export default function Multiplayer({onBack}:{onBack:()=>void}) {
           <div className="pvp-scoreline">
             <div><img src={championImageUrl(game.opponent.champion.id,true)} alt=""/><strong>{championShortName(game.opponent.champion.name).toUpperCase()}</strong><span>{game.opponent.life} ♥</span></div>
             <strong>RONDA {game.round} · DUELO {game.turn} · {game.duelScore.player}—{game.duelScore.opponent}</strong>
-            <div><img src={championImageUrl(game.player.champion.id,true)} alt=""/><strong>{championShortName(game.player.champion.name).toUpperCase()}</strong><span>{game.player.life} ♥</span></div>
+            <div><img src={championImageUrl(game.player.champion.id,true)} alt=""/><strong>{playerName.toUpperCase()}</strong><span className="pvp-player-champion">{championShortName(game.player.champion.name).toUpperCase()}</span><span>{game.player.life} ♥</span></div>
           </div>
           <div className="pvp-status" role="status">{game.phase==="finished"?"PARTIDA FINALIZADA":
             game.phase==="awaiting_quiero"?(myTurn?"ELEGÍ: QUIERO O NO QUIERO":"EL RIVAL DECIDE QUIERO O NO QUIERO"):
