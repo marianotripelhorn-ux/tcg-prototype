@@ -52,6 +52,8 @@ jobs:
           cp -R source/dist-duelboard/. site/gameplay-duelboard/
           cp source/duelboard-desktop.jpg site/gameplay-duelboard/_preview-desktop.jpg
           cp source/duelboard-mobile.jpg site/gameplay-duelboard/_preview-mobile.jpg
+          cp source/duelboard-flight-desktop.jpg site/gameplay-duelboard/_preview-flight-desktop.jpg
+          cp source/duelboard-flight-mobile.jpg site/gameplay-duelboard/_preview-flight-mobile.jpg
       - name: Publish isolated HTML board
         working-directory: site
         run: |
