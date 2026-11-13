@@ -45,7 +45,24 @@ try{
   const slot=page.locator('[data-drop-player="siniestra"]');
   if(mode==="desktop"){await first.click();await slot.click();}
   else{const a=await first.boundingBox(),b=await slot.boundingBox();await page.touchscreen.tap(a.x+a.width/2,a.y+a.height/2);await page.touchscreen.tap(b.x+b.width/2,b.y+b.height/2);}
+  // Visual v0.3 must render both actual card flights before resolving the result.
+  await page.waitForFunction(()=>document.querySelectorAll(".flight-card").length===2,
+    null,{timeout:1200});
+  const flight=await debug(page);
+  if(!flight.visualSequence||flight.visualSequence.stage!=="flying")
+    throw new Error(mode+" flight presentation not started");
+  const p=flight.visualSequence.playerFrom,pt=flight.visualSequence.playerTo;
+  const e=flight.visualSequence.opponentFrom,et=flight.visualSequence.opponentTo;
+  if(Math.hypot(pt.x-p.x,pt.y-p.y)<40 || Math.hypot(et.x-e.x,et.y-e.y)<30)
+    throw new Error(mode+" card travel does not reflect board coordinates "+JSON.stringify(flight.visualSequence));
+  const startTransform=await page.locator(".flight-card.player").evaluate(el=>getComputedStyle(el).transform);
+  await delay(220);
+  const middleTransform=await page.locator(".flight-card.player").evaluate(el=>getComputedStyle(el).transform);
+  if(startTransform===middleTransform)throw new Error(mode+" flight isn't visually progressing");
+  await page.screenshot({path:"duelboard-flight-"+mode+".jpg",type:"jpeg",quality:81,fullPage:true});
   await assertPlay(page,"siniestra");
+  await page.waitForFunction(()=>!document.querySelector(".flight-layer"),null,{timeout:3500});
+  console.log("DUELBOARD_FLIGHT_OK",mode);
   console.log("DUELBOARD_CLICK_OK",mode);
 
   // A fresh game tests physical card dragging using native pointer events.
@@ -76,6 +93,7 @@ try{
     await cdp.detach();
   }
   await assertPlay(page,"diestra");
+  await page.waitForFunction(()=>!document.querySelector(".flight-layer"),null,{timeout:3500});
   console.log("DUELBOARD_DRAG_OK",mode);
   if(errors.some(e=>!/favicon|net::ERR|404/.test(e)))throw new Error(mode+" browser errors: "+errors.join("\n"));
   console.log("DUELBOARD_SMOKE_OK",mode,width+"x"+height);
