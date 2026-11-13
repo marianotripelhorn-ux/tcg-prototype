@@ -116,11 +116,22 @@ function TableauBoard(){
   const [drag,setDrag]=useState<{index:number;x:number;y:number}|null>(null);
   const [inspector,setInspector]=useState<string|null>(null);
   const [notice,setNotice]=useState("");
+  const [duelMoment,setDuelMoment]=useState<{
+    key:number; position:Position; outcome:"player"|"opponent"|"draw";
+    ownPower:number; rivalPower:number;
+  }|null>(null);
+  const momentSeq=useRef(0);
   const pointer=useRef<{index:number;x:number;y:number;started:boolean}|null>(null);
   const legal=game.phase==="awaiting_player"?legalPositions(game.player):[];
   const latest=game.events.at(-1)?.text||"";
   const currentMessage=notice||latest;
   const selectedCard=selected===null?null:game.player.hand[selected]??null;
+
+  useEffect(()=>{
+    if(!duelMoment)return;
+    const timeout=window.setTimeout(()=>setDuelMoment(current=>current?.key===duelMoment.key?null:current),1450);
+    return ()=>window.clearTimeout(timeout);
+  },[duelMoment]);
 
   useEffect(()=>{
     document.documentElement.dataset.boardReady="true";
@@ -135,7 +146,7 @@ function TableauBoard(){
   },[game,selected,drag]);
 
   function reset(){
-    pointer.current=null;setSelected(null);setHovering(null);setDrag(null);setInspector(null);setNotice("");
+    pointer.current=null;setSelected(null);setHovering(null);setDrag(null);setInspector(null);setNotice("");setDuelMoment(null);
     setGame(startGame("dextral","sinistral",Math.random,"player","normal"));
   }
   function play(index:number,position:Position) {
@@ -148,6 +159,13 @@ function TableauBoard(){
       else if(d)setNotice(d.outcome==="draw"?"EMPATE · "+d.playerPlay.finalPower+" — "+d.opponentPlay.finalPower:
         (d.outcome==="player"?"DUELO GANADO · ":"DUELO PERDIDO · ")+d.playerPlay.finalPower+" — "+d.opponentPlay.finalPower);
       else setNotice("");
+      if(d){
+        setDuelMoment({
+          key:++momentSeq.current, position:d.playerPlay.position, outcome:d.outcome,
+          ownPower:d.playerPlay.finalPower ?? d.playerPlay.card.power,
+          rivalPower:d.opponentPlay.finalPower ?? d.opponentPlay.card.power
+        });
+      }
     }catch(e){setNotice(String(e));setDrag(null);setHovering(null);}
   }
   function findPosition(x:number,y:number):Position|null {
@@ -222,6 +240,13 @@ function TableauBoard(){
         </aside>
 
         <section className="central-arena" aria-label="Posiciones de duelo">
+          {duelMoment&&<div className={"duel-beat "+(duelMoment.outcome==="player"?"victory":duelMoment.outcome==="opponent"?"defeat":"draw")}
+             key={duelMoment.key} aria-live="polite" role="status">
+            <div className="duel-beat-crest" aria-hidden="true">✦</div>
+            <span className="duel-beat-overline">{LABEL[duelMoment.position].toUpperCase()}</span>
+            <strong>{duelMoment.outcome==="player"?"DUELO GANADO":duelMoment.outcome==="opponent"?"DUELO PERDIDO":"EMPATE"}</strong>
+            <span className="duel-beat-score">{duelMoment.ownPower} <i>VS</i> {duelMoment.rivalPower}</span>
+          </div>}
           <div className="opponent-hand" aria-label={game.opponent.hand.length+" cartas restantes del rival"}>
             {game.opponent.hand.map((_,i)=><CardBack key={i} index={i}/>)}
           </div>
@@ -271,7 +296,7 @@ function TableauBoard(){
           <div className="hand-counter">TU MANO · {game.player.hand.length} CARTAS</div>
         </section>
       </main>
-      <div className="board-footer"><span>PROTOTIPO HTML · MOTOR REAL DE DAGGERLIGHT</span><span>DRAG & DROP · TOCAR + ELEGIR</span></div>
+      <div className="board-footer"><span>DUELBOARD · VISUAL 0.2 · MOTOR REAL</span><span>DRAG & DROP · TOCAR + ELEGIR</span></div>
     </div>
 
     {drag&&game.player.hand[drag.index]&&<div className="drag-ghost"
