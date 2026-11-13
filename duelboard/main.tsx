@@ -351,6 +351,9 @@ function TableauBoard(){
             opponent:{key:"opponent-"+id,card:d.opponentPlay.card,side:"opponent",
               from:enemySource,to:enemyDestination}
           });
+        } else {
+          // A missing measurement must never leave the game stuck waiting for a visual.
+          setReviewReady(true);
         }
       }else if(d){
         setReviewReady(true);
