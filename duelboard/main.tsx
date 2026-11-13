@@ -491,7 +491,7 @@ function TableauBoard(){
               <LaneSlot side="rival" lane={lane} plays={opponentPlays(lane)}
                 selected={false} legal={false} hovering={false} onPlay={()=>{}}
                 onInspect={inspectCard}
-                hideArrival={hideArrival&&sequence.opponentPosition===lane
+                hideArrival={hideArrival&&sequence&&sequence.opponentPosition===lane
                   ?{cardId:sequence.opponent.card.id,power:sequence.opponentPower}:null}/>
               <ArchiveStack count={board.opponent.archives[lane].length} side="rival"/>
               <div className="lane-divider">
@@ -501,7 +501,7 @@ function TableauBoard(){
               <ArchiveStack count={board.player.archives[lane].length} side="self"/>
               <LaneSlot side="self" lane={lane} plays={playerPlays(lane)}
                 selected={selected!==null&&!busy} legal={!busy&&legal.includes(lane)} hovering={hovering===lane}
-                hideArrival={hideArrival&&sequence.position===lane
+                hideArrival={hideArrival&&sequence&&sequence.position===lane
                   ?{cardId:sequence.player.card.id,power:sequence.playerPower}:null}
                 onPlay={()=>{if(selected!==null&&!busy)play(selected,lane);}}
                 onInspect={inspectCard}/>
