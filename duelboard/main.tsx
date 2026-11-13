@@ -173,6 +173,7 @@ function DamageBeam({trace}: {trace:DamageTrace}){
   const distance=Math.hypot(dx,dy);
   return <div className={"damage-beam "+trace.target} aria-hidden="true"
     style={{left:trace.from.x,top:trace.from.y,width:distance,
+      "--beam-distance":(distance-9)+"px",
       transform:"rotate("+Math.atan2(dy,dx)+"rad)"}}>
     <span className="damage-beam-streak"/>
     <span className="damage-beam-orb"/>
