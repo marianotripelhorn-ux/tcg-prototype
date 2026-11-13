@@ -10,7 +10,9 @@
     "audit": "vitest run src/engine/effect-audit.test.ts src/engine/champion-audit.test.ts src/engine/core-rules-audit.test.ts",
     "test": "vitest run",
     "build:phaser": "tsc -p tsconfig.phaser.json && vite build --config vite.phaser.config.ts",
-    "test:phaser:smoke": "node phaser/smoke.mjs"
+    "test:phaser:smoke": "node phaser/smoke.mjs",
+    "build:duelboard": "tsc -p tsconfig.duelboard.json && vite build --config vite.duelboard.config.ts",
+    "test:duelboard:smoke": "node duelboard/smoke.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
