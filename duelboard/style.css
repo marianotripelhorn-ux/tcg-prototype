@@ -394,7 +394,7 @@ box-shadow:inset 0 18px 40px #0007,inset 0 -50px 35px #0008;z-index:-1}
   48%{opacity:1;transform:translate(calc(-50% + var(--flight-half-x)),
    calc(-50% + var(--flight-half-y))) rotate(3deg) scale(1.10)}
   88%{opacity:1;transform:translate(calc(-50% + var(--flight-dx)),
-   calc(-50% + var(--flight-dy))) rotate(-1deg) scale(calc(var(--flight-scale)*1.065))}
+   calc(-50% + var(--flight-dy))) rotate(-1deg) scale(var(--flight-bounce-scale))}
   100%{opacity:0;transform:translate(calc(-50% + var(--flight-dx)),
    calc(-50% + var(--flight-dy))) rotate(0deg) scale(var(--flight-scale))}
 }
