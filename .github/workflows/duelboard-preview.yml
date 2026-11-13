@@ -56,6 +56,10 @@ jobs:
           cp source/duelboard-flight-mobile.jpg site/gameplay-duelboard/_preview-flight-mobile.jpg
           cp source/duelboard-impact-desktop.jpg site/gameplay-duelboard/_preview-impact-desktop.jpg
           cp source/duelboard-impact-mobile.jpg site/gameplay-duelboard/_preview-impact-mobile.jpg
+          cp source/duelboard-inspect-desktop.jpg site/gameplay-duelboard/_preview-inspect-desktop.jpg
+          cp source/duelboard-inspect-mobile.jpg site/gameplay-duelboard/_preview-inspect-mobile.jpg
+          cp source/duelboard-review-desktop.jpg site/gameplay-duelboard/_preview-review-desktop.jpg
+          cp source/duelboard-review-mobile.jpg site/gameplay-duelboard/_preview-review-mobile.jpg
       - name: Publish isolated HTML board
         working-directory: site
         run: |
