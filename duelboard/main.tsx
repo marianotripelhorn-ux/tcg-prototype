@@ -104,7 +104,7 @@ function LaneSlot({side, lane, plays, selected, legal, hovering, onPlay}:{
 }
 
 function CardBack({index}: {index:number}) {
-  return <span className="card-back" style={{"--back-i":index} as React.CSSProperties} aria-label="Carta rival oculta">
+  return <span className="card-back" style={{left:"calc(50% + "+((index-1)*61)+"px)",transform:"translateX(-50%) rotate("+((index-1)*7)+"deg)"}} aria-label="Carta rival oculta">
     <i className="back-crest">✦</i>
   </span>;
 }
