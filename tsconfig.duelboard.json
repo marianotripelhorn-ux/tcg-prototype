@@ -1,0 +1,5 @@
+{
+  "extends":"./tsconfig.app.json",
+  "compilerOptions":{"noEmit":true},
+  "include":["duelboard/**/*.ts","duelboard/**/*.tsx","src/data.ts","src/types.ts","src/engine/**/*.ts"]
+}
