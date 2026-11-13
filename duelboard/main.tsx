@@ -412,6 +412,14 @@ function TableauBoard(){
     if(drag)return;
     setInspectedCard({card,power,fromHand});
   }
+  useEffect(()=>{
+    if(!inspectedCard&&!inspector)return;
+    const close=(e:KeyboardEvent)=>{
+      if(e.key==="Escape"){setInspectedCard(null);setInspector(null);}
+    };
+    window.addEventListener("keydown",close);
+    return ()=>window.removeEventListener("keydown",close);
+  },[inspectedCard,inspector]);
   function chooseQuiero(wants:boolean){
     if(busy)return;
     answerQuiero(game,wants);
@@ -565,6 +573,34 @@ function TableauBoard(){
     {drag&&game.player.hand[drag.index]&&<div className="drag-ghost"
        style={{left:drag.x,top:drag.y}} aria-hidden="true">
       <CardFace card={game.player.hand[drag.index]}/>
+    </div>}
+    {inspectedCard&&<div className="card-inspect-backdrop" role="presentation"
+      onPointerDown={e=>{if(e.target===e.currentTarget)setInspectedCard(null);}}>
+      <section className="card-inspect-dialog" role="dialog" aria-modal="true"
+        aria-label={"Detalle de "+inspectedCard.card.name}>
+        <button type="button" className="card-inspect-close"
+          aria-label="Cerrar carta" onClick={()=>setInspectedCard(null)}>×</button>
+        <div className="card-inspect-art"><CardFace
+          card={inspectedCard.card} power={inspectedCard.power}/></div>
+        <div className="card-inspect-info">
+          <span className="card-inspect-label">DAGGERLIGHT · CARTA</span>
+          <h2>{inspectedCard.card.name}</h2>
+          <div className="card-inspect-power">
+            {inspectedCard.power===undefined?"PODER BASE":"PODER FINAL"}
+            <strong>{inspectedCard.power??inspectedCard.card.power}</strong>
+          </div>
+          <p>{inspectedCard.card.text}</p>
+          <div className="card-inspect-actions">
+            {inspectedCard.fromHand!==undefined&&!busy&&<button type="button"
+              className="inspect-play" onClick={()=>{
+                setSelected(inspectedCard.fromHand!);
+                setInspectedCard(null);
+              }}>ELEGIR POSICIÓN</button>}
+            <button type="button" className="inspect-back"
+              onClick={()=>setInspectedCard(null)}>CERRAR</button>
+          </div>
+        </div>
+      </section>
     </div>}
     {inspector&&<div className="dialog-backdrop" onClick={()=>setInspector(null)}>
       <div className="decision-dialog inspector-dialog" role="dialog" aria-label="Habilidad de Champion" onClick={e=>e.stopPropagation()}>
