@@ -432,8 +432,7 @@ function TableauBoard(){
   ];
   const opponentPlays=(lane:Position)=>[
     ...board.opponent.roundPlays.filter(p=>p.position===lane),
-    ...(held&&showingPlayed&&heldDuel?.opponentPlay.position===lane?[heldDuel.opponentPlay]:[]),
-    ...(!held&&board.pendingOpponentPlay?.position===lane?[board.pendingOpponentPlay]:[])
+    ...(held&&showingPlayed&&heldDuel?.opponentPlay.position===lane?[heldDuel.opponentPlay]:[])
   ];
 
   return <div className="screen">
