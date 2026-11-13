@@ -216,7 +216,7 @@ function TableauBoard(){
     const {id}=sequence;
     const land=window.setTimeout(()=>setArrivalId(id),905);
     const clash=window.setTimeout(()=>setClashId(id),960);
-    const hit=window.setTimeout(()=>setImpactId(id),1250);
+    const hit=window.setTimeout(()=>setImpactId(id),1400);
     const result=window.setTimeout(()=>{
       setDuelMoment({
         key:id,position:sequence.position,outcome:sequence.outcome,
