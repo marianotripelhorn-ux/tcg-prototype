@@ -66,8 +66,9 @@ try{
   const clashText=await page.locator(".power-clash").innerText();
   const inClash=await debug(page);
   if(!clashText.includes("ENFRENTAMIENTO DE PODER")||
-    !clashText.includes(String(inClash.visualSequence.life.playerBefore)) && !clashText.includes("PODER"))
-    throw new Error(mode+" duel power clash missing");
+     !clashText.includes(String(inClash.visualSequence.playerPower))||
+     !clashText.includes(String(inClash.visualSequence.opponentPower)))
+    throw new Error(mode+" duel power clash doesn't show the engine's values "+clashText);
   await page.waitForFunction(()=>window.__daggerlightBoardDebug?.()?.visualSequence?.stage==="impact",
     null,{timeout:2500});
   const impact=await debug(page);
