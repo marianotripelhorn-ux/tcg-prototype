@@ -41,6 +41,33 @@ try{
   const render=await page.evaluate(()=>({w:document.documentElement.scrollWidth,h:document.documentElement.scrollHeight,viewport:[innerWidth,innerHeight]}));
   if(render.w>width+3)throw new Error(mode+" unexpected horizontal overflow "+JSON.stringify(render));
   await page.screenshot({path:"duelboard-"+mode+".jpg",type:"jpeg",quality:78,fullPage:true});
+  // Preserve short-lived visual states even if screenshot generation is slow.
+  // This runs inside the browser and doesn't alter gameplay or animation timing.
+  await page.evaluate(()=>{
+    const audit={clash:null,impact:null};
+    window.__duelVisualAudit=audit;
+    const watch=()=>{
+      const stage=document.querySelector(".tabletop")?.getAttribute("data-visual-stage");
+      if(stage==="clash"){
+        const element=document.querySelector(".power-clash");
+        if(element)audit.clash={text:element.textContent||""};
+      }
+      if(stage==="impact"){
+        const life=(kind)=>Number(document.querySelector(".champion-piece."+kind+" .champion-life")?.textContent||"-999");
+        const gems=(kind)=>document.querySelectorAll(".champion-piece."+kind+" .life-gem.full").length;
+        audit.impact={
+          playerLife:life("self"),opponentLife:life("rival"),
+          playerGems:gems("self"),opponentGems:gems("rival"),
+          beams:document.querySelectorAll(".damage-beam").length,
+          targets:Array.from(document.querySelectorAll(".champion-piece.taking-hit"))
+            .map(n=>n.classList.contains("self")?"self":"rival")
+        };
+      }
+    };
+    new MutationObserver(watch).observe(document.querySelector("#root"),{
+      childList:true,subtree:true,attributes:true,characterData:true
+    });
+  });
   const first=page.locator(".hand-card").first();
   const slot=page.locator('[data-drop-player="siniestra"]');
   if(mode==="desktop"){await first.click();await slot.click();}
@@ -61,33 +88,26 @@ try{
   if(startTransform===middleTransform)throw new Error(mode+" flight isn't visually progressing");
   await page.screenshot({path:"duelboard-flight-"+mode+".jpg",type:"jpeg",quality:81,fullPage:true});
   await assertPlay(page,"siniestra");
-  await page.waitForFunction(()=>window.__daggerlightBoardDebug?.()?.visualSequence?.stage==="clash",
-    null,{timeout:2500});
-  const clashText=await page.locator(".power-clash").innerText();
-  const inClash=await debug(page);
-  if(!clashText.includes("ENFRENTAMIENTO DE PODER")||
-     !clashText.includes(String(inClash.visualSequence.playerPower))||
-     !clashText.includes(String(inClash.visualSequence.opponentPower)))
-    throw new Error(mode+" duel power clash doesn't show the engine's values "+clashText);
-  await page.waitForFunction(()=>window.__daggerlightBoardDebug?.()?.visualSequence?.stage==="impact",
-    null,{timeout:2500});
-  const impact=await debug(page);
-  const life=impact.visualSequence.life;
-  const damage=impact.visualSequence.damage;
-  if(impact.displayedLife.player!==life.playerAfter||
-     impact.displayedLife.opponent!==life.opponentAfter)
-    throw new Error(mode+" UI didn't reveal the engine's final life totals "+JSON.stringify(impact));
-  const selfGems=await page.locator(".champion-piece.self .life-gem.full").count();
-  const rivalGems=await page.locator(".champion-piece.rival .life-gem.full").count();
-  if(selfGems!==life.playerAfter||rivalGems!==life.opponentAfter)
-    throw new Error(mode+" life gem count inconsistent with engine "+JSON.stringify({selfGems,rivalGems,life}));
+  await page.waitForFunction(()=>Boolean(window.__duelVisualAudit?.clash &&
+    window.__duelVisualAudit?.impact),null,{timeout:5500});
+  const audit=await page.evaluate(()=>window.__duelVisualAudit);
+  const life=flight.visualSequence.life;
+  const realPowers=[flight.visualSequence.playerPower,flight.visualSequence.opponentPower];
+  if(!audit.clash.text.includes("ENFRENTAMIENTO DE PODER") ||
+     !realPowers.every(value=>audit.clash.text.includes(String(value))))
+    throw new Error(mode+" visual clash doesn't display real powers "+JSON.stringify({audit,realPowers}));
+  if(audit.impact.playerLife!==life.playerAfter||
+     audit.impact.opponentLife!==life.opponentAfter||
+     audit.impact.playerGems!==life.playerAfter||
+     audit.impact.opponentGems!==life.opponentAfter)
+    throw new Error(mode+" visual HP/gems differ from the game engine "+JSON.stringify({audit,life}));
+  const damage=flight.visualSequence.damage;
   const expectedDamage=Math.max(0,life.playerBefore-life.playerAfter)+
     Math.max(0,life.opponentBefore-life.opponentAfter);
-  const measuredDamage=damage.reduce((n,d)=>n+d.amount,0);
-  if(expectedDamage!==measuredDamage)
-    throw new Error(mode+" damage effect doesn't match real HP delta "+JSON.stringify(impact.visualSequence));
-  if(await page.locator(".damage-beam").count()!==damage.length)
-    throw new Error(mode+" wrong number of damage beams");
+  if(damage.reduce((total,item)=>total+item.amount,0)!==expectedDamage ||
+    audit.impact.beams!==damage.length ||
+    audit.impact.targets.length!==damage.length)
+    throw new Error(mode+" Champion impacts don't match actual life lost "+JSON.stringify({audit,damage,life}));
   await page.screenshot({path:"duelboard-impact-"+mode+".jpg",type:"jpeg",quality:84,fullPage:true});
   await page.waitForFunction(()=>!document.querySelector(".flight-layer"),null,{timeout:3500});
   console.log("DUELBOARD_POWER_IMPACT_OK",mode,"damage",expectedDamage);
