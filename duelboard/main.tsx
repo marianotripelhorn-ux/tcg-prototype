@@ -218,30 +218,33 @@ function TableauBoard(){
   const damageToOpponent=Boolean(impactActive&&sequence?.damage.some(d=>d.target==="rival"));
   const pointer=useRef<{index:number;x:number;y:number;started:boolean}|null>(null);
   const legal=!busy&&game.phase==="awaiting_player"?legalPositions(game.player):[];
-  const latest=game.events.at(-1)?.text||"";
   const selectedCard=selected===null?null:board.player.hand[selected]??null;
-  const shownHand=held?board.player.hand.filter((_,index)=>index!==held.playedIndex):board.player.hand;
-  const currentMessage=(!busy&&notice)||(!busy&&latest)||"";
+  const shownHand=board.player.hand.map((card,index)=>({card,index}))
+    .filter(item=>!held||item.index!==held.playedIndex);
+  const currentMessage=(!busy&&notice)||"";
 
   useEffect(()=>{
     if(!sequence)return;
     const {id}=sequence;
-    const land=window.setTimeout(()=>setArrivalId(id),905);
-    const clash=window.setTimeout(()=>setClashId(id),960);
-    const hit=window.setTimeout(()=>setImpactId(id),1400);
+    const land=window.setTimeout(()=>setArrivalId(id),1680);
+    const clash=window.setTimeout(()=>setClashId(id),1780);
+    const hit=window.setTimeout(()=>setImpactId(id),2410);
     const result=window.setTimeout(()=>{
       setDuelMoment({
         key:id,position:sequence.position,outcome:sequence.outcome,
         ownPower:sequence.playerPower,rivalPower:sequence.opponentPower
       });
-    },1620);
-    const finish=window.setTimeout(()=>setSequence(current=>current?.id===id?null:current),2130);
+    },2750);
+    const finish=window.setTimeout(()=>{
+      setReviewReady(true);
+      setSequence(current=>current?.id===id?null:current);
+    },3350);
     return ()=>{[land,clash,hit,result,finish].forEach(window.clearTimeout);};
   },[sequence]);
 
   useEffect(()=>{
     if(!duelMoment)return;
-    const timeout=window.setTimeout(()=>setDuelMoment(current=>current?.key===duelMoment.key?null:current),820);
+    const timeout=window.setTimeout(()=>setDuelMoment(current=>current?.key===duelMoment.key?null:current),660);
     return ()=>window.clearTimeout(timeout);
   },[duelMoment]);
 
@@ -255,7 +258,7 @@ function TableauBoard(){
       playerPlays:game.player.roundPlays.map(p=>[p.card.id,p.position]),
       opponentPlays:game.opponent.roundPlays.map(p=>[p.card.id,p.position]),
       hand:game.player.hand.map(c=>c.id),
-      displayedHand:shownHand.map(c=>c.id),
+      displayedHand:shownHand.map(({card})=>card.id),
       archives:game.player.archives,
       selected,dragging:drag?.index??null,
       visualSequence:sequence?{
@@ -395,7 +398,10 @@ function TableauBoard(){
     if(p.started){
       if(lane&&legal.includes(lane))play(p.index,lane,{x:e.clientX,y:e.clientY});
       else setSelected(p.index);
-    }else setSelected(selected===p.index?null:p.index);
+    }else {
+      setSelected(null);
+      inspectCard(game.player.hand[p.index],undefined,p.index);
+    }
   }
   function onHandCancel(){pointer.current=null;setDrag(null);setHovering(null);}
   function continueAfterDuel(){
@@ -411,7 +417,7 @@ function TableauBoard(){
     answerQuiero(game,wants);
     setGame({...game});setSelected(null);setNotice(wants?"TERCER DUELO":"SIGUIENTE RONDA");
   }
-  const hideArrival=sequence&&arrivalId!==sequence.id&&game.round===sequence.round;
+  const hideArrival=Boolean(sequence&&arrivalId!==sequence.id&&game.round===sequence.round);
   const playerPlays=(lane:Position)=>[
     ...board.player.roundPlays.filter(p=>p.position===lane),
     ...(held&&showingPlayed&&heldDuel?.playerPlay.position===lane?[heldDuel.playerPlay]:[])
@@ -426,7 +432,7 @@ function TableauBoard(){
     <div className="board-wrap">
       <header className="board-header">
         <div className="game-brand"><span className="brand-crown" aria-hidden="true">♛</span><span>DAGGERLIGHT</span><small>DUEL BOARD</small></div>
-        <div className="battle-progress"><span>RONDA {game.round}</span><i/> <span>DUELO {game.turn} / 3</span></div>
+        <div className="battle-progress"><span>RONDA {board.round}</span><i/> <span>DUELO {board.turn} / 3</span></div>
         <button className="reset-button" onClick={reset} title="Comenzar una partida nueva">↻ <span>NUEVA PARTIDA</span></button>
       </header>
       <main className="tabletop" aria-label="Tablero de duelo Daggerlight"
@@ -444,11 +450,11 @@ function TableauBoard(){
           </g>
         </svg>
         <aside className="left-rail" aria-label="Champions y marcador">
-          <ChampionMedallion player={game.opponent} owner="rival" onInspect={setInspector}
+          <ChampionMedallion player={board.opponent} owner="rival" onInspect={setInspector}
             visibleLife={visibleOpponentLife} previousLife={previousOpponentLife}
             impact={damageToOpponent}/>
-          <div className="match-score"><span>MARCADOR</span><strong>{game.duelScore.opponent}<i>—</i>{game.duelScore.player}</strong></div>
-          <ChampionMedallion player={game.player} owner="self" onInspect={setInspector}
+          <div className="match-score"><span>MARCADOR</span><strong>{shownScore.opponent}<i>—</i>{shownScore.player}</strong></div>
+          <ChampionMedallion player={board.player} owner="self" onInspect={setInspector}
             visibleLife={visiblePlayerLife} previousLife={previousPlayerLife}
             impact={damageToPlayer}/>
         </aside>
@@ -475,62 +481,77 @@ function TableauBoard(){
             <strong>{duelMoment.outcome==="player"?"DUELO GANADO":duelMoment.outcome==="opponent"?"DUELO PERDIDO":"EMPATE"}</strong>
             <span className="duel-beat-score">{duelMoment.ownPower} <i>VS</i> {duelMoment.rivalPower}</span>
           </div>}
-          <div className="opponent-hand" aria-label={game.opponent.hand.length+" cartas restantes del rival"}>
-            {game.opponent.hand.map((_,i)=><CardBack key={i} index={i}/>)}
-          </div>
           <div className="lane-grid">
-            {POSITIONS.map((lane,i)=><div className={"lane lane-"+lane} key={lane}>
+            {POSITIONS.map(lane=><div className={"lane lane-"+lane} key={lane}>
               <LaneSlot side="rival" lane={lane} plays={opponentPlays(lane)}
                 selected={false} legal={false} hovering={false} onPlay={()=>{}}
+                onInspect={inspectCard}
                 hideArrival={hideArrival&&sequence.opponentPosition===lane
                   ?{cardId:sequence.opponent.card.id,power:sequence.opponentPower}:null}/>
-              <ArchiveStack count={game.opponent.archives[lane].length} side="rival"/>
+              <ArchiveStack count={board.opponent.archives[lane].length} side="rival"/>
               <div className="lane-divider">
-                <span className="lane-number">0{i+1}</span><strong>{LABEL[lane]}</strong>
+                <strong>{LABEL[lane]}</strong>
                 <span className="lane-ornament">{lane==="trono"?"♛":lane==="siniestra"?"☾":"✧"}</span>
               </div>
-              <ArchiveStack count={game.player.archives[lane].length} side="self"/>
+              <ArchiveStack count={board.player.archives[lane].length} side="self"/>
               <LaneSlot side="self" lane={lane} plays={playerPlays(lane)}
                 selected={selected!==null&&!busy} legal={!busy&&legal.includes(lane)} hovering={hovering===lane}
                 hideArrival={hideArrival&&sequence.position===lane
                   ?{cardId:sequence.player.card.id,power:sequence.playerPower}:null}
-                onPlay={()=>{if(selected!==null&&!busy)play(selected,lane);}}/>
+                onPlay={()=>{if(selected!==null&&!busy)play(selected,lane);}}
+                onInspect={inspectCard}/>
             </div>)}
           </div>
-          <div className="combat-message" aria-live="polite">{currentMessage}</div>
+ 
         </section>
 
         <aside className="right-rail" aria-label="Mazos y ronda">
-          <div className="deck-meta opponent-deck"><span>MAZO RIVAL</span><div className="mini-deck"><span className="back-crest">✦</span></div><strong>{game.opponent.deck.length}</strong></div>
-          <div className="round-medallion"><span>RONDA</span><strong>{String(game.round).padStart(2,"0")}</strong><small>DUELO {game.turn}</small><div className="round-gems">{[1,2,3].map(n=><i className={n<=game.turn?"active":""} key={n}/>)}</div></div>
-          <div className="deck-meta own-deck"><span>TU MAZO</span><div className="mini-deck"><span className="back-crest">✦</span></div><strong>{game.player.deck.length}</strong></div>
+          <div className="deck-meta opponent-deck"><span>MAZO RIVAL</span><div className="mini-deck"><span className="back-crest">✦</span></div><strong>{board.opponent.deck.length}</strong></div>
+          <div className="round-medallion"><span>RONDA</span><strong>{String(board.round).padStart(2,"0")}</strong><small>DUELO {board.turn}</small><div className="round-gems">{[1,2,3].map(n=><i className={n<=board.turn?"active":""} key={n}/>)}</div></div>
+          <div className="deck-meta own-deck"><span>TU MAZO</span><div className="mini-deck"><span className="back-crest">✦</span></div><strong>{board.player.deck.length}</strong></div>
         </aside>
 
-        <section className="hand-zone" aria-label="Tu mano">
+        <section className={"hand-zone"+(held&&reviewReady?" reviewing":"")} aria-label="Tu mano">
           <div className="hand-velvet"/>
-          <div className="hand-hint">
-            {selectedCard?"ELEGÍ UNA POSICIÓN PARA "+selectedCard.name:
-              "ARRASTRÁ UNA CARTA O TOCÁ PARA ELEGIR"}
-          </div>
-          <div className="hand-cards">
-            {game.player.hand.map((card,index)=><div key={card.id+"-"+index}
-              className={"hand-card hand-"+index+(selected===index?" chosen":"")+(drag?.index===index?" dragging-source":"")}
+          {held&&reviewReady? <div className="review-panel" role="status" aria-live="polite">
+            <div className="review-result">
+              <span className="review-kicker">RONDA {board.round} · DUELO {board.turn}</span>
+              <strong className={"review-headline "+held.lastDuel.outcome}>
+                {held.lastDuel.outcome==="player"?"DUELO GANADO":
+                 held.lastDuel.outcome==="opponent"?"DUELO PERDIDO":"EMPATE"}
+              </strong>
+              <span className="review-power">
+                {held.lastDuel.playerPlay.finalPower} <i>VS</i> {held.lastDuel.opponentPlay.finalPower}
+              </span>
+            </div>
+            <button type="button" className="review-continue" data-continue-duel
+              onClick={continueAfterDuel}>
+              {game.phase==="finished"?"VER RESULTADO FINAL":
+               game.phase==="awaiting_quiero"?"CONTINUAR A LA DECISIÓN":
+               game.round!==board.round?"SIGUIENTE RONDA":"SIGUIENTE DUELO"}
+              <span aria-hidden="true">›</span>
+            </button>
+          </div> : <div className="hand-cards">
+            {shownHand.map(({card,index})=><div key={card.id+"-"+index}
+              className={"hand-card hand-"+index+(selected===index?" chosen":"")+
+                (drag?.index===index?" dragging-source":"")}
               data-hand-index={index}
               role="button" tabIndex={busy?-1:0} aria-pressed={selected===index}
               aria-disabled={busy}
-              aria-label={"Elegir "+card.name}
+              aria-label={"Ver "+card.name}
               onPointerDown={e=>onHandDown(e,index)}
               onPointerMove={onHandMove}
               onPointerUp={onHandUp}
               onPointerCancel={onHandCancel}
-              onKeyDown={e=>{if(!busy&&(e.key==="Enter"||e.key===" ")){e.preventDefault();setSelected(index);}}}>
+              onKeyDown={e=>{if(!busy&&(e.key==="Enter"||e.key===" ")){
+                e.preventDefault();inspectCard(card,undefined,index);
+              }}}>
               <CardFace card={card}/>
             </div>)}
-          </div>
-          <div className="hand-counter">TU MANO · {game.player.hand.length} CARTAS</div>
+          </div>}
         </section>
       </main>
-      <div className="board-footer"><span>DUELBOARD · VISUAL 0.4 · MOTOR REAL</span><span>DRAG & DROP · TOCAR + ELEGIR</span></div>
+      <div className="board-footer"><span>DUELBOARD · VISUAL 0.5 · MOTOR REAL</span><span>ARRASTRÁ PARA JUGAR · TOCÁ PARA VER</span></div>
     </div>
 
     {sequence&&<div className="flight-layer" data-visual-flight={sequence.id}>
