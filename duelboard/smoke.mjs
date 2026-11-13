@@ -35,6 +35,16 @@ try{
   const initial=await debug(page);
   if(!initial||initial.hand.length!==3||initial.playerLife!==9||initial.opponentLife!==9)throw new Error(mode+" no real opening game state "+JSON.stringify(initial));
   if(await page.locator(".duel-slot").count()!==6||await page.locator(".hand-card").count()!==3)throw new Error(mode+" board structural components missing");
+  if(await page.locator(".opponent-hand,.lane-number,.hand-hint").count()!==0)
+    throw new Error(mode+" old UI elements still remain");
+  const nameLifeOverlap=await page.evaluate(()=>{
+    return Array.from(document.querySelectorAll(".champion-piece")).some(champion=>{
+      const a=champion.querySelector(".champion-nameplate").getBoundingClientRect();
+      const b=champion.querySelector(".champion-life").getBoundingClientRect();
+      return a.left<b.right-2&&a.right>b.left+2&&a.top<b.bottom-2&&a.bottom>b.top+2;
+    });
+  });
+  if(nameLifeOverlap)throw new Error(mode+" champion name overlaps life badge");
   await page.waitForFunction(()=>Array.from(document.querySelectorAll(".champion-portrait img")).every(n=>n.complete && n.naturalWidth>0),null,{timeout:12000});
   const art=await page.locator(".hand-card .physical-card").first().evaluate(el=>getComputedStyle(el).backgroundImage);
   if(!art.includes("cards/v4/"))throw new Error(mode+" real Card Studio art not connected "+art);
@@ -68,10 +78,23 @@ try{
       childList:true,subtree:true,attributes:true,characterData:true
     });
   });
+  // Tap/click opens full-card inspection; choosing a position is a separate step.
   const first=page.locator(".hand-card").first();
-  const slot=page.locator('[data-drop-player="siniestra"]');
-  if(mode==="desktop"){await first.click();await slot.click();}
-  else{const a=await first.boundingBox(),b=await slot.boundingBox();await page.touchscreen.tap(a.x+a.width/2,a.y+a.height/2);await page.touchscreen.tap(b.x+b.width/2,b.y+b.height/2);}
+  if(mode==="desktop")await first.click();
+  else{
+    const a=await first.boundingBox();
+    await page.touchscreen.tap(a.x+a.width/2,a.y+a.height/2);
+  }
+  await page.locator(".card-inspect-dialog").waitFor({state:"visible"});
+  const fullCard=await page.locator(".card-inspect-art .physical-card").boundingBox();
+  const preview=await first.locator(".physical-card").boundingBox();
+  if(!fullCard||!preview||fullCard.width<=preview.width*1.1||
+     fullCard.x<0||fullCard.y<0||
+     fullCard.x+fullCard.width>width+1||fullCard.y+fullCard.height>height+1)
+    throw new Error(mode+" inspected card is cropped or not enlarged "+JSON.stringify({fullCard,preview}));
+  await page.screenshot({path:"duelboard-inspect-"+mode+".jpg",type:"jpeg",quality:84,fullPage:true});
+  await page.locator(".inspect-play").click();
+  await page.locator('[data-drop-player="siniestra"]').click();
   // Visual v0.3 must render both actual card flights before resolving the result.
   await page.waitForFunction(()=>document.querySelectorAll(".flight-card").length===2,
     null,{timeout:1200});
@@ -110,6 +133,21 @@ try{
     throw new Error(mode+" Champion impacts don't match actual life lost "+JSON.stringify({audit,damage,life}));
   await page.screenshot({path:"duelboard-impact-"+mode+".jpg",type:"jpeg",quality:84,fullPage:true});
   await page.waitForFunction(()=>!document.querySelector(".flight-layer"),null,{timeout:3500});
+  const heldState=await debug(page);
+  if(!heldState.held||!heldState.reviewReady||heldState.displayedRound!==initial.round||
+     heldState.displayedHand.length!==initial.hand.length-1)
+    throw new Error(mode+" board revealed next round/hand before Continue "+JSON.stringify(heldState));
+  const continueButton=page.locator("[data-continue-duel]");
+  await continueButton.waitFor({state:"visible"});
+  await delay(550);
+  if(!(await debug(page)).held)throw new Error(mode+" review auto-advanced");
+  await page.screenshot({path:"duelboard-review-"+mode+".jpg",type:"jpeg",quality:84,fullPage:true});
+  await page.locator('[data-drop-player="siniestra"]').click();
+  await page.locator(".card-inspect-dialog").waitFor({state:"visible"});
+  await page.locator(".card-inspect-close").click();
+  await continueButton.click();
+  await page.waitForFunction(()=>!window.__daggerlightBoardDebug?.()?.held,null,{timeout:2000});
+  console.log("DUELBOARD_REVIEW_GATE_OK",mode);
   console.log("DUELBOARD_POWER_IMPACT_OK",mode,"damage",expectedDamage);
   console.log("DUELBOARD_FLIGHT_OK",mode);
   console.log("DUELBOARD_CLICK_OK",mode);
@@ -149,15 +187,17 @@ try{
   await page.emulateMedia({reducedMotion:"reduce"});
   await page.locator(".reset-button").click();
   const reducedCard=page.locator(".hand-card").first();
-  const reducedLane=page.locator('[data-drop-player="trono"]');
-  if(mode==="desktop"){await reducedCard.click();await reducedLane.click();}
-  else{
-    const from=await reducedCard.boundingBox(),to=await reducedLane.boundingBox();
+  if(mode==="desktop")await reducedCard.click();
+  else {
+    const from=await reducedCard.boundingBox();
     await page.touchscreen.tap(from.x+from.width/2,from.y+from.height/2);
-    await page.touchscreen.tap(to.x+to.width/2,to.y+to.height/2);
   }
+  await page.locator(".card-inspect-dialog").waitFor({state:"visible"});
+  await page.locator(".inspect-play").click();
+  await page.locator('[data-drop-player="trono"]').click();
   await assertPlay(page,"trono");
   if(await page.locator(".flight-card").count())throw new Error(mode+" reduced-motion path still uses flying cards");
+  if(!(await debug(page)).reviewReady)throw new Error(mode+" reduced motion must still show manual Continue");
   console.log("DUELBOARD_REDUCED_MOTION_OK",mode);
   if(errors.some(e=>!/favicon|net::ERR|404/.test(e)))throw new Error(mode+" browser errors: "+errors.join("\n"));
   console.log("DUELBOARD_SMOKE_OK",mode,width+"x"+height);
