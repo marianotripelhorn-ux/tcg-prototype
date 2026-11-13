@@ -360,3 +360,65 @@ box-shadow:inset 0 18px 40px #0007,inset 0 -50px 35px #0008;z-index:-1}
  .duel-slot.self.target .slot-ring{animation:none!important}
  .duel-beat{opacity:1;scale:1}
 }
+
+
+/* Visual v0.3 — real card travel, resolved by the existing rules engine.
+   The flying fronts are temporary presentation clones; they never become cards
+   in hand, archive or a board position. */
+.flight-layer{
+  position:fixed;inset:0;z-index:112;pointer-events:none;overflow:hidden;
+  perspective:1100px;contain:layout style paint
+}
+.flight-card{
+  position:absolute;will-change:transform,opacity;transform-origin:50% 50%;
+  filter:drop-shadow(0 17px 14px #000d) drop-shadow(0 0 12px #f2d39458);
+  animation:travel-own .65s cubic-bezier(.18,.65,.23,1) both
+}
+.flight-card.player{z-index:2}
+.flight-card.opponent{
+  z-index:3;
+  animation:travel-rival .69s cubic-bezier(.19,.72,.25,1) .17s both;
+  filter:drop-shadow(0 17px 14px #000d) drop-shadow(0 0 14px #87bcdb4b)
+}
+.flight-card-face{width:100%;height:100%;transform-style:preserve-3d;backface-visibility:hidden}
+.flight-card.opponent .flight-card-face{animation:rival-reveal .66s ease-out .17s both}
+.flight-card .physical-card{
+  width:100%;height:100%;aspect-ratio:190/272;
+  border-radius:9px;box-shadow:0 3px 0 #b3a37f,0 6px 0 #716448,0 19px 24px #000d
+}
+.played-stack .physical-card.arrival-hidden{
+  visibility:hidden!important;opacity:0!important;animation:none!important
+}
+@keyframes travel-own{
+  0%{opacity:1;transform:translate(-50%,-50%) rotate(-7deg) scale(1)}
+  48%{opacity:1;transform:translate(calc(-50% + var(--flight-half-x)),
+   calc(-50% + var(--flight-half-y))) rotate(3deg) scale(1.10)}
+  88%{opacity:1;transform:translate(calc(-50% + var(--flight-dx)),
+   calc(-50% + var(--flight-dy))) rotate(-1deg) scale(calc(var(--flight-scale)*1.065))}
+  100%{opacity:0;transform:translate(calc(-50% + var(--flight-dx)),
+   calc(-50% + var(--flight-dy))) rotate(0deg) scale(var(--flight-scale))}
+}
+@keyframes travel-rival{
+  0%{opacity:0;transform:translate(-50%,-50%) rotate(10deg) scale(.82)}
+  12%{opacity:1}
+  52%{opacity:1;transform:translate(calc(-50% + var(--flight-half-x)),
+   calc(-50% + var(--flight-half-y))) rotate(-5deg) scale(1.12)}
+  91%{opacity:1;transform:translate(calc(-50% + var(--flight-dx)),
+   calc(-50% + var(--flight-dy))) rotate(1deg) scale(calc(var(--flight-scale)*1.05))}
+  100%{opacity:0;transform:translate(calc(-50% + var(--flight-dx)),
+   calc(-50% + var(--flight-dy))) rotate(0deg) scale(var(--flight-scale))}
+}
+@keyframes rival-reveal{
+  0%{transform:rotateY(-80deg);filter:brightness(.45)}
+  43%{transform:rotateY(0);filter:brightness(1.35)}
+  70%,100%{transform:rotateY(0);filter:brightness(1)}
+}
+@media(max-width:760px){
+  .flight-card{filter:drop-shadow(0 11px 12px #000d) drop-shadow(0 0 8px #f2d39455)}
+  .flight-card.opponent{filter:drop-shadow(0 11px 12px #000d) drop-shadow(0 0 8px #87bcdb55)}
+}
+@media(prefers-reduced-motion:reduce){
+  .flight-card,.flight-card.opponent,.flight-card.opponent .flight-card-face{
+    animation:none!important
+  }
+}
