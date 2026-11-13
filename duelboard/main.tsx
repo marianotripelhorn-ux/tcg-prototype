@@ -174,7 +174,7 @@ function DamageBeam({trace}: {trace:DamageTrace}){
   return <div className={"damage-beam "+trace.target} aria-hidden="true"
     style={{left:trace.from.x,top:trace.from.y,width:distance,
       "--beam-distance":(distance-9)+"px",
-      transform:"rotate("+Math.atan2(dy,dx)+"rad)"}}>
+      transform:"rotate("+Math.atan2(dy,dx)+"rad)"} as React.CSSProperties}>
     <span className="damage-beam-streak"/>
     <span className="damage-beam-orb"/>
   </div>;
