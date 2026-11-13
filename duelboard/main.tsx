@@ -47,26 +47,37 @@ function CardFace({card, power, className="", title}: {
   </div>;
 }
 
-function LifeGems({player, owner}: {player:PlayerState;owner:"self"|"rival"}) {
-  return <div className={"life-gems "+owner} aria-label={"Vida "+player.life+" de "+player.champion.life}>
+function LifeGems({player, owner, visibleLife, previousLife, impact}: {
+  player:PlayerState;owner:"self"|"rival";
+  visibleLife:number;previousLife:number;impact:boolean;
+}) {
+  return <div className={"life-gems "+owner}
+    aria-label={"Vida "+visibleLife+" de "+player.champion.life}>
     {Array.from({length:player.champion.life},(_,i)=>
-      <span key={i} className={"life-gem "+(i<player.life?"full":"empty")}/>)}
+      <span key={i} className={"life-gem "+(i<visibleLife?"full":"empty")+
+        (impact&&i>=visibleLife&&i<previousLife?" just-lost":"")}/>)}
   </div>;
 }
 
-function ChampionMedallion({player, owner, onInspect}:{
+function ChampionMedallion({player, owner, onInspect, visibleLife, previousLife, impact}:{
   player:PlayerState;owner:"self"|"rival";onInspect:(text:string)=>void;
+  visibleLife:number;previousLife:number;impact:boolean;
 }) {
   const name=player.champion.name.split(",")[0];
-  return <section className={"champion-piece "+owner} aria-label={owner==="self"?"Tu Champion":"Champion rival"}>
+  const damage=Math.max(0,previousLife-visibleLife);
+  return <section className={"champion-piece "+owner+(impact&&damage>0?" taking-hit":"")}
+    aria-label={owner==="self"?"Tu Champion":"Champion rival"}>
     <button className="champion-portrait" onClick={()=>onInspect(player.champion.name+" — "+player.champion.text)}
       aria-label={"Ver habilidad de "+name} title={player.champion.text}>
       <img src={FACE_URL[player.champion.id] || FACE_URL.dextral} alt={name}
         onError={e=>{e.currentTarget.style.visibility="hidden";}}/>
     </button>
     <div className="champion-nameplate">{name}</div>
-    <LifeGems player={player} owner={owner}/>
-    <div className="champion-life" aria-label={"Vida "+player.life}>{player.life}</div>
+    <LifeGems player={player} owner={owner}
+      visibleLife={visibleLife} previousLife={previousLife} impact={impact}/>
+    <div className={"champion-life"+(impact&&damage>0?" life-hit":"")}
+      aria-label={"Vida "+visibleLife}>{visibleLife}</div>
+    {impact&&damage>0&&<div className="floating-damage" aria-hidden="true">−{damage}</div>}
     <span className="champion-side-label">{owner==="self"?"VOS":"RIVAL"}</span>
   </section>;
 }
@@ -118,11 +129,19 @@ type AnimatedCard={
   key:string; card:CardDefinition; side:"player"|"opponent";
   from:FlightGeometry; to:FlightGeometry;
 };
+type LifeChange={
+  playerBefore:number;opponentBefore:number;playerAfter:number;opponentAfter:number;
+};
+type DamageTrace={
+  target:"self"|"rival";amount:number;
+  from:{x:number;y:number};to:{x:number;y:number};
+};
 type VisualSequence={
   id:number; round:number; player:AnimatedCard; opponent:AnimatedCard;
   playerPower:number; opponentPower:number;
   position:Position; opponentPosition:Position;
   outcome:"player"|"opponent"|"draw";
+  life:LifeChange; damage:DamageTrace[];
 };
 function boxGeometry(rect:DOMRect):FlightGeometry{
   return {x:rect.left+rect.width/2,y:rect.top+rect.height/2,width:rect.width,height:rect.height};
@@ -146,6 +165,17 @@ function FlightCard({flight}: {flight:AnimatedCard}){
   return <div className={"flight-card "+flight.side} style={style} data-flight-side={flight.side}
     aria-hidden="true">
     <div className="flight-card-face"><CardFace card={flight.card}/></div>
+  </div>;
+}
+
+function DamageBeam({trace}: {trace:DamageTrace}){
+  const dx=trace.to.x-trace.from.x,dy=trace.to.y-trace.from.y;
+  const distance=Math.hypot(dx,dy);
+  return <div className={"damage-beam "+trace.target} aria-hidden="true"
+    style={{left:trace.from.x,top:trace.from.y,width:distance,
+      transform:"rotate("+Math.atan2(dy,dx)+"rad)"}}>
+    <span className="damage-beam-streak"/>
+    <span className="damage-beam-orb"/>
   </div>;
 }
 
