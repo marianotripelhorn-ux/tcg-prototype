@@ -90,17 +90,22 @@ function ArchiveStack({count, side}: {count:number;side:"self"|"rival"}) {
   </div>;
 }
 
-function LaneSlot({side, lane, plays, selected, legal, hovering, onPlay, hideArrival}:{
+function LaneSlot({side, lane, plays, selected, legal, hovering, onPlay, hideArrival, onInspect}:{
   side:"self"|"rival";lane:Position;plays:EnginePlay[];
-  selected:boolean;legal:boolean;hovering:boolean;onPlay:()=>void;hideArrival?:{cardId:string;power:number}|null;
+  selected:boolean;legal:boolean;hovering:boolean;onPlay:()=>void;
+  hideArrival?:{cardId:string;power:number}|null;
+  onInspect:(card:CardDefinition, power?:number)=>void;
 }) {
   const playable=side==="self"&&legal;
   return <button type="button"
     className={"duel-slot "+side+(playable?" available":"")+(hovering?" target":"")+(selected&&playable?" ready":"")}
     data-drop-player={side==="self"?lane:undefined}
     data-drop-rival={side==="rival"?lane:undefined}
-    onClick={playable?onPlay:undefined}
-    disabled={!playable}
+    onClick={()=>{
+      if(playable&&selected)onPlay();
+      else if(plays.length){const last=plays[plays.length-1];onInspect(last.card,last.finalPower);}
+    }}
+    disabled={!playable&&plays.length===0}
     aria-label={(side==="self"?"Jugar en ":"Cartas rivales en ")+LABEL[lane]}>
     <span className="slot-inner" aria-hidden="true"/>
     <span className="slot-ring" aria-hidden="true"><i/></span>
@@ -116,12 +121,6 @@ function LaneSlot({side, lane, plays, selected, legal, hovering, onPlay, hideArr
     </span>
     {hovering && <span className="drop-callout">SOLTAR EN {LABEL[lane].toUpperCase()}</span>}
   </button>;
-}
-
-function CardBack({index}: {index:number}) {
-  return <span className="card-back" style={{left:"calc(50% + "+((index-1)*61)+"px)",transform:"translateX(-50%) rotate("+((index-1)*7)+"deg)"}} aria-label="Carta rival oculta">
-    <i className="back-crest">✦</i>
-  </span>;
 }
 
 type FlightGeometry={x:number;y:number;width:number;height:number};
@@ -186,6 +185,11 @@ function TableauBoard(){
   const [hovering,setHovering]=useState<Position|null>(null);
   const [drag,setDrag]=useState<{index:number;x:number;y:number}|null>(null);
   const [inspector,setInspector]=useState<string|null>(null);
+  const [inspectedCard,setInspectedCard]=useState<{card:CardDefinition;power?:number;fromHand?:number}|null>(null);
+  const [held,setHeld]=useState<{
+    state:GameState;playedIndex:number;lastDuel:NonNullable<GameState["lastDuel"]>;
+  }|null>(null);
+  const [reviewReady,setReviewReady]=useState(false);
   const [notice,setNotice]=useState("");
   const [duelMoment,setDuelMoment]=useState<{
     key:number; position:Position; outcome:"player"|"opponent"|"draw";
@@ -196,7 +200,14 @@ function TableauBoard(){
   const [arrivalId,setArrivalId]=useState<number|null>(null);
   const [clashId,setClashId]=useState<number|null>(null);
   const [impactId,setImpactId]=useState<number|null>(null);
-  const busy=sequence!==null;
+  const busy=sequence!==null||held!==null;
+  const board=held?.state??game;
+  const showingPlayed=Boolean(held&&(reviewReady||!sequence||arrivalId===sequence.id));
+  const heldDuel=held?.lastDuel??null;
+  const shownScore=held
+    ? {player:board.duelScore.player+((showingPlayed&&heldDuel?.outcome==="player")?1:0),
+       opponent:board.duelScore.opponent+((showingPlayed&&heldDuel?.outcome==="opponent")?1:0)}
+    : game.duelScore;
   const impactActive=Boolean(sequence&&impactId===sequence.id);
   const pendingLife=Boolean(sequence&&!impactActive);
   const visiblePlayerLife=pendingLife?sequence!.life.playerBefore:game.player.life;
@@ -206,10 +217,11 @@ function TableauBoard(){
   const damageToPlayer=Boolean(impactActive&&sequence?.damage.some(d=>d.target==="self"));
   const damageToOpponent=Boolean(impactActive&&sequence?.damage.some(d=>d.target==="rival"));
   const pointer=useRef<{index:number;x:number;y:number;started:boolean}|null>(null);
-  const legal=game.phase==="awaiting_player"?legalPositions(game.player):[];
+  const legal=!busy&&game.phase==="awaiting_player"?legalPositions(game.player):[];
   const latest=game.events.at(-1)?.text||"";
-  const currentMessage=notice||latest;
-  const selectedCard=selected===null?null:game.player.hand[selected]??null;
+  const selectedCard=selected===null?null:board.player.hand[selected]??null;
+  const shownHand=held?board.player.hand.filter((_,index)=>index!==held.playedIndex):board.player.hand;
+  const currentMessage=(!busy&&notice)||(!busy&&latest)||"";
 
   useEffect(()=>{
     if(!sequence)return;
@@ -237,10 +249,14 @@ function TableauBoard(){
     document.documentElement.dataset.boardReady="true";
     (window as Window & {__daggerlightBoardDebug?:()=>unknown}).__daggerlightBoardDebug=()=>({
       round:game.round,turn:game.turn,phase:game.phase,
+      displayedRound:board.round,displayedTurn:board.turn,
+      held:Boolean(held),reviewReady,
       playerLife:game.player.life,opponentLife:game.opponent.life,
       playerPlays:game.player.roundPlays.map(p=>[p.card.id,p.position]),
       opponentPlays:game.opponent.roundPlays.map(p=>[p.card.id,p.position]),
-      hand:game.player.hand.map(c=>c.id),archives:game.player.archives,
+      hand:game.player.hand.map(c=>c.id),
+      displayedHand:shownHand.map(c=>c.id),
+      archives:game.player.archives,
       selected,dragging:drag?.index??null,
       visualSequence:sequence?{
         id:sequence.id,
@@ -257,10 +273,10 @@ function TableauBoard(){
         opponent:game.lastDuel.opponentPlay.finalPower
       }:null
     });
-  },[game,selected,drag,sequence,arrivalId,clashId,impactId]);
+  },[game,board,held,reviewReady,selected,drag,sequence,arrivalId,clashId,impactId]);
 
   function reset(){
-    pointer.current=null;setSelected(null);setHovering(null);setDrag(null);setInspector(null);setNotice("");setDuelMoment(null);setSequence(null);setArrivalId(null);setClashId(null);setImpactId(null);
+    pointer.current=null;setSelected(null);setHovering(null);setDrag(null);setInspector(null);setInspectedCard(null);setHeld(null);setReviewReady(false);setNotice("");setDuelMoment(null);setSequence(null);setArrivalId(null);setClashId(null);setImpactId(null);
     setGame(startGame("dextral","sinistral",Math.random,"player","normal"));
   }
   function play(index:number,position:Position,dropPoint?:{x:number;y:number}) {
@@ -272,6 +288,7 @@ function TableauBoard(){
     const handRect=handElement?.getBoundingClientRect();
     const playerSlotRect=playerSlot?.getBoundingClientRect();
     const startingRound=game.round;
+    const priorState=structuredClone(game) as GameState;
     const beforePlayerLife=game.player.life;
     const beforeOpponentLife=game.opponent.life;
     const selectedCard=game.player.hand[index];
@@ -281,6 +298,10 @@ function TableauBoard(){
       submitPlayerPlay(game,index,position);
       setGame({...game});setSelected(null);setDrag(null);setHovering(null);
       const d=game.lastDuel;
+      if(d){
+        setHeld({state:priorState,playedIndex:index,lastDuel:d});
+        setReviewReady(false);
+      }
       if((game.phase as GameState["phase"])==="finished")setNotice(
         game.winner==="player"?"VICTORIA":game.winner==="opponent"?"DERROTA":"EMPATE"
       );
@@ -291,13 +312,13 @@ function TableauBoard(){
       if(d&&handSource&&playerSlotRect&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches){
         const enemySlot=document.querySelector('[data-drop-rival="'+d.opponentPlay.position+'"]');
         const enemySlotRect=enemySlot?.getBoundingClientRect();
-        const enemyHand=document.querySelector(".opponent-hand .card-back");
-        const enemyHandRect=enemyHand?.getBoundingClientRect();
+        const enemyDeck=document.querySelector(".opponent-deck .mini-deck");
+        const enemyHandRect=enemyDeck?.getBoundingClientRect();
         const enemyDestination=enemySlotRect?destinationGeometry(enemySlotRect):null;
         if(enemyDestination){
           const enemySource=enemyHandRect&&enemyHandRect.width>10
             ?boxGeometry(enemyHandRect)
-            :{x:enemyDestination.x,y:enemyDestination.y-145,width:85,height:122};
+            :{x:enemyDestination.x,y:Math.max(40,enemyDestination.y-170),width:85,height:122};
           const playerDestination=destinationGeometry(playerSlotRect);
           const rectangle=(selector:string)=>document.querySelector(selector)?.getBoundingClientRect();
           const selfPortrait=rectangle(".champion-piece.self .champion-portrait");
@@ -331,6 +352,7 @@ function TableauBoard(){
           });
         }
       }else if(d){
+        setReviewReady(true);
         // Accessibility: instant resolution, no travelling overlay.
         setDuelMoment({
           key:++momentSeq.current,position:d.playerPlay.position,outcome:d.outcome,
@@ -376,16 +398,28 @@ function TableauBoard(){
     }else setSelected(selected===p.index?null:p.index);
   }
   function onHandCancel(){pointer.current=null;setDrag(null);setHovering(null);}
+  function continueAfterDuel(){
+    setHeld(null);setReviewReady(false);setDuelMoment(null);
+    setSelected(null);setHovering(null);setNotice("");
+  }
+  function inspectCard(card:CardDefinition, power?:number, fromHand?:number){
+    if(drag)return;
+    setInspectedCard({card,power,fromHand});
+  }
   function chooseQuiero(wants:boolean){
     if(busy)return;
     answerQuiero(game,wants);
     setGame({...game});setSelected(null);setNotice(wants?"TERCER DUELO":"SIGUIENTE RONDA");
   }
   const hideArrival=sequence&&arrivalId!==sequence.id&&game.round===sequence.round;
-  const playerPlays=(lane:Position)=>game.player.roundPlays.filter(p=>p.position===lane);
+  const playerPlays=(lane:Position)=>[
+    ...board.player.roundPlays.filter(p=>p.position===lane),
+    ...(held&&showingPlayed&&heldDuel?.playerPlay.position===lane?[heldDuel.playerPlay]:[])
+  ];
   const opponentPlays=(lane:Position)=>[
-    ...game.opponent.roundPlays.filter(p=>p.position===lane),
-    ...(game.pendingOpponentPlay?.position===lane?[game.pendingOpponentPlay]:[])
+    ...board.opponent.roundPlays.filter(p=>p.position===lane),
+    ...(held&&showingPlayed&&heldDuel?.opponentPlay.position===lane?[heldDuel.opponentPlay]:[]),
+    ...(!held&&board.pendingOpponentPlay?.position===lane?[board.pendingOpponentPlay]:[])
   ];
 
   return <div className="screen">
