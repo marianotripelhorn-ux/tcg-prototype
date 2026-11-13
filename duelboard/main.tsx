@@ -266,6 +266,8 @@ function TableauBoard(){
     const handRect=handElement?.getBoundingClientRect();
     const playerSlotRect=playerSlot?.getBoundingClientRect();
     const startingRound=game.round;
+    const beforePlayerLife=game.player.life;
+    const beforeOpponentLife=game.opponent.life;
     const selectedCard=game.player.hand[index];
     const source=handRect?boxGeometry(handRect):null;
     const handSource=source && dropPoint?{...source,x:dropPoint.x,y:dropPoint.y}:source;
@@ -290,15 +292,34 @@ function TableauBoard(){
           const enemySource=enemyHandRect&&enemyHandRect.width>10
             ?boxGeometry(enemyHandRect)
             :{x:enemyDestination.x,y:enemyDestination.y-145,width:85,height:122};
+          const playerDestination=destinationGeometry(playerSlotRect);
+          const rectangle=(selector:string)=>document.querySelector(selector)?.getBoundingClientRect();
+          const selfPortrait=rectangle(".champion-piece.self .champion-portrait");
+          const rivalPortrait=rectangle(".champion-piece.rival .champion-portrait");
+          const playerAfter=game.player.life;
+          const opponentAfter=game.opponent.life;
+          const damage:DamageTrace[]=[];
+          if(beforePlayerLife>playerAfter&&selfPortrait){
+            damage.push({target:"self",amount:beforePlayerLife-playerAfter,
+              from:{x:enemyDestination.x,y:enemyDestination.y},
+              to:{x:selfPortrait.left+selfPortrait.width/2,y:selfPortrait.top+selfPortrait.height/2}});
+          }
+          if(beforeOpponentLife>opponentAfter&&rivalPortrait){
+            damage.push({target:"rival",amount:beforeOpponentLife-opponentAfter,
+              from:{x:playerDestination.x,y:playerDestination.y},
+              to:{x:rivalPortrait.left+rivalPortrait.width/2,y:rivalPortrait.top+rivalPortrait.height/2}});
+          }
           const id=++momentSeq.current;
-          setArrivalId(null);
+          setArrivalId(null);setClashId(null);setImpactId(null);
           setSequence({
             id,round:startingRound,position,opponentPosition:d.opponentPlay.position,
             outcome:d.outcome,
             playerPower:d.playerPlay.finalPower??selectedCard.power,
             opponentPower:d.opponentPlay.finalPower??d.opponentPlay.card.power,
+            life:{playerBefore:beforePlayerLife,opponentBefore:beforeOpponentLife,
+              playerAfter,opponentAfter},damage,
             player:{key:"player-"+id,card:selectedCard,side:"player",
-              from:handSource,to:destinationGeometry(playerSlotRect)},
+              from:handSource,to:playerDestination},
             opponent:{key:"opponent-"+id,card:d.opponentPlay.card,side:"opponent",
               from:enemySource,to:enemyDestination}
           });
@@ -381,9 +402,13 @@ function TableauBoard(){
           </g>
         </svg>
         <aside className="left-rail" aria-label="Champions y marcador">
-          <ChampionMedallion player={game.opponent} owner="rival" onInspect={setInspector}/>
+          <ChampionMedallion player={game.opponent} owner="rival" onInspect={setInspector}
+            visibleLife={visibleOpponentLife} previousLife={previousOpponentLife}
+            impact={damageToOpponent}/>
           <div className="match-score"><span>MARCADOR</span><strong>{game.duelScore.opponent}<i>—</i>{game.duelScore.player}</strong></div>
-          <ChampionMedallion player={game.player} owner="self" onInspect={setInspector}/>
+          <ChampionMedallion player={game.player} owner="self" onInspect={setInspector}
+            visibleLife={visiblePlayerLife} previousLife={previousPlayerLife}
+            impact={damageToPlayer}/>
         </aside>
 
         <section className="central-arena" aria-label="Posiciones de duelo">
