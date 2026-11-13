@@ -412,6 +412,20 @@ function TableauBoard(){
         </aside>
 
         <section className="central-arena" aria-label="Posiciones de duelo">
+          {sequence&&clashId===sequence.id&&!impactActive&&<div
+            className={"power-clash "+(sequence.outcome==="draw"?"tied":"")}
+            role="status" aria-live="polite" data-power-clash="true">
+            <span className="power-clash-heading">ENFRENTAMIENTO DE PODER</span>
+            <div className="power-clash-values">
+              <span className={"power-clash-value ally "+(sequence.outcome==="player"?"winning":"")}>
+                {sequence.playerPower}
+              </span>
+              <span className="power-clash-spark" aria-hidden="true">✦</span>
+              <span className={"power-clash-value enemy "+(sequence.outcome==="opponent"?"winning":"")}>
+                {sequence.opponentPower}
+              </span>
+            </div>
+          </div>}
           {duelMoment&&<div className={"duel-beat "+(duelMoment.outcome==="player"?"victory":duelMoment.outcome==="opponent"?"defeat":"draw")}
              key={duelMoment.key} aria-live="polite" role="status">
             <div className="duel-beat-crest" aria-hidden="true">✦</div>
@@ -474,13 +488,17 @@ function TableauBoard(){
           <div className="hand-counter">TU MANO · {game.player.hand.length} CARTAS</div>
         </section>
       </main>
-      <div className="board-footer"><span>DUELBOARD · VISUAL 0.3 · MOTOR REAL</span><span>DRAG & DROP · TOCAR + ELEGIR</span></div>
+      <div className="board-footer"><span>DUELBOARD · VISUAL 0.4 · MOTOR REAL</span><span>DRAG & DROP · TOCAR + ELEGIR</span></div>
     </div>
 
     {sequence&&<div className="flight-layer" data-visual-flight={sequence.id}>
-      <FlightCard flight={sequence.player}/>
-      <FlightCard flight={sequence.opponent}/>
-    </div>}
+      {arrivalId!==sequence.id&&<>
+        <FlightCard flight={sequence.player}/>
+        <FlightCard flight={sequence.opponent}/>
+      </>}
+      {impactActive&&sequence.damage.map(trace=><DamageBeam
+        key={sequence.id+"-"+trace.target} trace={trace}/>)}
+    </div>
     {drag&&game.player.hand[drag.index]&&<div className="drag-ghost"
        style={{left:drag.x,top:drag.y}} aria-hidden="true">
       <CardFace card={game.player.hand[drag.index]}/>
@@ -491,7 +509,7 @@ function TableauBoard(){
         <button className="decision-primary" onClick={()=>setInspector(null)}>CERRAR</button>
       </div>
     </div>}
-    {game.phase==="awaiting_quiero"&&<div className="dialog-backdrop">
+    {game.phase==="awaiting_quiero"&&!busy&&<div className="dialog-backdrop">
       <div className="decision-dialog" role="dialog" aria-label="Quiero o No quiero" aria-modal="true">
         <span className="dialog-eyebrow">DECISIÓN DE RONDA</span>
         <h2>¿QUIERO O NO QUIERO?</h2>
@@ -502,7 +520,7 @@ function TableauBoard(){
         </div>
       </div>
     </div>}
-    {game.phase==="finished"&&<div className="dialog-backdrop">
+    {game.phase==="finished"&&!busy&&<div className="dialog-backdrop">
       <div className="decision-dialog" role="dialog" aria-label="Fin de partida" aria-modal="true">
         <span className="dialog-eyebrow">PARTIDA TERMINADA</span>
         <h2>{game.winner==="player"?"VICTORIA":game.winner==="opponent"?"DERROTA":"EMPATE"}</h2>
