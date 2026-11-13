@@ -61,7 +61,35 @@ try{
   if(startTransform===middleTransform)throw new Error(mode+" flight isn't visually progressing");
   await page.screenshot({path:"duelboard-flight-"+mode+".jpg",type:"jpeg",quality:81,fullPage:true});
   await assertPlay(page,"siniestra");
+  await page.waitForFunction(()=>window.__daggerlightBoardDebug?.()?.visualSequence?.stage==="clash",
+    null,{timeout:2500});
+  const clashText=await page.locator(".power-clash").innerText();
+  const inClash=await debug(page);
+  if(!clashText.includes("ENFRENTAMIENTO DE PODER")||
+    !clashText.includes(String(inClash.visualSequence.life.playerBefore)) && !clashText.includes("PODER"))
+    throw new Error(mode+" duel power clash missing");
+  await page.waitForFunction(()=>window.__daggerlightBoardDebug?.()?.visualSequence?.stage==="impact",
+    null,{timeout:2500});
+  const impact=await debug(page);
+  const life=impact.visualSequence.life;
+  const damage=impact.visualSequence.damage;
+  if(impact.displayedLife.player!==life.playerAfter||
+     impact.displayedLife.opponent!==life.opponentAfter)
+    throw new Error(mode+" UI didn't reveal the engine's final life totals "+JSON.stringify(impact));
+  const selfGems=await page.locator(".champion-piece.self .life-gem.full").count();
+  const rivalGems=await page.locator(".champion-piece.rival .life-gem.full").count();
+  if(selfGems!==life.playerAfter||rivalGems!==life.opponentAfter)
+    throw new Error(mode+" life gem count inconsistent with engine "+JSON.stringify({selfGems,rivalGems,life}));
+  const expectedDamage=Math.max(0,life.playerBefore-life.playerAfter)+
+    Math.max(0,life.opponentBefore-life.opponentAfter);
+  const measuredDamage=damage.reduce((n,d)=>n+d.amount,0);
+  if(expectedDamage!==measuredDamage)
+    throw new Error(mode+" damage effect doesn't match real HP delta "+JSON.stringify(impact.visualSequence));
+  if(await page.locator(".damage-beam").count()!==damage.length)
+    throw new Error(mode+" wrong number of damage beams");
+  await page.screenshot({path:"duelboard-impact-"+mode+".jpg",type:"jpeg",quality:84,fullPage:true});
   await page.waitForFunction(()=>!document.querySelector(".flight-layer"),null,{timeout:3500});
+  console.log("DUELBOARD_POWER_IMPACT_OK",mode,"damage",expectedDamage);
   console.log("DUELBOARD_FLIGHT_OK",mode);
   console.log("DUELBOARD_CLICK_OK",mode);
 
