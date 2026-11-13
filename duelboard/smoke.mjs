@@ -95,6 +95,21 @@ try{
   await assertPlay(page,"diestra");
   await page.waitForFunction(()=>!document.querySelector(".flight-layer"),null,{timeout:3500});
   console.log("DUELBOARD_DRAG_OK",mode);
+
+  // Reduced-motion mode must resolve the same real duel without flying overlays.
+  await page.emulateMedia({reducedMotion:"reduce"});
+  await page.locator(".reset-button").click();
+  const reducedCard=page.locator(".hand-card").first();
+  const reducedLane=page.locator('[data-drop-player="trono"]');
+  if(mode==="desktop"){await reducedCard.click();await reducedLane.click();}
+  else{
+    const from=await reducedCard.boundingBox(),to=await reducedLane.boundingBox();
+    await page.touchscreen.tap(from.x+from.width/2,from.y+from.height/2);
+    await page.touchscreen.tap(to.x+to.width/2,to.y+to.height/2);
+  }
+  await assertPlay(page,"trono");
+  if(await page.locator(".flight-card").count())throw new Error(mode+" reduced-motion path still uses flying cards");
+  console.log("DUELBOARD_REDUCED_MOTION_OK",mode);
   if(errors.some(e=>!/favicon|net::ERR|404/.test(e)))throw new Error(mode+" browser errors: "+errors.join("\n"));
   console.log("DUELBOARD_SMOKE_OK",mode,width+"x"+height);
   await page.close();
