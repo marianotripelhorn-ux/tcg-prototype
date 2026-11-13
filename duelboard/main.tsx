@@ -190,7 +190,7 @@ function TableauBoard(){
     state:GameState;playedIndex:number;lastDuel:NonNullable<GameState["lastDuel"]>;
   }|null>(null);
   const [reviewReady,setReviewReady]=useState(false);
-  const [notice,setNotice]=useState("");
+  const [,setNotice]=useState("");
   const [duelMoment,setDuelMoment]=useState<{
     key:number; position:Position; outcome:"player"|"opponent"|"draw";
     ownPower:number; rivalPower:number;
@@ -218,10 +218,8 @@ function TableauBoard(){
   const damageToOpponent=Boolean(impactActive&&sequence?.damage.some(d=>d.target==="rival"));
   const pointer=useRef<{index:number;x:number;y:number;started:boolean}|null>(null);
   const legal=!busy&&game.phase==="awaiting_player"?legalPositions(game.player):[];
-  const selectedCard=selected===null?null:board.player.hand[selected]??null;
   const shownHand=board.player.hand.map((card,index)=>({card,index}))
     .filter(item=>!held||item.index!==held.playedIndex);
-  const currentMessage=(!busy&&notice)||"";
 
   useEffect(()=>{
     if(!sequence)return;
