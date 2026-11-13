@@ -223,7 +223,7 @@ function TableauBoard(){
         ownPower:sequence.playerPower,rivalPower:sequence.opponentPower
       });
     },1620);
-    const finish=window.setTimeout(()=>setSequence(current=>current?.id===id?null:current),1950);
+    const finish=window.setTimeout(()=>setSequence(current=>current?.id===id?null:current),2130);
     return ()=>{[land,clash,hit,result,finish].forEach(window.clearTimeout);};
   },[sequence]);
 
