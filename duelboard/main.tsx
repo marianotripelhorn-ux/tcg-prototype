@@ -500,7 +500,7 @@ function TableauBoard(){
       </>}
       {impactActive&&sequence.damage.map(trace=><DamageBeam
         key={sequence.id+"-"+trace.target} trace={trace}/>)}
-    </div>
+    </div>}
     {drag&&game.player.hand[drag.index]&&<div className="drag-ghost"
        style={{left:drag.x,top:drag.y}} aria-hidden="true">
       <CardFace card={game.player.hand[drag.index]}/>
