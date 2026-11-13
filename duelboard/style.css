@@ -536,7 +536,7 @@ box-shadow:inset 0 18px 40px #0007,inset 0 -50px 35px #0008;z-index:-1}
   from{transform:translateX(0) scale(.5);opacity:.1}
   15%{opacity:1}
   83%{opacity:1}
-  to{transform:translateX(calc(100% - 9px)) scale(2);opacity:0}
+  to{transform:translateX(var(--beam-distance)) scale(2);opacity:0}
 }
 @keyframes champion-impact{
   0%{transform:translateX(0) rotate(0deg);filter:brightness(1.6)}
