@@ -193,7 +193,17 @@ function TableauBoard(){
   const momentSeq=useRef(0);
   const [sequence,setSequence]=useState<VisualSequence|null>(null);
   const [arrivalId,setArrivalId]=useState<number|null>(null);
+  const [clashId,setClashId]=useState<number|null>(null);
+  const [impactId,setImpactId]=useState<number|null>(null);
   const busy=sequence!==null;
+  const impactActive=Boolean(sequence&&impactId===sequence.id);
+  const pendingLife=Boolean(sequence&&!impactActive);
+  const visiblePlayerLife=pendingLife?sequence!.life.playerBefore:game.player.life;
+  const visibleOpponentLife=pendingLife?sequence!.life.opponentBefore:game.opponent.life;
+  const previousPlayerLife=sequence?.life.playerBefore??game.player.life;
+  const previousOpponentLife=sequence?.life.opponentBefore??game.opponent.life;
+  const damageToPlayer=Boolean(impactActive&&sequence?.damage.some(d=>d.target==="self"));
+  const damageToOpponent=Boolean(impactActive&&sequence?.damage.some(d=>d.target==="rival"));
   const pointer=useRef<{index:number;x:number;y:number;started:boolean}|null>(null);
   const legal=game.phase==="awaiting_player"?legalPositions(game.player):[];
   const latest=game.events.at(-1)?.text||"";
@@ -204,19 +214,21 @@ function TableauBoard(){
     if(!sequence)return;
     const {id}=sequence;
     const land=window.setTimeout(()=>setArrivalId(id),905);
+    const clash=window.setTimeout(()=>setClashId(id),960);
+    const hit=window.setTimeout(()=>setImpactId(id),1250);
     const result=window.setTimeout(()=>{
       setDuelMoment({
         key:id,position:sequence.position,outcome:sequence.outcome,
         ownPower:sequence.playerPower,rivalPower:sequence.opponentPower
       });
-    },1040);
-    const finish=window.setTimeout(()=>setSequence(current=>current?.id===id?null:current),1460);
-    return ()=>{window.clearTimeout(land);window.clearTimeout(result);window.clearTimeout(finish);};
+    },1480);
+    const finish=window.setTimeout(()=>setSequence(current=>current?.id===id?null:current),1950);
+    return ()=>{[land,clash,hit,result,finish].forEach(window.clearTimeout);};
   },[sequence]);
 
   useEffect(()=>{
     if(!duelMoment)return;
-    const timeout=window.setTimeout(()=>setDuelMoment(current=>current?.key===duelMoment.key?null:current),1200);
+    const timeout=window.setTimeout(()=>setDuelMoment(current=>current?.key===duelMoment.key?null:current),820);
     return ()=>window.clearTimeout(timeout);
   },[duelMoment]);
 
@@ -230,15 +242,19 @@ function TableauBoard(){
       hand:game.player.hand.map(c=>c.id),archives:game.player.archives,
       selected,dragging:drag?.index??null,
       visualSequence:sequence?{
-        id:sequence.id,stage:arrivalId===sequence.id?"landed":"flying",
+        id:sequence.id,
+        stage:impactId===sequence.id?"impact":clashId===sequence.id?"clash":
+          arrivalId===sequence.id?"landed":"flying",
         playerFrom:sequence.player.from,playerTo:sequence.player.to,
-        opponentFrom:sequence.opponent.from,opponentTo:sequence.opponent.to
-      }:null
+        opponentFrom:sequence.opponent.from,opponentTo:sequence.opponent.to,
+        life:sequence.life,damage:sequence.damage.map(d=>({target:d.target,amount:d.amount}))
+      }:null,
+      displayedLife:{player:visiblePlayerLife,opponent:visibleOpponentLife}
     });
-  },[game,selected,drag,sequence,arrivalId]);
+  },[game,selected,drag,sequence,arrivalId,clashId,impactId]);
 
   function reset(){
-    pointer.current=null;setSelected(null);setHovering(null);setDrag(null);setInspector(null);setNotice("");setDuelMoment(null);setSequence(null);setArrivalId(null);
+    pointer.current=null;setSelected(null);setHovering(null);setDrag(null);setInspector(null);setNotice("");setDuelMoment(null);setSequence(null);setArrivalId(null);setClashId(null);setImpactId(null);
     setGame(startGame("dextral","sinistral",Math.random,"player","normal"));
   }
   function play(index:number,position:Position,dropPoint?:{x:number;y:number}) {
