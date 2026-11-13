@@ -199,6 +199,44 @@ try{
   if(await page.locator(".flight-card").count())throw new Error(mode+" reduced-motion path still uses flying cards");
   if(!(await debug(page)).reviewReady)throw new Error(mode+" reduced motion must still show manual Continue");
   console.log("DUELBOARD_REDUCED_MOTION_OK",mode);
+  // Exercise an entire round: new cards and the next round must remain
+  // hidden until the player explicitly acknowledges the previous duel.
+  await page.locator(".reset-button").click();
+  const initialRound=(await debug(page)).round;
+  let rolloverConfirmed=false;
+  for(let duel=0;duel<3;duel++){
+    const before=await debug(page);
+    if(before.phase==="awaiting_quiero"){
+      await page.locator(".decision-primary").filter({hasText:"QUIERO"}).click();
+    }
+    const playable=await debug(page);
+    if(playable.phase!=="awaiting_player")
+      throw new Error(mode+" engine not ready for a new played card "+JSON.stringify(playable));
+    const occupied=new Set(playable.playerPlays.map(p=>p[1]));
+    const nextLane=["siniestra","trono","diestra"].find(p=>!occupied.has(p));
+    if(!nextLane)throw new Error(mode+" no legal free position in three-duel test");
+    const nextCard=page.locator(".hand-card").first();
+    await nextCard.click();
+    await page.locator(".inspect-play").click();
+    await page.locator('[data-drop-player="'+nextLane+'"]').click();
+    await page.waitForFunction(()=>window.__daggerlightBoardDebug?.()?.reviewReady,
+      null,{timeout:2500});
+    const after=await debug(page);
+    if(!after.held||after.displayedRound!==initialRound)
+      throw new Error(mode+" early transition exposed new round "+JSON.stringify(after));
+    if(after.round>initialRound){
+      if(after.displayedHand.length!==playable.hand.length-1)
+        throw new Error(mode+" next-round hand leaked during review "+JSON.stringify(after));
+      await page.locator("[data-continue-duel]").click();
+      await page.waitForFunction(([round])=>window.__daggerlightBoardDebug?.()?.displayedRound>round,
+        [initialRound],{timeout:1500});
+      rolloverConfirmed=true;
+      break;
+    }
+    await page.locator("[data-continue-duel]").click();
+  }
+  if(!rolloverConfirmed)throw new Error(mode+" entire round was not tested to completion");
+  console.log("DUELBOARD_ROUND_TRANSITION_OK",mode);
   if(errors.some(e=>!/favicon|net::ERR|404/.test(e)))throw new Error(mode+" browser errors: "+errors.join("\n"));
   console.log("DUELBOARD_SMOKE_OK",mode,width+"x"+height);
   await page.close();
