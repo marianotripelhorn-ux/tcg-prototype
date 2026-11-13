@@ -144,7 +144,7 @@ function TableauBoard(){
       submitPlayerPlay(game,index,position);
       setGame({...game});setSelected(null);setDrag(null);setHovering(null);
       const d=game.lastDuel;
-      if(game.phase==="finished")setNotice(game.winner==="player"?"VICTORIA":game.winner==="opponent"?"DERROTA":"EMPATE");
+      if((game.phase as GameState["phase"])==="finished")setNotice(game.winner==="player"?"VICTORIA":game.winner==="opponent"?"DERROTA":"EMPATE");
       else if(d)setNotice(d.outcome==="draw"?"EMPATE · "+d.playerPlay.finalPower+" — "+d.opponentPlay.finalPower:
         (d.outcome==="player"?"DUELO GANADO · ":"DUELO PERDIDO · ")+d.playerPlay.finalPower+" — "+d.opponentPlay.finalPower);
       else setNotice("");
