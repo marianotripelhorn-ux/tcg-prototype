@@ -251,7 +251,11 @@ function TableauBoard(){
         playerPower:sequence.playerPower,opponentPower:sequence.opponentPower,
         life:sequence.life,damage:sequence.damage.map(d=>({target:d.target,amount:d.amount}))
       }:null,
-      displayedLife:{player:visiblePlayerLife,opponent:visibleOpponentLife}
+      displayedLife:{player:visiblePlayerLife,opponent:visibleOpponentLife},
+      lastDuelPowers:game.lastDuel?{
+        player:game.lastDuel.playerPlay.finalPower,
+        opponent:game.lastDuel.opponentPlay.finalPower
+      }:null
     });
   },[game,selected,drag,sequence,arrivalId,clashId,impactId]);
 
@@ -391,7 +395,9 @@ function TableauBoard(){
         <div className="battle-progress"><span>RONDA {game.round}</span><i/> <span>DUELO {game.turn} / 3</span></div>
         <button className="reset-button" onClick={reset} title="Comenzar una partida nueva">↻ <span>NUEVA PARTIDA</span></button>
       </header>
-      <main className="tabletop" aria-label="Tablero de duelo Daggerlight">
+      <main className="tabletop" aria-label="Tablero de duelo Daggerlight"
+        data-visual-stage={sequence?(impactActive?"impact":clashId===sequence.id?"clash":
+          arrivalId===sequence.id?"landed":"flying"):"idle"}>
         <div className="stone-grain" aria-hidden="true"/>
         <svg className="engraved-rings" viewBox="0 0 1400 830" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
           <g fill="none" stroke="#bfa46f" strokeOpacity=".14">
