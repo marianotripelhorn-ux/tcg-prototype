@@ -422,3 +422,158 @@ box-shadow:inset 0 18px 40px #0007,inset 0 -50px 35px #0008;z-index:-1}
     animation:none!important
   }
 }
+
+
+/* ── Visual 0.4: consequences of real duels ─────────────────────────────────
+   Power values, lost life and the damage target come exclusively from the
+   authoritative engine. All effects are decorative and non-interactive. */
+.power-clash{
+  position:absolute;left:50%;top:49%;z-index:24;transform:translate(-50%,-50%);
+  pointer-events:none;display:flex;flex-direction:column;align-items:center;
+  min-width:195px;max-width:90%;
+  padding:10px 18px 13px;border:1px solid #c4a26d9c;
+  border-radius:10px;background:radial-gradient(ellipse at center,#23252cf5,#0e1118ed);
+  box-shadow:0 0 0 3px #131516bc,0 10px 44px #000e,
+             inset 0 0 22px #bca67525;
+  animation:power-stage .27s cubic-bezier(.12,.85,.32,1) both
+}
+.power-clash-heading{
+  font-size:9px;font-weight:800;white-space:nowrap;letter-spacing:.17em;
+  color:#c5ae89;text-shadow:0 1px #000
+}
+.power-clash-values{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  margin-top:7px;font:800 clamp(28px,4vw,43px)/1 Georgia,serif
+}
+.power-clash-value{
+  display:grid;place-items:center;min-width:52px;min-height:57px;
+  padding:5px 8px;border-radius:7px;border:1px solid #bbac8666;
+  background:#1e2226;color:#ddc6a8;text-shadow:0 2px 10px #000;
+  box-shadow:inset 0 0 15px #0008,0 3px 10px #0009
+}
+.power-clash-value.ally{border-color:#c3a26a98}
+.power-clash-value.enemy{border-color:#7199bd8d}
+.power-clash-value.winning{
+  color:#fff3d2;border-color:#f7d28f;
+  box-shadow:inset 0 0 16px #b88b4e2e,0 0 22px #dfb96975
+}
+.power-clash-value.enemy.winning{
+  border-color:#90caff;box-shadow:inset 0 0 16px #4981be2e,0 0 22px #73baff69
+}
+.power-clash-spark{
+  font:24px Georgia,serif;color:#f4d69b;animation:clash-spark .32s ease-in-out alternate infinite
+}
+.power-clash.tied .power-clash-value{
+  box-shadow:inset 0 0 14px #668cad31,0 0 12px #95b0c750;
+  border-color:#9baec5
+}
+.damage-beam{
+  position:absolute;height:0;pointer-events:none;transform-origin:left center;
+  z-index:15;filter:drop-shadow(0 0 11px #f3c990)
+}
+.damage-beam.rival{filter:drop-shadow(0 0 10px #f5c879)}
+.damage-beam.self{filter:drop-shadow(0 0 10px #80bdec)}
+.damage-beam-streak{
+  position:absolute;left:0;top:-2px;width:100%;height:4px;border-radius:9px;
+  background:linear-gradient(90deg,transparent 0%,#bd9768 20%,#fff6ca 65%,#ffffff 94%);
+  transform:scaleX(0);transform-origin:left center;
+  box-shadow:0 0 12px #fff1bb80;
+  animation:damage-sweep .43s ease-out both
+}
+.damage-beam.self .damage-beam-streak{
+  background:linear-gradient(90deg,transparent 0%,#517aa2 20%,#9bdaff 66%,#fff 95%);
+  box-shadow:0 0 12px #83c4fa91
+}
+.damage-beam-orb{
+  display:block;position:absolute;left:0;top:-9px;width:18px;height:18px;
+  border:2px solid #fff6ca;border-radius:50%;
+  background:radial-gradient(circle,#fffbd9 0%,#e8c57e 45%,#b8853988 68%,transparent);
+  box-shadow:0 0 22px #eab66ecc;
+  animation:damage-orb .45s ease-out both
+}
+.damage-beam.self .damage-beam-orb{
+  background:radial-gradient(circle,#e8f7ff,#73b9ed 51%,#5485bd00 75%);
+  box-shadow:0 0 22px #6abbeacc
+}
+.champion-piece.taking-hit .champion-portrait{
+  animation:champion-impact .48s ease-out both;
+  filter:brightness(1.25) drop-shadow(0 0 13px #ffe2ad8a)
+}
+.champion-piece.rival.taking-hit .champion-portrait{
+  filter:brightness(1.25) drop-shadow(0 0 13px #a0cfff89)
+}
+.champion-life.life-hit{
+  animation:life-crack .55s cubic-bezier(.22,.71,.32,1.1) both;
+  border-color:#fff2cd;color:#fff4e9
+}
+.life-gem.just-lost{
+  animation:gem-shatter .58s ease-in both;
+  transform-origin:center;position:relative
+}
+.floating-damage{
+  position:absolute;z-index:9;top:60px;right:8px;
+  font:900 34px/1 Georgia,serif;letter-spacing:-.09em;
+  color:#ffd49f;text-shadow:0 0 9px #000,0 0 24px #b55333;
+  pointer-events:none;
+  animation:damage-number .72s ease-out both
+}
+.champion-piece.rival .floating-damage{color:#b9e2ff;text-shadow:0 0 9px #000,0 0 25px #5697bd}
+.duel-beat{animation-duration:.82s}
+@keyframes power-stage{
+  from{opacity:0;scale:.77;filter:brightness(1.7)}
+  to{opacity:1;scale:1;filter:brightness(1)}
+}
+@keyframes clash-spark{
+  from{transform:rotate(-20deg) scale(.75);opacity:.6}
+  to{transform:rotate(25deg) scale(1.15);opacity:1}
+}
+@keyframes damage-sweep{
+  0%{transform:scaleX(0);opacity:1}
+  75%{transform:scaleX(1);opacity:1}
+  100%{transform:scaleX(1);opacity:0}
+}
+@keyframes damage-orb{
+  from{transform:translateX(0) scale(.5);opacity:.1}
+  15%{opacity:1}
+  83%{opacity:1}
+  to{transform:translateX(calc(100% - 9px)) scale(2);opacity:0}
+}
+@keyframes champion-impact{
+  0%{transform:translateX(0) rotate(0deg);filter:brightness(1.6)}
+  16%{transform:translateX(-5px) rotate(-2deg)}
+  38%{transform:translateX(5px) rotate(2deg)}
+  62%{transform:translateX(-2px) rotate(-1deg)}
+  100%{transform:translateX(0) rotate(0);filter:brightness(1)}
+}
+@keyframes life-crack{
+  0%{transform:scale(1.3);filter:brightness(1.8)}
+  45%{transform:scale(.88);filter:brightness(1.3)}
+  100%{transform:scale(1);filter:brightness(1)}
+}
+@keyframes gem-shatter{
+  0%{opacity:1;transform:rotate(45deg) scale(1.45);filter:brightness(3)}
+  28%{opacity:1;filter:brightness(2)}
+  72%{opacity:.1;transform:rotate(82deg) scale(.3);filter:brightness(1)}
+  100%{opacity:.35;transform:rotate(45deg) scale(1);filter:brightness(.4)}
+}
+@keyframes damage-number{
+  0%{transform:translateY(8px) scale(.6);opacity:0}
+  24%{opacity:1;transform:translateY(-10px) scale(1.15)}
+  66%{opacity:1;transform:translateY(-25px) scale(1)}
+  100%{opacity:0;transform:translateY(-37px) scale(.96)}
+}
+@media(max-width:760px){
+ .power-clash{top:49%;min-width:161px;padding:7px 12px 9px}
+ .power-clash-heading{font-size:7px;letter-spacing:.12em}
+ .power-clash-values{gap:7px;margin-top:5px;font-size:27px}
+ .power-clash-value{min-width:42px;min-height:43px;padding:4px}
+ .power-clash-spark{font-size:19px}
+ .floating-damage{right:66px;top:10px;font-size:27px}
+ .champion-piece.taking-hit{overflow:visible}
+}
+@media(prefers-reduced-motion:reduce){
+ .power-clash,.power-clash-spark,.damage-beam-streak,.damage-beam-orb,
+ .champion-piece.taking-hit .champion-portrait,.champion-life.life-hit,
+ .life-gem.just-lost,.floating-damage{animation:none!important}
+ .damage-beam{display:none!important}
+}
