@@ -173,14 +173,14 @@ function TableauBoard(){
   useEffect(()=>{
     if(!sequence)return;
     const {id}=sequence;
-    const land=window.setTimeout(()=>setArrivalId(id),820);
+    const land=window.setTimeout(()=>setArrivalId(id),905);
     const result=window.setTimeout(()=>{
       setDuelMoment({
         key:id,position:sequence.position,outcome:sequence.outcome,
         ownPower:sequence.playerPower,rivalPower:sequence.opponentPower
       });
-    },850);
-    const finish=window.setTimeout(()=>setSequence(current=>current?.id===id?null:current),1190);
+    },1040);
+    const finish=window.setTimeout(()=>setSequence(current=>current?.id===id?null:current),1460);
     return ()=>{window.clearTimeout(land);window.clearTimeout(result);window.clearTimeout(finish);};
   },[sequence]);
 
@@ -234,7 +234,7 @@ function TableauBoard(){
         (d.outcome==="player"?"DUELO GANADO · ":"DUELO PERDIDO · ")+d.playerPlay.finalPower+" — "+d.opponentPlay.finalPower);
       else setNotice("");
       setDuelMoment(null);
-      if(d&&handSource&&playerSlotRect){
+      if(d&&handSource&&playerSlotRect&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches){
         const enemySlot=document.querySelector('[data-drop-rival="'+d.opponentPlay.position+'"]');
         const enemySlotRect=enemySlot?.getBoundingClientRect();
         const enemyHand=document.querySelector(".opponent-hand .card-back");
@@ -257,6 +257,13 @@ function TableauBoard(){
               from:enemySource,to:enemyDestination}
           });
         }
+      }else if(d){
+        // Accessibility: instant resolution, no travelling overlay.
+        setDuelMoment({
+          key:++momentSeq.current,position:d.playerPlay.position,outcome:d.outcome,
+          ownPower:d.playerPlay.finalPower??d.playerPlay.card.power,
+          rivalPower:d.opponentPlay.finalPower??d.opponentPlay.card.power
+        });
       }
     }catch(e){setNotice(String(e));setDrag(null);setHovering(null);}
   }
