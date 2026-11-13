@@ -79,14 +79,15 @@ function ArchiveStack({count, side}: {count:number;side:"self"|"rival"}) {
   </div>;
 }
 
-function LaneSlot({side, lane, plays, selected, legal, hovering, onPlay}:{
+function LaneSlot({side, lane, plays, selected, legal, hovering, onPlay, hideArrival}:{
   side:"self"|"rival";lane:Position;plays:EnginePlay[];
-  selected:boolean;legal:boolean;hovering:boolean;onPlay:()=>void;
+  selected:boolean;legal:boolean;hovering:boolean;onPlay:()=>void;hideArrival?:{cardId:string;power:number}|null;
 }) {
   const playable=side==="self"&&legal;
   return <button type="button"
     className={"duel-slot "+side+(playable?" available":"")+(hovering?" target":"")+(selected&&playable?" ready":"")}
     data-drop-player={side==="self"?lane:undefined}
+    data-drop-rival={side==="rival"?lane:undefined}
     onClick={playable?onPlay:undefined}
     disabled={!playable}
     aria-label={(side==="self"?"Jugar en ":"Cartas rivales en ")+LABEL[lane]}>
@@ -95,7 +96,10 @@ function LaneSlot({side, lane, plays, selected, legal, hovering, onPlay}:{
     {plays.length===0 && <span className="empty-sigil" aria-hidden="true">✦</span>}
     <span className={"played-stack played-"+Math.min(plays.length,3)}>
       {plays.map((play,index)=><CardFace key={play.card.id+"-"+index}
-        card={play.card} power={play.finalPower} className={"played-card stack-"+index}
+        card={play.card} power={play.finalPower}
+        className={"played-card stack-"+index+
+          (hideArrival&&index===plays.length-1&&play.card.id===hideArrival.cardId&&
+           play.finalPower===hideArrival.power?" arrival-hidden":"")}
         title={play.card.name+" · "+LABEL[play.position]+
           (play.finalPower===undefined?"":" · Poder "+play.finalPower)}/>)}
     </span>
@@ -107,6 +111,42 @@ function CardBack({index}: {index:number}) {
   return <span className="card-back" style={{left:"calc(50% + "+((index-1)*61)+"px)",transform:"translateX(-50%) rotate("+((index-1)*7)+"deg)"}} aria-label="Carta rival oculta">
     <i className="back-crest">✦</i>
   </span>;
+}
+
+type FlightGeometry={x:number;y:number;width:number;height:number};
+type AnimatedCard={
+  key:string; card:CardDefinition; side:"player"|"opponent";
+  from:FlightGeometry; to:FlightGeometry;
+};
+type VisualSequence={
+  id:number; round:number; player:AnimatedCard; opponent:AnimatedCard;
+  playerPower:number; opponentPower:number;
+  position:Position; opponentPosition:Position;
+  outcome:"player"|"opponent"|"draw";
+};
+function boxGeometry(rect:DOMRect):FlightGeometry{
+  return {x:rect.left+rect.width/2,y:rect.top+rect.height/2,width:rect.width,height:rect.height};
+}
+function destinationGeometry(slot:DOMRect):FlightGeometry{
+  const mobile=window.matchMedia("(max-width:760px)").matches;
+  const availableWidth=Math.min(slot.width*(mobile?.8:.65),mobile?93:137);
+  const width=Math.max(35,Math.min(availableWidth,slot.height*.91*190/272));
+  return {x:slot.left+slot.width/2,y:slot.top+slot.height/2,width,height:width*272/190};
+}
+function FlightCard({flight}: {flight:AnimatedCard}){
+  const dx=flight.to.x-flight.from.x;
+  const dy=flight.to.y-flight.from.y;
+  const scale=flight.to.width/Math.max(1,flight.from.width);
+  const style={
+    left:flight.from.x,top:flight.from.y,width:flight.from.width,height:flight.from.height,
+    "--flight-dx":dx+"px","--flight-dy":dy+"px",
+    "--flight-half-x":(dx*.47)+"px","--flight-half-y":(dy*.46-24)+"px",
+    "--flight-scale":String(scale)
+  } as React.CSSProperties;
+  return <div className={"flight-card "+flight.side} style={style} data-flight-side={flight.side}
+    aria-hidden="true">
+    <div className="flight-card-face"><CardFace card={flight.card}/></div>
+  </div>;
 }
 
 function TableauBoard(){
@@ -121,6 +161,9 @@ function TableauBoard(){
     ownPower:number; rivalPower:number;
   }|null>(null);
   const momentSeq=useRef(0);
+  const [sequence,setSequence]=useState<VisualSequence|null>(null);
+  const [arrivalId,setArrivalId]=useState<number|null>(null);
+  const busy=sequence!==null;
   const pointer=useRef<{index:number;x:number;y:number;started:boolean}|null>(null);
   const legal=game.phase==="awaiting_player"?legalPositions(game.player):[];
   const latest=game.events.at(-1)?.text||"";
@@ -128,8 +171,22 @@ function TableauBoard(){
   const selectedCard=selected===null?null:game.player.hand[selected]??null;
 
   useEffect(()=>{
+    if(!sequence)return;
+    const {id}=sequence;
+    const land=window.setTimeout(()=>setArrivalId(id),820);
+    const result=window.setTimeout(()=>{
+      setDuelMoment({
+        key:id,position:sequence.position,outcome:sequence.outcome,
+        ownPower:sequence.playerPower,rivalPower:sequence.opponentPower
+      });
+    },850);
+    const finish=window.setTimeout(()=>setSequence(current=>current?.id===id?null:current),1190);
+    return ()=>{window.clearTimeout(land);window.clearTimeout(result);window.clearTimeout(finish);};
+  },[sequence]);
+
+  useEffect(()=>{
     if(!duelMoment)return;
-    const timeout=window.setTimeout(()=>setDuelMoment(current=>current?.key===duelMoment.key?null:current),1450);
+    const timeout=window.setTimeout(()=>setDuelMoment(current=>current?.key===duelMoment.key?null:current),1200);
     return ()=>window.clearTimeout(timeout);
   },[duelMoment]);
 
@@ -141,30 +198,65 @@ function TableauBoard(){
       playerPlays:game.player.roundPlays.map(p=>[p.card.id,p.position]),
       opponentPlays:game.opponent.roundPlays.map(p=>[p.card.id,p.position]),
       hand:game.player.hand.map(c=>c.id),archives:game.player.archives,
-      selected,dragging:drag?.index??null
+      selected,dragging:drag?.index??null,
+      visualSequence:sequence?{
+        id:sequence.id,stage:arrivalId===sequence.id?"landed":"flying",
+        playerFrom:sequence.player.from,playerTo:sequence.player.to,
+        opponentFrom:sequence.opponent.from,opponentTo:sequence.opponent.to
+      }:null
     });
-  },[game,selected,drag]);
+  },[game,selected,drag,sequence,arrivalId]);
 
   function reset(){
-    pointer.current=null;setSelected(null);setHovering(null);setDrag(null);setInspector(null);setNotice("");setDuelMoment(null);
+    pointer.current=null;setSelected(null);setHovering(null);setDrag(null);setInspector(null);setNotice("");setDuelMoment(null);setSequence(null);setArrivalId(null);
     setGame(startGame("dextral","sinistral",Math.random,"player","normal"));
   }
-  function play(index:number,position:Position) {
-    if(game.phase!=="awaiting_player"||!game.player.hand[index]||!legal.includes(position))return;
+  function play(index:number,position:Position,dropPoint?:{x:number;y:number}) {
+    if(busy||game.phase!=="awaiting_player"||!game.player.hand[index]||!legal.includes(position))return;
+    // Measure *before* submitting the move because the real engine immediately
+    // removes the hand card and may start the next round synchronously.
+    const handElement=document.querySelector('[data-hand-index="'+index+'"] .physical-card');
+    const playerSlot=document.querySelector('[data-drop-player="'+position+'"]');
+    const handRect=handElement?.getBoundingClientRect();
+    const playerSlotRect=playerSlot?.getBoundingClientRect();
+    const startingRound=game.round;
+    const selectedCard=game.player.hand[index];
+    const source=handRect?boxGeometry(handRect):null;
+    const handSource=source && dropPoint?{...source,x:dropPoint.x,y:dropPoint.y}:source;
     try{
       submitPlayerPlay(game,index,position);
       setGame({...game});setSelected(null);setDrag(null);setHovering(null);
       const d=game.lastDuel;
-      if((game.phase as GameState["phase"])==="finished")setNotice(game.winner==="player"?"VICTORIA":game.winner==="opponent"?"DERROTA":"EMPATE");
+      if((game.phase as GameState["phase"])==="finished")setNotice(
+        game.winner==="player"?"VICTORIA":game.winner==="opponent"?"DERROTA":"EMPATE"
+      );
       else if(d)setNotice(d.outcome==="draw"?"EMPATE · "+d.playerPlay.finalPower+" — "+d.opponentPlay.finalPower:
         (d.outcome==="player"?"DUELO GANADO · ":"DUELO PERDIDO · ")+d.playerPlay.finalPower+" — "+d.opponentPlay.finalPower);
       else setNotice("");
-      if(d){
-        setDuelMoment({
-          key:++momentSeq.current, position:d.playerPlay.position, outcome:d.outcome,
-          ownPower:d.playerPlay.finalPower ?? d.playerPlay.card.power,
-          rivalPower:d.opponentPlay.finalPower ?? d.opponentPlay.card.power
-        });
+      setDuelMoment(null);
+      if(d&&handSource&&playerSlotRect){
+        const enemySlot=document.querySelector('[data-drop-rival="'+d.opponentPlay.position+'"]');
+        const enemySlotRect=enemySlot?.getBoundingClientRect();
+        const enemyHand=document.querySelector(".opponent-hand .card-back");
+        const enemyHandRect=enemyHand?.getBoundingClientRect();
+        const enemyDestination=enemySlotRect?destinationGeometry(enemySlotRect):null;
+        if(enemyDestination){
+          const enemySource=enemyHandRect&&enemyHandRect.width>10
+            ?boxGeometry(enemyHandRect)
+            :{x:enemyDestination.x,y:enemyDestination.y-145,width:85,height:122};
+          const id=++momentSeq.current;
+          setArrivalId(null);
+          setSequence({
+            id,round:startingRound,position,opponentPosition:d.opponentPlay.position,
+            outcome:d.outcome,
+            playerPower:d.playerPlay.finalPower??selectedCard.power,
+            opponentPower:d.opponentPlay.finalPower??d.opponentPlay.card.power,
+            player:{key:"player-"+id,card:selectedCard,side:"player",
+              from:handSource,to:destinationGeometry(playerSlotRect)},
+            opponent:{key:"opponent-"+id,card:d.opponentPlay.card,side:"opponent",
+              from:enemySource,to:enemyDestination}
+          });
+        }
       }
     }catch(e){setNotice(String(e));setDrag(null);setHovering(null);}
   }
@@ -176,7 +268,7 @@ function TableauBoard(){
     return null;
   }
   function onHandDown(e:React.PointerEvent,index:number){
-    if(game.phase!=="awaiting_player" || e.button!==0)return;
+    if(busy||game.phase!=="awaiting_player" || e.button!==0)return;
     pointer.current={index,x:e.clientX,y:e.clientY,started:false};
     e.currentTarget.setPointerCapture(e.pointerId);
   }
@@ -199,15 +291,17 @@ function TableauBoard(){
     const lane=p.started?findPosition(e.clientX,e.clientY):null;
     setHovering(null);setDrag(null);
     if(p.started){
-      if(lane&&legal.includes(lane))play(p.index,lane);
+      if(lane&&legal.includes(lane))play(p.index,lane,{x:e.clientX,y:e.clientY});
       else setSelected(p.index);
     }else setSelected(selected===p.index?null:p.index);
   }
   function onHandCancel(){pointer.current=null;setDrag(null);setHovering(null);}
   function chooseQuiero(wants:boolean){
+    if(busy)return;
     answerQuiero(game,wants);
     setGame({...game});setSelected(null);setNotice(wants?"TERCER DUELO":"SIGUIENTE RONDA");
   }
+  const hideArrival=sequence&&arrivalId!==sequence.id&&game.round===sequence.round;
   const playerPlays=(lane:Position)=>game.player.roundPlays.filter(p=>p.position===lane);
   const opponentPlays=(lane:Position)=>[
     ...game.opponent.roundPlays.filter(p=>p.position===lane),
@@ -253,7 +347,9 @@ function TableauBoard(){
           <div className="lane-grid">
             {POSITIONS.map((lane,i)=><div className={"lane lane-"+lane} key={lane}>
               <LaneSlot side="rival" lane={lane} plays={opponentPlays(lane)}
-                selected={false} legal={false} hovering={false} onPlay={()=>{}}/>
+                selected={false} legal={false} hovering={false} onPlay={()=>{}}
+                hideArrival={hideArrival&&sequence.opponentPosition===lane
+                  ?{cardId:sequence.opponent.card.id,power:sequence.opponentPower}:null}/>
               <ArchiveStack count={game.opponent.archives[lane].length} side="rival"/>
               <div className="lane-divider">
                 <span className="lane-number">0{i+1}</span><strong>{LABEL[lane]}</strong>
@@ -261,8 +357,10 @@ function TableauBoard(){
               </div>
               <ArchiveStack count={game.player.archives[lane].length} side="self"/>
               <LaneSlot side="self" lane={lane} plays={playerPlays(lane)}
-                selected={selected!==null} legal={legal.includes(lane)} hovering={hovering===lane}
-                onPlay={()=>{if(selected!==null)play(selected,lane);}}/>
+                selected={selected!==null&&!busy} legal={!busy&&legal.includes(lane)} hovering={hovering===lane}
+                hideArrival={hideArrival&&sequence.position===lane
+                  ?{cardId:sequence.player.card.id,power:sequence.playerPower}:null}
+                onPlay={()=>{if(selected!==null&&!busy)play(selected,lane);}}/>
             </div>)}
           </div>
           <div className="combat-message" aria-live="polite">{currentMessage}</div>
@@ -283,22 +381,28 @@ function TableauBoard(){
           <div className="hand-cards">
             {game.player.hand.map((card,index)=><div key={card.id+"-"+index}
               className={"hand-card hand-"+index+(selected===index?" chosen":"")+(drag?.index===index?" dragging-source":"")}
-              role="button" tabIndex={0} aria-pressed={selected===index}
+              data-hand-index={index}
+              role="button" tabIndex={busy?-1:0} aria-pressed={selected===index}
+              aria-disabled={busy}
               aria-label={"Elegir "+card.name}
               onPointerDown={e=>onHandDown(e,index)}
               onPointerMove={onHandMove}
               onPointerUp={onHandUp}
               onPointerCancel={onHandCancel}
-              onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setSelected(index);}}}>
+              onKeyDown={e=>{if(!busy&&(e.key==="Enter"||e.key===" ")){e.preventDefault();setSelected(index);}}}>
               <CardFace card={card}/>
             </div>)}
           </div>
           <div className="hand-counter">TU MANO · {game.player.hand.length} CARTAS</div>
         </section>
       </main>
-      <div className="board-footer"><span>DUELBOARD · VISUAL 0.2 · MOTOR REAL</span><span>DRAG & DROP · TOCAR + ELEGIR</span></div>
+      <div className="board-footer"><span>DUELBOARD · VISUAL 0.3 · MOTOR REAL</span><span>DRAG & DROP · TOCAR + ELEGIR</span></div>
     </div>
 
+    {sequence&&<div className="flight-layer" data-visual-flight={sequence.id}>
+      <FlightCard flight={sequence.player}/>
+      <FlightCard flight={sequence.opponent}/>
+    </div>}
     {drag&&game.player.hand[drag.index]&&<div className="drag-ghost"
        style={{left:drag.x,top:drag.y}} aria-hidden="true">
       <CardFace card={game.player.hand[drag.index]}/>
@@ -315,8 +419,8 @@ function TableauBoard(){
         <h2>¿QUIERO O NO QUIERO?</h2>
         <p>Perdiste los dos primeros duelos. ¿Querés jugar el tercero?</p>
         <div className="decision-actions">
-          <button className="decision-secondary" onClick={()=>chooseQuiero(false)}>NO QUIERO</button>
-          <button className="decision-primary" onClick={()=>chooseQuiero(true)}>QUIERO</button>
+          <button className="decision-secondary" disabled={busy} onClick={()=>chooseQuiero(false)}>NO QUIERO</button>
+          <button className="decision-primary" disabled={busy} onClick={()=>chooseQuiero(true)}>QUIERO</button>
         </div>
       </div>
     </div>}
