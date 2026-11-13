@@ -248,6 +248,7 @@ function TableauBoard(){
           arrivalId===sequence.id?"landed":"flying",
         playerFrom:sequence.player.from,playerTo:sequence.player.to,
         opponentFrom:sequence.opponent.from,opponentTo:sequence.opponent.to,
+        playerPower:sequence.playerPower,opponentPower:sequence.opponentPower,
         life:sequence.life,damage:sequence.damage.map(d=>({target:d.target,amount:d.amount}))
       }:null,
       displayedLife:{player:visiblePlayerLife,opponent:visibleOpponentLife}
