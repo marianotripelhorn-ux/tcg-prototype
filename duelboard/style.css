@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
 :root{font-family:Inter,system-ui,sans-serif;color:#ebe4d6;background:#0c0e10;font-synthesis:none;font-smooth:always}
 *{box-sizing:border-box}
 html,body,#root{width:100%;height:100%;margin:0;min-height:0}
@@ -576,4 +576,186 @@ box-shadow:inset 0 18px 40px #0007,inset 0 -50px 35px #0008;z-index:-1}
  .champion-piece.taking-hit .champion-portrait,.champion-life.life-hit,
  .life-gem.just-lost,.floating-damage{animation:none!important}
  .damage-beam{display:none!important}
+}
+
+
+/* ───── Visual 0.5: clean card access and deliberate duel pacing ───── */
+:root{font-family:Inter,ui-sans-serif,system-ui,sans-serif}
+body,button,.screen,.board-wrap,.tabletop{font-family:Inter,ui-sans-serif,system-ui,sans-serif}
+.board-header,.game-brand,.battle-progress,.reset-button,.game-brand .brand-crown,
+.champion-nameplate,.champion-life,.round-medallion,.round-medallion strong,
+.lane-divider,.lane-divider strong,.lane-ornament,.match-score strong,
+.duel-beat,.duel-beat strong,.duel-beat-score,.duel-beat-score i,
+.power-clash,.power-clash-values,.power-clash-spark,
+.decision-dialog,.decision-dialog h2,.decision-dialog p,
+.fallback-card,.fallback-card p,.back-crest,.floating-damage,
+.card-inspect-dialog,.card-inspect-dialog h2,.review-panel{
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif
+}
+.game-brand{letter-spacing:.11em}
+.game-brand .brand-crown{font-size:24px;font-weight:700}
+.champion-piece{isolation:isolate}
+.champion-nameplate{
+  width:min(96%,216px);max-width:calc(100% - 14px);
+  margin-top:4px;min-height:31px;line-height:1.2;letter-spacing:.025em;
+  font-weight:800;font-size:clamp(11px,1vw,15px);border-radius:7px
+}
+.champion-life{
+  top:13px;right:10px;left:auto;
+  width:43px;height:43px;font-size:22px;z-index:5;
+  box-shadow:0 4px 12px #000d,0 0 0 2px #090b0e
+}
+.champion-piece .life-gems{z-index:2}
+.champion-piece .champion-side-label{margin-top:1px}
+.champion-piece.taking-hit .champion-life{z-index:7}
+.lane-divider{font-size:clamp(10px,.99vw,14px);gap:6px;letter-spacing:.12em}
+.lane-divider strong{font-weight:800;font-size:1em}
+.lane-ornament{font-family:Inter,system-ui,sans-serif}
+.lane-number,.opponent-hand{display:none!important}
+.central-arena{padding-top:17px;padding-bottom:22px}
+.combat-message,.hand-hint{display:none!important}
+.hand-zone{overflow:hidden}
+.hand-cards{overflow:hidden}
+.hand-card{
+  width:clamp(86px,min(10vw,15.5vh),146px);
+  bottom:8px;transform-origin:50% 50%;transition:transform .19s ease,filter .17s ease;
+}
+.hand-card.hand-0{transform:translateX(-165%) rotate(-7deg)}
+.hand-card.hand-1{transform:translateX(-50%) translateY(-4px) rotate(0)}
+.hand-card.hand-2{transform:translateX(65%) rotate(7deg)}
+.hand-card.hand-0:hover,.hand-card.hand-0.chosen{
+  transform:translateX(-165%) translateY(-9px) rotate(-5deg);z-index:8
+}
+.hand-card.hand-1:hover,.hand-card.hand-1.chosen{
+  transform:translateX(-50%) translateY(-12px) scale(1.01);z-index:8
+}
+.hand-card.hand-2:hover,.hand-card.hand-2.chosen{
+  transform:translateX(65%) translateY(-9px) rotate(5deg);z-index:8
+}
+.hand-card:focus-visible{outline:2px solid #efd39d;outline-offset:2px}
+.hand-card[aria-disabled="true"]{pointer-events:none}
+.hand-card.chosen .physical-card{box-shadow:0 2px 0 #c6aa7b,0 8px 0 #67502f,0 0 18px #e4bd7966}
+.hand-zone.reviewing .hand-velvet{background:radial-gradient(ellipse at center,#442d25,#261b1d 68%,#101317)}
+.review-panel{
+  position:relative;z-index:4;width:100%;height:100%;
+  display:flex;flex-direction:row;align-items:center;justify-content:center;gap:clamp(16px,3vw,42px);
+  padding:16px 22px;text-align:center
+}
+.review-result{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.review-kicker{font-size:10px;letter-spacing:.20em;color:#c3ab82;font-weight:700}
+.review-headline{
+  font-size:clamp(19px,2vw,29px);line-height:1.18;letter-spacing:.025em;
+  font-weight:900;color:#f5dfaa;text-shadow:0 3px 10px #000a
+}
+.review-headline.opponent{color:#ecb5af}
+.review-headline.draw{color:#bed6e7}
+.review-power{font-size:23px;font-weight:800;color:#eee0c9;letter-spacing:.07em}
+.review-power i{font-size:12px;font-style:normal;color:#ad9a7d;padding:0 8px}
+.review-continue,.inspect-play{
+  background:linear-gradient(165deg,#f1d59d,#c49d60 62%,#a7814b);
+  border:1px solid #fbe5b8;border-radius:7px;
+  color:#161816;font-weight:900;letter-spacing:.075em;cursor:pointer;
+  box-shadow:0 4px 0 #60482a,0 11px 23px #0008;
+  transition:transform .16s ease,filter .16s ease
+}
+.review-continue{
+  padding:16px 21px;font-size:13px;display:flex;align-items:center;
+  justify-content:center;gap:15px;white-space:nowrap
+}
+.review-continue span{font-size:24px;line-height:0}
+.review-continue:hover,.inspect-play:hover{transform:translateY(-2px);filter:brightness(1.07)}
+.review-continue:active,.inspect-play:active{transform:translateY(2px);box-shadow:0 1px 0 #60482a,0 5px 10px #0007}
+.card-inspect-backdrop{
+  position:fixed;inset:0;z-index:210;display:grid;place-items:center;
+  padding:18px;background:#020409e8;backdrop-filter:blur(9px)
+}
+.card-inspect-dialog{
+  position:relative;display:grid;grid-template-columns:minmax(0,310px) minmax(0,300px);
+  align-items:center;gap:clamp(18px,3vw,44px);
+  width:min(94vw,730px);max-height:calc(100dvh - 36px);
+  padding:clamp(20px,3vw,34px);
+  border:1px solid #cbb083;border-radius:13px;
+  background:radial-gradient(ellipse at 22% 30%,#303134,#111518 75%);
+  box-shadow:0 0 0 3px #0b0e11,0 30px 75px #000e;overflow:auto
+}
+.card-inspect-close{
+  position:absolute;top:8px;right:10px;width:36px;height:36px;
+  background:#171b1f;border:1px solid #ac9270;border-radius:6px;
+  color:#f6e1bd;font-size:26px;line-height:1;cursor:pointer;z-index:3
+}
+.card-inspect-art{width:100%;display:grid;place-items:center}
+.card-inspect-art .physical-card{width:min(100%,290px);height:auto;aspect-ratio:190/272;max-height:65dvh}
+.card-inspect-info{display:flex;flex-direction:column;gap:17px;min-width:0}
+.card-inspect-label{font-size:10px;letter-spacing:.22em;font-weight:800;color:#d0ac6e}
+.card-inspect-info h2{
+  color:#f5e4bd;line-height:1.11;font-size:clamp(23px,2.35vw,36px);
+  font-weight:900;letter-spacing:.02em;margin:0
+}
+.card-inspect-power{display:flex;align-items:center;gap:15px;color:#c5b89d;
+  font-size:10px;letter-spacing:.16em;font-weight:800}
+.card-inspect-power strong{font-size:29px;color:#f4d8aa;letter-spacing:0}
+.card-inspect-info p{font-size:15px;line-height:1.6;color:#e0d7c6;margin:0;white-space:pre-wrap}
+.card-inspect-actions{display:flex;flex-wrap:wrap;gap:10px}
+.inspect-play,.inspect-back{padding:12px 16px;font-size:11px}
+.inspect-back{
+  border:1px solid #84755e;background:#22272a;color:#efdfc5;
+  border-radius:7px;cursor:pointer;font-weight:700;letter-spacing:.10em
+}
+.inspect-back:hover{background:#353b3d}
+.power-clash,.duel-beat{font-family:Inter,system-ui,sans-serif}
+.power-clash-heading{font-family:Inter,system-ui,sans-serif}
+.flight-card.opponent{animation-delay:.87s}
+.flight-card.player{animation-duration:.72s}
+.flight-card.opponent,.flight-card.opponent .flight-card-face{animation-duration:.70s;animation-delay:.87s}
+@media(max-width:760px){
+  .champion-nameplate{
+    font-size:clamp(11px,3.4vw,15px);font-weight:800;
+    margin-top:0;background:none;box-shadow:none;width:auto;max-width:none;
+    min-height:0
+  }
+  .champion-life{
+    position:static;top:auto;right:auto;margin-left:auto;
+    width:40px;height:40px;font-size:21px;flex-shrink:0;order:3
+  }
+  .champion-side-label{margin-top:0}
+  .central-arena{padding:13px 6px 17px}
+  .hand-card{width:min(25.5vw,15vh,108px);bottom:9px}
+  .hand-card.hand-0{transform:translateX(-148%) rotate(-6deg)}
+  .hand-card.hand-1{transform:translateX(-50%) translateY(-3px)}
+  .hand-card.hand-2{transform:translateX(48%) rotate(6deg)}
+  .hand-card.hand-0:hover,.hand-card.hand-0.chosen{transform:translateX(-148%) translateY(-7px) rotate(-5deg)}
+  .hand-card.hand-1:hover,.hand-card.hand-1.chosen{transform:translateX(-50%) translateY(-9px)}
+  .hand-card.hand-2:hover,.hand-card.hand-2.chosen{transform:translateX(48%) translateY(-7px) rotate(5deg)}
+  .hand-zone{overflow:hidden}
+  .review-panel{gap:13px;padding:12px 10px;flex-direction:column}
+  .review-kicker{font-size:8px}
+  .review-result{gap:2px}
+  .review-headline{font-size:19px}
+  .review-power{font-size:17px}
+  .review-continue{font-size:10px;padding:10px 15px;white-space:normal;max-width:95%}
+  .review-continue span{font-size:19px}
+  .card-inspect-dialog{
+    display:flex;flex-direction:column;width:min(94vw,415px);
+    gap:10px;padding:21px 13px 15px
+  }
+  .card-inspect-art .physical-card{
+    width:min(51vw,25dvh,230px);max-height:37dvh;
+  }
+  .card-inspect-info{gap:8px;text-align:center;align-items:center}
+  .card-inspect-info h2{font-size:18px}
+  .card-inspect-info p{font-size:12px;line-height:1.35}
+  .card-inspect-power{font-size:9px}
+  .card-inspect-power strong{font-size:20px}
+  .card-inspect-label{font-size:8px}
+  .card-inspect-actions{justify-content:center}
+  .inspect-play,.inspect-back{padding:10px 12px}
+  .lane-divider strong{font-size:clamp(9px,2.35vw,11px);letter-spacing:.07em}
+}
+@media(max-height:690px) and (min-width:761px){
+  .hand-card{width:min(9.1vw,16vh,119px);bottom:5px}
+  .hand-card.hand-1{transform:translateX(-50%) translateY(-3px)}
+  .hand-card.hand-1:hover{transform:translateX(-50%) translateY(-6px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .hand-card,.review-continue,.card-inspect-close,.inspect-play,.inspect-back{transition:none!important}
 }
