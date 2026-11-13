@@ -141,7 +141,7 @@ function FlightCard({flight}: {flight:AnimatedCard}){
     left:flight.from.x,top:flight.from.y,width:flight.from.width,height:flight.from.height,
     "--flight-dx":dx+"px","--flight-dy":dy+"px",
     "--flight-half-x":(dx*.47)+"px","--flight-half-y":(dy*.46-24)+"px",
-    "--flight-scale":String(scale)
+    "--flight-scale":String(scale),"--flight-bounce-scale":String(scale*1.065)
   } as React.CSSProperties;
   return <div className={"flight-card "+flight.side} style={style} data-flight-side={flight.side}
     aria-hidden="true">
