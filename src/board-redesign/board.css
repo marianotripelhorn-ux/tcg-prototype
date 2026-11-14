@@ -677,3 +677,32 @@
     animation:none!important;
   }
 }
+
+
+/* On the redesigned board the ceremonial score pennant is the single scoreboard. */
+.app-shell.board-redesign-v1 .arena-topbar .arena-top-score{display:none!important}
+/* The classic comparison toggle must remain legible after switching back. */
+.app-shell.arena-v2 .hybrid-board-toggle{
+  display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;white-space:nowrap;border:1px solid #a68c61;
+  border-radius:3px;background:#292419;color:#f3e6cd;
+  font:800 9px/1 Inter,Arial,sans-serif;letter-spacing:.075em;padding:9px 10px;
+}
+.app-shell.arena-v2 .hybrid-board-toggle:focus-visible{outline:2px solid #e9c384;outline-offset:2px}
+@media(max-width:760px){
+  /* Keep a small, inspectable physical deck even on touch screens. */
+  .app-shell.board-redesign-v1 .hybrid-deck-holder{
+    display:block;position:fixed;z-index:96;right:9px;
+    bottom:calc(48px + env(safe-area-inset-bottom,0px));top:auto;
+  }
+  .app-shell.board-redesign-v1 .hybrid-deck-object{
+    width:58px;height:81px;filter:drop-shadow(0 4px 8px #0009);
+  }
+  .app-shell.board-redesign-v1 .hybrid-deck-face>span:last-child{font-size:4px}
+  .app-shell.board-redesign-v1 .hybrid-deck-info{
+    width:180px;right:0;bottom:calc(100% + 8px);
+  }
+  .app-shell.board-redesign-v1 .hand-zone{
+    padding-right:70px!important;
+  }
+}
