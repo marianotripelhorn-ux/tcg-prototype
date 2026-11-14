@@ -213,7 +213,7 @@
   left:-4px;right:-4px;width:auto;height:clamp(36px,5dvh,51px);
   top:50%;transform:translateY(-50%);border:0!important;border-radius:0!important;
   background:#080808;
-  clip-path:polygon(0% 0%,4% 0%,6.2% 50%,4% 100%,0% 100%,3.7% 50%,0% 0%,100% 0%,96.3% 50%,100% 100%,96% 100%,93.8% 50%,96% 0%);
+  clip-path:polygon(0% 0%,100% 0%,96% 50%,100% 100%,0% 100%,4% 50%);
   /* The center is all one continuous heraldic band. */
   box-shadow:0 3px 7px #0009;
   pointer-events:none;
