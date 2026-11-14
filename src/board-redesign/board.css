@@ -1,0 +1,679 @@
+/*
+ * DAGGERLIGHT · Hybrid Board v1
+ * Scoped presentation for the optional board redesign on prototype/board-redesign-v1.
+ * Rules, card faces, engine state and existing classic board remain untouched.
+ */
+.app-shell.arena-v2.board-redesign-v1 {
+  --hybrid-ink:#151513;
+  --hybrid-rim:#292721;
+  --hybrid-deep:#121311;
+  --hybrid-stone:#d9d7ca;
+  --hybrid-stone-light:#e9e6da;
+  --hybrid-gold:#c5a36b;
+  --hybrid-copper:#7f6746;
+  --hybrid-dock:clamp(180px,23dvh,226px);
+  --hybrid-right-w:clamp(130px,13vw,205px);
+  background:var(--hybrid-rim)!important;
+  color:#efe6d5;
+}
+.app-shell.board-redesign-v1 .arena-game-frame{
+  background:#25231e!important;
+}
+.app-shell.board-redesign-v1 .arena-topbar {
+  position:relative;z-index:80;height:57px!important;min-height:57px!important;
+  background:#070707!important;color:#f8f5ec!important;
+  grid-template-columns:minmax(150px,1fr) auto minmax(245px,1fr)!important;
+  border-bottom:2px solid #3e3930!important;
+  box-shadow:0 3px 12px #0004;
+}
+.app-shell.board-redesign-v1 .arena-game-frame {
+  grid-template-rows:57px minmax(0,1fr)!important;
+}
+.app-shell.board-redesign-v1 .arena-top-wordmark{
+  font-size:clamp(20px,2.05vw,34px)!important;font-weight:950!important;
+  color:#fff!important;letter-spacing:-.065em!important;text-shadow:0 2px 1px #000;
+}
+.app-shell.board-redesign-v1 .arena-top-center > span{
+  color:#efede7!important;font-size:clamp(10px,.96vw,16px)!important;
+  font-weight:500!important;letter-spacing:.02em!important;
+}
+.app-shell.board-redesign-v1 .arena-top-center b{
+  color:#fff!important;font-size:clamp(15px,1.3vw,21px)!important;
+}
+.app-shell.board-redesign-v1 .arena-topbar .arena-top-score{
+  color:#f2eadb!important;border:1px solid #6e5c3c;padding:4px 8px;border-radius:3px;
+}
+.app-shell.board-redesign-v1 .hybrid-board-toggle {
+  border:1px solid #a68c61!important;background:#292419!important;
+  color:#f3e6cd!important;font:800 9px/1 Inter,Arial,sans-serif!important;
+  letter-spacing:.075em;padding:9px 10px;white-space:nowrap;
+  border-radius:3px;cursor:pointer;
+}
+.app-shell.board-redesign-v1 .hybrid-board-toggle:hover,
+.app-shell.board-redesign-v1 .hybrid-board-toggle:focus-visible {
+  background:#d3b787!important;color:#181715!important;
+}
+.app-shell.board-redesign-v1 .arena-main{
+  height:100%;min-height:0!important;min-width:0!important;
+  --lab-dock:var(--hybrid-dock)!important;
+  display:grid!important;grid-template-columns:clamp(210px,17vw,286px) minmax(0,1fr)!important;
+  background:#26231d!important;
+}
+/* LEFT: two materially linked Champion banners, with swapped sizes. */
+.app-shell.board-redesign-v1 .arena-sidebar {
+  display:block!important;
+  height:100%!important;min-height:0!important;min-width:0;
+  overflow:hidden!important;padding:0!important;gap:0!important;
+  background:#19150f!important;border-right:3px solid #544731!important;
+  box-shadow:inset -8px 0 14px #0005;
+}
+.app-shell.board-redesign-v1 .hybrid-sidebar-inner {
+  display:grid;height:100%;min-height:0;width:100%;
+  grid-template-rows:minmax(126px,1fr) minmax(280px,3fr) 28px;
+  transition:grid-template-rows .38s cubic-bezier(.22,.75,.22,1);
+}
+.app-shell.board-redesign-v1 .hybrid-sidebar-inner.show-opponent{
+  grid-template-rows:minmax(280px,3fr) minmax(126px,1fr) 28px;
+}
+.app-shell.board-redesign-v1 .hybrid-champion-panel{
+  position:relative;min-height:0;isolation:isolate;overflow:hidden;
+  border-bottom:2px solid #000;box-shadow:inset 0 0 0 1px #bb9a6240;
+}
+.app-shell.board-redesign-v1 .hybrid-champion-panel::before {
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:linear-gradient(180deg,transparent 32%,#0a0606a1 98%);
+}
+.app-shell.board-redesign-v1 .hybrid-champion-panel.is-expanded::before{
+  background:
+    linear-gradient(140deg,var(--hybrid-faction-accent) 0%,transparent 78%),
+    linear-gradient(180deg,#08070794 0%,transparent 43%,#0004 100%);
+  opacity:.95;
+}
+.app-shell.board-redesign-v1 .hybrid-champion-trigger{
+  display:block;position:relative;width:100%;height:100%;padding:0;border:0;
+  background:#191919;color:#fff;text-align:left;cursor:pointer;overflow:hidden;
+}
+.app-shell.board-redesign-v1 .hybrid-champion-trigger:focus-visible{
+  outline:3px solid #e9c384;outline-offset:-5px;
+}
+.app-shell.board-redesign-v1 .hybrid-portrait-surface{
+  display:block;position:absolute;inset:0;overflow:hidden;
+  background-position:center top;background-size:cover;
+  transition:filter .38s ease;
+}
+.app-shell.board-redesign-v1 .hybrid-champion-art{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:center 22%;
+  transition:transform .38s cubic-bezier(.2,.7,.25,1);
+}
+.app-shell.board-redesign-v1 .hybrid-champion-panel.is-expanded .hybrid-champion-art{
+  height:56%;top:auto;bottom:-2%;
+  object-fit:cover;object-position:center 22%;
+  transform:scale(1.12);
+  -webkit-mask-image:linear-gradient(to bottom,transparent,#000 15%,#000 93%);
+  mask-image:linear-gradient(to bottom,transparent,#000 15%,#000 93%);
+}
+.app-shell.board-redesign-v1 .hybrid-champion-panel.is-compact:hover .hybrid-champion-art,
+.app-shell.board-redesign-v1 .hybrid-champion-trigger:focus-visible .hybrid-champion-art{
+  transform:scale(1.07);
+}
+.app-shell.board-redesign-v1 .hybrid-panel-overline,
+.app-shell.board-redesign-v1 .hybrid-mini-name{
+  position:absolute;z-index:3;left:12px;max-width:calc(100% - 24px);
+  font:950 clamp(12px,1.24vw,19px)/.95 Inter,Arial,sans-serif;
+  text-transform:uppercase;letter-spacing:-.045em;text-shadow:0 3px 8px #000;
+  color:#fff;
+}
+.app-shell.board-redesign-v1 .hybrid-panel-overline{
+  top:13px;font-size:clamp(11px,1.05vw,16px);
+}
+.app-shell.board-redesign-v1 .hybrid-mini-name{
+  bottom:12px;font-size:clamp(14px,1.48vw,24px);
+}
+.app-shell.board-redesign-v1 .hybrid-champion-panel.is-expanded .hybrid-mini-name,
+.app-shell.board-redesign-v1 .hybrid-champion-panel.is-expanded .hybrid-panel-overline{
+  opacity:0;
+}
+.app-shell.board-redesign-v1 .hybrid-banner-body{
+  display:flex;flex-direction:column;align-items:flex-start;gap:4px;
+  position:absolute;z-index:4;top:clamp(22px,6%,42px);left:12px;right:12px;
+  color:#f8f3e8;pointer-events:none;
+  opacity:0;transform:translateY(-14px);
+  transition:opacity .26s ease,transform .38s cubic-bezier(.2,.65,.3,1);
+}
+.app-shell.board-redesign-v1 .hybrid-champion-panel.is-expanded .hybrid-banner-body{
+  opacity:1;transform:translateY(0);
+}
+.app-shell.board-redesign-v1 .hybrid-banner-owner{
+  font:950 clamp(12px,1.25vw,20px)/1 Inter,Arial,sans-serif;
+  text-transform:uppercase;letter-spacing:-.02em;
+}
+.app-shell.board-redesign-v1 .hybrid-banner-owner::after{
+  content:"";display:block;width:min(185px,96%);height:2px;margin-top:9px;
+  background:linear-gradient(90deg,#e9c88c,transparent);
+}
+.app-shell.board-redesign-v1 .hybrid-banner-name{
+  max-width:100%;overflow-wrap:break-word;
+  font:950 clamp(17px,1.62vw,28px)/.98 Inter,Arial,sans-serif;
+  letter-spacing:-.045em;text-transform:uppercase;margin-top:10px;
+}
+.app-shell.board-redesign-v1 .hybrid-banner-faction{
+  font:700 10px/1.2 Inter,Arial,sans-serif;letter-spacing:.13em;color:#eed4aa;
+}
+.app-shell.board-redesign-v1 .hybrid-banner-divider{
+  width:100%;height:1px;margin:10px 0 5px;background:linear-gradient(90deg,#efd19d90,transparent);
+}
+.app-shell.board-redesign-v1 .hybrid-banner-ability{
+  max-width:235px;color:#fff6e5;font:500 clamp(12px,1vw,16px)/1.32 Inter,Arial,sans-serif;
+  text-shadow:0 1px 4px #000;
+}
+.app-shell.board-redesign-v1 .hybrid-sidebar-base{
+  background:#080807;display:flex;align-items:center;justify-content:center;
+  color:#c8b28b;font:900 9px/1 Inter,Arial,sans-serif;letter-spacing:.15em;
+}
+.app-shell.board-redesign-v1 .hybrid-sidebar-base i{font-style:normal;margin:0 9px;color:#e3c88f}
+/* CENTER: a materially distinct ivory inset. Its engravings are not click targets. */
+.app-shell.board-redesign-v1 .arena-stage {
+  --lab-dock:var(--hybrid-dock)!important;
+  position:relative!important;min-height:0!important;height:100%!important;
+  display:grid!important;grid-template-rows:minmax(0,1fr) 0px var(--hybrid-dock)!important;
+  overflow:visible!important;background:#28241e!important;
+}
+.app-shell.board-redesign-v1 .battlefield {
+  grid-row:1;position:relative!important;isolation:isolate;
+  min-height:0!important;width:auto!important;
+  margin:9px calc(var(--hybrid-right-w) + 7px) 4px 8px!important;
+  padding:clamp(8px,1vw,16px)!important;
+  gap:0!important;overflow:visible!important;
+  border:1px solid #8f8773!important;
+  border-radius:2px!important;
+  background:
+    radial-gradient(ellipse at 51% 44%,#eeece1 0%,#e1dfd3 31%,#d1cfc0 67%,#c2c1b4 100%)!important;
+  background-color:#d9d7ca!important;
+  box-shadow:inset 0 0 0 4px #f4f1e77d,inset 0 0 18px #4f493a5c,4px 4px 8px #0006!important;
+}
+.app-shell.board-redesign-v1 .hybrid-engraving{
+  position:absolute;inset:0;z-index:0;pointer-events:none;
+  background-image:url("/board/hybrid-engraving.svg");
+  background-position:center center;background-repeat:no-repeat;
+  background-size:auto 112%;
+  opacity:.88;mix-blend-mode:multiply;
+}
+.app-shell.board-redesign-v1 .battlefield::before {
+  content:"";position:absolute;z-index:0;inset:0;display:block!important;
+  width:auto!important;height:auto!important;border:0!important;
+  border-radius:0!important;left:0;top:0;transform:none!important;
+  background-image:
+    repeating-linear-gradient(22deg,#80765b03 0px,#80765b03 2px,transparent 2px,transparent 11px),
+    repeating-linear-gradient(-51deg,#4c433004 0px,#4c433004 1px,transparent 1px,transparent 15px);
+  pointer-events:none;
+}
+.app-shell.board-redesign-v1 .battlefield::after{
+  content:"";position:absolute;z-index:2;display:block!important;
+  left:-4px;right:-4px;width:auto;height:clamp(36px,5dvh,51px);
+  top:50%;transform:translateY(-50%);border:0!important;border-radius:0!important;
+  background:#080808;
+  clip-path:polygon(0% 0%,4% 0%,6.2% 50%,4% 100%,0% 100%,3.7% 50%,0% 0%,100% 0%,96.3% 50%,100% 100%,96% 100%,93.8% 50%,96% 0%);
+  /* The center is all one continuous heraldic band. */
+  box-shadow:0 3px 7px #0009;
+  pointer-events:none;
+}
+.app-shell.board-redesign-v1 .battlefield .lane{
+  position:relative;z-index:3;min-height:0!important;
+  grid-template-rows:minmax(0,1fr) clamp(36px,5dvh,51px) minmax(0,1fr)!important;
+  gap:0!important;padding:0 2px!important;
+}
+.app-shell.board-redesign-v1 .lane-axis{position:relative;z-index:5;gap:0!important;width:100%!important}
+.app-shell.board-redesign-v1 .lane-axis::before{display:none!important}
+.app-shell.board-redesign-v1 .lane-axis i{display:none!important}
+.app-shell.board-redesign-v1 .lane-axis span{
+  position:relative;z-index:5;display:grid;place-items:center;
+  width:100%;min-width:0!important;padding:4px 0!important;
+  background:transparent!important;color:#fff!important;
+  font:950 clamp(12px,1.83vw,28px)/1 Inter,Arial,sans-serif!important;
+  letter-spacing:-.035em!important;text-shadow:0 2px 1px #000;
+  clip-path:none!important;
+}
+.app-shell.board-redesign-v1 .board-slot,
+:root[data-theme="light"] .app-shell.board-redesign-v1 .board-slot{
+  position:relative;min-height:0!important;height:100%!important;
+  background:transparent!important;border:1px solid transparent!important;
+  box-shadow:none!important;border-radius:4px!important;
+  padding:4px!important;overflow:visible!important;
+}
+.app-shell.board-redesign-v1 .board-slot.opponent,
+.app-shell.board-redesign-v1 .board-slot.player{
+  background:transparent!important;border:1px solid transparent!important;
+}
+.app-shell.board-redesign-v1 .board-slot.drop-active,
+:root[data-theme="light"] .app-shell.board-redesign-v1 .board-slot.drop-active {
+  border-color:#bd8a42!important;
+  background:#dfcda04d!important;box-shadow:inset 0 0 21px #be975b62,0 0 9px #c5a36b60!important;
+}
+.app-shell.board-redesign-v1 .slot-stack{
+  display:flex;align-items:center;justify-content:center;flex-wrap:wrap;align-content:center;
+  min-height:0!important;max-height:100%!important;height:100%;
+  padding:12px 2px!important;gap:7px;overflow:visible!important;
+}
+.app-shell.board-redesign-v1 .board-slot.opponent .slot-stack{padding:13px 2px 23px!important}
+.app-shell.board-redesign-v1 .board-slot.player .slot-stack{padding:23px 2px 13px!important}
+.app-shell.board-redesign-v1 .played-card{position:relative;z-index:4;min-width:0;max-width:100%}
+.app-shell.board-redesign-v1 .current-board-card{
+  position:relative;z-index:5;
+  height:clamp(95px,20.5dvh,196px)!important;
+  max-width:100%!important;width:auto!important;
+  filter:drop-shadow(0 8px 8px #0009)!important;
+  transition:transform .2s ease,filter .2s ease!important;
+}
+.app-shell.board-redesign-v1 .current-board-card:hover,
+.app-shell.board-redesign-v1 .current-board-card:focus-visible{
+  transform:translateY(-6px) scale(1.065)!important;
+  filter:drop-shadow(0 14px 13px #000a)!important;z-index:10;
+}
+.app-shell.board-redesign-v1 .battle-card{
+  position:relative;z-index:3;
+  width:clamp(85px,9vw,145px)!important;height:clamp(39px,6.2dvh,60px)!important;
+  border:1px solid #938d79!important;border-radius:2px!important;
+  filter:grayscale(1) contrast(.9) drop-shadow(0 4px 5px #0007)!important;
+  opacity:.7;transition:opacity .2s,filter .2s,transform .2s;
+}
+.app-shell.board-redesign-v1 .battle-card:hover,
+.app-shell.board-redesign-v1 .battle-card:focus-visible{
+  opacity:1;filter:grayscale(.5) drop-shadow(0 8px 8px #0009)!important;
+  transform:translateY(-3px) scale(1.1)!important;z-index:15;
+}
+.app-shell.board-redesign-v1 .archive-count,
+.app-shell.board-redesign-v1 .slot-capacity,
+:root[data-theme="light"] .app-shell.board-redesign-v1 .archive-count,
+:root[data-theme="light"] .app-shell.board-redesign-v1 .slot-capacity {
+  border:0!important;background:#ebe7d9a8!important;color:#454136!important;
+  height:auto!important;min-width:0!important;padding:3px 6px!important;
+  border-radius:2px!important;font:700 clamp(8px,.76vw,12px)/1 Inter,Arial,sans-serif!important;
+  box-shadow:none!important;
+}
+.app-shell.board-redesign-v1 .board-slot .archive-count{right:4px!important}
+.app-shell.board-redesign-v1 .board-slot .slot-capacity{left:4px!important}
+/* RIGHT: life crests and actual deck are independent physical objects. */
+.app-shell.board-redesign-v1 .hybrid-right-rail{
+  position:absolute;z-index:10;right:0;top:0;
+  width:var(--hybrid-right-w);height:calc(100% - var(--hybrid-dock));
+  background:
+    linear-gradient(90deg,#11110e63,transparent 20%),
+    radial-gradient(ellipse at 60% 50%,#3e382b,#201e19 72%,#11110e 100%);
+  box-shadow:inset 3px 0 0 #9d805247;pointer-events:none;
+}
+.app-shell.board-redesign-v1 .hybrid-life-unit{
+  position:absolute;left:9%;width:83%;text-align:center;
+  display:flex;flex-direction:column;align-items:center;
+  gap:1px;pointer-events:none;
+}
+.app-shell.board-redesign-v1 .hybrid-life-unit.opponent{top:6%}
+.app-shell.board-redesign-v1 .hybrid-life-unit.player{top:67%}
+.app-shell.board-redesign-v1 .hybrid-life-label,
+.app-shell.board-redesign-v1 .hybrid-tally-label,
+.app-shell.board-redesign-v1 .hybrid-healed-label{
+  color:#d9cbb1;font:850 clamp(9px,.8vw,12px)/1 Inter,Arial,sans-serif;
+  letter-spacing:.11em;
+}
+.app-shell.board-redesign-v1 .hybrid-life-crest {
+  width:clamp(81px,9.1vw,150px);height:clamp(93px,10.9vw,176px);
+  display:grid;place-items:center;
+  background:#080808;
+  clip-path:polygon(50% 0,73% 28%,96% 14%,86% 70%,76% 96%,24% 96%,14% 70%,4% 14%,27% 28%);
+  filter:drop-shadow(0 6px 4px #000);
+}
+.app-shell.board-redesign-v1 .hybrid-life-number{
+  color:#fff;font:950 clamp(60px,6.7vw,109px)/1 Inter,Arial,sans-serif;
+  letter-spacing:-.08em;text-indent:-.08em;
+  animation:hybrid-life-enter .32s cubic-bezier(.2,.8,.25,1) both;
+}
+@keyframes hybrid-life-enter{
+  from{opacity:.35;transform:scale(1.22)}
+  to{opacity:1;transform:scale(1)}
+}
+.app-shell.board-redesign-v1 .hybrid-healed-label{font-size:9px;color:#e7d0a0}
+.app-shell.board-redesign-v1 .hybrid-duel-tally{
+  position:absolute;z-index:3;top:43%;width:100%;min-height:79px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:#070707;color:#fff;
+  clip-path:polygon(0 0,100% 0,100% 100%,0 100%,25% 50%);
+}
+.app-shell.board-redesign-v1 .hybrid-duel-tally strong{
+  font:950 clamp(34px,3.5vw,57px)/1 Inter,Arial,sans-serif;letter-spacing:-.09em;
+}
+.app-shell.board-redesign-v1 .hybrid-tally-label{font-size:10px}
+.app-shell.board-redesign-v1 .hybrid-deck-holder{
+  position:absolute;z-index:25;right:clamp(9px,1vw,20px);
+  bottom:calc(-1 * var(--hybrid-dock) + 10px);
+  pointer-events:auto;
+}
+.app-shell.board-redesign-v1 .hybrid-deck-object{
+  position:relative;display:block;
+  height:clamp(140px,22dvh,213px);aspect-ratio:63/88;
+  padding:0;border:0;background:none;cursor:pointer;
+  filter:drop-shadow(0 10px 15px #0009);
+  transition:transform .22s cubic-bezier(.18,.77,.29,1);
+}
+.app-shell.board-redesign-v1 .hybrid-deck-object:hover,
+.app-shell.board-redesign-v1 .hybrid-deck-object:focus-visible{
+  transform:translateY(-8px) rotate(-2deg);
+}
+.app-shell.board-redesign-v1 .hybrid-deck-object:focus-visible{outline:3px solid #d7b883;outline-offset:5px}
+.app-shell.board-redesign-v1 .hybrid-deck-layer{
+  position:absolute;inset:5px -5px -5px 5px;background:#a39578;
+  border:2px solid #0e0d0b;box-shadow:3px 3px 0 #44392a,5px 5px 0 #10100e;
+}
+.app-shell.board-redesign-v1 .hybrid-deck-face{
+  position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  border:3px solid #a58b57;outline:2px solid #0b0b09;
+  color:#bda578;background:
+    radial-gradient(ellipse at 50% 50%,#d1bd8c 0%,#b69b63 37%,#332e23 71%,#111313 100%);
+  box-shadow:inset 0 0 0 4px #12120e,inset 0 0 0 6px #d3b787a8;
+}
+.app-shell.board-redesign-v1 .hybrid-deck-face::before,
+.app-shell.board-redesign-v1 .hybrid-deck-face::after {
+  content:"";position:absolute;inset:13%;border:1px solid #d9be82;
+  transform:rotate(45deg);opacity:.72;pointer-events:none;
+}
+.app-shell.board-redesign-v1 .hybrid-deck-face::after{
+  inset:20%;transform:rotate(0deg);border-radius:50%;
+}
+.app-shell.board-redesign-v1 .hybrid-deck-face img{position:relative;z-index:2;width:53%;height:35%;object-fit:contain;filter:drop-shadow(0 1px 2px #0007)}
+.app-shell.board-redesign-v1 .hybrid-deck-face>span:last-child{
+  position:relative;z-index:2;color:#fff5d8;letter-spacing:.14em;
+  font:950 clamp(8px,.66vw,11px)/1 Inter,Arial,sans-serif;text-shadow:0 2px 3px #000;
+}
+.app-shell.board-redesign-v1 .hybrid-deck-info {
+  position:absolute;bottom:calc(100% + 14px);right:0;width:195px;
+  background:#181714;color:#eadfc9;border:1px solid #a78b59;
+  padding:12px;box-shadow:0 12px 24px #0009;
+  display:flex;flex-direction:column;gap:6px;font:650 11px/1.4 Inter,Arial,sans-serif;
+}
+.app-shell.board-redesign-v1 .hybrid-deck-info b{color:#d5b778;letter-spacing:.11em}
+.app-shell.board-redesign-v1 .hybrid-deck-info small{color:#bfb39e;font-size:10px}
+/* BOTTOM: a stable hand dock with an actual command rail. */
+.app-shell.board-redesign-v1 .hand-zone,
+:root[data-theme="light"] .app-shell.board-redesign-v1 .hand-zone{
+  grid-row:3!important;z-index:25!important;
+  height:100%!important;min-height:0!important;overflow:visible!important;
+  padding:8px calc(var(--hybrid-right-w) + 4px) 44px 10px!important;
+  background:
+    linear-gradient(#32291d,#171713) !important;
+  border-top:3px solid #947c56!important;
+}
+.app-shell.board-redesign-v1 .hand-zone .hand-layout,
+.app-shell.board-redesign-v1 .hand-zone:hover .hand-layout,
+.app-shell.board-redesign-v1 .hand-zone:focus-within .hand-layout,
+.app-shell.board-redesign-v1 .hand-zone.is-open .hand-layout{
+  height:100%!important;position:relative!important;inset:auto!important;
+  display:flex!important;align-items:center!important;overflow:visible!important;
+  transform:none!important;translate:none!important;transition:none!important;
+}
+.app-shell.board-redesign-v1 .hand-zone .hand{
+  width:100%;height:100%!important;min-height:0!important;
+  align-items:center!important;justify-content:center!important;
+  gap:clamp(9px,1.6vw,26px)!important;overflow:visible!important;
+}
+.app-shell.board-redesign-v1 .hand-zone .hand-card {
+  height:min(18dvh,170px)!important;width:auto!important;max-width:30%!important;
+  flex:0 0 auto!important;
+  transform:none!important;transform-origin:center bottom!important;
+  filter:drop-shadow(0 4px 8px #0009)!important;
+  transition:transform .21s cubic-bezier(.2,.8,.3,1),filter .21s!important;
+}
+@media(hover:hover) and (pointer:fine){
+  .app-shell.board-redesign-v1 .hand-zone .hand-card:hover,
+  .app-shell.board-redesign-v1 .hand-zone .hand-card:focus-visible,
+  .app-shell.board-redesign-v1 .hand-zone .hand-card.is-selected{
+    transform:translateY(-12px) scale(1.08)!important;z-index:65!important;
+    filter:drop-shadow(0 12px 14px #000a)!important;
+  }
+}
+.app-shell.board-redesign-v1 .arena-hand-toggle{display:none!important}
+.app-shell.board-redesign-v1 .arena-card-hover-preview {
+  display:block!important;position:absolute!important;z-index:95!important;
+  top:49%!important;left:47%!important;bottom:auto!important;
+  width:clamp(250px,25vw,365px)!important;height:auto!important;
+  aspect-ratio:63/88;transform:translate(-50%,-50%)!important;
+  pointer-events:none!important;filter:drop-shadow(0 24px 35px #000b);
+  animation:hybrid-card-lift .2s cubic-bezier(.15,.75,.25,1) both;
+}
+.app-shell.board-redesign-v1 .arena-card-board-preview{
+  position:absolute;z-index:96;pointer-events:none;
+  top:48%;left:46%;transform:translate(-50%,-50%);
+  width:clamp(220px,21vw,320px);aspect-ratio:63/88;
+  filter:drop-shadow(0 18px 30px #000c);
+}
+.app-shell.board-redesign-v1 .arena-card-hover-preview .game-card,
+.app-shell.board-redesign-v1 .arena-card-board-preview .game-card{
+  height:100%!important;width:100%!important;
+  border-radius:8px!important;border:2px solid #dfc48a!important;
+}
+@keyframes hybrid-card-lift{
+  from{opacity:.5;transform:translate(-50%,-43%) scale(.92)}
+  to{opacity:1;transform:translate(-50%,-50%) scale(1)}
+}
+.app-shell.board-redesign-v1 .hand-zone .manifest-hand{
+  position:absolute!important;right:calc(var(--hybrid-right-w) + 4px)!important;
+  top:8px!important;height:calc(100% - 47px)!important;
+  width:clamp(80px,12%,145px)!important;min-width:0!important;
+  overflow:hidden!important;background:#191919a6!important;
+  border:1px solid #9f8359;
+}
+.app-shell.board-redesign-v1 .manifest-hand-cards{overflow-x:auto!important;overflow-y:hidden!important}
+.app-shell.board-redesign-v1 .hybrid-command-rail{
+  position:absolute;z-index:35;left:0;right:0;bottom:0;height:42px;
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;gap:10px;padding:0 12px;
+  background:#070807!important;color:#ede3d2;border-top:1px solid #6c583b;
+  box-shadow:0 -3px 12px #0007;
+  font:700 11px/1.15 Inter,Arial,sans-serif;
+}
+.app-shell.board-redesign-v1 .hybrid-command-left{display:flex;gap:4px;align-items:center}
+.app-shell.board-redesign-v1 .hybrid-command-left details{position:relative}
+.app-shell.board-redesign-v1 .hybrid-command-left summary{
+  display:flex;align-items:center;gap:5px;padding:7px 8px;
+  list-style:none;cursor:pointer;white-space:nowrap;
+  color:#d8ba86;font:900 10px/1 Inter,Arial,sans-serif;letter-spacing:.08em;
+  border:1px solid #5e4c32;border-radius:2px;
+}
+.app-shell.board-redesign-v1 .hybrid-command-left summary::-webkit-details-marker{display:none}
+.app-shell.board-redesign-v1 .hybrid-command-left summary:focus-visible{outline:2px solid #e6c88c}
+.app-shell.board-redesign-v1 .hybrid-command-left details[open] summary{
+  background:#9c8258;color:#161513;
+}
+.app-shell.board-redesign-v1 .hybrid-archive-popover,
+.app-shell.board-redesign-v1 .hybrid-history-popover{
+  position:absolute;bottom:calc(100% + 9px);left:0;
+  width:270px;max-width:calc(100vw - 25px);max-height:min(45dvh,400px);
+  overflow-y:auto;z-index:100;padding:14px 13px;
+  background:#1b1b18;border:1px solid #b99b67;color:#f1e2cd;
+  box-shadow:0 20px 35px #000b;
+  display:grid;gap:8px;font:500 12px/1.3 Inter,Arial,sans-serif;
+}
+.app-shell.board-redesign-v1 .hybrid-archive-popover>strong,
+.app-shell.board-redesign-v1 .hybrid-history-popover>strong{
+  font-size:11px;letter-spacing:.11em;color:#d4b77c;
+}
+.app-shell.board-redesign-v1 .hybrid-archive-key,
+.app-shell.board-redesign-v1 .hybrid-archive-row{
+  display:grid;grid-template-columns:minmax(0,1fr) 45px 45px;
+  gap:8px;border-bottom:1px solid #5e503c;padding:5px 0;
+  align-items:center;
+}
+.app-shell.board-redesign-v1 .hybrid-archive-key{font-size:10px;letter-spacing:.06em;color:#bdb09b}
+.app-shell.board-redesign-v1 .hybrid-archive-row b{text-align:center;font-size:16px}
+.app-shell.board-redesign-v1 .hybrid-archive-popover small{color:#baa98d;font-size:10px}
+.app-shell.board-redesign-v1 .hybrid-history-popover{width:350px}
+.app-shell.board-redesign-v1 .hybrid-history-popover p{margin:0;padding-bottom:6px;border-bottom:1px solid #42392e}
+.app-shell.board-redesign-v1 .hybrid-command-status{
+  text-align:center;white-space:nowrap;text-overflow:ellipsis;
+  overflow:hidden;font-size:clamp(10px,.83vw,13px);color:#e9e0d0;
+}
+.app-shell.board-redesign-v1 .hybrid-command-round{
+  color:#d3c1a4;white-space:nowrap;font-size:10px;letter-spacing:.04em;
+}
+.app-shell.board-redesign-v1 .hybrid-command-round b{color:#fff;font-size:13px}
+.app-shell.board-redesign-v1 .hybrid-quiero-actions{display:flex;gap:5px}
+.app-shell.board-redesign-v1 .hybrid-quiero-actions button{
+  border:1px solid #a58858;padding:7px 10px;font-size:10px;font-weight:900;
+  background:#211f1b;color:#e9dec8;cursor:pointer;
+}
+.app-shell.board-redesign-v1 .hybrid-quiero-actions .is-primary{
+  background:#d3b787;color:#11110f;
+}
+.app-shell.board-redesign-v1 .drag-layer{pointer-events:none!important;z-index:20000!important}
+.app-shell.board-redesign-v1 .decision-overlay{display:none!important}
+/* The Stage remains usable on 16:10 laptops and smaller landscape screens. */
+@media(max-width:1100px) and (min-width:761px){
+  .app-shell.board-redesign-v1 {--hybrid-right-w:126px;--hybrid-dock:clamp(170px,23dvh,204px)}
+  .app-shell.board-redesign-v1 .arena-main{grid-template-columns:clamp(190px,19vw,230px)!important}
+  .app-shell.board-redesign-v1 .arena-topbar{grid-template-columns:minmax(124px,1fr) auto minmax(165px,1fr)!important}
+  .app-shell.board-redesign-v1 .game-difficulty-label{display:none}
+  .app-shell.board-redesign-v1 .hybrid-banner-ability{font-size:12px}
+  .app-shell.board-redesign-v1 .hybrid-life-crest{width:85px;height:97px}
+  .app-shell.board-redesign-v1 .hybrid-life-number{font-size:64px}
+  .app-shell.board-redesign-v1 .hybrid-deck-object{height:145px}
+  .app-shell.board-redesign-v1 .hybrid-duel-tally{min-height:62px}
+  .app-shell.board-redesign-v1 .hybrid-duel-tally strong{font-size:35px}
+  .app-shell.board-redesign-v1 .lane-axis span{font-size:clamp(12px,1.65vw,20px)!important}
+}
+/* Compact portrait layout: Champions move above the battlefield. */
+@media(max-width:760px){
+  .app-shell.arena-v2.board-redesign-v1{--hybrid-right-w:0px;--hybrid-dock:clamp(168px,29dvh,210px)}
+  .app-shell.board-redesign-v1 .arena-game-frame{
+    grid-template-rows:48px minmax(0,1fr)!important;
+  }
+  .app-shell.board-redesign-v1 .arena-topbar{
+    height:48px!important;min-height:48px!important;
+    grid-template-columns:auto 1fr auto!important;gap:5px!important;padding:0 7px!important;
+  }
+  .app-shell.board-redesign-v1 .arena-top-wordmark{font-size:16px!important}
+  .app-shell.board-redesign-v1 .arena-top-center{gap:4px!important}
+  .app-shell.board-redesign-v1 .arena-top-center>span{font-size:9px!important}
+  .app-shell.board-redesign-v1 .arena-top-center b{font-size:12px!important}
+  .app-shell.board-redesign-v1 .arena-topbar .game-tools{gap:0!important}
+  .app-shell.board-redesign-v1 .arena-topbar .game-tools .arena-icon-button{width:25px}
+  .app-shell.board-redesign-v1 .arena-topbar .game-difficulty-label,
+  .app-shell.board-redesign-v1 .arena-top-score{display:none!important}
+  .app-shell.board-redesign-v1 .hybrid-board-toggle{padding:6px 4px;font-size:8px!important}
+  .app-shell.board-redesign-v1 .arena-main{
+    display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+    grid-template-rows:92px minmax(0,1fr)!important;
+  }
+  .app-shell.board-redesign-v1 .arena-sidebar{
+    display:block!important;grid-row:1!important;grid-column:1!important;
+    height:92px!important;width:100%;border-right:0!important;border-bottom:2px solid #9a8459!important;
+  }
+  .app-shell.board-redesign-v1 .hybrid-sidebar-inner,
+  .app-shell.board-redesign-v1 .hybrid-sidebar-inner.show-opponent{
+    display:grid!important;grid-template-columns:1fr 1fr!important;
+    grid-template-rows:1fr!important;gap:2px;
+  }
+  .app-shell.board-redesign-v1 .hybrid-sidebar-base{display:none}
+  .app-shell.board-redesign-v1 .hybrid-champion-panel.opponent{grid-column:1;grid-row:1}
+  .app-shell.board-redesign-v1 .hybrid-champion-panel.player{grid-column:2;grid-row:1}
+  .app-shell.board-redesign-v1 .hybrid-champion-panel.is-expanded .hybrid-champion-art,
+  .app-shell.board-redesign-v1 .hybrid-champion-art{
+    height:100%;top:0;bottom:auto;object-fit:cover;transform:none!important;
+    -webkit-mask-image:none;mask-image:none;
+  }
+  .app-shell.board-redesign-v1 .hybrid-panel-overline{font-size:9px;top:4px;left:7px}
+  .app-shell.board-redesign-v1 .hybrid-mini-name{font-size:12px;bottom:5px;left:7px}
+  .app-shell.board-redesign-v1 .hybrid-banner-body{top:24px;left:7px;right:4px;gap:2px}
+  .app-shell.board-redesign-v1 .hybrid-banner-owner{display:none}
+  .app-shell.board-redesign-v1 .hybrid-banner-name{font-size:clamp(9px,2.9vw,14px);margin:0}
+  .app-shell.board-redesign-v1 .hybrid-banner-faction,
+  .app-shell.board-redesign-v1 .hybrid-banner-divider{display:none}
+  .app-shell.board-redesign-v1 .hybrid-banner-ability{
+    font-size:clamp(8px,2.2vw,10px);line-height:1.12;max-height:38px;
+    overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+  }
+  .app-shell.board-redesign-v1 .arena-stage{
+    display:grid!important;grid-row:2!important;grid-column:1!important;
+    grid-template-rows:minmax(0,1fr) 0px var(--hybrid-dock)!important;
+    min-height:0!important;
+  }
+  .app-shell.board-redesign-v1 .battlefield{
+    grid-row:1!important;margin:55px 3px 2px!important;padding:0 2px!important;
+    min-height:0!important;
+  }
+  .app-shell.board-redesign-v1 .battlefield .lane{
+    grid-template-rows:minmax(0,1fr) 29px minmax(0,1fr)!important;
+    padding:0 1px!important;
+  }
+  .app-shell.board-redesign-v1 .battlefield::after{height:29px}
+  .app-shell.board-redesign-v1 .lane-axis{min-height:29px}
+  .app-shell.board-redesign-v1 .lane-axis span{font-size:clamp(10px,3.3vw,15px)!important}
+  .app-shell.board-redesign-v1 .hybrid-engraving{background-size:auto 125%}
+  .app-shell.board-redesign-v1 .current-board-card{
+    height:clamp(72px,17dvh,128px)!important;max-width:97%!important;
+  }
+  .app-shell.board-redesign-v1 .battle-card{
+    height:34px!important;min-width:0!important;width:min(24vw,95px)!important;
+  }
+  .app-shell.board-redesign-v1 .slot-stack{padding:3px 1px!important}
+  .app-shell.board-redesign-v1 .board-slot.opponent .slot-stack{padding:4px 0 11px!important}
+  .app-shell.board-redesign-v1 .board-slot.player .slot-stack{padding:11px 0 4px!important}
+  .app-shell.board-redesign-v1 .hybrid-right-rail{
+    width:100%;height:54px;top:0;bottom:auto;
+    display:flex;align-items:center;justify-content:space-around;
+    background:#24221c;box-shadow:inset 0 -1px 0 #6d5536;
+  }
+  .app-shell.board-redesign-v1 .hybrid-life-unit{
+    position:static;flex:0 0 auto;width:80px;flex-direction:row;gap:4px;
+  }
+  .app-shell.board-redesign-v1 .hybrid-life-label{font-size:8px;letter-spacing:0;max-width:35px}
+  .app-shell.board-redesign-v1 .hybrid-life-crest{
+    width:44px;height:49px;flex:0 0 auto;
+  }
+  .app-shell.board-redesign-v1 .hybrid-life-number{font-size:36px}
+  .app-shell.board-redesign-v1 .hybrid-healed-label{display:none}
+  .app-shell.board-redesign-v1 .hybrid-duel-tally{
+    position:static;width:85px;height:40px;min-height:40px;
+    clip-path:none;background:#050505;
+  }
+  .app-shell.board-redesign-v1 .hybrid-duel-tally strong{font-size:23px}
+  .app-shell.board-redesign-v1 .hybrid-tally-label{font-size:8px}
+  .app-shell.board-redesign-v1 .hybrid-deck-holder{display:none}
+  .app-shell.board-redesign-v1 .hand-zone{
+    padding:5px 5px 44px!important;overflow:visible!important;
+    height:100%!important;min-height:0!important;
+  }
+  .app-shell.board-redesign-v1 .hand-zone .hand-card{
+    height:min(21dvh,150px)!important;max-width:31%!important;transform:none!important;
+  }
+  .app-shell.board-redesign-v1 .arena-card-hover-preview,
+  .app-shell.board-redesign-v1 .arena-card-board-preview{display:none!important}
+  .app-shell.board-redesign-v1 .hand-zone .manifest-hand{
+    top:0!important;right:2px!important;width:34%!important;height:80%!important;
+  }
+  .app-shell.board-redesign-v1 .hybrid-command-rail{
+    height:44px;padding:0 5px;gap:4px;
+    grid-template-columns:auto minmax(0,1fr) auto;
+  }
+  .app-shell.board-redesign-v1 .hybrid-command-left{gap:2px}
+  .app-shell.board-redesign-v1 .hybrid-command-left summary{
+    font-size:8px;padding:6px 4px;letter-spacing:0;
+  }
+  .app-shell.board-redesign-v1 .hybrid-command-left .hybrid-history-details{display:none}
+  .app-shell.board-redesign-v1 .hybrid-command-status{font-size:9px;line-height:1.15}
+  .app-shell.board-redesign-v1 .hybrid-command-round{font-size:8px}
+  .app-shell.board-redesign-v1 .hybrid-command-round b{font-size:10px}
+  .app-shell.board-redesign-v1 .hybrid-quiero-actions button{font-size:8px;padding:7px 3px}
+}
+@media(prefers-reduced-motion:reduce){
+  .app-shell.board-redesign-v1 .hybrid-sidebar-inner,
+  .app-shell.board-redesign-v1 .hybrid-champion-art,
+  .app-shell.board-redesign-v1 .hybrid-banner-body,
+  .app-shell.board-redesign-v1 .hybrid-deck-object,
+  .app-shell.board-redesign-v1 .hand-card,
+  .app-shell.board-redesign-v1 .current-board-card,
+  .app-shell.board-redesign-v1 .battle-card{
+    transition:none!important;animation:none!important;
+  }
+  .app-shell.board-redesign-v1 .hybrid-life-number,
+  .app-shell.board-redesign-v1 .arena-card-hover-preview{
+    animation:none!important;
+  }
+}
