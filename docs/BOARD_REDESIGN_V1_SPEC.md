@@ -1,5 +1,5 @@
 # DAGGERLIGHT — Board Redesign v1
-**Status:** Design direction selected; implementation not started.
+**Status:** Step 1 implemented on the experimental branch (14 November 2026). Existing rules and classic comparison view preserved; premium timeline/archive animations remain Step 2. Build and tests verified by GitHub Actions.
 **Branch:** prototype/board-redesign-v1 (based on prototype/gameplay-v1)
 **Reference:** User-supplied ROUGH BOARD REDESIGN.png, 14 November 2026; Daggerlight Game Design Bible v0.3 (2 November 2026); docs/IDENTIDAD_VISUAL.md; current React and prior Phaser prototypes.
 **Purpose:** A faithful, higher-quality and tactile reinterpretation of the supplied layout, not an alternative board design.
@@ -176,3 +176,16 @@ Special situations to exercise: Majestad Dextral second Diestra slot, Athos thir
 5. Whether Archive wells appear as three small physical pockets per side or as counters set into the stone. Both must map to the actual six independent Archives.
 
 None of these decisions requires modifying rules or stopping the first faithful layout build.
+
+
+## Step 1 implementation log — 14 November 2026
+
+- New component: `src/board-redesign/HybridBoardHardware.tsx` (interactive reciprocal Champion panels, life crests, real-data deck, Archive and history rail, scalable engraving).
+- New CSS skin: `src/board-redesign/board.css` (hybrid pale/dark materials, three-position ribbon, card/slot/hand positioning, desktop and mobile layouts).
+- New editable vector ornament: `public/board/hybrid-engraving.svg` (resolution-independent circular engraving; final physical material texture remains art polish).
+- `src/App.tsx` shows hybrid board by default on **this experimental branch**, with a `CLÁSICO` comparison toggle or the `?board=classic` URL parameter; the original live React gameplay branch is unchanged.
+- Integration uses the existing `src/engine` state and action handlers, including card inspection, legal play, abilities, specials and Quiero / No quiero. No changes to game mechanics or saved-game schema.
+- Test: `src/board-redesign/HybridBoardHardware.test.tsx` ensures the hardware reads engine state and does not mutate it.
+- Preview workflow: `.github/workflows/board-redesign-v1-preview.yml` validates engine tests, builds the React client and publishes a **separate** `board-redesign-v1/` GitHub Pages path; it does not overwrite the gameplay-v1 build.
+- **Not implemented as Step 1:** animated card travel into Archives, high-end material assets, full presentation-state timeline, faction-specific particle choreography. They are covered by Step 2/3 above.
+- **Visual QA caveat:** automated build and data tests pass, but final visual screenshot comparison, touch testing on real devices and performance profiling remain to be done as part of visual sign-off.
