@@ -209,7 +209,7 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents}:{
         <DuelPowerCard played={duel.opponentPlay} side="opponent"/>
       </div>
       {auguryEvents.length>0&&<div className="duel-showcase-events">{auguryEvents.map((event,index)=><span key={index}>{event}</span>)}</div>}
-      <button type="button" className="duel-showcase-skip" onClick={onAdvance}>VER RESULTADO →</button>
+      <button type="button" className="duel-showcase-skip" onClick={onAdvance}>SALTAR A RESULTADO →</button>
     </div>
   );
 }
@@ -347,7 +347,7 @@ function samePlay(a:EnginePlay|null|undefined,b:EnginePlay|null|undefined) {
   return a.card.id===b.card.id && a.position===b.position;
 }
 
-function Slot({
+export function Slot({
   side,
   position,
   cards,
@@ -404,6 +404,7 @@ function Slot({
     >
       {archivedKind
         ? <button type="button" className="archive-count manifest-archive-button"
+          aria-label={`Archivo: ${archive} cartas. ${onCopyArchive&&archiveCards?.some(card=>card.specialArchiveKind==="dagger") ? "Copiar Daga Etérea" : "Inspeccionar carta especial"}`}
           title={onCopyArchive&&archiveCards?.some(card=>card.specialArchiveKind==="dagger")
             ? "Copiar una Daga Etérea archivada con Simetría Perfecta"
             : "Inspeccionar carta especial archivada"}
@@ -412,9 +413,9 @@ function Slot({
             if(onCopyArchive&&archiveCards?.some(card=>card.specialArchiveKind==="dagger"))
               onCopyArchive();
             else onManifestInspect(archivedKind);
-          }}>{archive}</button>
-        : <span className="archive-count" title="Archivo">{archive}</span>}
-      <span className="slot-capacity" title="Capacidad">{cards.length}/{capacityValue}</span>
+          }}><span className="archive-caption">ARCHIVO </span>{archive}</button>
+        : <span className="archive-count" title="Archivo" aria-label={`Archivo: ${archive} cartas`}><span className="archive-caption">ARCHIVO </span>{archive}</span>}
+      <span className="slot-capacity" title="Capacidad" aria-label={`Ocupación: ${cards.length} de ${capacityValue}`}>{cards.length}/{capacityValue}</span>
       {!!fieldCards.length && <div className="manifest-board-zone" aria-label="Cartas especiales en esta posición">
         {fieldCards.map((token,index)=><button type="button" key={token.kind+"-"+token.createdRound+"-"+index}
           className={"manifest-board-item"+(onCopyTarget?" is-copy-target":"")}
@@ -937,6 +938,7 @@ export default function App() {
         </section>
 
         <div className={"arena-main"+(handExpanded?" hand-expanded":"")}>
+          {boardRedesign && <HybridEngraving/>}
           <aside className="arena-sidebar" aria-label="Campeones y marcador">
             {boardRedesign ? <HybridSidebar player={game.player} opponent={game.opponent} playerName={playerName}/> : <>
             <ChampionBar side="opponent" championId={game.opponent.champion.id}
@@ -967,13 +969,12 @@ export default function App() {
                 <CardFace card={hoveredBoardCard}/>
               </div>
             )}
-            {hoveredHandIndex!==null && hand[hoveredHandIndex] && !drag && !handExpanded && (
+            {hoveredHandIndex!==null && hand[hoveredHandIndex] && !drag && !handExpanded && !duelPreview && (
               <div className="arena-card-hover-preview" aria-hidden="true">
                 <CardFace card={hand[hoveredHandIndex]}/>
               </div>
             )}
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
-          {boardRedesign && <HybridEngraving/>}
           {duelPreview && (duelStep==="cards"
             ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries} onAdvance={showDuelResult}/>
             : <button type="button" className={"duel-cinematic duel-cinematic-"+duelPreview.outcome} onClick={finishDuelPresentation} aria-label="Saltar animación del resultado">
@@ -983,7 +984,7 @@ export default function App() {
               <span className="duel-cinematic-label">DUELO {duelPreview.turn}</span>
               <strong>{duelPreview.outcome==="player"?"VICTORIA":duelPreview.outcome==="opponent"?"DERROTA":"EMPATE"}</strong>
               <span className="duel-cinematic-powers">{duelPreview.playerPlay.finalPower ?? duelPreview.playerPlay.card.power} <i>—</i> {duelPreview.opponentPlay.finalPower ?? duelPreview.opponentPlay.card.power}</span>
-              <span className="duel-cinematic-skip">TOCÁ PARA CONTINUAR</span>
+              <span className="duel-cinematic-skip">OMITIR ANIMACIÓN</span>
             </button>
           )}
           {positions.map(position=>(
@@ -1097,6 +1098,10 @@ export default function App() {
                 onFocus={()=>setHoveredHandIndex(index)}
 
                 onBlur={()=>setHoveredHandIndex(current=>current===index?null:current)}
+
+                onClick={event=>{
+                  if(event.detail===0)setInspection({card,handIndex:index,powerExact:true});
+                }}
 
                 onPointerDown={event=>{
 

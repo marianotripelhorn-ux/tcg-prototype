@@ -1,5 +1,5 @@
 # DAGGERLIGHT — Board Redesign v1
-**Status:** Step 1 implemented on the experimental branch (14 November 2026). Existing rules and classic comparison view preserved; premium timeline/archive animations remain Step 2. Build and tests verified by GitHub Actions.
+**Status:** Godot desktop composition ported to React (14 November 2026). See [implementation and validation](GODOT_BOARD_REACT_PORT.md). Existing rules, automatic duel progression and Classic comparison view are preserved; deeper cinematic/archive motion remains a later pass.
 **Branch:** prototype/board-redesign-v1 (based on prototype/gameplay-v1)
 **Reference:** User-supplied ROUGH BOARD REDESIGN.png, 14 November 2026; Daggerlight Game Design Bible v0.3 (2 November 2026); docs/IDENTIDAD_VISUAL.md; current React and prior Phaser prototypes.
 **Purpose:** A faithful, higher-quality and tactile reinterpretation of the supplied layout, not an alternative board design.

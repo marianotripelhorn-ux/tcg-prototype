@@ -1,5 +1,5 @@
-import { useState, type CSSProperties } from "react";
-import { championBackgroundUrl, championImageUrl } from "../championArtwork";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { championBackgroundUrl, championImageUrl, championShortName, championSubtitle } from "../championArtwork";
 import { DEFAULT_PLAYER_NAME } from "../playerProfile";
 import { positionLabels, positions } from "../data";
 import type { CardDefinition, Position } from "../types";
@@ -19,6 +19,8 @@ function ChampionPanel({
   onExpand:()=>void;onHoverEnd:()=>void;
 }) {
   const champion = state.champion;
+  const bannerBackground = championBackgroundUrl(champion.faction);
+  const subtitle = championSubtitle(champion.name);
   return <section
     className={`hybrid-champion-panel ${side} ${expanded?"is-expanded":"is-compact"}`}
     style={{"--hybrid-faction-accent":factionAccent[champion.faction]} as CSSProperties}
@@ -33,14 +35,17 @@ function ChampionPanel({
       onFocus={onExpand}
       onClick={onExpand}
     >
-      <span className="hybrid-portrait-surface" style={{backgroundImage:`url("${championBackgroundUrl(champion.faction)}")`}}>
+      <span className="hybrid-banner-fabric" aria-hidden="true"
+        style={{backgroundImage:`url("${bannerBackground}")`}}/>
+      <span className="hybrid-portrait-surface" style={{backgroundImage:`url("${bannerBackground}")`}}>
         <img className="hybrid-champion-art" src={championImageUrl(champion.id,true)} alt="" decoding="async"/>
         <span className="hybrid-panel-overline">{userLabel}</span>
-        <span className="hybrid-mini-name">{champion.name}</span>
+        <span className="hybrid-mini-name">{championShortName(champion.name)}</span>
       </span>
       <span className="hybrid-banner-body" aria-hidden={!expanded}>
         <span className="hybrid-banner-owner">{userLabel}</span>
-        <span className="hybrid-banner-name">{champion.name}</span>
+        <span className="hybrid-banner-name">{championShortName(champion.name)}</span>
+        {subtitle && <span className="hybrid-banner-subtitle">{subtitle}</span>}
         <span className="hybrid-banner-faction">{champion.faction==="red"?"GUARDIA DEXTRAL":
           champion.faction==="blue"?"CORTE SINISTRAL":
           champion.faction==="white"?"EMPÍREOS":
@@ -48,6 +53,8 @@ function ChampionPanel({
         <span className="hybrid-banner-divider" />
         <span className="hybrid-banner-ability">{champion.text}</span>
       </span>
+      <img className="hybrid-champion-figure" src={championImageUrl(champion.id)}
+        alt="" aria-hidden="true" decoding="async"/>
     </button>
   </section>;
 }
@@ -72,10 +79,21 @@ export function HybridSidebar({player,opponent,playerName}:{
 function LifeCrest({side,life,healed}:{
   side:Side;life:number;healed:number;
 }) {
-  return <div className={`hybrid-life-unit ${side}`} aria-label={`${side==="player"?"Tu Campeón":"Campeón rival"}: ${life} de 9 puntos de Vida`}>
+  const previousLife=useRef(life);
+  const [change,setChange]=useState<{direction:""|"is-damaged"|"is-healed";sequence:number}>({direction:"",sequence:0});
+  useEffect(()=>{
+    if(previousLife.current===life)return;
+    const direction=life<previousLife.current?"is-damaged":"is-healed";
+    previousLife.current=life;
+    setChange(current=>({direction,sequence:current.sequence+1}));
+    const timer=window.setTimeout(()=>setChange(current=>({...current,direction:""})),1100);
+    return ()=>window.clearTimeout(timer);
+  },[life]);
+  return <div className={`hybrid-life-unit ${side}${change.direction?` ${change.direction}`:""}`} aria-label={`${side==="player"?"Tu Campeón":"Campeón rival"}: ${life} de 9 puntos de Vida`}>
     <span className="hybrid-life-label">{side==="player"?"TU VIDA":"VIDA RIVAL"}</span>
     <div className="hybrid-life-crest">
       <span className="hybrid-life-number" key={life}>{life}</span>
+      {change.direction && <span className="hybrid-life-wave" key={change.sequence} aria-hidden="true"/>}
     </div>
     {healed>0 && <span className="hybrid-healed-label">+{healed} RECUPERADA</span>}
   </div>;
@@ -90,9 +108,10 @@ export function HybridRightRail({
   const [deckOpen,setDeckOpen]=useState(false);
   return <aside className="hybrid-right-rail" aria-label="Vida, marcador y mazo">
     <LifeCrest side="opponent" life={opponentLife} healed={opponentHealed}/>
-    <div className="hybrid-duel-tally" aria-label={`Duelos de esta ronda: rival ${score.opponent}, vos ${score.player}`}>
+    <div className="hybrid-duel-tally" aria-label={`Duelos de esta ronda: vos ${score.player}, rival ${score.opponent}`}>
       <span className="hybrid-tally-label">DUELOS</span>
-      <strong>{score.opponent}–{score.player}</strong>
+      <strong>{score.player}–{score.opponent}</strong>
+      <span className="hybrid-tally-sides">VOS · RIVAL</span>
     </div>
     <LifeCrest side="player" life={playerLife} healed={playerHealed}/>
     <div className="hybrid-deck-holder">
@@ -102,11 +121,11 @@ export function HybridRightRail({
         onClick={()=>setDeckOpen(current=>!current)}>
         <span className="hybrid-deck-layer" aria-hidden="true"/>
         <span className="hybrid-deck-face" aria-hidden="true">
-          <span className="hybrid-deck-ornament"/>
-          <img src={`${import.meta.env.BASE_URL}branding/logo.svg`} alt=""/>
-          <span>DAGGERLIGHT</span>
+          <img className="hybrid-deck-art" src={`${import.meta.env.BASE_URL}board/cardback-gold.png`}
+            alt="" decoding="async"/>
         </span>
       </button>
+      <span className="hybrid-deck-count">MAZO · <b>{deckRemaining}</b></span>
       {deckOpen && <div className="hybrid-deck-info" role="status">
         <b>MAZO</b><span>{deckRemaining} restantes</span>
         <span>{discardCount} descartadas</span>
@@ -164,5 +183,6 @@ export function HybridCommandRail({
 }
 
 export function HybridEngraving(){
-  return <div className="hybrid-engraving" aria-hidden="true" style={{backgroundImage:`url("${import.meta.env.BASE_URL}board/hybrid-engraving.svg")`}}/>;
+  return <div className="hybrid-engraving is-reference-compass" aria-hidden="true"
+    style={{backgroundImage:`url("${import.meta.env.BASE_URL}board/arena-compass-source.png")`}}/>;
 }

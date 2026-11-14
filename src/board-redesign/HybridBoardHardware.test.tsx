@@ -31,9 +31,10 @@ describe("Hybrid board is a view of the authoritative engine state",()=>{
     expect(html).toContain("hybrid-life-number");
     expect(html).toContain(">7</span>");
     expect(html).toContain(">9</span>");
-    expect(html).toContain("1–0");
+    expect(html).toContain("0–1");
+    expect(html).toContain("VOS · RIVAL");
     expect(html).toContain("Mazo:");
-    expect(html).toContain("branding/logo.svg");
+    expect(html).toContain("board/cardback-gold.png");
   });
 
   it("reads the six Archives directly from the real game state",()=>{
@@ -52,10 +53,10 @@ describe("Hybrid board is a view of the authoritative engine state",()=>{
     expect(html).toContain("Tu turno");
   });
 
-  it("uses a vector engraved overlay with the Vite public base",()=>{
+  it("uses the original compass artwork with the Vite public base",()=>{
     const html=renderToStaticMarkup(createElement(HybridEngraving));
     expect(html).toContain("hybrid-engraving");
-    expect(html).toContain("board/hybrid-engraving.svg");
+    expect(html).toContain("board/arena-compass-source.png");
     expect(html).toContain("aria-hidden");
   });
 
@@ -70,5 +71,32 @@ describe("Hybrid board is a view of the authoritative engine state",()=>{
       onChooseQuiero:()=>{}
     }));
     expect(JSON.stringify(game)).toBe(before);
+  });
+
+  it("reveals the real Quiero decision only after duel presentation finishes",()=>{
+    const game=newGame();
+    game.phase="awaiting_quiero";
+    game.duelScore={player:0,opponent:2};
+    const props={
+      game,pendingOpponent:null,selectedCard:null,latestEvent:"",duelResolving:true,
+      onChooseQuiero:()=>{}
+    };
+    const resolving=renderToStaticMarkup(createElement(HybridCommandRail,props));
+    expect(resolving).toContain("Resolviendo el duelo");
+    expect(resolving).not.toContain("hybrid-quiero-actions");
+    const waiting=renderToStaticMarkup(createElement(HybridCommandRail,{...props,duelResolving:false}));
+    expect(waiting).toContain("hybrid-quiero-actions");
+    expect(waiting).toContain(">NO QUIERO</button>");
+    expect(waiting).toContain(">QUIERO</button>");
+  });
+
+  it("does not introduce a next-duel action during an ordinary player turn",()=>{
+    const html=renderToStaticMarkup(createElement(HybridCommandRail,{
+      game:newGame(),pendingOpponent:null,selectedCard:null,latestEvent:"",duelResolving:false,
+      onChooseQuiero:()=>{}
+    }));
+    expect(html).toContain("Tu turno");
+    expect(html).not.toContain("<button");
+    expect(html).not.toContain("SIGUIENTE DUELO");
   });
 });
