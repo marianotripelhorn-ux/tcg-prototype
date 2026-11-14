@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { championBackgroundUrl, championImageUrl } from "../championArtwork";
 import { DEFAULT_PLAYER_NAME } from "../playerProfile";
 import { positionLabels, positions } from "../data";
@@ -21,7 +21,7 @@ function ChampionPanel({
   const champion = state.champion;
   return <section
     className={`hybrid-champion-panel ${side} ${expanded?"is-expanded":"is-compact"}`}
-    style={{"--hybrid-faction-accent":factionAccent[champion.faction]} as React.CSSProperties}
+    style={{"--hybrid-faction-accent":factionAccent[champion.faction]} as CSSProperties}
     onPointerLeave={event=>{if(event.pointerType==="mouse")onHoverEnd();}}
   >
     <button
