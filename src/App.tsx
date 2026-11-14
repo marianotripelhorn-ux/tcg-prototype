@@ -28,6 +28,7 @@ import { capacity, legalPositions } from "./engine/rules";
 import type { AIDifficulty, DuelSummary, EnginePlay, GameState, ActiveManifestation, SpecialKind } from "./engine/types";
 import { ManifestCard, ManifestCardDialog } from "./ManifestCard";
 import { formatPowerDelta, playEffectFeedback, playPowerDelta } from "./engine/presentation";
+import { HybridSidebar, HybridRightRail, HybridCommandRail, HybridEngraving } from "./board-redesign/HybridBoardHardware";
 import { appendMatchHistory, clearSavedMatch, completedMatch, newSavedMatch, readMatchHistory, readSavedMatch, summarizeHistory, writeSavedMatch } from "./persistence";
 import type { SavedMatch } from "./persistence";
 import { analyticsAvailable, analyticsOptedIn, sendCompletedMatch, setAnalyticsConsent } from "./telemetry";
@@ -471,6 +472,7 @@ export default function App() {
   const [aiDifficulty,setAiDifficulty]=useState<AIDifficulty>("normal");
   const [screen,setScreen]=useState<"home"|"champions"|"arcade"|"collection"|"table"|"decklab"|"multiplayer"|"playtest">("home");
   const [playerName,setPlayerName]=useState(()=>readPlayerName());
+  const [boardRedesign,setBoardRedesign]=useState(()=>new URLSearchParams(window.location.search).get("board")!=="classic");
   const [handExpanded,setHandExpanded]=useState(false);
   const [hoveredHandIndex,setHoveredHandIndex]=useState<number|null>(null);
   const [hoveredBoardCard,setHoveredBoardCard]=useState<CardDefinition|null>(null);
@@ -884,7 +886,7 @@ export default function App() {
         : `DUELO ${game.turn} · ${game.initiative==="player"?"VOS ABRÍS":"IA ABRE"}`;
 
   return (
-    <main className="app-shell arena-v2">
+    <main className={"app-shell arena-v2"+(boardRedesign?" board-redesign-v1":"")}>
       <div className="ambient ambient-one" />
       <div className="ambient ambient-two" />
 
@@ -901,6 +903,17 @@ export default function App() {
             {arcadeRun && <em>ARCADE · {arcadeRun.index+1}/{arcadeRun.opponents.length}</em>}
           </div>
           <div className="game-tools">
+            <button type="button" className="hybrid-board-toggle"
+              title={boardRedesign?"Mostrar el tablero React anterior":"Ver el nuevo tablero híbrido"}
+              onClick={()=>{
+                const next=!boardRedesign;
+                setBoardRedesign(next);
+                setHoveredHandIndex(null);
+                setHandExpanded(false);
+                const url=new URL(window.location.href);
+                url.searchParams.set("board",next?"hybrid":"classic");
+                window.history.replaceState(null,"",url.toString());
+              }}>{boardRedesign?"CLÁSICO":"HÍBRIDO"}</button>
             <span className="game-difficulty-label" title="Dificultad de la IA">
               {game.aiDifficulty==="easy"?"FÁCIL":game.aiDifficulty==="hard"?"DIFÍCIL":"NORMAL"}
             </span>
@@ -925,6 +938,7 @@ export default function App() {
 
         <div className={"arena-main"+(handExpanded?" hand-expanded":"")}>
           <aside className="arena-sidebar" aria-label="Campeones y marcador">
+            {boardRedesign ? <HybridSidebar player={game.player} opponent={game.opponent} playerName={playerName}/> : <>
             <ChampionBar side="opponent" championId={game.opponent.champion.id}
               faction={game.opponent.champion.faction} name={game.opponent.champion.name}
               life={displayed?.opponentLife??game.opponent.life}
@@ -944,6 +958,7 @@ export default function App() {
               playerName={playerName} active={actingSide==="player"}/>
             <div className="arena-sidebar-hand-art" aria-hidden="true"
               style={{backgroundImage:`linear-gradient(0deg,#171816a8,#17181670),url("${championBackgroundUrl(game.player.champion.faction)}")`}}/>
+            </>}
           </aside>
           <div className="arena-stage">
             <span className="arena-visually-hidden" role="status">{turnText}</span>
@@ -958,6 +973,7 @@ export default function App() {
               </div>
             )}
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
+          {boardRedesign && <HybridEngraving/>}
           {duelPreview && (duelStep==="cards"
             ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries} onAdvance={showDuelResult}/>
             : <button type="button" className={"duel-cinematic duel-cinematic-"+duelPreview.outcome} onClick={finishDuelPresentation} aria-label="Saltar animación del resultado">
@@ -1023,6 +1039,15 @@ export default function App() {
             </div>
           ))}
         </section>
+        {boardRedesign && <HybridRightRail
+          playerLife={displayed?.playerLife??game.player.life}
+          opponentLife={displayed?.opponentLife??game.opponent.life}
+          playerHealed={displayed?.playerHealed??game.player.healedLife}
+          opponentHealed={displayed?.opponentHealed??game.opponent.healedLife}
+          score={displayed?.score??game.duelScore}
+          deckRemaining={game.player.deck.length}
+          discardCount={game.player.discard.length}
+        />}
 
         <div className="action-line" role="status">
           {duelPreview
@@ -1075,7 +1100,7 @@ export default function App() {
 
                 onPointerDown={event=>{
 
-                  if(!handExpanded && window.matchMedia("(min-width:761px)").matches){
+                  if(!boardRedesign && !handExpanded && window.matchMedia("(min-width:761px)").matches){
                      setHandExpanded(true);
                      setHoveredHandIndex(null);
                      return;
@@ -1141,6 +1166,14 @@ export default function App() {
           </aside>}
           </div>
         </section>
+        {boardRedesign && <HybridCommandRail
+          game={game}
+          pendingOpponent={pendingOpponent}
+          selectedCard={selectedCard}
+          latestEvent={latestEvent}
+          duelResolving={!!duelPreview}
+          onChooseQuiero={chooseQuiero}
+        />}
 
           </div>
         </div>
@@ -1204,7 +1237,7 @@ export default function App() {
           </div>
         )}
 
-        {game.phase==="awaiting_quiero" && !duelPreview && (
+        {game.phase==="awaiting_quiero" && !duelPreview && !boardRedesign && (
           <div className="decision-overlay">
             <div className="decision-card">
               <span>VAS 0–2</span>
