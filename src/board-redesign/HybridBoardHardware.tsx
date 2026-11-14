@@ -164,5 +164,5 @@ export function HybridCommandRail({
 }
 
 export function HybridEngraving(){
-  return <div className="hybrid-engraving" aria-hidden="true"/>;
+  return <div className="hybrid-engraving" aria-hidden="true" style={{backgroundImage:`url("${import.meta.env.BASE_URL}board/hybrid-engraving.svg")`}}/>;
 }
