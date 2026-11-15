@@ -1,0 +1,139 @@
+/*
+ * DAGGERLIGHT / Animation Laboratory v4
+ * Three directed effects founded on the approved v3 spectral language.
+ * Physical color as material, one contained wave, one decisive result.
+ * No random particles in any of these three studies.
+ */
+.animation-lab .lab-stage.scene-power-rise,
+.animation-lab .lab-stage.scene-power-fall,
+.animation-lab .lab-stage.scene-champion-impact{
+  --v4-edge:var(--spectral-v3-light);
+  --v4-core:var(--spectral-v3-color);
+  --v4-ink:var(--spectral-v3-ink);
+}
+.animation-lab .scene-power-rise .lab-card-anchor,
+.animation-lab .scene-power-fall .lab-card-anchor,
+.animation-lab .scene-champion-impact .lab-card-anchor{top:42%}
+.animation-lab .lab-v4-card-sigil{
+  position:absolute;inset:13% 12%;z-index:6;
+  pointer-events:none;opacity:0;visibility:hidden;
+  display:grid;place-items:center;color:var(--v4-edge,#e4c38b);
+  filter:drop-shadow(0 0 3px var(--v4-core,#c8a36a));
+}
+.animation-lab .lab-v4-card-sigil::before{
+  content:"";position:absolute;width:77%;aspect-ratio:1;
+  border:1px solid currentColor;transform:rotate(45deg);
+  opacity:.74;
+}
+.animation-lab .lab-v4-card-sigil::after{
+  content:"";position:absolute;width:35%;height:35%;
+  border:1px solid currentColor;transform:rotate(45deg);
+  opacity:.8;
+}
+.animation-lab .lab-v4-card-sigil span{
+  width:100%;height:1px;display:block;position:absolute;
+  background:linear-gradient(90deg,transparent,currentColor 20%,currentColor 80%,transparent);
+  transform:rotate(-45deg);opacity:.65;
+}
+.animation-lab .lab-v4-card-sigil b{
+  font:400 clamp(25px,2.1vw,34px)/1 'Archivo Black',Impact,sans-serif;
+  display:block;position:relative;z-index:1;
+  text-shadow:0 2px 1px var(--v4-ink,#111);
+}
+.animation-lab .flavor-shadow .lab-v4-card-sigil{
+  color:#a9a293;
+  filter:drop-shadow(0 0 1px #f6eddf) drop-shadow(0 0 5px #19191a);
+}
+.animation-lab .lab-v4-transfer{
+  position:absolute;left:52%;top:41%;width:24%;height:clamp(38px,7dvh,68px);
+  z-index:9;pointer-events:none;opacity:0;visibility:hidden;
+  transform:translateY(-50%);
+  clip-path:inset(0 100% 0 0);
+  background:
+    linear-gradient(to bottom,transparent 0%,var(--v4-ink,#171717) 26%,
+      var(--v4-core,#be9a61) 43%,var(--v4-edge,#f0d48f) 50%,
+      var(--v4-core,#bd9b61) 56%,var(--v4-ink,#191919) 74%,transparent);
+  -webkit-mask-image:linear-gradient(180deg,transparent 0%,black 33%,black 67%,transparent 100%);
+  mask-image:linear-gradient(180deg,transparent 0%,black 33%,black 67%,transparent 100%);
+  filter:drop-shadow(0 0 4px var(--v4-core,#d1b070));
+}
+.animation-lab .flavor-shadow .lab-v4-transfer{
+  background:
+    linear-gradient(180deg,transparent 0%,#0e1013 27%,#36383c 42%,
+      #050607 50%,#272a2c 60%,#0e1013 72%,transparent);
+  filter:drop-shadow(0 0 2px #222527);
+}
+.animation-lab .lab-v4-crown-wash{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  opacity:0;visibility:hidden;
+  background:linear-gradient(178deg,#363434 0%,#050607 53%,#2d2b29 100%);
+  clip-path:inset(0 0 100% 0);
+}
+.animation-lab .lab-v4-crown-rim{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  opacity:0;visibility:hidden;
+  box-shadow:inset 0 0 0 10px #cbbba177,inset 0 -17px 25px #171819;
+  background:radial-gradient(ellipse at 52% 47%,transparent 43%,#ffffff20 67%,transparent 82%);
+}
+.animation-lab .lab-life-crest{position:relative;isolation:isolate}
+.animation-lab .lab-life-crest strong{position:relative;z-index:3}
+.animation-lab .lab-v4-delta{
+  position:absolute;z-index:12;top:48%;left:77%;
+  color:var(--spectral-v3-light,#e4c48f);
+  font:400 clamp(27px,3vw,44px)/1 'Archivo Black',Impact,sans-serif;
+  text-shadow:0 2px 5px #121210bb,0 0 10px var(--spectral-v3-core,#bfa37c);
+  pointer-events:none;opacity:0;visibility:hidden;
+  transform:translate(-50%,-50%);
+}
+.animation-lab .lab-v4-delta.negative{
+  color:#252527;
+  text-shadow:0 1px 1px #e5dacf,0 0 9px #77726d;
+}
+.animation-lab .lab-v4-delta.damage{top:74%;left:76%}
+.animation-lab .lab-v4-stage-response{
+  position:absolute;z-index:7;left:47%;top:42%;
+  width:min(82%,780px);height:clamp(95px,17dvh,160px);
+  transform:translate(-50%,-50%) scaleX(.08);
+  pointer-events:none;opacity:0;visibility:hidden;
+  background:radial-gradient(ellipse at center,
+    var(--spectral-v3-core,#f1d292) 0%,var(--spectral-v3-color,#b99762) 19%,transparent 76%);
+  filter:blur(7px);
+  mix-blend-mode:multiply;
+}
+.animation-lab .flavor-shadow .lab-v4-stage-response{
+  background:radial-gradient(ellipse at center,#1b1c1e 0%,#343336 24%,transparent 76%);
+  filter:blur(5px);
+}
+.animation-lab .scene-power-fall .lab-power-badge,
+.animation-lab .scene-champion-impact .lab-life-crest{
+  border-color:#625a52;
+}
+.animation-lab .scene-power-rise .lab-power-badge{
+  border-color:#e3c37c;
+}
+.animation-lab .lab-power-badge strong,
+.animation-lab .lab-life-crest strong{
+  font-variant-numeric:tabular-nums;
+}
+.animation-lab .lab-effect-option.is-v4{
+  border-left:3px solid #e4c991;
+  background:linear-gradient(90deg,#48412f,#232923);
+}
+.animation-lab .lab-effect-option.is-v4.selected{
+  border-color:#f1d398;background:linear-gradient(90deg,#5b4b31,#2a302b);
+}
+.animation-lab .lab-v4-note{
+  margin:0 0 12px;
+  font-size:11px;line-height:1.55;
+  color:#e3d0ae;
+  border-left:2px solid #d1b784;
+  padding:8px 10px;background:#d1ad6320;
+}
+@media(prefers-reduced-motion:reduce){
+  .animation-lab .lab-v4-card-sigil,
+  .animation-lab .lab-v4-transfer,
+  .animation-lab .lab-v4-crown-wash,
+  .animation-lab .lab-v4-stage-response{
+    transition:none!important;animation:none!important;
+  }
+}
