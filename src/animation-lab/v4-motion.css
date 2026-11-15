@@ -24,7 +24,8 @@
   filter:drop-shadow(0 0 2px var(--v4-core,#c8a36a));
 }
 .animation-lab .lab-v4-orbit{
-  position:absolute;aspect-ratio:1;border:1px solid transparent;
+  position:absolute;top:50%;left:50%;translate:-50% -50%;
+  aspect-ratio:1;border:1px solid transparent;
   border-radius:50%;pointer-events:none;
 }
 .animation-lab .lab-v4-orbit.outer{
@@ -83,7 +84,8 @@
   color:#c0b8a9;transform-origin:center;
 }
 .animation-lab .lab-v4-impact-arcs span{
-  position:absolute;aspect-ratio:1;border-radius:50%;
+  position:absolute;top:50%;left:50%;translate:-50% -50%;
+  aspect-ratio:1;border-radius:50%;
   border:1.2px solid transparent;
 }
 .animation-lab .lab-v4-impact-arcs .outer{
