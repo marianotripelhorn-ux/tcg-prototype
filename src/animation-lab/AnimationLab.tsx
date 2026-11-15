@@ -195,7 +195,7 @@ export default function AnimationLab(){
         .to(fl,{autoAlpha:.65,duration:.08},"<")
         .to(fl,{autoAlpha:0,duration:.24})
         .to(crown,{x:7,rotation:3,scale:1.1,duration:.09},"<")
-        .call(()=>{ring(end,67);burst(end,75,1.35);},"<")
+        .call(()=>{ring(end,67);burst(end,75,1.35);},undefined,"<")
         .to(counter,{value:8,duration:.11,roundProps:"value",onUpdate:()=>{if(lifeValue.current)lifeValue.current.textContent=String(counter.value);}},"<")
         .to(crown,{x:-7,rotation:-3,duration:.085})
         .to(crown,{x:3,rotation:1.2,scale:1.02,duration:.11})
