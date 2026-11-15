@@ -906,7 +906,29 @@ export default function App() {
   }
 
   const legal=game.phase==="awaiting_player" && !duelPreview && !boardMotion ? legalPositions(game.player) : [];
-  const displayed=boardRedesign ? (boardMotion?.phase==="flight" || (duelPreview && duelStep==="cards") ? preDuel : null) : (duelPreview?preDuel:null);
+  // Display the round that is still physically on the table. The rules engine
+  // may already have reset the duel score and drawn the next hand.
+  const displayed:DuelPublicSnapshot|null=boardRedesign&&boardMotion&&boardMotion.phase!=="deal"
+    ? {
+        round:boardMotion.before.round,
+        playerLife:boardMotion.phase==="flight" || (duelPreview&&duelStep==="cards")
+          ?boardMotion.before.player.life:game.player.life,
+        opponentLife:boardMotion.phase==="flight" || (duelPreview&&duelStep==="cards")
+          ?boardMotion.before.opponent.life:game.opponent.life,
+        playerHealed:boardMotion.phase==="flight" || (duelPreview&&duelStep==="cards")
+          ?boardMotion.before.player.healedLife:game.player.healedLife,
+        opponentHealed:boardMotion.phase==="flight" || (duelPreview&&duelStep==="cards")
+          ?boardMotion.before.opponent.healedLife:game.opponent.healedLife,
+        score:{
+          player:boardMotion.before.duelScore.player +
+            (boardMotion.phase!=="flight" && !(duelPreview&&duelStep==="cards") &&
+             boardMotion.duel?.outcome==="player"?1:0),
+          opponent:boardMotion.before.duelScore.opponent +
+            (boardMotion.phase!=="flight" && !(duelPreview&&duelStep==="cards") &&
+             boardMotion.duel?.outcome==="opponent"?1:0)
+        }
+      }
+    : duelPreview?preDuel:null;
   const pendingOpponent=duelPreview || boardMotion ? null : game.pendingOpponentPlay;
   const focusPlayer=(boardRedesign?boardMotion?.duel?.playerPlay:null) ?? duelPreview?.playerPlay ?? null;
   const focusOpponent=(boardRedesign?boardMotion?.duel?.opponentPlay:null) ?? duelPreview?.opponentPlay ?? pendingOpponent;
@@ -1110,8 +1132,8 @@ export default function App() {
           playerHealed={displayed?.playerHealed??game.player.healedLife}
           opponentHealed={displayed?.opponentHealed??game.opponent.healedLife}
           score={displayed?.score??game.duelScore}
-          deckRemaining={game.player.deck.length}
-          discardCount={game.player.discard.length}
+          deckRemaining={boardRedesign&&boardMotion&&boardMotion.phase!=="deal"?boardMotion.before.player.deck.length:game.player.deck.length}
+          discardCount={boardRedesign&&boardMotion&&boardMotion.phase!=="deal"?boardMotion.before.player.discard.length:game.player.discard.length}
         />}
 
         <div className="action-line" role="status">
@@ -1241,7 +1263,8 @@ export default function App() {
           pendingOpponent={pendingOpponent}
           selectedCard={selectedCard}
           latestEvent={latestEvent}
-          duelResolving={!!duelPreview}
+          duelResolving={!!duelPreview||!!boardMotion}
+          transitionLabel={boardMotion?.phase==="flight"?"Jugando carta…":boardMotion?.phase==="archive"?"Archivando cartas…":boardMotion?.phase==="deal"?"Repartiendo nueva mano…":undefined}
           onChooseQuiero={chooseQuiero}
         />}
 
