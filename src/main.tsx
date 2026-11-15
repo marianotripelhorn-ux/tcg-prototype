@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { initializeTheme } from "./theme";
@@ -22,11 +22,15 @@ import "./arena-v2-overrides.css";
 import "./arena-interaction-fix.css";
 import "./board-redesign/board.css";
 import "./board-redesign/motion.css";
+import "./animation-lab/lab.css";
 
 initializeTheme();
 
+const isAnimationLab = new URLSearchParams(window.location.search).get("lab") === "animations";
+const AnimationLab = React.lazy(() => import("./animation-lab/AnimationLab"));
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    {isAnimationLab ? <Suspense fallback={<div className="lab-boot">Preparando el laboratorio de animaciones…</div>}><AnimationLab /></Suspense> : <App />}
   </React.StrictMode>
 );
