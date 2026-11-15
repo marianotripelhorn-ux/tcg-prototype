@@ -40,6 +40,24 @@ jobs:
         working-directory: board-source
         run: npm run build
 
+      - name: Install headless Chromium for visual smoke test
+        working-directory: board-source
+        run: npx playwright install --with-deps --only-shell chromium
+
+      - name: Browser-play all five Animation Lab demonstrations
+        working-directory: board-source
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/daggerlight-lab-vite.log 2>&1 &
+          node scripts/animation-lab-smoke.mjs
+
+      - name: Upload Animation Lab screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daggerlight-animation-lab-browser-check
+          path: /tmp/daggerlight-animation-lab-smoke.png
+          if-no-files-found: ignore
+
       - name: Checkout main site for separately scoped preview
         uses: actions/checkout@v4
         with:
