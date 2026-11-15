@@ -86,7 +86,7 @@ function cardSpriteStyle(card: CardDefinition): CSSProperties | undefined {
   };
 }
 
-function CardFace({
+export function CardFace({
   card,
   finalPower,
   powerExact = true,
