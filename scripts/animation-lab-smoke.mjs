@@ -32,9 +32,25 @@ try {
   assert.equal(await page.locator(".lab-v4-card-sigil").count(),0,
     "The old emblem must be removed, not merely hidden");
   assert.equal(await page.locator(".lab-v4-orbits .lab-v4-orbit").count(),3,
-    "The new card accents must be three thin circular or semicircular traces");
+    "The card accents must be three fine full circles");
   assert.equal(await page.locator(".lab-v4-impact-arcs span").count(),2,
-    "The damage impact must feature two fine semicircular crown traces");
+    "The Champion impact must have two fine full circles");
+  for(const selector of [".lab-v4-orbits .lab-v4-orbit",".lab-v4-impact-arcs span"]){
+    const rings=await page.locator(selector).evaluateAll(nodes=>nodes.map(node=>{
+      const style=getComputedStyle(node);
+      return ["Top","Right","Bottom","Left"].map(side=>({
+        color:style.getPropertyValue("border-"+side.toLowerCase()+"-color").trim(),
+        width:style.getPropertyValue("border-"+side.toLowerCase()+"-width").trim(),
+        line:style.getPropertyValue("border-"+side.toLowerCase()+"-style").trim()
+      }));
+    }));
+    for(const [index,sides] of rings.entries()){
+      const colors=sides.map(s=>s.color);
+      assert.ok(colors.every(c=>c===colors[0]),selector+" ring "+index+" has a missing/partial border");
+      assert.ok(sides.every(side=>side.line==="solid"&&parseFloat(side.width)>0),
+        selector+" ring "+index+" must have a complete thin border");
+    }
+  }
   await page.waitForTimeout(1100);
   const pixiStatus=(await page.locator(".lab-renderer-status").textContent())?.trim()??"unknown";
   console.log("PixiJS:",pixiStatus);
