@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, type ReactNode } from "react";
 import type { CardDefinition, Position } from "../types";
 import type { DuelSummary, EnginePlay, GameState } from "../engine/types";
 
-export type BoardMotionPhase = "flight" | "duel" | "archive";
+export type BoardMotionPhase = "flight" | "duel" | "archive" | "deal";
 export interface RectSnapshot { x:number;y:number;width:number;height:number }
 export interface BoardMotionSequence {
   id:number;
@@ -19,13 +19,13 @@ export interface BoardMotionSequence {
  * enough to move them visibly to the six corresponding Archive counters.
  */
 export function visibleRoundPlays(motion:BoardMotionSequence|null,side:"player"|"opponent"):EnginePlay[]|null {
-  if(!motion) return null;
+  if(!motion || motion.phase==="deal") return null;
   const previous=motion.before[side].roundPlays;
   if(!motion.duel) return previous;
   return [...previous,side==="player"?motion.duel.playerPlay:motion.duel.opponentPlay];
 }
 export function visibleHand(motion:BoardMotionSequence|null, fallback:CardDefinition[]):CardDefinition[]{
-  if(!motion)return fallback;
+  if(!motion || motion.phase==="deal")return fallback;
   if(motion.handIndex===null)return motion.before.player.hand;
   return motion.before.player.hand.filter((_,index)=>index!==motion.handIndex);
 }
@@ -124,8 +124,51 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
       ],{duration:680,easing:"cubic-bezier(.26,.73,.27,1)",delay:i*65,fill:"forwards"});
       animations.push(animation);
     }
+    // An unused third hand card is discarded, never placed in an Archive.
+    const remaining=Array.from(document.querySelectorAll<HTMLElement>(".app-shell.board-redesign-v1 .hand-zone .hand-card"));
+    const discard=document.querySelector<HTMLElement>(".hybrid-deck-object");
+    const discardRect=discard?.getBoundingClientRect();
+    for(let i=0;i<remaining.length;i++){
+      const card=remaining[i],rect=card.getBoundingClientRect();
+      const dx=discardRect?(discardRect.left+discardRect.width/2)-(rect.left+rect.width/2):170;
+      const dy=discardRect?(discardRect.top+discardRect.height/2)-(rect.top+rect.height/2):70;
+      animations.push(card.animate([
+        {transform:"translate3d(0,0,0) scale(1)",opacity:1},
+        {transform:`translate3d(${dx}px,${dy}px,0) rotate(12deg) scale(.25)`,opacity:0}
+      ],{duration:520,delay:140+i*50,easing:"cubic-bezier(.3,.78,.32,1)",fill:"forwards"}));
+    }
     let cancelled=false;
     if(animations.length===0){done.current();return;}
+    Promise.all(animations.map(a=>a.finished.catch(()=>{}))).then(()=>{if(!cancelled)done.current();});
+    return ()=>{cancelled=true;animations.forEach(a=>a.cancel());};
+  },[sequenceId,reducedMotion]);
+  return null;
+}
+
+/** Reveal the real newly-dealt hand from the physical deck, after the Archive
+ * transition has completed. The new game hand already exists in the engine. */
+export function DealMotion({sequenceId,reducedMotion,onComplete}:ArchiveFlightProps){
+  const done=useRef(onComplete);
+  done.current=onComplete;
+  useLayoutEffect(()=>{
+    if(reducedMotion){done.current();return;}
+    const cards=Array.from(document.querySelectorAll<HTMLElement>(".app-shell.board-redesign-v1 .hand-zone .hand-card"));
+    const source=document.querySelector<HTMLElement>(".app-shell.board-redesign-v1 .hybrid-deck-object");
+    const deck=source?.getBoundingClientRect();
+    const animations:Animation[]=[];
+    cards.forEach((card,index)=>{
+      const rect=card.getBoundingClientRect();
+      if(!rect.width)return;
+      const dx=deck?deck.left+deck.width/2-(rect.left+rect.width/2):160;
+      const dy=deck?deck.top+deck.height/2-(rect.top+rect.height/2):55;
+      animations.push(card.animate([
+        {transform:`translate3d(${dx}px,${dy}px,0) rotate(9deg) scale(.3)`,opacity:0,offset:0},
+        {transform:"translate3d(0,-9px,0) rotate(-1deg) scale(1.025)",opacity:1,offset:.83},
+        {transform:"translate3d(0,0,0) rotate(0deg) scale(1)",opacity:1,offset:1}
+      ],{duration:440,delay:index*90,easing:"cubic-bezier(.2,.72,.29,1)",fill:"forwards"}));
+    });
+    let cancelled=false;
+    if(!animations.length){done.current();return;}
     Promise.all(animations.map(a=>a.finished.catch(()=>{}))).then(()=>{if(!cancelled)done.current();});
     return ()=>{cancelled=true;animations.forEach(a=>a.cancel());};
   },[sequenceId,reducedMotion]);
