@@ -1,0 +1,121 @@
+/*
+ * DAGGERLIGHT / SOLID MOTION STUDIES
+ * Directed color masses, opposed Quiral fronts and structural waves.
+ * No showers of particles, jitter, or randomly generated energy.
+ * Isolated to the Animation Lab and never affects the live board.
+ */
+.animation-lab .lab-stage{
+  --chiral-left:#b59a65;
+  --chiral-left-core:#f2d492;
+  --chiral-right:#842b20;
+  --chiral-right-core:#d04d37;
+  --chiral-ink:#121718;
+  --chiral-ivory:#fcf1d9;
+}
+.animation-lab .lab-stage.flavor-arcane{
+  --chiral-left:#2b827c;
+  --chiral-left-core:#8de2d8;
+  --chiral-right:#303d72;
+  --chiral-right-core:#778fbe;
+  --chiral-ink:#101c2a;
+  --chiral-ivory:#d9fff3;
+}
+.animation-lab .lab-chiral-surface{
+  position:absolute;inset:0;z-index:6;overflow:hidden;pointer-events:none;
+  opacity:0;visibility:hidden;border:2px solid transparent;
+}
+.animation-lab .lab-chiral-paint{
+  position:absolute;inset:0;opacity:1;pointer-events:none;
+  will-change:clip-path;
+}
+.animation-lab .lab-chiral-left{
+  background:linear-gradient(112deg,
+    var(--chiral-ink) 0%,var(--chiral-left) 38%,var(--chiral-left-core) 91%);
+  clip-path:polygon(0 0,0 0,0 100%,0 100%);
+}
+.animation-lab .lab-chiral-right{
+  background:linear-gradient(248deg,
+    var(--chiral-ink) 0%,var(--chiral-right) 45%,var(--chiral-right-core) 92%);
+  clip-path:polygon(100% 0,100% 0,100% 100%,100% 100%);
+}
+.animation-lab .lab-chiral-solid{
+  position:absolute;inset:0;opacity:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 42%,var(--chiral-ivory) 0%,transparent 22%),
+    linear-gradient(105deg,var(--chiral-left-core) 0%,var(--chiral-left) 46%,
+      var(--chiral-ink) 50%,var(--chiral-right) 54%,
+      var(--chiral-right-core) 100%);
+  mix-blend-mode:normal;
+}
+.animation-lab .lab-chiral-axis{
+  position:absolute;z-index:7;left:calc(50% - 2px);top:-5%;
+  width:4px;height:110%;opacity:0;pointer-events:none;
+  background:linear-gradient(180deg,transparent 0%,var(--chiral-ivory) 18%,
+    #ffffff 48%,var(--chiral-ivory) 84%,transparent);
+  box-shadow:0 0 5px var(--chiral-ivory),0 0 17px var(--chiral-left-core);
+  transform-origin:50% 50%;
+}
+.animation-lab .lab-chiral-sheen{
+  position:absolute;inset:-20%;z-index:8;opacity:0;
+  background:linear-gradient(100deg,transparent 28%,
+    #ffffff00 35%,var(--chiral-ivory) 48%,#fff9 51%,transparent 67%);
+  pointer-events:none;filter:blur(10px);transform:translateX(-105%) skewX(-9deg);
+}
+.animation-lab .lab-chiral-seal{
+  position:absolute;z-index:10;left:50%;top:50%;width:50%;height:auto;
+  aspect-ratio:1;transform:translate(-50%,-50%);
+  opacity:0;pointer-events:none;
+  color:var(--chiral-ivory);
+  filter:drop-shadow(0 2px 1px #050604bb)
+    drop-shadow(0 0 8px var(--chiral-left-core));
+}
+.animation-lab .lab-chiral-seal polygon,
+.animation-lab .lab-chiral-seal path,
+.animation-lab .lab-chiral-seal rect{
+  stroke:currentColor;vector-effect:non-scaling-stroke;
+}
+.animation-lab .lab-chiral-seal .inner-ink{
+  fill:var(--chiral-ink);stroke:var(--chiral-ivory);stroke-width:1.1px;
+}
+.animation-lab .lab-chiral-seal .stroke-core{
+  stroke:var(--chiral-ivory);stroke-width:3.6px;fill:none;
+}
+.animation-lab .lab-chiral-stone-wave{
+  position:absolute;pointer-events:none;z-index:7;
+  left:47%;top:42%;width:88%;height:clamp(75px,15dvh,145px);
+  background:linear-gradient(90deg,transparent 0%,
+    var(--chiral-left-core) 30%,var(--chiral-ivory) 49%,
+    var(--chiral-right-core) 70%,transparent 100%);
+  -webkit-mask-image:linear-gradient(180deg,transparent 0%,black 38%,black 57%,transparent 100%);
+  mask-image:linear-gradient(180deg,transparent 0%,black 38%,black 57%,transparent 100%);
+  mix-blend-mode:multiply;
+  opacity:0;transform:translate(-50%,-50%) scaleX(.12);
+}
+.animation-lab .lab-chiral-stone-wave::after{
+  content:"";position:absolute;inset:31% 0;
+  border-top:1px solid var(--chiral-ink);
+  border-bottom:1px solid var(--chiral-ink);
+  opacity:.2;
+}
+.animation-lab .scene-chiral-wave .lab-slot-mark,
+.animation-lab .scene-chiral-seal .lab-slot-mark{
+  opacity:.33;
+}
+.animation-lab .scene-chiral-wave .lab-card-anchor,
+.animation-lab .scene-chiral-seal .lab-card-anchor{
+  top:42%;
+}
+.animation-lab .lab-controls .lab-identity-note{
+  font-size:11px;line-height:1.55;color:#ebd7b3;
+  padding:11px 12px;margin:0 0 14px;
+  border-left:2px solid #cdb27f;
+  background:linear-gradient(90deg,#b58f4b1b,transparent);
+}
+.animation-lab .lab-effect-option.is-v2{border-left:3px solid #d1b27c}
+.animation-lab .lab-effect-option.is-legacy{opacity:.78}
+@media(prefers-reduced-motion:reduce){
+  .animation-lab .lab-chiral-surface,.animation-lab .lab-chiral-stone-wave,
+  .animation-lab .lab-chiral-seal,.animation-lab .lab-chiral-axis{
+    transition:none!important;animation:none!important;
+  }
+}
