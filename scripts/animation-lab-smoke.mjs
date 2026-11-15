@@ -1,7 +1,7 @@
 /**
  * Real desktop browser smoke test for the isolated lab only.
  * Usage: start Vite preview on localhost:4173, then node scripts/animation-lab-smoke.mjs
- * Validates the actual React card, GSAP timeline controls, ten demos and Pixi canvas.
+ * Validates the actual React card, GSAP timeline controls, thirteen demos and Pixi canvas.
  */
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
@@ -27,12 +27,12 @@ try {
   await page.getByRole("heading",{name:"Laboratorio de animaciones"}).waitFor({timeout:12000});
   await page.locator(".lab-stage .lab-card .game-card").first().waitFor({timeout:12000});
   const buttons=page.locator(".lab-effect-option");
-  assert.equal(await buttons.count(),10,"Expected ten independent motion experiments");
+  assert.equal(await buttons.count(),13,"Expected thirteen independent motion experiments");
   await page.waitForTimeout(1100);
   const pixiStatus=(await page.locator(".lab-renderer-status").textContent())?.trim()??"unknown";
   console.log("PixiJS:",pixiStatus);
   // Software WebGL may be unavailable on some CI machines; GSAP must still work.
-  for(let index=0;index<10;index++){
+  for(let index=0;index<13;index++){
     await buttons.nth(index).click();
     const name=(await buttons.nth(index).textContent())?.trim();
     await page.getByRole("button",{name:/REPRODUCIR/}).click();
@@ -48,9 +48,31 @@ try {
     );
     console.log("Effect played:",name);
   }
-  // Verify that the new first study maps positive energy to antique gold and
+  // Validate v4's illustrative gameplay values: the original printed card
+  // remains the source for both Power studies, while Vida always starts at 9.
+  const basePower=Number((await page.locator(".lab-power-badge strong").textContent())?.trim());
+  assert.ok(Number.isFinite(basePower),"The selected Daggerlight card must have a numeric Power value");
+  await buttons.nth(0).click();
+  assert.ok((await page.locator(".lab-stage").getAttribute("class"))?.includes("flavor-gold"),"Power boost must choose gold");
+  await page.getByRole("button",{name:/REPRODUCIR/}).click();
+  await page.waitForFunction(()=>document.querySelector(".lab-transport-caption")?.textContent?.includes("EFECTO COMPLETADO"),null,{timeout:10000});
+  assert.equal(Number((await page.locator(".lab-power-badge strong").textContent())?.trim()),basePower+3,
+    "Power gain must show an illustrative +3");
+  await buttons.nth(1).click();
+  assert.ok((await page.locator(".lab-stage").getAttribute("class"))?.includes("flavor-shadow"),"Power drain must choose near-black ink");
+  await page.getByRole("button",{name:/REPRODUCIR/}).click();
+  await page.waitForFunction(()=>document.querySelector(".lab-transport-caption")?.textContent?.includes("EFECTO COMPLETADO"),null,{timeout:10000});
+  assert.equal(Number((await page.locator(".lab-power-badge strong").textContent())?.trim()),Math.max(0,basePower-3),
+    "Power drain must be bounded at zero");
+  await buttons.nth(2).click();
+  assert.ok((await page.locator(".lab-stage").getAttribute("class"))?.includes("flavor-shadow"),"Damage must choose near-black ink");
+  await page.getByRole("button",{name:/REPRODUCIR/}).click();
+  await page.waitForFunction(()=>document.querySelector(".lab-transport-caption")?.textContent?.includes("EFECTO COMPLETADO"),null,{timeout:10000});
+  assert.equal((await page.locator(".lab-life-crest strong").textContent())?.trim(),"8","Champion impact must visibly change sample Vida from 9 to 8");
+  console.log("PASS: Gold Power increase, black Power decrease, black Champion damage");
+  // Verify that the approved spectral reference still maps positive energy to antique gold and
   // negative energy to a genuinely dark, filled material treatment.
-  await page.locator(".lab-effect-option").first().click();
+  await buttons.nth(3).click();
   const stage=page.locator(".lab-stage");
   assert.ok((await stage.getAttribute("class"))?.includes("flavor-gold"),"Gold must be the default");
   await page.getByRole("button",{name:/Negro/}).click();
@@ -72,7 +94,7 @@ try {
   assert.match((await page.locator(".lab-transport-caption").textContent())??"",/Prueba reiniciada/);
   await page.screenshot({path:"/tmp/daggerlight-animation-lab-smoke.png"});
   assert.deepEqual(fatalErrors,[],"Browser page errors");
-  console.log("PASS: ten GSAP/PixiJS previews, replay controls and actual Daggerlight card.");
+  console.log("PASS: thirteen GSAP/PixiJS previews, replay controls and actual Daggerlight card.");
 } finally {
   await browser.close();
 }
