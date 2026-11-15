@@ -62,8 +62,8 @@
   pointer-events:none;filter:blur(10px);transform:translateX(-105%) skewX(-9deg);
 }
 .animation-lab .lab-chiral-seal{
-  position:absolute;z-index:10;left:50%;top:50%;width:50%;height:auto;
-  aspect-ratio:1;transform:translate(-50%,-50%);
+  position:absolute;z-index:10;left:25%;top:25%;width:50%;height:auto;
+  aspect-ratio:1;transform:scale(.62);transform-origin:center center;
   opacity:0;pointer-events:none;
   color:var(--chiral-ivory);
   filter:drop-shadow(0 2px 1px #050604bb)
