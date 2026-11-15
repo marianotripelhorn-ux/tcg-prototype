@@ -160,9 +160,9 @@ export default function AnimationLab(){
       tl.to(c,{y:-9,scale:1.035,filter:"brightness(1.35) drop-shadow(0 20px 18px #0009)",duration:.24})
         .call(()=>{ring(start,85);burst(start,65,1.05);arc({x:start.x-85,y:start.y-110},{x:start.x+85,y:start.y+110},2.5)},undefined,"-=.12")
         .to(h,{autoAlpha:1,scale:1.08,duration:.29},"<")
-        .to({value:0},{value:1,duration:.76,ease:"power2.inOut",
-          onUpdate:function(){
-            const v=this.targets()[0] as {value:number};
+        .to(dissolution,{value:1,duration:.76,ease:"power2.inOut",
+          onUpdate:()=>{
+            const v=dissolution;
             c.style.clipPath=jaggedDissolve(v.value);
             if(Math.random()<.48){
               const box=c.getBoundingClientRect(),base=stage.current!.getBoundingClientRect();
