@@ -1,7 +1,7 @@
 /**
  * Real desktop browser smoke test for the isolated lab only.
  * Usage: start Vite preview on localhost:4173, then node scripts/animation-lab-smoke.mjs
- * Validates the actual React card, GSAP timeline controls, seven demos and Pixi canvas.
+ * Validates the actual React card, GSAP timeline controls, nine demos and Pixi canvas.
  */
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
@@ -27,12 +27,12 @@ try {
   await page.getByRole("heading",{name:"Laboratorio de animaciones"}).waitFor({timeout:12000});
   await page.locator(".lab-stage .lab-card .game-card").first().waitFor({timeout:12000});
   const buttons=page.locator(".lab-effect-option");
-  assert.equal(await buttons.count(),7,"Expected seven independent motion experiments");
+  assert.equal(await buttons.count(),9,"Expected nine independent motion experiments");
   await page.waitForTimeout(1100);
   const pixiStatus=(await page.locator(".lab-renderer-status").textContent())?.trim()??"unknown";
   console.log("PixiJS:",pixiStatus);
   // Software WebGL may be unavailable on some CI machines; GSAP must still work.
-  for(let index=0;index<7;index++){
+  for(let index=0;index<9;index++){
     await buttons.nth(index).click();
     const name=(await buttons.nth(index).textContent())?.trim();
     await page.getByRole("button",{name:/REPRODUCIR/}).click();
@@ -56,7 +56,7 @@ try {
   assert.match((await page.locator(".lab-transport-caption").textContent())??"",/Prueba reiniciada/);
   await page.screenshot({path:"/tmp/daggerlight-animation-lab-smoke.png"});
   assert.deepEqual(fatalErrors,[],"Browser page errors");
-  console.log("PASS: seven GSAP/PixiJS previews, replay controls and actual Daggerlight card.");
+  console.log("PASS: nine GSAP/PixiJS previews, replay controls and actual Daggerlight card.");
 } finally {
   await browser.close();
 }
