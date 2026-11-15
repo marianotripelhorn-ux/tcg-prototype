@@ -73,6 +73,7 @@ try {
   // Verify that the approved spectral reference still maps positive energy to antique gold and
   // negative energy to a genuinely dark, filled material treatment.
   await buttons.nth(3).click();
+  await page.getByRole("button",{name:/Dorado/}).click();
   const stage=page.locator(".lab-stage");
   assert.ok((await stage.getAttribute("class"))?.includes("flavor-gold"),"Gold must be the default");
   await page.getByRole("button",{name:/Negro/}).click();
