@@ -943,6 +943,7 @@ export default function App() {
           </div>
           <div className="game-tools">
             <button type="button" className="hybrid-board-toggle"
+              disabled={!!boardMotion}
               title={boardRedesign?"Mostrar el tablero React anterior":"Ver el nuevo tablero híbrido"}
               onClick={()=>{
                 const next=!boardRedesign;
