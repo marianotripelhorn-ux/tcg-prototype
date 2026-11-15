@@ -136,13 +136,14 @@ export function HybridRightRail({
 }
 
 export function HybridCommandRail({
-  game,pendingOpponent,selectedCard,latestEvent,duelResolving,onChooseQuiero
+  game,pendingOpponent,selectedCard,latestEvent,duelResolving,transitionLabel,onChooseQuiero
 }:{
   game:GameState;pendingOpponent:EnginePlay|null;selectedCard:CardDefinition|null;
-  latestEvent:string;duelResolving:boolean;onChooseQuiero:(wants:boolean)=>void;
+  latestEvent:string;duelResolving:boolean;transitionLabel?:string;onChooseQuiero:(wants:boolean)=>void;
 }) {
   let status=latestEvent;
-  if (duelResolving) status="Resolviendo el duelo…";
+  if (transitionLabel) status=transitionLabel;
+  else if (duelResolving) status="Resolviendo el duelo…";
   else if (game.phase==="awaiting_quiero") status="La ronda está 0–2. ¿Querés disputar el tercer duelo?";
   else if (pendingOpponent) status=`El rival abrió con ${pendingOpponent.card.name} en ${positionLabels[pendingOpponent.position]}. Elegí tu respuesta.`;
   else if (selectedCard) status=`${selectedCard.name} seleccionada · elegí una posición legal.`;
