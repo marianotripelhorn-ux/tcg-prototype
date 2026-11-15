@@ -44,7 +44,7 @@ jobs:
         working-directory: board-source
         run: npx playwright install --with-deps --only-shell chromium
 
-      - name: Browser-play all five Animation Lab demonstrations
+      - name: Browser-play all seven Animation Lab demonstrations
         working-directory: board-source
         run: |
           npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/daggerlight-lab-vite.log 2>&1 &
