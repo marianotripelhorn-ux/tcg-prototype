@@ -568,10 +568,15 @@ export default function AnimationLab(){
   const changeSpeed=(next:number)=>{
     setSpeed(next);timeline.current?.timeScale(next);fx.current?.setSpeed(next);
   };
-  const chooseEffect=(next:EffectId)=>{setEffect(next);setInfo("Efecto seleccionado · Presioná REPRODUCIR");};
+  const chooseEffect=(next:EffectId)=>{
+    setEffect(next);
+    if(next==="power-rise")setFlavor("gold");
+    if(next==="power-fall"||next==="champion-impact")setFlavor("shadow");
+    setInfo("Efecto seleccionado · Presioná REPRODUCIR");
+  };
   return <div className="animation-lab">
     <header className="lab-header">
-      <div className="lab-brand"><strong>DAGGERLIGHT</strong><span>ANIMATION LAB <i>03</i></span></div>
+      <div className="lab-brand"><strong>DAGGERLIGHT</strong><span>ANIMATION LAB <i>04</i></span></div>
       <div className="lab-header-actions">
         <span className="lab-renderer-status">{renderer}</span>
         <a href="./">VOLVER AL JUEGO <span aria-hidden="true">↗</span></a>
@@ -583,10 +588,11 @@ export default function AnimationLab(){
         <h1>Laboratorio de animaciones</h1>
         <p className="lab-lead">Pruebas visuales independientes. Ninguna modifica las reglas ni el tablero jugable.</p>
         <h2>01 / Elegí el efecto</h2>
-        <p className="lab-identity-note">La disolución original, ahora con una onda continua y pocas partículas. Dorado para efectos favorables; negro para adversos. Las otras pruebas siguen disponibles para comparar.</p>
+        <p className="lab-v4-note">Tres efectos nuevos con la identidad aprobada: <b>oro para potenciar</b> y <b>tinta negra para debilitar o dañar</b>. Una onda de material por efecto, sin partículas.</p>
+        <p className="lab-identity-note">La disolución etérea refinada (v3) sigue disponible como referencia y los estudios anteriores se mantienen para comparar.</p>
         <div className="lab-effect-list">
           {demos.map(d=><button key={d.id} type="button"
-            className={"lab-effect-option"+(effect===d.id?" selected":"")+(d.id==="spectral-refined"?" is-v3":d.id.startsWith("chiral")?" is-v2":d.id==="spectral"?" is-legacy":"")}
+            className={"lab-effect-option"+(effect===d.id?" selected":"")+(["power-rise","power-fall","champion-impact"].includes(d.id)?" is-v4":d.id==="spectral-refined"?" is-v3":d.id.startsWith("chiral")?" is-v2":d.id==="spectral"?" is-legacy":"")}
             aria-pressed={effect===d.id} onClick={()=>chooseEffect(d.id)}>
               <span>{d.label}</span><small>{d.duration}</small>
             </button>)}
@@ -659,6 +665,9 @@ export default function AnimationLab(){
               <div ref={spectralV3Fill} className="lab-spectral-v3-fill" aria-hidden="true"/>
               <div ref={spectralV3Front} className="lab-spectral-v3-front" aria-hidden="true"/>
               <div ref={spectralEnergy} className="lab-spectral-energy" aria-hidden="true"/>
+              <div ref={v4Sigil} className="lab-v4-card-sigil" aria-hidden="true">
+                <span/><b>✦</b>
+              </div>
               <svg ref={spectralEdge} className="lab-spectral-etching"
                 viewBox="0 0 210 294" preserveAspectRatio="none" aria-hidden="true">
                 <rect x="4" y="4" width="202" height="286" rx="1" fill="none"
@@ -678,8 +687,21 @@ export default function AnimationLab(){
           <div className="lab-archive-well" ref={archive}>
             <span>ARCHIVO</span><strong ref={archiveValue}>3</strong><small>TRONO · VOS</small>
           </div>
-          <div className="lab-power-badge" ref={power}><span>PODER FINAL</span><strong ref={powerValue}>{currentCard.power}</strong><small>+3 EN ESTA PRUEBA</small></div>
-          <div className="lab-life-holder" ref={life}><span>VIDA DEL RIVAL</span><div className="lab-life-crest"><strong ref={lifeValue}>9</strong></div></div>
+          <div className="lab-power-badge" ref={power}>
+            <span>PODER FINAL</span><strong ref={powerValue}>{currentCard.power}</strong>
+            <small>{effect==="power-fall"?"−3 (O HASTA 0) EN ESTA PRUEBA":"+3 EN ESTA PRUEBA"}</small>
+          </div>
+          <div className="lab-life-holder" ref={life}>
+            <span>VIDA DEL RIVAL</span>
+            <div className="lab-life-crest">
+              <div ref={v4CrownWash} className="lab-v4-crown-wash" aria-hidden="true"/>
+              <div ref={v4CrownRim} className="lab-v4-crown-rim" aria-hidden="true"/>
+              <strong ref={lifeValue}>9</strong>
+            </div>
+          </div>
+          <span ref={v4Delta} className={"lab-v4-delta"+(effect==="power-fall"||effect==="champion-impact"?" negative":"")+(effect==="champion-impact"?" damage":"")} aria-hidden="true">
+            {effect==="power-rise"?"+3":effect==="power-fall"?String(Math.max(0,currentCard.power-3)-currentCard.power):"−1"}
+          </span>
           <div className="lab-banner" ref={banner} style={{backgroundImage:`url("${championBackgroundUrl("red")}")`}}>
             <div className="lab-banner-content" ref={bannerBody}>
               <small>CAMPEÓN · GUARDIA DEXTRAL</small><strong>MAJESTAD DEXTRAL</strong>
@@ -690,6 +712,8 @@ export default function AnimationLab(){
           <div className="lab-chiral-stone-wave" ref={chiralStoneWave} aria-hidden="true"/>
           <div className="lab-spectral-v3-shroud" ref={spectralV3Shroud} aria-hidden="true"/>
           <div className="lab-spectral-v3-ground" ref={spectralV3Ground} aria-hidden="true"/>
+          <div className="lab-v4-stage-response" ref={v4StageResponse} aria-hidden="true"/>
+          <div className="lab-v4-transfer" ref={v4Transfer} aria-hidden="true"/>
           <div className="lab-stage-flash" ref={flash}/>
           <ParticleField ref={fx} onRenderer={setRenderer}/>
           <span className="lab-stage-watermark">DAGGERLIGHT / EFECTOS EN DESARROLLO</span>
@@ -706,7 +730,7 @@ export default function AnimationLab(){
       </section>
     </main>
     <footer className="lab-footer">
-      <span>React renderiza las cartas originales · GSAP coreografía los objetos · PixiJS dibuja energía y partículas</span>
+      <span>Cartas React originales · GSAP dirige las ondas y los objetos · PixiJS conserva los estudios anteriores</span>
       <span>NO CONECTADO AL MOTOR DE PARTIDA · ESCRITORIO PRIMERO</span>
     </footer>
   </div>;
