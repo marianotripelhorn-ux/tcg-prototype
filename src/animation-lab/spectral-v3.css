@@ -1,0 +1,131 @@
+/*
+ * Daggerlight Animation Lab 03 — restrained, material spectral treatment.
+ * Preserves the v1 silhouette/filament choreography and replaces particle
+ * showers with a continuous, solid color wave and a single stone response.
+ * Positive = antique gold; negative = dense near-black ink with a silver rim.
+ * This sheet is ONLY loaded by the experimental lab branch.
+ */
+.animation-lab .lab-stage.flavor-gold {
+  --spectral-v3-ink:#4a3517;
+  --spectral-v3-core:#f5dda0;
+  --spectral-v3-color:#bd924c;
+  --spectral-v3-light:#f5dfb5;
+  --spectral-v3-shadow:#8a6a3a;
+}
+.animation-lab .lab-stage.flavor-shadow {
+  --lab-spectral:#1a1919;
+  --spectral-v3-ink:#060708;
+  --spectral-v3-core:#8f8981;
+  --spectral-v3-color:#262729;
+  --spectral-v3-light:#c9c1b1;
+  --spectral-v3-shadow:#101112;
+}
+.animation-lab .lab-spectral-v3-fill {
+  position:absolute;inset:0;z-index:4;opacity:0;
+  pointer-events:none;
+  background:
+    linear-gradient(155deg,transparent 0%,#ffffff24 31%,transparent 41%,transparent 100%),
+    linear-gradient(180deg,var(--spectral-v3-core) 0%,
+      var(--spectral-v3-color) 48%,var(--spectral-v3-ink) 100%);
+  clip-path:inset(100% 0 0 0);
+  box-shadow:inset 0 0 0 2px var(--spectral-v3-light);
+  will-change:clip-path,opacity;
+}
+.animation-lab .lab-spectral-v3-front {
+  position:absolute;z-index:5;top:0;left:-8%;width:116%;height:100%;
+  opacity:0;pointer-events:none;
+  background:linear-gradient(180deg,transparent 0%,transparent 33%,
+    var(--spectral-v3-color) 42%,var(--spectral-v3-light) 49%,
+    var(--spectral-v3-core) 53%,var(--spectral-v3-color) 61%,
+    transparent 70%,transparent 100%);
+  -webkit-mask-image:linear-gradient(90deg,transparent 0%,black 9%,black 91%,transparent);
+  mask-image:linear-gradient(90deg,transparent 0%,black 9%,black 91%,transparent);
+  filter:blur(1.7px);will-change:transform,opacity;
+}
+.animation-lab .scene-spectral-refined .lab-spectral-etching{
+  color:var(--spectral-v3-light);
+  z-index:7;
+  filter:drop-shadow(0 0 2px var(--spectral-v3-core))
+    drop-shadow(0 0 7px var(--spectral-v3-color));
+}
+.animation-lab .scene-spectral-refined.flavor-shadow .lab-spectral-etching{
+  color:#181919;
+  filter:drop-shadow(0 0 1px #f5f0de)
+    drop-shadow(0 0 5px #151515)
+    drop-shadow(0 0 9px #474340);
+}
+.animation-lab .scene-spectral-refined .lab-spectral-ghost{
+  z-index:3;filter:grayscale(.65) contrast(1.35) brightness(1.6);
+}
+.animation-lab .scene-spectral-refined.flavor-shadow .lab-spectral-ghost{
+  mix-blend-mode:multiply;
+  filter:grayscale(1) contrast(1.7) brightness(.4)
+    drop-shadow(0 0 7px #1c1a19);
+}
+.animation-lab .scene-spectral-refined.flavor-shadow .lab-spectral-ghost::after{
+  background:linear-gradient(160deg,#000b,transparent 50%),
+    radial-gradient(ellipse,#141517,transparent 72%);
+  mix-blend-mode:multiply;
+}
+.animation-lab .scene-spectral-refined .lab-spectral-energy{
+  z-index:6;filter:blur(5px);opacity:0;
+  background:
+    linear-gradient(105deg,transparent 15%,var(--spectral-v3-light) 47%,
+      #fff8 50%,transparent 59%),
+    radial-gradient(ellipse at center,var(--spectral-v3-color),transparent 74%);
+  mix-blend-mode:screen;
+}
+.animation-lab .scene-spectral-refined.flavor-shadow .lab-spectral-energy{
+  mix-blend-mode:multiply;
+  background:
+    linear-gradient(105deg,transparent 20%,#111 41%,#030405 52%,transparent 65%),
+    radial-gradient(ellipse,#121416,transparent 78%);
+}
+.animation-lab .lab-spectral-v3-ground{
+  position:absolute;left:47%;top:42%;width:min(80%,650px);height:170px;
+  z-index:7;pointer-events:none;
+  transform:translate(-50%,-50%) scaleX(.1);
+  transform-origin:center;
+  opacity:0;
+  border-radius:50%;
+  background:radial-gradient(ellipse at center,
+    var(--spectral-v3-color) 0%,var(--spectral-v3-core) 12%,
+    transparent 72%);
+  mix-blend-mode:multiply;
+  filter:blur(9px);
+}
+.animation-lab .lab-spectral-v3-shroud{
+  position:absolute;inset:0;z-index:3;opacity:0;pointer-events:none;
+  background:radial-gradient(ellipse at 47% 40%,
+    var(--spectral-v3-shadow) 0%,transparent 53%);
+}
+.animation-lab .scene-spectral-refined.flavor-shadow .lab-spectral-v3-shroud{
+  background:radial-gradient(ellipse at 47% 40%,
+    #090a0b9c 0%,#17191a35 32%,transparent 58%);
+}
+.animation-lab .scene-spectral-refined .lab-card-anchor{top:42%}
+.animation-lab .scene-spectral-refined .lab-slot-mark{opacity:.21}
+.animation-lab .scene-spectral-refined .lab-stage-axis{opacity:.91}
+.animation-lab .flavor-shadow .lab-card-halo{
+  background:radial-gradient(ellipse,#2928249d 1%,#413f3c50 35%,transparent 74%);
+}
+.animation-lab .lab-effect-option.is-v3{
+  border-left:3px solid #e4c58b;
+  background:linear-gradient(90deg,#57472b,#262a26);
+}
+.animation-lab .lab-effect-option.is-v3.selected{
+  border-color:#f0d7a1;background:linear-gradient(90deg,#60492d,#2c302c);
+}
+.animation-lab .lab-polarity-legend{
+  padding:9px 11px;margin-bottom:14px;border:1px solid #75674c;
+  color:#d7cfbd;font-size:11px;line-height:1.5;
+}
+.animation-lab .lab-polarity-legend b{color:#e8d2a2}
+@media(prefers-reduced-motion:reduce){
+  .animation-lab .lab-spectral-v3-fill,
+  .animation-lab .lab-spectral-v3-front,
+  .animation-lab .lab-spectral-v3-shroud,
+  .animation-lab .lab-spectral-v3-ground{
+    transition:none!important;animation:none!important;
+  }
+}
