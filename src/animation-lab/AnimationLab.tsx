@@ -156,6 +156,7 @@ export default function AnimationLab(){
     if(effect==="archive"){
       const start=pCard(),end=pArchive();
       gsap.set(h,{autoAlpha:.08,scale:.7});
+      const dissolution={value:0};
       tl.to(c,{y:-9,scale:1.035,filter:"brightness(1.35) drop-shadow(0 20px 18px #0009)",duration:.24})
         .call(()=>{ring(start,85);burst(start,65,1.05);arc({x:start.x-85,y:start.y-110},{x:start.x+85,y:start.y+110},2.5)},undefined,"-=.12")
         .to(h,{autoAlpha:1,scale:1.08,duration:.29},"<")
