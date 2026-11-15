@@ -129,3 +129,39 @@
     transition:none!important;animation:none!important;
   }
 }
+
+/* The same polarity selector also colors legacy comparisons consistently. */
+.animation-lab .lab-stage.flavor-shadow {
+  --chiral-left:#4c4843;
+  --chiral-left-core:#aaa397;
+  --chiral-right:#0b0c0d;
+  --chiral-right-core:#393738;
+  --chiral-ink:#050607;
+  --chiral-ivory:#e1daca;
+}
+.animation-lab .flavor-shadow .lab-spectral-ghost {
+  mix-blend-mode:multiply;
+  filter:grayscale(1) contrast(1.7) brightness(.4);
+}
+.animation-lab .flavor-shadow .lab-spectral-ghost::after {
+  background:linear-gradient(160deg,#000b,transparent 60%),
+    radial-gradient(ellipse,#17181a,transparent 72%);
+  mix-blend-mode:multiply;
+}
+.animation-lab .flavor-shadow .lab-spectral-energy {
+  mix-blend-mode:multiply;
+  background:linear-gradient(105deg,transparent 20%,#171718 43%,
+    #050607 52%,transparent 65%),
+    radial-gradient(ellipse,#17181a,transparent 78%);
+}
+.animation-lab .flavor-shadow .lab-spectral-etching {
+  color:#17191a;
+  filter:drop-shadow(0 0 1px #f1e8d7)
+    drop-shadow(0 0 6px #272525);
+}
+.animation-lab .flavor-shadow .lab-power-badge {
+  border-color:#484846;
+}
+.animation-lab .flavor-shadow .lab-progress-track>div {
+  background:linear-gradient(90deg,#7f7c73,#242426);
+}
