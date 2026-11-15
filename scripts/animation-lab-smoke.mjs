@@ -28,6 +28,13 @@ try {
   await page.locator(".lab-stage .lab-card .game-card").first().waitFor({timeout:12000});
   const buttons=page.locator(".lab-effect-option");
   assert.equal(await buttons.count(),13,"Expected thirteen independent motion experiments");
+  // V4.1 art-direction regression: no invented glyphs or standalone sigils.
+  assert.equal(await page.locator(".lab-v4-card-sigil").count(),0,
+    "The old emblem must be removed, not merely hidden");
+  assert.equal(await page.locator(".lab-v4-orbits .lab-v4-orbit").count(),3,
+    "The new card accents must be three thin circular or semicircular traces");
+  assert.equal(await page.locator(".lab-v4-impact-arcs span").count(),2,
+    "The damage impact must feature two fine semicircular crown traces");
   await page.waitForTimeout(1100);
   const pixiStatus=(await page.locator(".lab-renderer-status").textContent())?.trim()??"unknown";
   console.log("PixiJS:",pixiStatus);
