@@ -1143,7 +1143,8 @@ export default function App() {
                 type="button"
                 key={`${card.id}-${index}`}
                 style={{animationDelay:`${index*115}ms`}}
-                disabled={game.phase!=="awaiting_player" || !!duelPreview}
+                data-motion-hand-index={index}
+                disabled={game.phase!=="awaiting_player" || !!duelPreview || !!boardMotion}
                 onPointerEnter={()=>setHoveredHandIndex(index)}
 
                 onPointerLeave={()=>setHoveredHandIndex(current=>current===index?null:current)}
@@ -1179,7 +1180,7 @@ export default function App() {
             ))}
             {hand.length===0 && <div className="empty-hand">Sin cartas disponibles.</div>}
           </div>
-          {!!specialHand.length && <aside className="manifest-hand" aria-label="Mano de cartas especiales">
+          {game.manifestationsEnabled!==false && !!specialHand.length && <aside className="manifest-hand" aria-label="Mano de cartas especiales">
             <div className="manifest-hand-heading"><span>ESPECIALES</span><span>{specialHand.length} CARTAS</span></div>
             <div className="manifest-hand-cards">
               {specialHand.map((kind,index)=>{
@@ -1236,7 +1237,7 @@ export default function App() {
           </div>
         </div>
 
-        {specialInspection && <ManifestCardDialog kind={specialInspection} onClose={()=>setSpecialInspection(null)}/>}
+        {game.manifestationsEnabled!==false && specialInspection && <ManifestCardDialog kind={specialInspection} onClose={()=>setSpecialInspection(null)}/>}
 
         {inspection && (
           <div
@@ -1261,7 +1262,7 @@ export default function App() {
                   livePower={inspection.finalPower!==undefined || inspection.powerExact===false}
                 />
               </div>
-              {inspection.card.trait && <p className="manifest-inspect-rule">
+              {game.manifestationsEnabled!==false && inspection.card.trait && <p className="manifest-inspect-rule">
                  <strong>{inspection.card.trait.toUpperCase()}</strong> · {SPECIAL_TEXT[
                    inspection.card.trait.startsWith("Portaanillos")?
                      inspection.card.trait.includes("Sinistral")?"shield":"dagger":
@@ -1280,7 +1281,7 @@ export default function App() {
                         : ""}
                   </span>
                 </div>
-                {game.phase==="awaiting_player" && inspection.handIndex!==undefined && !duelPreview && (
+                {game.phase==="awaiting_player" && inspection.handIndex!==undefined && !duelPreview && !boardMotion && (
                   <button
                     className="primary-button"
                     type="button"
