@@ -1,0 +1,291 @@
+/*
+ * DAGGERLIGHT / Animation Laboratory 01
+ * Isolated to ?lab=animations. No changes to the playable React arena.
+ */
+:root[data-theme] .animation-lab,
+.animation-lab{
+  --lab-black:#090c0b;--lab-dark:#171917;--lab-stone:#dbd9cc;
+  --lab-gold:#cdb27f;--lab-muted:#a8a99d;
+  position:relative;display:flex;flex-direction:column;
+  min-height:100dvh;background:var(--lab-black);color:#f3efe5;
+  font-family:Inter,Arial,sans-serif;line-height:1.35;
+  -webkit-font-smoothing:antialiased;
+}
+.animation-lab *, .animation-lab *::before,.animation-lab *::after{box-sizing:border-box}
+.animation-lab button,.animation-lab select{font:inherit}
+.animation-lab button{cursor:pointer}
+.animation-lab button:focus-visible,.animation-lab input:focus-visible,.animation-lab select:focus-visible,.animation-lab a:focus-visible{outline:2px solid #f0d397;outline-offset:3px}
+.animation-lab .lab-kicker{font:800 10px/1.2 Inter,Arial,sans-serif;letter-spacing:.19em;color:var(--lab-gold);text-transform:uppercase}
+.animation-lab .lab-header{
+  display:flex;justify-content:space-between;align-items:center;gap:24px;
+  min-height:67px;padding:13px clamp(22px,2.7vw,44px);border-bottom:1px solid #65553a;
+  background:#060807;position:relative;z-index:40;
+}
+.animation-lab .lab-brand{display:flex;align-items:baseline;gap:18px}
+.animation-lab .lab-brand strong{font:400 clamp(25px,2.4vw,39px)/1 'Archivo Black',Impact,sans-serif;letter-spacing:-.065em}
+.animation-lab .lab-brand>span{font:750 11px/1 Inter,Arial,sans-serif;letter-spacing:.15em;color:#c5bca8}
+.animation-lab .lab-brand i{font-style:normal;color:#d4b57c;margin-left:5px}
+.animation-lab .lab-header-actions{display:flex;align-items:center;gap:23px}
+.animation-lab .lab-renderer-status{font-size:11px;color:#b3c0b8}
+.animation-lab .lab-renderer-status::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:8px;background:#a5c8b6;vertical-align:middle}
+.animation-lab a{color:#e9d4ad;font-size:11px;font-weight:800;letter-spacing:.09em;text-decoration:none}
+.animation-lab a:hover{text-decoration:underline;text-underline-offset:4px}
+.animation-lab .lab-main{
+  display:grid;grid-template-columns:clamp(282px,24vw,358px) minmax(0,1fr);
+  flex:1;min-height:0;
+}
+.animation-lab .lab-controls{
+  padding:clamp(24px,2.5vw,40px) clamp(18px,2.4vw,35px) 26px;
+  border-right:1px solid #53472e;
+  background:
+    radial-gradient(ellipse at 12% 0%,#27302b 0%,transparent 58%),
+    linear-gradient(125deg,#141915,#0d100f 74%);
+  display:flex;flex-direction:column;gap:0;position:relative;
+}
+.animation-lab .lab-controls::before{
+  content:"";pointer-events:none;position:absolute;inset:13px;
+  border:1px solid #d0b78018;
+}
+.animation-lab .lab-controls h1{
+  font:400 clamp(24px,2.15vw,34px)/1.06 'Archivo Black',Arial,sans-serif;
+  margin:12px 0 13px;letter-spacing:-.046em;max-width:310px;
+}
+.animation-lab .lab-lead{font-size:12px;line-height:1.55;color:#c7c7bc;margin:0 0 27px;max-width:290px}
+.animation-lab .lab-controls h2{
+  font:850 10px/1 Inter,Arial,sans-serif;letter-spacing:.12em;color:#bfa46d;
+  text-transform:uppercase;margin:0 0 13px;
+}
+.animation-lab .lab-effect-list{display:grid;gap:7px;margin:0 0 29px}
+.animation-lab .lab-effect-option{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:#242a26a3;color:#e5e1d6;border:1px solid #6b716055;
+  padding:11px 11px 11px 13px;min-height:42px;text-align:left;
+  transition:background .18s,border-color .18s,transform .18s;
+}
+.animation-lab .lab-effect-option span{font-size:12px;font-weight:850;letter-spacing:.025em}
+.animation-lab .lab-effect-option small{font-size:10px;color:#aeb3a8;white-space:nowrap}
+.animation-lab .lab-effect-option:hover{background:#3b423a;border-color:#b9aa82;transform:translateX(2px)}
+.animation-lab .lab-effect-option.selected{border-color:#e0be7f;color:#fff7df;background:linear-gradient(90deg,#49412d,#252a24)}
+.animation-lab .lab-effect-option.selected::before{content:"◆";font-size:9px;color:#dbb778;margin-right:2px}
+.animation-lab .lab-field{display:grid;gap:9px;font-size:12px;font-weight:700;color:#e1ded1;margin:0 0 19px}
+.animation-lab .lab-field select{
+  appearance:none;min-height:39px;padding:8px 36px 8px 12px;color:#f5ecdd;
+  border:1px solid #786a4d;border-radius:0;background:
+    linear-gradient(45deg,transparent 50%,#d5b788 50%) calc(100% - 17px) center/6px 6px no-repeat,
+    #232824;
+}
+.animation-lab .lab-segments{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.animation-lab .lab-segments button{
+  min-height:37px;border:1px solid #74674d;background:#202520;color:#c9c6b7;
+  font-size:11px;font-weight:800;letter-spacing:.07em;
+}
+.animation-lab .lab-segments button.active{background:#bfa071;color:#11150f;border-color:#e1c690}
+.animation-lab .lab-slider>span{display:flex;align-items:center;justify-content:space-between}
+.animation-lab .lab-slider strong{color:#e7c88b;font-variant-numeric:tabular-nums}
+.animation-lab .lab-slider input{width:100%;cursor:ew-resize;accent-color:#d1b278;margin:0;min-height:25px}
+.animation-lab .lab-access-note{font-size:11px;line-height:1.5;color:#969d90;margin:auto 0 0;padding-top:20px}
+.animation-lab .lab-motion-notice{display:grid;gap:7px;padding:11px;border:1px solid #ae8656;font-size:11px;background:#372a1c}
+.animation-lab .lab-motion-notice button{padding:7px;background:#d4b87d;color:#12130d;border:0;font-size:10px;font-weight:850}
+.animation-lab .lab-workbench{
+  display:flex;flex-direction:column;min-width:0;
+  padding:clamp(17px,1.9vw,31px) clamp(18px,2.3vw,36px) 19px;
+  background:
+    repeating-linear-gradient(45deg,transparent 0 16px,#f6efdb04 16px 17px),
+    radial-gradient(ellipse at 50% 40%,#373a32,#20251f 76%);
+}
+.animation-lab .lab-workbench-header{
+  display:flex;align-items:center;justify-content:space-between;gap:24px;
+  margin-bottom:17px;
+}
+.animation-lab .lab-workbench-header h2{
+  font:400 clamp(21px,2.1vw,34px)/1 'Archivo Black',Arial,sans-serif;
+  letter-spacing:-.04em;margin:7px 0 7px;
+}
+.animation-lab .lab-workbench-header p{font-size:12px;color:#d2d2c6;margin:0}
+.animation-lab .lab-chip{
+  border:1px solid #766e5c;color:#e6d0a0;padding:8px 12px;white-space:nowrap;
+  font-size:10px;font-weight:800;letter-spacing:.09em;
+}
+.animation-lab .lab-stage{
+  position:relative;isolation:isolate;flex:1;min-height:clamp(490px,61dvh,730px);
+  overflow:hidden;
+  background:
+    radial-gradient(ellipse at 52% 38%,#f1efe4 0%,#e4e1d3 35%,#d6d3c4 75%,#bfbcae 100%);
+  border:7px solid #26261e;
+  outline:1px solid #90784f;
+  box-shadow:inset 0 0 0 2px #eee5ce, inset 0 0 30px #514a3b88,0 10px 30px #0007;
+}
+.animation-lab .lab-stage::after{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(18deg,#554c3503 0 3px,transparent 3px 17px);
+  mix-blend-mode:multiply;
+}
+.animation-lab .lab-stage-engraving{
+  position:absolute;inset:-4%;z-index:0;pointer-events:none;
+  background-image:url("../board/arena-compass-source.png");
+  /* Keep a neutral engraved guide if the original image isn't available at this URL. */
+  background-size:100% 100%;background-position:center;
+  opacity:.22;filter:grayscale(1) contrast(.65);
+}
+.animation-lab .lab-stage-axis{
+  position:absolute;left:0;right:0;top:47%;height:48px;z-index:2;
+  background:#080b09;
+  clip-path:polygon(0 0,100% 0,97% 50%,100% 100%,0 100%,3% 50%);
+  transform:translateY(-50%);
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;
+}
+.animation-lab .lab-stage-axis span{
+  text-align:center;color:#fff;font:400 clamp(12px,1.35vw,23px)/1 'Archivo Black',Arial,sans-serif;
+  letter-spacing:-.03em;
+}
+.animation-lab .lab-slot-mark{
+  position:absolute;left:48%;top:39%;width:260px;height:380px;z-index:1;
+  transform:translate(-50%,-50%);pointer-events:none;opacity:.45;
+  background:linear-gradient(#71694e,#71694e) left top/17px 1px no-repeat,
+  linear-gradient(#71694e,#71694e) left top/1px 17px no-repeat,
+  linear-gradient(#71694e,#71694e) right bottom/17px 1px no-repeat,
+  linear-gradient(#71694e,#71694e) right bottom/1px 17px no-repeat;
+}
+.animation-lab .lab-card-anchor{
+  position:absolute;z-index:8;left:47%;top:43%;transform:translate(-50%,-50%);
+  width:clamp(160px,17vw,230px);aspect-ratio:63/88;pointer-events:none;
+}
+.animation-lab .lab-card{
+  position:relative;z-index:3;width:100%;height:100%;transform-origin:center center;
+  filter:drop-shadow(5px 16px 12px #0007);will-change:transform;
+}
+.animation-lab .lab-card .game-card{
+  width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;
+  aspect-ratio:63/88;display:block;border-radius:0!important;border:2px solid #24221c!important;
+  box-shadow:0 4px 7px #0004;
+}
+.animation-lab .lab-card .studio-card-sprite{width:100%!important;height:100%!important}
+.animation-lab .lab-card-halo{
+  position:absolute;inset:-27%;z-index:1;opacity:0;pointer-events:none;
+  background:radial-gradient(ellipse at center,#ccad6280 2%,#dbbd7250 28%,transparent 70%);
+  filter:blur(16px);
+}
+.animation-lab .flavor-arcane .lab-card-halo{
+  background:radial-gradient(ellipse at center,#76d7d8a0 2%,#82dfdb57 35%,transparent 72%);
+}
+.animation-lab .lab-archive-well{
+  display:grid;place-items:center;align-content:center;gap:2px;
+  position:absolute;z-index:5;left:72%;top:81%;transform:translate(-50%,-50%);
+  width:clamp(105px,13vw,176px);aspect-ratio:1.37/1;
+  border:2px solid #8a7551;
+  border-radius:50%;background:
+    radial-gradient(ellipse,#0a1010 0%,#27291f 52%,#71634a 68%,#9d987e 73%,#4a432f 76%);
+  box-shadow:inset 0 6px 14px #000b,0 4px 8px #0004,0 0 0 3px #b6ad8f8c;
+  color:#e7d6b2;
+}
+.animation-lab .lab-archive-well>span{font:900 10px/1 Inter,Arial,sans-serif;letter-spacing:.16em}
+.animation-lab .lab-archive-well strong{font:400 38px/1 'Archivo Black',Arial,sans-serif;color:#faf4e2}
+.animation-lab .lab-archive-well small{font-size:8px;letter-spacing:.1em}
+.animation-lab .lab-power-badge{
+  position:absolute;z-index:9;left:72%;top:25%;width:135px;padding:15px 9px;
+  transform:translate(-50%,-50%);text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:#080b0b;border:2px solid #b99862;box-shadow:0 6px 16px #0006;
+}
+.animation-lab .lab-power-badge span{color:#e5cf9b;font:900 10px/1 Inter,Arial,sans-serif;letter-spacing:.11em}
+.animation-lab .lab-power-badge strong{color:#fff;font:400 60px/.92 'Archivo Black',Arial,sans-serif}
+.animation-lab .lab-power-badge small{color:#c3b390;font-size:9px}
+.animation-lab .lab-life-holder{
+  position:absolute;z-index:8;left:76%;top:44%;transform:translate(-50%,-50%);
+  display:grid;justify-items:center;gap:10px;
+}
+.animation-lab .lab-life-holder>span{color:#4d4635;font-size:10px;font-weight:900;letter-spacing:.13em}
+.animation-lab .lab-life-crest{
+  display:grid;place-items:center;width:120px;height:144px;
+  background:#080909;clip-path:polygon(50% 0,78% 33%,100% 24%,84% 61%,70% 100%,30% 100%,16% 61%,0 24%,22% 33%);
+  filter:drop-shadow(4px 9px 8px #0007);
+}
+.animation-lab .lab-life-crest strong{
+  font:400 80px/.95 'Archivo Black',Arial,sans-serif;color:white;transform:translateY(10%);
+}
+.animation-lab .lab-banner{
+  position:absolute;left:50%;top:50%;width:clamp(220px,22vw,285px);height:72%;
+  transform:translate(-50%,-50%);z-index:9;overflow:visible;
+  color:#fff;background-size:cover;background-position:center;
+  clip-path:polygon(0 0,100% 0,100% 92%,50% 100%,0 92%);
+  filter:drop-shadow(4px 10px 8px #0009);
+}
+.animation-lab .lab-banner::before{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    linear-gradient(117deg,#0007,transparent 40%,#fff2 54%,transparent 68%,#0009),
+    linear-gradient(0deg,#591c14d9,#7e2118aa);
+}
+.animation-lab .lab-banner-content{
+  position:relative;z-index:3;padding:21px 18px;display:grid;justify-items:start;
+  text-shadow:1px 2px 4px #0009;
+}
+.animation-lab .lab-banner-content small{font-size:10px;font-weight:850;color:#f1d7a8;letter-spacing:.09em}
+.animation-lab .lab-banner-content strong{
+  margin-top:16px;max-width:100%;font:400 27px/.98 'Archivo Black',Arial,sans-serif;
+  letter-spacing:-.055em;
+}
+.animation-lab .lab-banner-content span{font-size:15px;margin-top:4px}
+.animation-lab .lab-banner-content p{font-size:13px;line-height:1.35;margin-top:23px;border-top:1px solid #efcea8;padding-top:12px}
+.animation-lab .lab-banner-figure{
+  position:absolute;z-index:2;bottom:-10%;left:-18%;width:135%;height:62%;
+  object-fit:contain;object-position:center bottom;pointer-events:none;
+  filter:drop-shadow(4px 7px 7px #0008);
+}
+.animation-lab .lab-stage-flash{position:absolute;inset:0;z-index:11;background:#f5dd9f;pointer-events:none;opacity:0}
+.animation-lab .lab-pixi-layer{position:absolute;inset:0;z-index:12;pointer-events:none;isolation:isolate}
+.animation-lab .lab-stage-watermark{
+  position:absolute;right:15px;bottom:13px;z-index:14;
+  color:#4647399c;font:750 9px/1 Inter,Arial,sans-serif;letter-spacing:.13em;
+  pointer-events:none;
+}
+.animation-lab .lab-transport{
+  padding:16px 0 4px;display:flex;flex-direction:column;gap:12px;
+}
+.animation-lab .lab-transport-buttons{display:flex;flex-wrap:wrap;gap:10px}
+.animation-lab .lab-transport-buttons button{
+  min-width:130px;padding:12px 14px;
+  color:#f0e5cf;background:#272b26;border:1px solid #777b6c;
+  font:850 11px/1 Inter,Arial,sans-serif;letter-spacing:.1em;
+  transition:background .16s,transform .16s,border-color .16s;
+}
+.animation-lab .lab-transport-buttons button:not(:disabled):hover{
+  border-color:#ddbe83;background:#40493b;transform:translateY(-2px);
+}
+.animation-lab .lab-transport-buttons button:disabled{opacity:.38;cursor:default}
+.animation-lab .lab-transport-buttons .lab-play{
+  border-color:#e0be7f;background:#c5a46e;color:#121711;min-width:167px;
+}
+.animation-lab .lab-transport-buttons .lab-play:hover{color:#0d1110}
+.animation-lab .lab-progress-track{
+  height:3px;background:#4b5047;position:relative;overflow:hidden;
+}
+.animation-lab .lab-progress-track>div{
+  height:100%;width:0;background:linear-gradient(90deg,#b8f6ef,#dbc28a);
+}
+.animation-lab .lab-transport-caption{
+  min-height:22px;font:720 11px/1.4 Inter,Arial,sans-serif;color:#d8c8a8;
+  letter-spacing:.03em;
+}
+.animation-lab .lab-footer{
+  display:flex;justify-content:space-between;align-items:center;gap:24px;
+  min-height:45px;padding:10px 28px;border-top:1px solid #62573e;background:#0d100e;
+  color:#a6ae9f;font:720 9px/1.4 Inter,Arial,sans-serif;letter-spacing:.06em;
+}
+.lab-boot{display:grid;place-items:center;height:100dvh;background:#0a0b09;color:#d9c28c;font:700 15px Arial,sans-serif}
+@media(max-width:1100px){
+  .animation-lab .lab-main{grid-template-columns:275px minmax(0,1fr)}
+  .animation-lab .lab-workbench{padding:16px}
+  .animation-lab .lab-card-anchor{width:175px}
+  .animation-lab .lab-workbench-header p{font-size:11px}
+  .animation-lab .lab-stage-engraving{opacity:.18}
+}
+@media(max-width:800px){
+  .animation-lab .lab-main{display:flex;flex-direction:column}
+  .animation-lab .lab-controls{padding:21px}
+  .animation-lab .lab-stage{min-height:510px}
+  .animation-lab .lab-header-actions .lab-renderer-status{display:none}
+  .animation-lab .lab-footer{display:none}
+}
+/* Explicitly triggered previews may override the OS preference with a visible
+   opt-in. The user's preference never affects the real game client. */
