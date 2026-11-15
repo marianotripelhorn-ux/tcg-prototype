@@ -94,6 +94,8 @@ export interface GameEvent {
 export interface GameState {
   mode?: "pvp";
   aiDifficulty?: AIDifficulty;
+  /** Experimental board only: when false all Manifestations are inactive. */
+  manifestationsEnabled?: boolean;
   round: number;
   turn: 1 | 2 | 3;
   roundStarter: Side;
