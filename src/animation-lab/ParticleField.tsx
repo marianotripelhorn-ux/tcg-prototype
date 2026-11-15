@@ -82,7 +82,9 @@ export const ParticleField=forwardRef<FXController,{onRenderer:(status:string)=>
         if(p.life<=0){p.node.parent?.removeChild(p.node);p.node.destroy();pulses.splice(i,1);continue;}
         const t=1-p.life/p.ttl;
         p.node.alpha=(1-t)*(1-t);
-        p.node.scale.set(.35+t*1.45);
+        // Rings expand around their own origin; lightning paths must NOT scale
+        // around global (0,0) or the electrical arc visibly jumps away.
+        if(p.radius>1)p.node.scale.set(.35+t*1.45);
       }
     };
 
@@ -130,10 +132,11 @@ export const ParticleField=forwardRef<FXController,{onRenderer:(status:string)=>
               node.position.set(x,y);node.rotation=angle;
               (Math.random()>.64?glow:sharp).addChild(node);
               const velocity=(1.7+Math.random()*5.1)*force;
+              const lifetime=24+Math.random()*42;
               particles.push({
                 node,x,y,
                 vx:Math.cos(angle)*velocity,vy:Math.sin(angle)*velocity,
-                life:24+Math.random()*42,ttl:66,
+                life:lifetime,ttl:lifetime,
                 gravity:mode==="embers"?.10:mode==="suction"?-.015:.016,
                 drag:mode==="suction"?.97:.982,mode,target
               });
