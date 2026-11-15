@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArchiveFlight, CardFlight, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
+import { ArchiveFlight, CardFlight, DealMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
 import type { BoardMotionSequence } from "./board-redesign/motion";
 import { disableManifestations } from "./board-redesign/disableManifestations";
 import Tutorial from "./Tutorial";
@@ -736,7 +736,7 @@ export default function App() {
     }catch(error){setSpecialError(error instanceof Error?error.message:"No se pudo usar la especial.");}
   }
 
-  function playCard(handIndex:number, position:Position) {
+  function playCard(handIndex:number, position:Position, originOverride?:ReturnType<typeof handCardRect>) {
     if (!game || game.phase!=="awaiting_player" || duelPreview || boardMotionRef.current) return;
     if (!legalPositions(game.player).includes(position)) return;
     setPreDuel({
@@ -747,7 +747,7 @@ export default function App() {
       opponentHealed:game.opponent.healedLife,
       score:{...game.duelScore}
     });
-    const origin=boardRedesign?handCardRect(handIndex):null;
+    const origin=boardRedesign?(originOverride??handCardRect(handIndex)):null;
     const next=cloneGame(game);
     submitPlayerPlay(next,handIndex,position,Math.random,Math.min(daggersToUse,availableDaggers));
     if(boardRedesign && next.lastDuel){
@@ -831,7 +831,11 @@ export default function App() {
     if (!current || current.pointerId!==event.pointerId) return;
     const destination=current.moved ? zoneAt(event.clientX,event.clientY) : null;
     if (destination) {
-      playCard(current.handIndex,destination);
+      const rect=handCardRect(current.handIndex);
+      const releasedRect=rect&&current.moved
+        ? {...rect,x:event.clientX-rect.width/2,y:event.clientY-rect.height/2}
+        : rect;
+      playCard(current.handIndex,destination,releasedRect);
     } else if (!current.moved) {
       const card=hand[current.handIndex];
       if (card) setInspection({card,handIndex:current.handIndex,powerExact:true});
@@ -906,8 +910,8 @@ export default function App() {
   const pendingOpponent=duelPreview || boardMotion ? null : game.pendingOpponentPlay;
   const focusPlayer=(boardRedesign?boardMotion?.duel?.playerPlay:null) ?? duelPreview?.playerPlay ?? null;
   const focusOpponent=(boardRedesign?boardMotion?.duel?.opponentPlay:null) ?? duelPreview?.opponentPlay ?? pendingOpponent;
-  const playerBoard=boardRedesign&&boardMotion?boardMotion.before.player:game.player;
-  const opponentBoard=boardRedesign&&boardMotion?boardMotion.before.opponent:game.opponent;
+  const playerBoard=boardRedesign&&boardMotion&&boardMotion.phase!=="deal"?boardMotion.before.player:game.player;
+  const opponentBoard=boardRedesign&&boardMotion&&boardMotion.phase!=="deal"?boardMotion.before.opponent:game.opponent;
   const playerBoardPlays=boardRedesign?visibleRoundPlays(boardMotion,"player"):null;
   const opponentBoardPlays=boardRedesign?visibleRoundPlays(boardMotion,"opponent"):null;
   const latestEvent=game.events.at(-1)?.text ?? "";
@@ -1089,6 +1093,12 @@ export default function App() {
           <CardFace card={boardMotion.duel.playerPlay.card}/>
         </CardFlight>}
         {boardRedesign && boardMotion?.phase==="archive" && <ArchiveFlight
+          sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
+          onComplete={()=>{
+            if(boardMotionRef.current?.id===boardMotion.id)
+              setMotion({...boardMotion,phase:"deal"});
+          }}/>}
+        {boardRedesign && boardMotion?.phase==="deal" && <DealMotion
           sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
           onComplete={()=>{
             if(boardMotionRef.current?.id===boardMotion.id)setMotion(null);
