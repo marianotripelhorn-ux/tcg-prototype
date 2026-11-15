@@ -93,3 +93,38 @@
     backdrop-filter:none!important;
   }
 }
+
+/* Reciprocal Champion banners now reveal their existing fabric and cutout as
+   layers, rather than instantly switching display:none/display:block. */
+@media(min-width:761px) and (prefers-reduced-motion:no-preference) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-banner-fabric{
+    display:block!important;opacity:0;
+    transform:translateY(-9px) scaleY(.82);
+    transform-origin:center top;
+    transition:opacity .28s ease,transform .39s cubic-bezier(.22,.72,.22,1);
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-champion-figure{
+    display:block!important;opacity:0;
+    transform:translateY(14px) scale(.96);
+    transition:opacity .27s ease,transform .39s cubic-bezier(.22,.72,.22,1);
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-champion-panel.is-expanded .hybrid-banner-fabric,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-champion-panel.is-expanded .hybrid-champion-figure{
+    opacity:1;transform:none;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-portrait-surface{
+    transition:opacity .22s ease;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-deck-holder{
+    perspective:800px;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-deck-object{
+    transform-origin:bottom center;
+    transition:transform .26s cubic-bezier(.18,.73,.3,1),filter .26s;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-deck-object:hover,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-deck-object:focus-visible{
+    transform:translateY(-8px) rotate(-1.5deg) rotateY(-5deg);
+    filter:drop-shadow(6px 14px 11px #0006);
+  }
+}
