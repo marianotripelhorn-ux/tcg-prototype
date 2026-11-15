@@ -6,10 +6,12 @@ import { championBackgroundUrl, championImageUrl } from "../championArtwork";
 import type { Faction } from "../types";
 import { ParticleField, type FXController, type Point } from "./ParticleField";
 
-type EffectId="archive"|"placement"|"power"|"damage"|"banner";
+type EffectId="spectral"|"summon"|"archive"|"placement"|"power"|"damage"|"banner";
 type Flavor="arcane"|"gold";
 type Demo={id:EffectId;label:string;description:string;principle:string;duration:string};
 const demos:Demo[]=[
+  {id:"spectral",label:"01 · Disolución etérea",duration:"~ 1,7 s",description:"La carta se electrifica, se convierte en una silueta luminosa y se deshace en hebras de energía.",principle:"Basado en la referencia: imagen → energía en el marco → silueta → filamentos → disipación."},
+  {id:"summon",label:"02 · Materialización",duration:"~ 1,6 s",description:"Filamentos eléctricos convergen y reconstruyen la carta desde un contorno spectral.",principle:"La carta se reconstruye de energía antes de convertirse en un objeto físico."},
   {id:"archive",label:"01 · Archivo",duration:"1,6 s",description:"Transmutación, fragmentos de luz y absorción hacia el Archivo.",principle:"La carta debe parecer almacenada, no destruida."},
   {id:"placement",label:"02 · Colocación",duration:"1,2 s",description:"Trayectoria, elevación, sombra móvil, contacto y asentamiento.",principle:"El peso debe sentirse antes que la magia."},
   {id:"power",label:"03 · Poder",duration:"1,5 s",description:"Energía que recorre la carta y activa su valor de Poder.",principle:"El cambio de número debe sentirse causado por la carta."},
@@ -33,7 +35,7 @@ function jaggedDissolve(progress:number):string{
   return "polygon("+points.join(",")+")";
 }
 export default function AnimationLab(){
-  const [effect,setEffect]=useState<EffectId>("archive");
+  const [effect,setEffect]=useState<EffectId>("spectral");
   const [faction,setFaction]=useState<Faction>("red");
   const [flavor,setFlavor]=useState<Flavor>("arcane");
   const [speed,setSpeed]=useState(1);
@@ -46,6 +48,10 @@ export default function AnimationLab(){
   const stage=useRef<HTMLDivElement>(null);
   const card=useRef<HTMLDivElement>(null);
   const halo=useRef<HTMLDivElement>(null);
+  const spectralRig=useRef<HTMLDivElement>(null);
+  const spectralGhost=useRef<HTMLDivElement>(null);
+  const spectralEnergy=useRef<HTMLDivElement>(null);
+  const spectralEdge=useRef<SVGSVGElement>(null);
   const archive=useRef<HTMLDivElement>(null);
   const archiveValue=useRef<HTMLElement>(null);
   const power=useRef<HTMLDivElement>(null);
@@ -78,7 +84,11 @@ export default function AnimationLab(){
     if(archiveValue.current)archiveValue.current.textContent="3";
     if(powerValue.current)powerValue.current.textContent=String(currentCard.power);
     if(lifeValue.current)lifeValue.current.textContent="9";
-    gsap.set(card.current,{x:0,y:0,scale:1,rotation:0,autoAlpha:effect==="banner"?0:1,filter:"brightness(1)",clipPath:"none"});
+    gsap.set(card.current,{x:0,y:0,scale:1,rotation:0,autoAlpha:effect==="banner"||effect==="summon"?0:1,filter:"brightness(1)",clipPath:"none"});
+    gsap.set(spectralRig.current,{x:0,y:0,rotation:0,scale:1,filter:"none"});
+    gsap.set(spectralGhost.current,{autoAlpha:0,scale:1,clipPath:"none",filter:"none"});
+    gsap.set(spectralEnergy.current,{autoAlpha:0,scale:1,rotation:-14,xPercent:-38});
+    gsap.set(spectralEdge.current,{autoAlpha:0,scale:1,rotation:0});
     gsap.set(halo.current,{autoAlpha:0,scale:.6,rotation:0});
     gsap.set(flash.current,{autoAlpha:0,scale:1});
     gsap.set(archive.current,{autoAlpha:effect==="archive"?1:0,scale:1,rotation:0});
@@ -98,8 +108,9 @@ export default function AnimationLab(){
   function run(){
     reset();
     const c=card.current,h=halo.current, a=archive.current, pow=power.current,
+      rig=spectralRig.current,ghost=spectralGhost.current,veins=spectralEnergy.current,edge=spectralEdge.current,
       crown=life.current,b=banner.current,bBody=bannerBody.current,fig=bannerFigure.current,fl=flash.current;
-    if(!c||!h||!a||!pow||!crown||!b||!bBody||!fig||!fl)return;
+    if(!c||!h||!a||!pow||!crown||!b||!bBody||!fig||!fl||!rig||!ghost||!veins||!edge)return;
     const activeColor=colors[flavor];
     const burst=(p:Point,n:number,force=1,mode:"scatter"|"suction"|"embers"="scatter",target?:Point)=>
       fx.current?.burst(p,activeColor,Math.round(n*intensity),force,mode,target);
@@ -121,6 +132,108 @@ export default function AnimationLab(){
     if(!allowMotion){
       tl.to(c,{opacity:1,duration:.18}).to(fl,{autoAlpha:.55,duration:.13}).to(fl,{autoAlpha:0,duration:.13});
       tl.timeScale(2).play();return;
+    }
+    if(effect==="spectral"){
+      const start=pCard();
+      const base=stage.current?.getBoundingClientRect();
+      const destination:Point={x:start.x-Math.min(240,(base?.width??800)*.29),
+        y:start.y+Math.min(220,(base?.height??600)*.31)};
+      // Its final motion is deliberately down and left, like the supplied
+      // frame-by-frame reference, rather than into an invented game zone.
+      const perimeter=(count:number,attract=false)=>{
+        const rect=c.getBoundingClientRect(),root=stage.current?.getBoundingClientRect();
+        if(!root)return;
+        for(let i=0;i<count;i++){
+          const u=Math.random(),edgeIndex=i%4;
+          const x=edgeIndex===0?rect.left+u*rect.width:
+            edgeIndex===1?rect.right:edgeIndex===2?rect.left+u*rect.width:rect.left;
+          const y=edgeIndex===0?rect.top:edgeIndex===1?rect.top+u*rect.height:
+            edgeIndex===2?rect.bottom:rect.top+u*rect.height;
+          burst({x:x-root.left,y:y-root.top},3,attract?.7:.9,
+            attract?"suction":"scatter",destination);
+        }
+      };
+      const dissolve={value:0};
+      const ghostDissolve={value:0};
+      tl.to(rig,{y:-11,scale:1.032,rotation:-.6,duration:.28,ease:"power2.out"})
+        .to(h,{autoAlpha:1,scale:1.12,duration:.28},"-=.15")
+        .to(edge,{autoAlpha:1,scale:1.015,duration:.18},"-=.15")
+        .call(()=>{perimeter(18);ring(start,85);},undefined,"<")
+        .to(veins,{autoAlpha:.91,xPercent:28,duration:.40,ease:"power2.inOut"},"-=.1")
+        .call(()=>{
+          const p=pCard();
+          for(let k=0;k<5;k++){
+            const side=k%2?1:-1;
+            arc({x:p.x-90*side,y:p.y-116+k*17},
+              {x:p.x+79*side,y:p.y+100-k*8},1.6);
+          }
+          burst(p,56,1.12);
+        },undefined,"-=.25")
+        .to(c,{filter:"brightness(1.72) saturate(1.45)",duration:.21},"-=.32")
+        .to(ghost,{autoAlpha:.86,filter:"brightness(1.1)",duration:.21},"-=.15")
+        .to(dissolve,{value:1,duration:.59,ease:"power2.in",
+          onUpdate:()=>{
+            c.style.clipPath=jaggedDissolve(dissolve.value);
+            if(Math.random()<.5)perimeter(2,true);
+          }},"-=.09")
+        .to(c,{autoAlpha:0,duration:.06},"-=.12")
+        .call(()=>{perimeter(24,true);ring(pCard(),76);},"<")
+        .to(veins,{autoAlpha:1,xPercent:-34,duration:.24},"<")
+        .call(()=>{
+          const p=pCard();
+          for(let k=0;k<6;k++){
+            const from={x:p.x-70+k*28,y:p.y+40+(k%3)*36};
+            const to={x:destination.x-26+k*10,y:destination.y-(k%2)*46};
+            arc(from,to,k%2?1.3:2.3);
+            burst(from,9,1.1,"suction",destination);
+          }
+          burst(destination,55,.9,"scatter");
+        },undefined,"+=.06")
+        .to(ghostDissolve,{value:1,duration:.41,
+          onUpdate:()=>{ghost.style.clipPath=jaggedDissolve(ghostDissolve.value);}},"<")
+        .to(ghost,{autoAlpha:0,y:-19,duration:.38,ease:"power2.in"},"<")
+        .to(veins,{autoAlpha:0,rotation:11,xPercent:-90,duration:.39},"<")
+        .to(edge,{autoAlpha:0,scale:1.09,duration:.42},"<")
+        .to(h,{autoAlpha:0,scale:1.33,duration:.48},"-=.28");
+    }
+    if(effect==="summon"){
+      const center=pCard(),base=stage.current?.getBoundingClientRect();
+      const source:Point={x:center.x-Math.min(240,(base?.width??800)*.27),
+        y:center.y+Math.min(200,(base?.height??600)*.28)};
+      const restoration={value:1};
+      gsap.set(c,{autoAlpha:0,clipPath:jaggedDissolve(1),filter:"brightness(1.95) saturate(1.3)"});
+      gsap.set(edge,{autoAlpha:0,scale:.96});
+      gsap.set(ghost,{autoAlpha:0,clipPath:"none"});
+      gsap.set(veins,{autoAlpha:0,xPercent:-80});
+      gsap.set(rig,{scale:.94,y:16,rotation:1.6});
+      tl.call(()=>{
+          for(let k=0;k<5;k++){
+            const destination={x:center.x-75+k*37,y:center.y+78-k*25};
+            arc({x:source.x-35+k*14,y:source.y+(k%2)*32},destination,1.6+(k%2));
+          }
+          burst(source,55,1.1,"suction",center);ring(source,40);
+        })
+        .to(edge,{autoAlpha:1,scale:1.04,duration:.26,ease:"power2.out"},"+=.12")
+        .to(ghost,{autoAlpha:.87,duration:.23},"-=.18")
+        .to(veins,{autoAlpha:.96,xPercent:14,duration:.48},"<")
+        .call(()=>{
+          const p=pCard();
+          burst(p,90,.77);ring(p,97);
+          for(let k=0;k<4;k++)arc(
+            {x:p.x-85+k*38,y:p.y-98},
+            {x:p.x+80-k*26,y:p.y+112},1.5);
+        },undefined,"-=.17")
+        .to(restoration,{value:0,duration:.66,ease:"power2.inOut",
+          onStart:()=>{gsap.set(c,{autoAlpha:1});},
+          onUpdate:()=>{c.style.clipPath=jaggedDissolve(restoration.value);}},"-=.08")
+        .to(c,{filter:"brightness(1) saturate(1)",duration:.35},"-=.22")
+        .to(rig,{scale:1.035,y:-7,rotation:-.8,duration:.22,ease:"power2.out"},"-=.27")
+        .call(()=>{ring(pCard(),71);burst(pCard(),55,.78,"embers");},"<")
+        .to(edge,{autoAlpha:0,scale:1.12,duration:.36},"<")
+        .to(veins,{autoAlpha:0,xPercent:65,duration:.3},"<")
+        .to(ghost,{autoAlpha:0,duration:.22},"<")
+        .to(rig,{scale:1,y:0,rotation:0,duration:.34,ease:"back.out(1.9)"},"-=.12")
+        .to(h,{autoAlpha:0,duration:.1},"<");
     }
     if(effect==="placement"){
       const width=stage.current?.clientWidth??950;
@@ -290,8 +403,27 @@ export default function AnimationLab(){
           <div className="lab-stage-axis"><span>SINIESTRA</span><span>TRONO</span><span>DIESTRA</span></div>
           <div className="lab-slot-mark" aria-hidden="true"/>
           <div className="lab-card-anchor">
-            <div ref={card} className="lab-card">
-              <CardFace card={currentCard} />
+            <div ref={spectralRig} className="lab-spectral-rig">
+              <div ref={card} className="lab-card">
+                <CardFace card={currentCard} />
+              </div>
+              <div ref={spectralGhost} className="lab-spectral-ghost" aria-hidden="true">
+                <CardFace card={currentCard} />
+              </div>
+              <div ref={spectralEnergy} className="lab-spectral-energy" aria-hidden="true"/>
+              <svg ref={spectralEdge} className="lab-spectral-etching"
+                viewBox="0 0 210 294" preserveAspectRatio="none" aria-hidden="true">
+                <rect x="4" y="4" width="202" height="286" rx="1" fill="none"
+                  stroke="currentColor" strokeWidth="1.7"/>
+                <rect x="9" y="9" width="192" height="276" rx="1" fill="none"
+                  stroke="currentColor" strokeWidth=".7" opacity=".67"/>
+                <path d="M4 47L4 4 43 4M167 4L206 4 206 47M4 248L4 290 43 290M167 290L206 290 206 248"
+                  fill="none" stroke="currentColor" strokeWidth="3.4"/>
+                <path d="M4 28L19 8 42 4M168 4L192 9 206 28M4 264L18 286 42 290M168 290L193 285 206 266"
+                  fill="none" stroke="currentColor" strokeWidth="1.1"/>
+                <path d="M25 21L33 29 25 37 17 29Z M184 258L192 266 184 274 176 266Z"
+                  fill="none" stroke="currentColor" strokeWidth=".8"/>
+              </svg>
             </div>
             <div ref={halo} className="lab-card-halo" aria-hidden="true"/>
           </div>
