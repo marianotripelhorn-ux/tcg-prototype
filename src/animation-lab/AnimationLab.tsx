@@ -5,11 +5,14 @@ import { byId, cardsByFaction, factionLabels } from "../data";
 import { championBackgroundUrl, championImageUrl } from "../championArtwork";
 import type { Faction } from "../types";
 import { ParticleField, type FXController, type Point } from "./ParticleField";
+import { chiralWaveMask,clamp01 } from "./chiralWave";
 
-type EffectId="spectral"|"summon"|"archive"|"placement"|"power"|"damage"|"banner";
+type EffectId="chiral-wave"|"chiral-seal"|"spectral"|"summon"|"archive"|"placement"|"power"|"damage"|"banner";
 type Flavor="arcane"|"gold";
 type Demo={id:EffectId;label:string;description:string;principle:string;duration:string};
 const demos:Demo[]=[
+  {id:"chiral-wave",label:"01 · Marea Quiral (v2)",duration:"~ 2,0 s",description:"Dos masas de color sólido se encuentran, saturan la carta y se pliegan en una línea de luz.",principle:"Contención → fuerzas opuestas → colisión → desaparición limpia. Sin lluvia de partículas."},
+  {id:"chiral-seal",label:"02 · Sello de Poder (v2)",duration:"~ 1,9 s",description:"Un color llena el material desde los extremos, surge un sello central y una onda se propaga por la piedra.",principle:"El Poder debe sentirse como una transformación física y controlada, sin destruir la carta."},
   {id:"spectral",label:"01 · Disolución etérea",duration:"~ 1,7 s",description:"La carta se electrifica, se convierte en una silueta luminosa y se deshace en hebras de energía.",principle:"Basado en la referencia: imagen → energía en el marco → silueta → filamentos → disipación."},
   {id:"summon",label:"02 · Materialización",duration:"~ 1,6 s",description:"Filamentos eléctricos convergen y reconstruyen la carta desde un contorno spectral.",principle:"La carta se reconstruye de energía antes de convertirse en un objeto físico."},
   {id:"archive",label:"01 · Archivo",duration:"1,6 s",description:"Transmutación, fragmentos de luz y absorción hacia el Archivo.",principle:"La carta debe parecer almacenada, no destruida."},
@@ -35,16 +38,16 @@ function jaggedDissolve(progress:number):string{
   return "polygon("+points.join(",")+")";
 }
 export default function AnimationLab(){
-  const [effect,setEffect]=useState<EffectId>("spectral");
+  const [effect,setEffect]=useState<EffectId>("chiral-wave");
   const [faction,setFaction]=useState<Faction>("red");
   const [cardId,setCardId]=useState(cards.red);
-  const [flavor,setFlavor]=useState<Flavor>("arcane");
+  const [flavor,setFlavor]=useState<Flavor>("gold");
   const [speed,setSpeed]=useState(1);
   const [intensity,setIntensity]=useState(1.15);
   const [playing,setPlaying]=useState(false);
   const [paused,setPaused]=useState(false);
   const [renderer,setRenderer]=useState("Inicializando PixiJS…");
-  const [info,setInfo]=useState("Elegí un efecto y presioná REPRODUCIR");
+  const [info,setInfo]=useState("Dos fuerzas. Una superficie. Ninguna partícula en los nuevos estudios.");
   const [allowMotion,setAllowMotion]=useState(()=>!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const stage=useRef<HTMLDivElement>(null);
   const card=useRef<HTMLDivElement>(null);
@@ -53,6 +56,14 @@ export default function AnimationLab(){
   const spectralGhost=useRef<HTMLDivElement>(null);
   const spectralEnergy=useRef<HTMLDivElement>(null);
   const spectralEdge=useRef<SVGSVGElement>(null);
+  const chiralSurface=useRef<HTMLDivElement>(null);
+  const chiralLeft=useRef<HTMLDivElement>(null);
+  const chiralRight=useRef<HTMLDivElement>(null);
+  const chiralAxis=useRef<HTMLDivElement>(null);
+  const chiralSolid=useRef<HTMLDivElement>(null);
+  const chiralSeal=useRef<SVGSVGElement>(null);
+  const chiralSheen=useRef<HTMLDivElement>(null);
+  const chiralStoneWave=useRef<HTMLDivElement>(null);
   const archive=useRef<HTMLDivElement>(null);
   const archiveValue=useRef<HTMLElement>(null);
   const power=useRef<HTMLDivElement>(null);
@@ -90,10 +101,18 @@ export default function AnimationLab(){
     gsap.set(spectralGhost.current,{autoAlpha:0,scale:1,clipPath:"none",filter:"none"});
     gsap.set(spectralEnergy.current,{autoAlpha:0,scale:1,rotation:-14,xPercent:-38});
     gsap.set(spectralEdge.current,{autoAlpha:0,scale:1,rotation:0});
+    gsap.set(chiralSurface.current,{autoAlpha:0,scaleX:1,transformOrigin:"center center"});
+    gsap.set(chiralLeft.current,{opacity:1,clipPath:chiralWaveMask("left",0)});
+    gsap.set(chiralRight.current,{opacity:1,clipPath:chiralWaveMask("right",0)});
+    gsap.set(chiralAxis.current,{autoAlpha:0,scaleY:.05});
+    gsap.set(chiralSolid.current,{autoAlpha:0});
+    gsap.set(chiralSeal.current,{autoAlpha:0,scale:.62,rotation:0});
+    gsap.set(chiralSheen.current,{autoAlpha:0,xPercent:-95});
+    gsap.set(chiralStoneWave.current,{autoAlpha:0,xPercent:-50,yPercent:-50,scaleX:.12});
     gsap.set(halo.current,{autoAlpha:0,scale:.6,rotation:0});
     gsap.set(flash.current,{autoAlpha:0,scale:1});
     gsap.set(archive.current,{autoAlpha:effect==="archive"?1:0,scale:1,rotation:0});
-    gsap.set(power.current,{autoAlpha:effect==="power"?1:0,scale:1,y:0});
+    gsap.set(power.current,{autoAlpha:effect==="power"||effect==="chiral-seal"?1:0,scale:1,y:0});
     gsap.set(life.current,{autoAlpha:effect==="damage"?1:0,scale:1,x:0,y:0,rotation:0});
     gsap.set(banner.current,{autoAlpha:effect==="banner"?1:0,scaleY:1,rotation:0,clipPath:"none"});
     gsap.set(bannerBody.current,{autoAlpha:effect==="banner"?1:0,y:0});
@@ -110,8 +129,11 @@ export default function AnimationLab(){
     reset();
     const c=card.current,h=halo.current, a=archive.current, pow=power.current,
       rig=spectralRig.current,ghost=spectralGhost.current,veins=spectralEnergy.current,edge=spectralEdge.current,
+      mass=chiralSurface.current,leftMass=chiralLeft.current,rightMass=chiralRight.current,
+      axis=chiralAxis.current,flood=chiralSolid.current,seal=chiralSeal.current,
+      sheen=chiralSheen.current,stone=chiralStoneWave.current,
       crown=life.current,b=banner.current,bBody=bannerBody.current,fig=bannerFigure.current,fl=flash.current;
-    if(!c||!h||!a||!pow||!crown||!b||!bBody||!fig||!fl||!rig||!ghost||!veins||!edge)return;
+    if(!c||!h||!a||!pow||!crown||!b||!bBody||!fig||!fl||!rig||!ghost||!veins||!edge||!mass||!leftMass||!rightMass||!axis||!flood||!seal||!sheen||!stone)return;
     const activeColor=colors[flavor];
     const burst=(p:Point,n:number,force=1,mode:"scatter"|"suction"|"embers"="scatter",target?:Point)=>
       fx.current?.burst(p,activeColor,Math.round(n*intensity),force,mode,target);
@@ -133,6 +155,61 @@ export default function AnimationLab(){
     if(!allowMotion){
       tl.to(c,{opacity:1,duration:.18}).to(fl,{autoAlpha:.55,duration:.13}).to(fl,{autoAlpha:0,duration:.13});
       tl.timeScale(2).play();return;
+    }
+    if(effect==="chiral-wave"||effect==="chiral-seal"){
+      // This is deliberate, dense graphic motion: two opposing color surfaces
+      // replace the earlier scatter of particles. No random FX are emitted.
+      const leftFront={progress:0},rightFront={progress:0};
+      const paint=()=>{
+        leftMass.style.clipPath=chiralWaveMask("left",leftFront.progress);
+        rightMass.style.clipPath=chiralWaveMask("right",rightFront.progress);
+      };
+      const opacity=clamp01(.72+.15*intensity);
+      const charge=effect==="chiral-seal";
+      const counter={value:currentCard.power};
+      gsap.set(mass,{autoAlpha:1,scaleX:1});
+      gsap.set(leftMass,{opacity});gsap.set(rightMass,{opacity});
+      gsap.set(c,{filter:"brightness(1) saturate(1)"});
+      tl.to(rig,{y:-8,scale:1.024,duration:.28,ease:"power2.out"})
+        .to(h,{autoAlpha:.32,scale:1.06,duration:.26},"-=.17")
+        .to(edge,{autoAlpha:.38,duration:.23},"<")
+        // The fronts approach with a small temporal offset. Their shapes are
+        // deterministic curves, so the same timing feels designed on replay.
+        .to(leftFront,{progress:1,duration:.61,ease:"power2.inOut",onUpdate:paint},"-=.07")
+        .to(rightFront,{progress:1,duration:.59,ease:"power2.inOut",onUpdate:paint},"<+=.065")
+        .to(axis,{autoAlpha:.98,scaleY:1,duration:.22,ease:"power2.out"},"-=.19")
+        .to(seal,{autoAlpha:.98,scale:1,duration:.32,ease:"back.out(1.65)"},"-=.18")
+        .to(sheen,{autoAlpha:.58,xPercent:85,duration:.31,ease:"power2.inOut"},"-=.20")
+        .to(flood,{autoAlpha:clamp01(.58+.2*intensity),duration:.22},"-=.15")
+        .to(stone,{autoAlpha:.47,scaleX:2.0,duration:.27,ease:"power2.out"},"<")
+        .to(stone,{autoAlpha:0,scaleX:3.45,duration:.45,ease:"power3.out"},"-=.04");
+
+      if(charge){
+        tl.to(flood,{autoAlpha:.24,duration:.20},"-=.20")
+          .to(counter,{value:currentCard.power+3,duration:.30,roundProps:"value",
+            onUpdate:()=>{if(powerValue.current)powerValue.current.textContent=String(counter.value);}},"-=.18")
+          .to(pow,{scale:1.16,y:-7,duration:.18,ease:"back.out(1.5)"},"<")
+          .to(pow,{scale:1,y:0,duration:.26,ease:"power2.out"})
+          .to(leftFront,{progress:0,duration:.46,ease:"power2.inOut",onUpdate:paint},"-=.25")
+          .to(rightFront,{progress:0,duration:.46,ease:"power2.inOut",onUpdate:paint},"<")
+          .to(flood,{autoAlpha:0,duration:.37},"<")
+          .to(axis,{autoAlpha:0,scaleY:.12,duration:.30},"<")
+          .to(seal,{autoAlpha:0,scale:1.25,duration:.34},"<")
+          .to(mass,{autoAlpha:0,duration:.12},"-=.08")
+          .to(rig,{y:0,scale:1,duration:.32,ease:"power2.out"},"-=.1")
+          .to(h,{autoAlpha:0,duration:.22},"<")
+          .to(edge,{autoAlpha:0,duration:.16},"<");
+      } else {
+        tl.to(c,{autoAlpha:0,duration:.14},"-=.24")
+          // The resulting color plate folds into a single thin bright line.
+          .to(mass,{scaleX:.024,duration:.46,ease:"power3.inOut"},"-=.07")
+          .to(seal,{scale:.78,autoAlpha:0,duration:.26},"-=.32")
+          .to(axis,{autoAlpha:.82,scaleY:1.10,duration:.22},"<")
+          .to(mass,{autoAlpha:0,duration:.16},"+=.06")
+          .to(axis,{autoAlpha:0,scaleY:0,duration:.28},"<")
+          .to(edge,{autoAlpha:0,duration:.23},"<")
+          .to(h,{autoAlpha:0,scale:1.22,duration:.35},"-=.18");
+      }
     }
     if(effect==="spectral"){
       const start=pCard();
@@ -346,7 +423,7 @@ export default function AnimationLab(){
   const chooseEffect=(next:EffectId)=>{setEffect(next);setInfo("Efecto seleccionado · Presioná REPRODUCIR");};
   return <div className="animation-lab">
     <header className="lab-header">
-      <div className="lab-brand"><strong>DAGGERLIGHT</strong><span>ANIMATION LAB <i>01</i></span></div>
+      <div className="lab-brand"><strong>DAGGERLIGHT</strong><span>ANIMATION LAB <i>02</i></span></div>
       <div className="lab-header-actions">
         <span className="lab-renderer-status">{renderer}</span>
         <a href="./">VOLVER AL JUEGO <span aria-hidden="true">↗</span></a>
@@ -358,9 +435,10 @@ export default function AnimationLab(){
         <h1>Laboratorio de animaciones</h1>
         <p className="lab-lead">Pruebas visuales independientes. Ninguna modifica las reglas ni el tablero jugable.</p>
         <h2>01 / Elegí el efecto</h2>
+        <p className="lab-identity-note">Nuevo estudio: ondas opuestas, masas de color y sellos. Los efectos anteriores siguen disponibles para comparar.</p>
         <div className="lab-effect-list">
           {demos.map(d=><button key={d.id} type="button"
-            className={"lab-effect-option"+(effect===d.id?" selected":"")}
+            className={"lab-effect-option"+(effect===d.id?" selected":"")+(d.id.startsWith("chiral")?" is-v2":d.id==="spectral"?" is-legacy":"")}
             aria-pressed={effect===d.id} onClick={()=>chooseEffect(d.id)}>
               <span>{d.label}</span><small>{d.duration}</small>
             </button>)}
@@ -413,6 +491,19 @@ export default function AnimationLab(){
               <div ref={card} className="lab-card">
                 <CardFace card={currentCard} />
               </div>
+              <div ref={chiralSurface} className="lab-chiral-surface" aria-hidden="true">
+                <div ref={chiralLeft} className="lab-chiral-paint lab-chiral-left"/>
+                <div ref={chiralRight} className="lab-chiral-paint lab-chiral-right"/>
+                <div ref={chiralSolid} className="lab-chiral-solid"/>
+                <div ref={chiralAxis} className="lab-chiral-axis"/>
+                <div ref={chiralSheen} className="lab-chiral-sheen"/>
+                <svg ref={chiralSeal} className="lab-chiral-seal" viewBox="0 0 120 120" aria-hidden="true">
+                  <path className="stroke-core" d="M60 6L113 60 60 114 7 60Z"/>
+                  <path className="inner-ink" d="M60 26L94 60 60 94 26 60Z"/>
+                  <path className="stroke-core" d="M60 38L82 60 60 82 38 60Z"/>
+                  <path className="stroke-core" d="M60 6V114M7 60H113" strokeWidth="1.2"/>
+                </svg>
+              </div>
               <div ref={spectralGhost} className="lab-spectral-ghost" aria-hidden="true">
                 <CardFace card={currentCard} />
               </div>
@@ -445,6 +536,7 @@ export default function AnimationLab(){
             </div>
             <img ref={bannerFigure} src={championImageUrl("dextral")} alt="" className="lab-banner-figure"/>
           </div>
+          <div className="lab-chiral-stone-wave" ref={chiralStoneWave} aria-hidden="true"/>
           <div className="lab-stage-flash" ref={flash}/>
           <ParticleField ref={fx} onRenderer={setRenderer}/>
           <span className="lab-stage-watermark">DAGGERLIGHT / EFECTOS EN DESARROLLO</span>
