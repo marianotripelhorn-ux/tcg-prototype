@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { CardFace } from "../App";
-import { byId, factionLabels } from "../data";
+import { byId, cardsByFaction, factionLabels } from "../data";
 import { championBackgroundUrl, championImageUrl } from "../championArtwork";
 import type { Faction } from "../types";
 import { ParticleField, type FXController, type Point } from "./ParticleField";
@@ -37,6 +37,7 @@ function jaggedDissolve(progress:number):string{
 export default function AnimationLab(){
   const [effect,setEffect]=useState<EffectId>("spectral");
   const [faction,setFaction]=useState<Faction>("red");
+  const [cardId,setCardId]=useState(cards.red);
   const [flavor,setFlavor]=useState<Flavor>("arcane");
   const [speed,setSpeed]=useState(1);
   const [intensity,setIntensity]=useState(1.15);
@@ -66,7 +67,7 @@ export default function AnimationLab(){
   const timeline=useRef<gsap.core.Timeline|null>(null);
   const fx=useRef<FXController>(null);
   const selected=demos.find(d=>d.id===effect)!;
-  const currentCard=byId(cards[faction]);
+  const currentCard=byId(cardId);
 
   const point=(element:Element|null):Point=>{
     const bounds=element?.getBoundingClientRect();
@@ -103,7 +104,7 @@ export default function AnimationLab(){
     return ()=>{timeline.current?.kill();fx.current?.clear();};
     // Reset for each explicitly selected demo, palette and physical card.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[effect,faction,flavor]);
+  },[effect,faction,flavor,cardId]);
 
   function run(){
     reset();
@@ -366,9 +367,14 @@ export default function AnimationLab(){
         </div>
         <h2>02 / Personalizá la prueba</h2>
         <label className="lab-field">Carta real de Daggerlight
-          <select value={faction} onChange={event=>setFaction(event.target.value as Faction)}>
+          <select value={faction} onChange={event=>{const next=event.target.value as Faction;setFaction(next);setCardId(cards[next]);}}>
             {(["red","blue","white","saints","ivory"] as Faction[]).map(key=>
               <option value={key} key={key}>{factionLabels[key]}</option>)}
+          </select>
+        </label>
+        <label className="lab-field">Carta para la prueba
+          <select value={cardId} onChange={event=>setCardId(event.target.value)}>
+            {cardsByFaction[faction].map(entry=><option key={entry.id} value={entry.id}>{entry.name} · Poder {entry.power}</option>)}
           </select>
         </label>
         <div className="lab-field"><span>Tratamiento de energía</span>
