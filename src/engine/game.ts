@@ -119,6 +119,7 @@ function spendDaggers(owner:PlayerState,count:number){
   for(let i=0;i<count;i++)owner.specialHand.splice(owner.specialHand.indexOf("dagger"),1);
 }
 function aiDaggerCount(state:GameState){
+  if(state.manifestationsEnabled===false)return 0;
   const amount=(state.opponent.specialHand||[]).filter(k=>k==="dagger").length;
   if(!amount)return 0;
   if(state.turn===3 || state.player.life<=3 || state.opponent.life<=3)return Math.min(amount,2);
@@ -129,6 +130,7 @@ function activateSpecial(
   state:GameState,side:Side,kind:"relic"|"symmetry",
   position?:Position,target?:CopyTarget
 ){
+  if(state.manifestationsEnabled===false)throw new Error("Manifestaciones desactivadas en esta versión.");
   if(state.phase!=="awaiting_player")throw new Error("No podés usar especiales ahora.");
   const self=ownerFor(state,side),rival=otherFor(state,side);
   ensureManifestations(self);ensureManifestations(rival);
@@ -165,7 +167,7 @@ export function submitHumanSpecial(
   activateSpecial(state,side,kind,position,target);
 }
 function prepareAISpecials(state:GameState) {
-  if(state.mode==="pvp")return;
+  if(state.mode==="pvp"||state.manifestationsEnabled===false)return;
   const ai=state.opponent;
   ensureManifestations(ai);
   if(ai.specialHand.includes("symmetry")){
@@ -211,10 +213,12 @@ export function startGame(
   rng:()=>number=Math.random,
   forcedStarter?: Side,
   difficulty: AIDifficulty = "normal",
-  decks?:{player?:DeckDefinition;opponent?:DeckDefinition}
+  decks?:{player?:DeckDefinition;opponent?:DeckDefinition},
+  manifestationsEnabled=true
 ) {
   const state=createGame(playerChampion,opponentChampion,rng,forcedStarter,decks);
   state.aiDifficulty=difficulty;
+  state.manifestationsEnabled=manifestationsEnabled;
   beginDuel(state,rng);
   return state;
 }
@@ -290,8 +294,10 @@ function resolvePendingDuel(state: GameState, rng:()=>number) {
   if (!playerPlay || !opponentPlay) throw new Error("Both plays are required to resolve a duel.");
 
   const power=calculateDuel(state,playerPlay,opponentPlay);
-  consumeShields(state.player,opponentPlay.position);
-  consumeShields(state.opponent,playerPlay.position);
+  if(state.manifestationsEnabled!==false){
+    consumeShields(state.player,opponentPlay.position);
+    consumeShields(state.opponent,playerPlay.position);
+  }
   consumePreparedState(state,playerPlay,opponentPlay);
 
   if (power.playerSaintTriggered) state.player.saintPassiveUsed=true;
@@ -310,10 +316,12 @@ function resolvePendingDuel(state: GameState, rng:()=>number) {
 
   // El Archivo recibe Dagas consumidas y las dos marcas generadas por
   // cada Reliquia que todavía protege una posición sin usar.
-  for(const [owner,play] of [[state.player,playerPlay],[state.opponent,opponentPlay]] as const){
-    for(let i=0;i<(play.daggers||0);i++)
-      owner.archives[play.position].push(archivedSpecial("dagger",owner.champion.faction));
-    collectRelicArchive(owner,state.round);
+  if(state.manifestationsEnabled!==false){
+    for(const [owner,play] of [[state.player,playerPlay],[state.opponent,opponentPlay]] as const){
+      for(let i=0;i<(play.daggers||0);i++)
+        owner.archives[play.position].push(archivedSpecial("dagger",owner.champion.faction));
+      collectRelicArchive(owner,state.round);
+    }
   }
 
   let outcome: Side | "draw"="draw";
@@ -369,7 +377,7 @@ function resolvePendingDuel(state: GameState, rng:()=>number) {
   applyPrioryHealing(state,state.opponent);
 
   // Se crean después de resolver el duelo, sin retroactividad.
-  for(const [owner,play] of [[state.player,playerPlay],[state.opponent,opponentPlay]] as const){
+  if(state.manifestationsEnabled!==false)for(const [owner,play] of [[state.player,playerPlay],[state.opponent,opponentPlay]] as const){
     const created=generateOnPlay(owner,play.card,play.position,state.round);
     if(created)state.events.push({
       text:`${owner.champion.name.split(",")[0]} generó ${SPECIAL_NAME[created]}.`,
@@ -440,10 +448,10 @@ export function submitPlayerPlay(
   if (!legalPositions(state.player).includes(position)) return;
   const card=state.player.hand[handIndex];
   if (!card) return;
-  spendDaggers(state.player,daggers);
+  spendDaggers(state.player,state.manifestationsEnabled===false?0:daggers);
 
   const [chosen]=state.player.hand.splice(handIndex,1);
-  state.pendingPlayerPlay={card:chosen,position,daggers};
+  state.pendingPlayerPlay={card:chosen,position,daggers:state.manifestationsEnabled===false?0:daggers};
 
 
   if (state.initiative==="player") {
@@ -515,9 +523,9 @@ export function submitHumanPlay(
   const rival=side==="player"?state.opponent:state.player;
   if(!legalPositions(owner).includes(position))throw new Error("Posición ocupada.");
   if(handIndex<0 || handIndex>=owner.hand.length)throw new Error("Carta inexistente.");
-  spendDaggers(owner,daggers);
+  spendDaggers(owner,state.manifestationsEnabled===false?0:daggers);
   const [card]=owner.hand.splice(handIndex,1);
-  const staged:EnginePlay={card,position,daggers};
+  const staged:EnginePlay={card,position,daggers:state.manifestationsEnabled===false?0:daggers};
   const isOpening=state.pendingPlayerPlay===null && state.pendingOpponentPlay===null;
   if(isOpening){
     const opening=previewOpeningPower(state,staged,owner,rival);
