@@ -23,6 +23,7 @@ import "./arena-interaction-fix.css";
 import "./board-redesign/board.css";
 import "./board-redesign/motion.css";
 import "./animation-lab/lab.css";
+import "./animation-lab/chiral.css";
 
 initializeTheme();
 
