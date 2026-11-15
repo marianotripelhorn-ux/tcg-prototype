@@ -51,7 +51,7 @@ try {
   await page.getByRole("button",{name:/PAUSAR/}).click();
   await page.getByRole("button",{name:/CONTINUAR/}).click();
   await page.getByRole("button",{name:/REINICIAR/}).click();
-  assert.match((await page.locator(".lab-transport-caption").textContent())??"","Prueba reiniciada");
+  assert.match((await page.locator(".lab-transport-caption").textContent())??"",/Prueba reiniciada/);
   await page.screenshot({path:"/tmp/daggerlight-animation-lab-smoke.png"});
   assert.deepEqual(fatalErrors,[],"Browser page errors");
   console.log("PASS: seven GSAP/PixiJS previews, replay controls and actual Daggerlight card.");
