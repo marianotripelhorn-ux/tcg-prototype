@@ -177,7 +177,7 @@ export default function AnimationLab(){
             if(Math.random()<.5)perimeter(2,true);
           }},"-=.09")
         .to(c,{autoAlpha:0,duration:.06},"-=.12")
-        .call(()=>{perimeter(24,true);ring(pCard(),76);},"<")
+        .call(()=>{perimeter(24,true);ring(pCard(),76);},undefined,"<")
         .to(veins,{autoAlpha:1,xPercent:-34,duration:.24},"<")
         .call(()=>{
           const p=pCard();
@@ -228,7 +228,7 @@ export default function AnimationLab(){
           onUpdate:()=>{c.style.clipPath=jaggedDissolve(restoration.value);}},"-=.08")
         .to(c,{filter:"brightness(1) saturate(1)",duration:.35},"-=.22")
         .to(rig,{scale:1.035,y:-7,rotation:-.8,duration:.22,ease:"power2.out"},"-=.27")
-        .call(()=>{ring(pCard(),71);burst(pCard(),55,.78,"embers");},"<")
+        .call(()=>{ring(pCard(),71);burst(pCard(),55,.78,"embers");},undefined,"<")
         .to(edge,{autoAlpha:0,scale:1.12,duration:.36},"<")
         .to(veins,{autoAlpha:0,xPercent:65,duration:.3},"<")
         .to(ghost,{autoAlpha:0,duration:.22},"<")
