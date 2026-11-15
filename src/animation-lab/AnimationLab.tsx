@@ -7,10 +7,11 @@ import type { Faction } from "../types";
 import { ParticleField, type FXController, type Point } from "./ParticleField";
 import { chiralWaveMask,clamp01 } from "./chiralWave";
 
-type EffectId="chiral-wave"|"chiral-seal"|"spectral"|"summon"|"archive"|"placement"|"power"|"damage"|"banner";
-type Flavor="arcane"|"gold";
+type EffectId="spectral-refined"|"chiral-wave"|"chiral-seal"|"spectral"|"summon"|"archive"|"placement"|"power"|"damage"|"banner";
+type Flavor="gold"|"shadow";
 type Demo={id:EffectId;label:string;description:string;principle:string;duration:string};
 const demos:Demo[]=[
+  {id:"spectral-refined",label:"01 · Disolución etérea refinada (v3)",duration:"~ 1,7 s",description:"La versión original: silueta luminosa, una onda de color denso y unos pocos filamentos. Dorado para un efecto favorable, negro para uno adverso.",principle:"La luz se acumula en la carta, una onda atraviesa el material y su silueta desaparece. Sin lluvia de partículas."},
   {id:"chiral-wave",label:"01 · Marea Quiral (v2)",duration:"~ 2,0 s",description:"Dos masas de color sólido se encuentran, saturan la carta y se pliegan en una línea de luz.",principle:"Contención → fuerzas opuestas → colisión → desaparición limpia. Sin lluvia de partículas."},
   {id:"chiral-seal",label:"02 · Sello de Poder (v2)",duration:"~ 1,9 s",description:"Un color llena el material desde los extremos, surge un sello central y una onda se propaga por la piedra.",principle:"El Poder debe sentirse como una transformación física y controlada, sin destruir la carta."},
   {id:"spectral",label:"01 · Disolución etérea",duration:"~ 1,7 s",description:"La carta se electrifica, se convierte en una silueta luminosa y se deshace en hebras de energía.",principle:"Basado en la referencia: imagen → energía en el marco → silueta → filamentos → disipación."},
@@ -25,7 +26,7 @@ const cards:Record<Faction,string>={
   red:"maestro_armas",blue:"asesino_sinistral",white:"gusano_blanco",
   saints:"santo_bifronte",ivory:"guardia_constelada"
 };
-const colors:{[key in Flavor]:number}={arcane:0x91e9e8,gold:0xffd18a};
+const colors:{[key in Flavor]:number}={gold:0xf5d69a,shadow:0x8c8880};
 const clamp=(n:number,a:number,b:number)=>Math.min(b,Math.max(a,n));
 function jaggedDissolve(progress:number):string{
   const edge=100-progress*109;
@@ -38,7 +39,7 @@ function jaggedDissolve(progress:number):string{
   return "polygon("+points.join(",")+")";
 }
 export default function AnimationLab(){
-  const [effect,setEffect]=useState<EffectId>("chiral-wave");
+  const [effect,setEffect]=useState<EffectId>("spectral-refined");
   const [faction,setFaction]=useState<Faction>("red");
   const [cardId,setCardId]=useState(cards.red);
   const [flavor,setFlavor]=useState<Flavor>("gold");
@@ -47,7 +48,7 @@ export default function AnimationLab(){
   const [playing,setPlaying]=useState(false);
   const [paused,setPaused]=useState(false);
   const [renderer,setRenderer]=useState("Inicializando PixiJS…");
-  const [info,setInfo]=useState("Dos fuerzas. Una superficie. Ninguna partícula en los nuevos estudios.");
+  const [info,setInfo]=useState("La silueta original. Menos partículas. Dorado o negro según el efecto.");
   const [allowMotion,setAllowMotion]=useState(()=>!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const stage=useRef<HTMLDivElement>(null);
   const card=useRef<HTMLDivElement>(null);
@@ -56,6 +57,10 @@ export default function AnimationLab(){
   const spectralGhost=useRef<HTMLDivElement>(null);
   const spectralEnergy=useRef<HTMLDivElement>(null);
   const spectralEdge=useRef<SVGSVGElement>(null);
+  const spectralV3Fill=useRef<HTMLDivElement>(null);
+  const spectralV3Front=useRef<HTMLDivElement>(null);
+  const spectralV3Shroud=useRef<HTMLDivElement>(null);
+  const spectralV3Ground=useRef<HTMLDivElement>(null);
   const chiralSurface=useRef<HTMLDivElement>(null);
   const chiralLeft=useRef<HTMLDivElement>(null);
   const chiralRight=useRef<HTMLDivElement>(null);
@@ -101,6 +106,10 @@ export default function AnimationLab(){
     gsap.set(spectralGhost.current,{autoAlpha:0,scale:1,clipPath:"none",filter:"none"});
     gsap.set(spectralEnergy.current,{autoAlpha:0,scale:1,rotation:-14,xPercent:-38});
     gsap.set(spectralEdge.current,{autoAlpha:0,scale:1,rotation:0});
+    gsap.set(spectralV3Fill.current,{autoAlpha:0,clipPath:"inset(100% 0% 0% 0%)"});
+    gsap.set(spectralV3Front.current,{autoAlpha:0,yPercent:105});
+    gsap.set(spectralV3Shroud.current,{autoAlpha:0});
+    gsap.set(spectralV3Ground.current,{autoAlpha:0,scaleX:.14});
     gsap.set(chiralSurface.current,{autoAlpha:0,scaleX:1,transformOrigin:"center center"});
     gsap.set(chiralLeft.current,{opacity:1,clipPath:chiralWaveMask("left",0)});
     gsap.set(chiralRight.current,{opacity:1,clipPath:chiralWaveMask("right",0)});
@@ -129,11 +138,13 @@ export default function AnimationLab(){
     reset();
     const c=card.current,h=halo.current, a=archive.current, pow=power.current,
       rig=spectralRig.current,ghost=spectralGhost.current,veins=spectralEnergy.current,edge=spectralEdge.current,
+      spectralFill=spectralV3Fill.current,spectralFront=spectralV3Front.current,
+      spectralShroud=spectralV3Shroud.current,spectralGround=spectralV3Ground.current,
       mass=chiralSurface.current,leftMass=chiralLeft.current,rightMass=chiralRight.current,
       axis=chiralAxis.current,flood=chiralSolid.current,seal=chiralSeal.current,
       sheen=chiralSheen.current,stone=chiralStoneWave.current,
       crown=life.current,b=banner.current,bBody=bannerBody.current,fig=bannerFigure.current,fl=flash.current;
-    if(!c||!h||!a||!pow||!crown||!b||!bBody||!fig||!fl||!rig||!ghost||!veins||!edge||!mass||!leftMass||!rightMass||!axis||!flood||!seal||!sheen||!stone)return;
+    if(!c||!h||!a||!pow||!crown||!b||!bBody||!fig||!fl||!rig||!ghost||!veins||!edge||!spectralFill||!spectralFront||!spectralShroud||!spectralGround||!mass||!leftMass||!rightMass||!axis||!flood||!seal||!sheen||!stone)return;
     const activeColor=colors[flavor];
     const burst=(p:Point,n:number,force=1,mode:"scatter"|"suction"|"embers"="scatter",target?:Point)=>
       fx.current?.burst(p,activeColor,Math.round(n*intensity),force,mode,target);
@@ -211,7 +222,7 @@ export default function AnimationLab(){
           .to(h,{autoAlpha:0,scale:1.22,duration:.35},"-=.18");
       }
     }
-    if(effect==="spectral"){
+    if(effect==="spectral"||effect==="spectral-refined"){
       const start=pCard();
       const base=stage.current?.getBoundingClientRect();
       const destination:Point={x:start.x-Math.min(240,(base?.width??800)*.29),
@@ -233,6 +244,48 @@ export default function AnimationLab(){
       };
       const dissolve={value:0};
       const ghostDissolve={value:0};
+      if(effect==="spectral-refined"){
+        // Keep original buildup -> image -> silhouette -> filaments -> absence.
+        // Particle budget: 12 at intensity 100%, no per-frame emission.
+        const negative=flavor==="shadow";
+        tl.to(rig,{y:-9,scale:1.025,rotation:-.35,duration:.30,ease:"power2.out"})
+          .to(h,{autoAlpha:negative?.58:.47,scale:1.10,duration:.27},"-=.13")
+          .to(edge,{autoAlpha:negative?.78:.88,scale:1.01,duration:.24},"<")
+          .to(spectralShroud,{autoAlpha:negative?.50:.15,duration:.34},"-=.19")
+          .to(spectralFill,{
+            autoAlpha:Math.min(.96,.66+.13*intensity),
+            clipPath:"inset(0% 0% 0% 0%)",
+            duration:.63,ease:"power2.inOut"
+          },"-=.07")
+          .to(spectralFront,{autoAlpha:.82,yPercent:-107,duration:.68,ease:"power2.inOut"},"<")
+          .to(veins,{autoAlpha:negative?.27:.43,xPercent:22,duration:.38},"<")
+          .to(c,{
+            filter:negative?"brightness(.48) saturate(.6)":"brightness(1.23) saturate(1.12)",
+            duration:.27
+          },"-=.37")
+          .to(ghost,{autoAlpha:negative?.66:.78,duration:.30},"-=.33")
+          .call(()=>{burst(pCard(),6,.36,"embers");},undefined,"-=.14")
+          .to(dissolve,{value:1,duration:.49,ease:"power2.in",
+            onUpdate:()=>{c.style.clipPath=jaggedDissolve(dissolve.value);}},"-=.12")
+          .to(c,{autoAlpha:0,duration:.07},"-=.09")
+          .to(spectralGround,{autoAlpha:negative?.36:.28,scaleX:2.1,duration:.30},"-=.13")
+          .to(spectralFill,{autoAlpha:0,clipPath:"inset(0% 0% 100% 0%)",duration:.36},"<")
+          .call(()=>{
+            // One directed filament, not a scatter of random lightning.
+            const p=pCard();
+            arc({x:p.x-10,y:p.y+19},{x:destination.x+12,y:destination.y-8},1.4);
+            burst({x:p.x-5,y:p.y+26},6,.5,"suction",destination);
+          },undefined,"-=.14")
+          .to(ghostDissolve,{value:1,duration:.42,ease:"power2.in",
+            onUpdate:()=>{ghost.style.clipPath=jaggedDissolve(ghostDissolve.value);}},"<")
+          .to(ghost,{autoAlpha:0,y:-16,duration:.37},"<")
+          .to(veins,{autoAlpha:0,xPercent:54,duration:.28},"<")
+          .to(spectralFront,{autoAlpha:0,duration:.17},"<")
+          .to(edge,{autoAlpha:0,scale:1.08,duration:.37},"<")
+          .to(h,{autoAlpha:0,scale:1.20,duration:.40},"-=.27")
+          .to(spectralShroud,{autoAlpha:0,duration:.40},"<")
+          .to(spectralGround,{autoAlpha:0,scaleX:3,duration:.44},"<");
+      }else{
       tl.to(rig,{y:-11,scale:1.032,rotation:-.6,duration:.28,ease:"power2.out"})
         .to(h,{autoAlpha:1,scale:1.12,duration:.28},"-=.15")
         .to(edge,{autoAlpha:1,scale:1.015,duration:.18},"-=.15")
@@ -273,6 +326,7 @@ export default function AnimationLab(){
         .to(veins,{autoAlpha:0,rotation:11,xPercent:-90,duration:.39},"<")
         .to(edge,{autoAlpha:0,scale:1.09,duration:.42},"<")
         .to(h,{autoAlpha:0,scale:1.33,duration:.48},"-=.28");
+      }
     }
     if(effect==="summon"){
       const center=pCard(),base=stage.current?.getBoundingClientRect();
@@ -423,7 +477,7 @@ export default function AnimationLab(){
   const chooseEffect=(next:EffectId)=>{setEffect(next);setInfo("Efecto seleccionado · Presioná REPRODUCIR");};
   return <div className="animation-lab">
     <header className="lab-header">
-      <div className="lab-brand"><strong>DAGGERLIGHT</strong><span>ANIMATION LAB <i>02</i></span></div>
+      <div className="lab-brand"><strong>DAGGERLIGHT</strong><span>ANIMATION LAB <i>03</i></span></div>
       <div className="lab-header-actions">
         <span className="lab-renderer-status">{renderer}</span>
         <a href="./">VOLVER AL JUEGO <span aria-hidden="true">↗</span></a>
@@ -435,10 +489,10 @@ export default function AnimationLab(){
         <h1>Laboratorio de animaciones</h1>
         <p className="lab-lead">Pruebas visuales independientes. Ninguna modifica las reglas ni el tablero jugable.</p>
         <h2>01 / Elegí el efecto</h2>
-        <p className="lab-identity-note">Nuevo estudio: ondas opuestas, masas de color y sellos. Los efectos anteriores siguen disponibles para comparar.</p>
+        <p className="lab-identity-note">La disolución original, ahora con una onda continua y pocas partículas. Dorado para efectos favorables; negro para adversos. Las otras pruebas siguen disponibles para comparar.</p>
         <div className="lab-effect-list">
           {demos.map(d=><button key={d.id} type="button"
-            className={"lab-effect-option"+(effect===d.id?" selected":"")+(d.id.startsWith("chiral")?" is-v2":d.id==="spectral"?" is-legacy":"")}
+            className={"lab-effect-option"+(effect===d.id?" selected":"")+(d.id==="spectral-refined"?" is-v3":d.id.startsWith("chiral")?" is-v2":d.id==="spectral"?" is-legacy":"")}
             aria-pressed={effect===d.id} onClick={()=>chooseEffect(d.id)}>
               <span>{d.label}</span><small>{d.duration}</small>
             </button>)}
@@ -457,9 +511,10 @@ export default function AnimationLab(){
         </label>
         <div className="lab-field"><span>Tratamiento de energía</span>
           <div className="lab-segments">
-            <button type="button" className={flavor==="arcane"?"active":""} aria-pressed={flavor==="arcane"} onClick={()=>setFlavor("arcane")}>Arcano</button>
-            <button type="button" className={flavor==="gold"?"active":""} aria-pressed={flavor==="gold"} onClick={()=>setFlavor("gold")}>Dorado</button>
+            <button type="button" className={flavor==="gold"?"active":""} aria-pressed={flavor==="gold"} onClick={()=>setFlavor("gold")}>+ Dorado</button>
+            <button type="button" className={flavor==="shadow"?"active":""} aria-pressed={flavor==="shadow"} onClick={()=>setFlavor("shadow")}>− Negro</button>
           </div>
+          <div className="lab-polarity-legend"><b>Dorado:</b> refuerzo o activación. <b>Negro:</b> debilitamiento o pérdida. Son pruebas visuales, todavía sin efectos de juego.</div>
         </div>
         <label className="lab-field lab-slider">
           <span>Velocidad <strong>{speed.toFixed(2)}×</strong></span>
@@ -507,6 +562,8 @@ export default function AnimationLab(){
               <div ref={spectralGhost} className="lab-spectral-ghost" aria-hidden="true">
                 <CardFace card={currentCard} />
               </div>
+              <div ref={spectralV3Fill} className="lab-spectral-v3-fill" aria-hidden="true"/>
+              <div ref={spectralV3Front} className="lab-spectral-v3-front" aria-hidden="true"/>
               <div ref={spectralEnergy} className="lab-spectral-energy" aria-hidden="true"/>
               <svg ref={spectralEdge} className="lab-spectral-etching"
                 viewBox="0 0 210 294" preserveAspectRatio="none" aria-hidden="true">
@@ -537,6 +594,8 @@ export default function AnimationLab(){
             <img ref={bannerFigure} src={championImageUrl("dextral")} alt="" className="lab-banner-figure"/>
           </div>
           <div className="lab-chiral-stone-wave" ref={chiralStoneWave} aria-hidden="true"/>
+          <div className="lab-spectral-v3-shroud" ref={spectralV3Shroud} aria-hidden="true"/>
+          <div className="lab-spectral-v3-ground" ref={spectralV3Ground} aria-hidden="true"/>
           <div className="lab-stage-flash" ref={flash}/>
           <ParticleField ref={fx} onRenderer={setRenderer}/>
           <span className="lab-stage-watermark">DAGGERLIGHT / EFECTOS EN DESARROLLO</span>
