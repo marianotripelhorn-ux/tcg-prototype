@@ -289,3 +289,77 @@
 }
 /* Explicitly triggered previews may override the OS preference with a visible
    opt-in. The user's preference never affects the real game client. */
+
+
+/* CARD ENERGY STUDIES / LAB 01A
+   The front remains the real Daggerlight Card Studio artwork. Ghosted card,
+   contour filigree and arcane energy are independent visual layers. */
+.animation-lab .lab-stage{--lab-spectral:#94f6ed}
+.animation-lab .lab-stage.flavor-gold{--lab-spectral:#f9d28b}
+.animation-lab .lab-spectral-rig{
+  position:absolute;inset:0;z-index:3;width:100%;height:100%;
+  transform-origin:center center;will-change:transform;
+}
+.animation-lab .lab-spectral-rig>.lab-card{
+  position:absolute;inset:0;width:100%;height:100%;z-index:2;
+  transform-origin:center center;
+}
+.animation-lab .lab-spectral-ghost{
+  position:absolute;inset:0;z-index:3;
+  pointer-events:none;opacity:0;transform-origin:center center;
+  mix-blend-mode:screen;
+  filter:grayscale(1) contrast(1.6) brightness(1.9) drop-shadow(0 0 10px var(--lab-spectral));
+}
+.animation-lab .lab-spectral-ghost::after{
+  content:"";position:absolute;inset:0;
+  pointer-events:none;
+  background:linear-gradient(127deg,#ffffff65 0%,transparent 29%),
+    radial-gradient(ellipse at 55% 42%,var(--lab-spectral) 0%,transparent 83%);
+  mix-blend-mode:color;opacity:.76;
+}
+.animation-lab .lab-spectral-ghost .game-card{
+  height:100%!important;width:100%!important;max-height:none!important;
+  border-radius:0!important;
+  border:1px solid var(--lab-spectral)!important;
+}
+.animation-lab .lab-spectral-energy{
+  position:absolute;inset:-9%;z-index:4;opacity:0;pointer-events:none;
+  background:
+    linear-gradient(115deg,transparent 22%,#fff0 34%,var(--lab-spectral) 49%,#fffc 50%,transparent 60%),
+    repeating-linear-gradient(151deg,transparent 0 16px,var(--lab-spectral) 17px 19px,transparent 23px 39px),
+    radial-gradient(ellipse at 55% 45%,var(--lab-spectral),transparent 72%);
+  background-size:135% 135%,100% 100%,100% 100%;
+  mix-blend-mode:screen;
+  filter:blur(8px) contrast(1.1);
+  transform:skewX(-9deg);
+  -webkit-mask-image:linear-gradient(to right,transparent 3%,black 28%,black 74%,transparent 100%);
+  mask-image:linear-gradient(to right,transparent 3%,black 28%,black 74%,transparent 100%);
+}
+.animation-lab .lab-spectral-etching{
+  display:block;position:absolute;inset:-4%;z-index:5;pointer-events:none;
+  width:108%;height:108%;opacity:0;overflow:visible;
+  color:var(--lab-spectral);
+  filter:drop-shadow(0 0 3px var(--lab-spectral))
+    drop-shadow(0 0 12px var(--lab-spectral))
+    drop-shadow(0 0 2px white);
+  transform-origin:center center;
+}
+.animation-lab .scene-spectral .lab-slot-mark,
+.animation-lab .scene-summon .lab-slot-mark{
+  opacity:.21;
+}
+.animation-lab .scene-spectral .lab-stage-axis,
+.animation-lab .scene-summon .lab-stage-axis{
+  opacity:.91;
+}
+.animation-lab .scene-spectral .lab-card-anchor,
+.animation-lab .scene-summon .lab-card-anchor{
+  top:42%;
+}
+.animation-lab .lab-effect-option.selected span{color:#fff0ce}
+@media(prefers-reduced-motion:reduce){
+  .animation-lab .lab-spectral-rig,.animation-lab .lab-spectral-ghost,
+  .animation-lab .lab-spectral-energy,.animation-lab .lab-spectral-etching{
+    transition:none!important;animation:none!important;
+  }
+}
