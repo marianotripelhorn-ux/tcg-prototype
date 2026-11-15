@@ -25,7 +25,7 @@ try {
   }
   assert.ok(ready,"Vite preview server did not become ready");
   await page.getByRole("heading",{name:"Laboratorio de animaciones"}).waitFor({timeout:12000});
-  await page.locator(".lab-stage .game-card").waitFor({timeout:12000});
+  await page.locator(".lab-stage .lab-card .game-card").first().waitFor({timeout:12000});
   const buttons=page.locator(".lab-effect-option");
   assert.equal(await buttons.count(),7,"Expected seven independent motion experiments");
   await page.waitForTimeout(1100);
