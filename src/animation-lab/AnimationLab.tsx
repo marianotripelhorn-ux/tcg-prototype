@@ -7,10 +7,13 @@ import type { Faction } from "../types";
 import { ParticleField, type FXController, type Point } from "./ParticleField";
 import { chiralWaveMask,clamp01 } from "./chiralWave";
 
-type EffectId="spectral-refined"|"chiral-wave"|"chiral-seal"|"spectral"|"summon"|"archive"|"placement"|"power"|"damage"|"banner";
+type EffectId="power-rise"|"power-fall"|"champion-impact"|"spectral-refined"|"chiral-wave"|"chiral-seal"|"spectral"|"summon"|"archive"|"placement"|"power"|"damage"|"banner";
 type Flavor="gold"|"shadow";
 type Demo={id:EffectId;label:string;description:string;principle:string;duration:string};
 const demos:Demo[]=[
+  {id:"power-rise",label:"01 · Ascenso de Poder (v4)",duration:"~ 1,9 s",description:"El oro se concentra en el material, sube por la carta y activa su Poder. Buildup contenido, una onda firme y resolución precisa.",principle:"Dorado: la carta gana fuerza a través de un cambio físico de luz y color. Sin partículas."},
+  {id:"power-fall",label:"02 · Pérdida de Poder (v4)",duration:"~ 1,9 s",description:"Una masa de tinta negra enfría la ilustración, desciende y reduce el Poder. La carta sigue siendo reconocible.",principle:"Negro: absorber luz y debilitar la carta debe sentirse distinto a simplemente invertir el efecto positivo."},
+  {id:"champion-impact",label:"03 · Herida del Campeón (v4)",duration:"~ 2,0 s",description:"Una onda negra y sólida viaja desde la carta hasta la corona, que responde con una pérdida de Vida.",principle:"Un impacto que une físicamente la carta y el Campeón: carga, transferencia, golpe y silencio."},
   {id:"spectral-refined",label:"01 · Disolución etérea refinada (v3)",duration:"~ 1,7 s",description:"La versión original: silueta luminosa, una onda de color denso y unos pocos filamentos. Dorado para un efecto favorable, negro para uno adverso.",principle:"La luz se acumula en la carta, una onda atraviesa el material y su silueta desaparece. Sin lluvia de partículas."},
   {id:"chiral-wave",label:"01 · Marea Quiral (v2)",duration:"~ 2,0 s",description:"Dos masas de color sólido se encuentran, saturan la carta y se pliegan en una línea de luz.",principle:"Contención → fuerzas opuestas → colisión → desaparición limpia. Sin lluvia de partículas."},
   {id:"chiral-seal",label:"02 · Sello de Poder (v2)",duration:"~ 1,9 s",description:"Un color llena el material desde los extremos, surge un sello central y una onda se propaga por la piedra.",principle:"El Poder debe sentirse como una transformación física y controlada, sin destruir la carta."},
@@ -39,7 +42,7 @@ function jaggedDissolve(progress:number):string{
   return "polygon("+points.join(",")+")";
 }
 export default function AnimationLab(){
-  const [effect,setEffect]=useState<EffectId>("spectral-refined");
+  const [effect,setEffect]=useState<EffectId>("power-rise");
   const [faction,setFaction]=useState<Faction>("red");
   const [cardId,setCardId]=useState(cards.red);
   const [flavor,setFlavor]=useState<Flavor>("gold");
@@ -48,7 +51,7 @@ export default function AnimationLab(){
   const [playing,setPlaying]=useState(false);
   const [paused,setPaused]=useState(false);
   const [renderer,setRenderer]=useState("Inicializando PixiJS…");
-  const [info,setInfo]=useState("La silueta original. Menos partículas. Dorado o negro según el efecto.");
+  const [info,setInfo]=useState("Tres estudios nuevos: potenciar, debilitar e impactar. Una onda, un resultado.");
   const [allowMotion,setAllowMotion]=useState(()=>!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const stage=useRef<HTMLDivElement>(null);
   const card=useRef<HTMLDivElement>(null);
@@ -61,6 +64,12 @@ export default function AnimationLab(){
   const spectralV3Front=useRef<HTMLDivElement>(null);
   const spectralV3Shroud=useRef<HTMLDivElement>(null);
   const spectralV3Ground=useRef<HTMLDivElement>(null);
+  const v4Sigil=useRef<HTMLDivElement>(null);
+  const v4Transfer=useRef<HTMLDivElement>(null);
+  const v4CrownWash=useRef<HTMLDivElement>(null);
+  const v4CrownRim=useRef<HTMLDivElement>(null);
+  const v4Delta=useRef<HTMLSpanElement>(null);
+  const v4StageResponse=useRef<HTMLDivElement>(null);
   const chiralSurface=useRef<HTMLDivElement>(null);
   const chiralLeft=useRef<HTMLDivElement>(null);
   const chiralRight=useRef<HTMLDivElement>(null);
@@ -110,6 +119,12 @@ export default function AnimationLab(){
     gsap.set(spectralV3Front.current,{autoAlpha:0,yPercent:105});
     gsap.set(spectralV3Shroud.current,{autoAlpha:0});
     gsap.set(spectralV3Ground.current,{autoAlpha:0,scaleX:.14});
+    gsap.set(v4Sigil.current,{autoAlpha:0,scale:.72,rotation:0});
+    gsap.set(v4Transfer.current,{autoAlpha:0,clipPath:"inset(0% 100% 0% 0%)"});
+    gsap.set(v4CrownWash.current,{autoAlpha:0,clipPath:"inset(0% 0% 100% 0%)"});
+    gsap.set(v4CrownRim.current,{autoAlpha:0});
+    gsap.set(v4Delta.current,{autoAlpha:0,x:0,y:0,scale:.84});
+    gsap.set(v4StageResponse.current,{autoAlpha:0,xPercent:-50,yPercent:-50,scaleX:.08});
     gsap.set(chiralSurface.current,{autoAlpha:0,scaleX:1,transformOrigin:"center center"});
     gsap.set(chiralLeft.current,{opacity:1,clipPath:chiralWaveMask("left",0)});
     gsap.set(chiralRight.current,{opacity:1,clipPath:chiralWaveMask("right",0)});
@@ -121,8 +136,8 @@ export default function AnimationLab(){
     gsap.set(halo.current,{autoAlpha:0,scale:.6,rotation:0});
     gsap.set(flash.current,{autoAlpha:0,scale:1});
     gsap.set(archive.current,{autoAlpha:effect==="archive"?1:0,scale:1,rotation:0});
-    gsap.set(power.current,{autoAlpha:effect==="power"||effect==="chiral-seal"?1:0,scale:1,y:0});
-    gsap.set(life.current,{autoAlpha:effect==="damage"?1:0,scale:1,x:0,y:0,rotation:0});
+    gsap.set(power.current,{autoAlpha:effect==="power"||effect==="chiral-seal"||effect==="power-rise"||effect==="power-fall"?1:0,scale:1,y:0});
+    gsap.set(life.current,{autoAlpha:effect==="damage"||effect==="champion-impact"?1:0,scale:1,x:0,y:0,rotation:0});
     gsap.set(banner.current,{autoAlpha:effect==="banner"?1:0,scaleY:1,rotation:0,clipPath:"none"});
     gsap.set(bannerBody.current,{autoAlpha:effect==="banner"?1:0,y:0});
     gsap.set(bannerFigure.current,{autoAlpha:effect==="banner"?1:0,y:0,x:0,scale:1});
@@ -140,11 +155,14 @@ export default function AnimationLab(){
       rig=spectralRig.current,ghost=spectralGhost.current,veins=spectralEnergy.current,edge=spectralEdge.current,
       spectralFill=spectralV3Fill.current,spectralFront=spectralV3Front.current,
       spectralShroud=spectralV3Shroud.current,spectralGround=spectralV3Ground.current,
+      sigil=v4Sigil.current,transfer=v4Transfer.current,
+      crownWash=v4CrownWash.current,crownRim=v4CrownRim.current,
+      delta=v4Delta.current,stoneResponse=v4StageResponse.current,
       mass=chiralSurface.current,leftMass=chiralLeft.current,rightMass=chiralRight.current,
       axis=chiralAxis.current,flood=chiralSolid.current,seal=chiralSeal.current,
       sheen=chiralSheen.current,stone=chiralStoneWave.current,
       crown=life.current,b=banner.current,bBody=bannerBody.current,fig=bannerFigure.current,fl=flash.current;
-    if(!c||!h||!a||!pow||!crown||!b||!bBody||!fig||!fl||!rig||!ghost||!veins||!edge||!spectralFill||!spectralFront||!spectralShroud||!spectralGround||!mass||!leftMass||!rightMass||!axis||!flood||!seal||!sheen||!stone)return;
+    if(!c||!h||!a||!pow||!crown||!b||!bBody||!fig||!fl||!rig||!ghost||!veins||!edge||!spectralFill||!spectralFront||!spectralShroud||!spectralGround||!sigil||!transfer||!crownWash||!crownRim||!delta||!stoneResponse||!mass||!leftMass||!rightMass||!axis||!flood||!seal||!sheen||!stone)return;
     const activeColor=colors[flavor];
     const burst=(p:Point,n:number,force=1,mode:"scatter"|"suction"|"embers"="scatter",target?:Point)=>
       fx.current?.burst(p,activeColor,Math.round(n*intensity),force,mode,target);
@@ -167,6 +185,82 @@ export default function AnimationLab(){
       tl.to(c,{opacity:1,duration:.18}).to(fl,{autoAlpha:.55,duration:.13}).to(fl,{autoAlpha:0,duration:.13});
       tl.timeScale(2).play();return;
     }
+    if(effect==="power-rise"||effect==="power-fall"){
+      // A fixed physical material wave changes the actual card state.
+      // No particle emission: color field, fine engraving, and one stone pulse.
+      const rising=effect==="power-rise";
+      const before=currentCard.power;
+      const after=rising?before+3:Math.max(0,before-3);
+      const actualDelta=after-before;
+      const counter={value:before};
+      delta.textContent=actualDelta>0?`+${actualDelta}`:String(actualDelta);
+      gsap.set(spectralFill,{autoAlpha:0,clipPath:rising?"inset(100% 0% 0% 0%)":"inset(0% 0% 100% 0%)"});
+      gsap.set(spectralFront,{autoAlpha:0,yPercent:rising?105:-105});
+      tl.to(rig,{y:rising?-8:3,scale:rising?1.03:.991,
+          rotation:rising?-.3:.2,duration:.3,ease:"power2.out"})
+        .to(h,{autoAlpha:rising?.38:.2,scale:1.08,duration:.3},"-=.13")
+        .to(edge,{autoAlpha:rising?.78:.66,scale:1.01,duration:.28},"<")
+        .to(spectralShroud,{autoAlpha:rising?.12:.43,duration:.34},"-=.20")
+        .to(spectralFill,{autoAlpha:Math.min(.9,.63+intensity*.13),
+          clipPath:"inset(0% 0% 0% 0%)",duration:.61,ease:"power2.inOut"},"-=.08")
+        .to(spectralFront,{autoAlpha:.73,yPercent:rising?-104:104,
+          duration:.65,ease:"power2.inOut"},"<")
+        .to(sigil,{autoAlpha:rising?.92:.68,scale:1,rotation:rising?0:-22,
+          duration:.28,ease:"power2.out"},"-=.27")
+        .to(stoneResponse,{autoAlpha:rising?.33:.25,scaleX:1.48,duration:.28},"-=.1")
+        .to(stoneResponse,{autoAlpha:0,scaleX:2.9,duration:.43,ease:"power3.out"},"-=.02")
+        .to(counter,{value:after,duration:.34,roundProps:"value",
+          onUpdate:()=>{if(powerValue.current)powerValue.current.textContent=String(counter.value);}},"-=.38")
+        .to(pow,{scale:rising?1.17:.92,y:rising?-7:4,duration:.20,ease:"power2.out"},"<")
+        .to(delta,{autoAlpha:.95,y:rising?-18:18,scale:1,
+          duration:.31,ease:"power2.out"},"<")
+        .to(pow,{scale:1,y:0,duration:.29,ease:rising?"back.out(1.6)":"power2.out"})
+        .to(delta,{autoAlpha:0,y:rising?-26:26,duration:.25},"-=.13")
+        .to(spectralFill,{autoAlpha:0,
+          clipPath:rising?"inset(0% 0% 100% 0%)":"inset(100% 0% 0% 0%)",
+          duration:.46,ease:"power2.inOut"},"-=.23")
+        .to(sigil,{autoAlpha:0,scale:rising?1.12:.89,duration:.35},"<")
+        .to(spectralFront,{autoAlpha:0,duration:.20},"<")
+        .to(edge,{autoAlpha:0,duration:.29},"<")
+        .to(spectralShroud,{autoAlpha:0,duration:.38},"<")
+        .to(h,{autoAlpha:0,scale:1.13,duration:.33},"<")
+        .to(rig,{y:0,scale:1,rotation:0,duration:.28,ease:"power2.out"},"-=.2");
+    }
+
+    if(effect==="champion-impact"){
+      // The source card charges, a single solid ink wave reaches the crown,
+      // then its displayed Life changes. This is a dummy 9->8 demonstration.
+      delta.textContent="−1";
+      tl.to(rig,{x:-4,y:-5,scale:1.016,duration:.28,ease:"power2.out"})
+        .to(edge,{autoAlpha:.74,duration:.22},"-=.12")
+        .to(spectralShroud,{autoAlpha:.42,duration:.30},"<")
+        .to(spectralFill,{autoAlpha:.77,clipPath:"inset(0% 0% 0% 0%)",
+          duration:.50,ease:"power2.inOut"},"-=.09")
+        .to(sigil,{autoAlpha:.71,scale:.96,duration:.27},"-=.20")
+        .to(transfer,{autoAlpha:.98,clipPath:"inset(0% 0% 0% 0%)",
+          duration:.38,ease:"power3.in"},"-=.06")
+        .to(crownWash,{autoAlpha:.98,clipPath:"inset(0% 0% 0% 0%)",
+          duration:.20,ease:"power2.in"},"-=.05")
+        .to(crownRim,{autoAlpha:.74,duration:.14},"<")
+        .call(()=>{if(lifeValue.current)lifeValue.current.textContent="8";},undefined,"<")
+        .to(crown,{x:5,rotation:2.2,scale:1.062,duration:.10,ease:"power2.out"},"<")
+        .to(delta,{autoAlpha:.92,scale:1,y:15,duration:.18},"<")
+        .to(crown,{x:-4,rotation:-1.5,scale:.97,duration:.10})
+        .to(crown,{x:0,rotation:0,scale:1,duration:.29,ease:"power2.out"})
+        .to(transfer,{autoAlpha:0,clipPath:"inset(0% 0% 0% 100%)",
+          duration:.31,ease:"power2.out"},"-=.23")
+        .to(delta,{autoAlpha:0,y:25,duration:.24},"<")
+        .to(crownWash,{autoAlpha:0,clipPath:"inset(100% 0% 0% 0%)",
+          duration:.38},"<")
+        .to(crownRim,{autoAlpha:0,duration:.32},"<")
+        .to(spectralFill,{autoAlpha:0,clipPath:"inset(100% 0% 0% 0%)",
+          duration:.42,ease:"power2.out"},"-=.28")
+        .to(sigil,{autoAlpha:0,scale:1.1,duration:.23},"<")
+        .to(edge,{autoAlpha:0,duration:.26},"<")
+        .to(spectralShroud,{autoAlpha:0,duration:.35},"<")
+        .to(rig,{x:0,y:0,scale:1,duration:.28,ease:"power2.out"},"-=.18");
+    }
+
     if(effect==="chiral-wave"||effect==="chiral-seal"){
       // This is deliberate, dense graphic motion: two opposing color surfaces
       // replace the earlier scatter of particles. No random FX are emitted.
