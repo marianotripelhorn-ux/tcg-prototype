@@ -901,11 +901,15 @@ export default function App() {
     );
   }
 
-  const legal=game.phase==="awaiting_player" && !duelPreview ? legalPositions(game.player) : [];
-  const displayed=duelPreview?preDuel:null;
-  const pendingOpponent=duelPreview ? null : game.pendingOpponentPlay;
-  const focusPlayer=duelPreview?.playerPlay ?? null;
-  const focusOpponent=duelPreview?.opponentPlay ?? pendingOpponent;
+  const legal=game.phase==="awaiting_player" && !duelPreview && !boardMotion ? legalPositions(game.player) : [];
+  const displayed=boardRedesign ? (boardMotion?.phase==="flight" || (duelPreview && duelStep==="cards") ? preDuel : null) : (duelPreview?preDuel:null);
+  const pendingOpponent=duelPreview || boardMotion ? null : game.pendingOpponentPlay;
+  const focusPlayer=(boardRedesign?boardMotion?.duel?.playerPlay:null) ?? duelPreview?.playerPlay ?? null;
+  const focusOpponent=(boardRedesign?boardMotion?.duel?.opponentPlay:null) ?? duelPreview?.opponentPlay ?? pendingOpponent;
+  const playerBoard=boardRedesign&&boardMotion?boardMotion.before.player:game.player;
+  const opponentBoard=boardRedesign&&boardMotion?boardMotion.before.opponent:game.opponent;
+  const playerBoardPlays=boardRedesign?visibleRoundPlays(boardMotion,"player"):null;
+  const opponentBoardPlays=boardRedesign?visibleRoundPlays(boardMotion,"opponent"):null;
   const latestEvent=game.events.at(-1)?.text ?? "";
   const actingSide=game.phase==="awaiting_player" && !duelPreview ? "player" : null;
   const turnText=duelPreview
@@ -940,6 +944,7 @@ export default function App() {
                 const next=!boardRedesign;
                 setBoardRedesign(next);
                 setHoveredHandIndex(null);
+                setMotion(null);
                 setHandExpanded(false);
                 const url=new URL(window.location.href);
                 url.searchParams.set("board",next?"hybrid":"classic");
@@ -1022,16 +1027,16 @@ export default function App() {
               <Slot
                 side="opponent"
                 position={position}
-                cards={game.opponent.roundPlays.filter(play=>play.position===position)}
+                cards={(opponentBoardPlays??game.opponent.roundPlays).filter(play=>play.position===position)}
                 pendingCard={pendingOpponent?.position===position ? pendingOpponent : null}
                 focusPlay={focusOpponent?.position===position ? focusOpponent : null}
-                archive={game.opponent.archives[position].length}
-                archiveCards={game.opponent.archives[position]}
-                manifestations={game.opponent.manifestations}
+                archive={opponentBoard.archives[position].length}
+                archiveCards={opponentBoard.archives[position]}
+                manifestations={[]}
                 onManifestInspect={setSpecialInspection}
-                onCopyTarget={specialMode==="symmetry"
+                onCopyTarget={game.manifestationsEnabled!==false&&specialMode==="symmetry"
                   ? target=>useSpecial("symmetry",undefined,target) : undefined}
-                onCopyArchive={specialMode==="symmetry"&&game.opponent.archives[position]
+                onCopyArchive={game.manifestationsEnabled!==false&&specialMode==="symmetry"&&game.opponent.archives[position]
                   .some(card=>card.specialArchiveKind==="dagger")
                   ? ()=>useSpecial("symmetry",undefined,{kind:"dagger",position}):undefined}
                 active={false}
@@ -1049,13 +1054,14 @@ export default function App() {
               <Slot
                 side="player"
                 position={position}
-                cards={game.player.roundPlays.filter(play=>play.position===position)}
+                cards={(playerBoardPlays??game.player.roundPlays).filter(play=>play.position===position)}
                 focusPlay={focusPlayer?.position===position ? focusPlayer : null}
-                archive={game.player.archives[position].length}
-                archiveCards={game.player.archives[position]}
-                manifestations={game.player.manifestations}
+                archive={playerBoard.archives[position].length}
+                archiveCards={playerBoard.archives[position]}
+                manifestations={[]}
                 onManifestInspect={setSpecialInspection}
-                onDropRelic={()=>useSpecial("relic",position)}
+                onDropRelic={game.manifestationsEnabled!==false?()=>useSpecial("relic",position):undefined}
+                hideFocusDuringFlight={!!boardMotion && boardMotion.phase==="flight"}
                 active={specialMode==="relic"
                    ? game.player.roundPlays.every(p=>p.position!==position)
                    : (hoveredPosition===position || (!!selectedCard&&!drag)) && legal.includes(position)}
@@ -1070,6 +1076,23 @@ export default function App() {
             </div>
           ))}
         </section>
+        {boardRedesign && boardMotion?.phase==="flight" && boardMotion.duel && <CardFlight
+          sequenceId={boardMotion.id} origin={boardMotion.origin}
+          position={boardMotion.duel.playerPlay.position}
+          reducedMotion={isReducedMotion()}
+          onComplete={()=>{
+            const active=boardMotionRef.current;
+            if(!active || active.id!==boardMotion.id || active.phase!=="flight")return;
+            setMotion({...active,phase:"duel"});
+            showResolvedDuel(active.duel,game.phase==="finished");
+          }}>
+          <CardFace card={boardMotion.duel.playerPlay.card}/>
+        </CardFlight>}
+        {boardRedesign && boardMotion?.phase==="archive" && <ArchiveFlight
+          sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
+          onComplete={()=>{
+            if(boardMotionRef.current?.id===boardMotion.id)setMotion(null);
+          }}/>}
         {boardRedesign && <HybridRightRail
           playerLife={displayed?.playerLife??game.player.life}
           opponentLife={displayed?.opponentLife??game.opponent.life}
