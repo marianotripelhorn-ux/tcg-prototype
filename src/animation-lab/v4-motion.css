@@ -46,7 +46,7 @@
 }
 .animation-lab .lab-v4-transfer{
   position:absolute;left:52%;top:41%;width:24%;height:clamp(38px,7dvh,68px);
-  z-index:9;pointer-events:none;opacity:0;visibility:hidden;
+  z-index:7;pointer-events:none;opacity:0;visibility:hidden;
   transform:translateY(-50%);
   clip-path:inset(0 100% 0 0);
   background:
@@ -78,7 +78,7 @@
 .animation-lab .lab-life-crest{position:relative;isolation:isolate}
 .animation-lab .lab-life-crest strong{position:relative;z-index:3}
 .animation-lab .lab-v4-delta{
-  position:absolute;z-index:12;top:48%;left:77%;
+  position:absolute;z-index:12;top:35%;left:81%;
   color:var(--spectral-v3-light,#e4c48f);
   font:400 clamp(27px,3vw,44px)/1 'Archivo Black',Impact,sans-serif;
   text-shadow:0 2px 5px #121210bb,0 0 10px var(--spectral-v3-core,#bfa37c);
@@ -89,7 +89,7 @@
   color:#252527;
   text-shadow:0 1px 1px #e5dacf,0 0 9px #77726d;
 }
-.animation-lab .lab-v4-delta.damage{top:74%;left:76%}
+.animation-lab .lab-v4-delta.damage{top:57%;left:83%}
 .animation-lab .lab-v4-stage-response{
   position:absolute;z-index:7;left:47%;top:42%;
   width:min(82%,780px);height:clamp(95px,17dvh,160px);
