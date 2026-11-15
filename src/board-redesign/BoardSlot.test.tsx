@@ -65,6 +65,29 @@ describe("Redesigned board slots preserve playable information", () => {
     expect(html.match(/class="played-card current-play"/g)).toHaveLength(1);
   });
 
+  it("keeps only the latest duplicate design in the same position as the focused card",()=>{
+    const {props,played}=fixture();
+    const first={...played,finalPower:5};
+    const second={...played,finalPower:9};
+    const html=renderToStaticMarkup(createElement(Slot,{
+      ...props,cards:[first,second],focusPlay:second,capacityValue:2
+    }));
+    expect(html.match(/class="current-board-card/g)).toHaveLength(1);
+    expect(html.match(/class="battle-card /g)).toHaveLength(1);
+    expect(html.match(/class="played-card"/g)).toHaveLength(2);
+  });
+
+  it("does not mistake an identical pending opening for an older resolved card",()=>{
+    const {props,played}=fixture({side:"opponent"});
+    const pending={...played,finalPower:undefined,powerExact:false};
+    const html=renderToStaticMarkup(createElement(Slot,{
+      ...props,cards:[played],focusPlay:pending,pendingCard:pending
+    }));
+    expect(html.match(/class="played-card/g)).toHaveLength(2);
+    expect(html.match(/class="current-board-card pending/g)).toHaveLength(1);
+    expect(html.match(/class="battle-card /g)).toHaveLength(1);
+  });
+
   it("retains three separate cards and dynamic capacity for expanded Champion lanes", () => {
     const {props, played} = fixture();
     const html = renderToStaticMarkup(createElement(Slot, {
