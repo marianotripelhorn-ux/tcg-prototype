@@ -122,7 +122,7 @@
 }
 .animation-lab .lab-stage-engraving{
   position:absolute;inset:-4%;z-index:0;pointer-events:none;
-  background-image:url("../board/arena-compass-source.png");
+  background-image:none;
   /* Keep a neutral engraved guide if the original image isn't available at this URL. */
   background-size:100% 100%;background-position:center;
   opacity:.22;filter:grayscale(1) contrast(.65);
