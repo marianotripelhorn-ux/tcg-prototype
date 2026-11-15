@@ -13,13 +13,15 @@
 - **Dedicated entry point:** `?lab=animations` conditionally mounts the laboratory; without it, the usual game loads. This is an experimental branch. No game mechanics, deck contents or balance changed.
 - **Isolated deployment:** workflow `.github/workflows/animation-lab-v1-preview.yml` copies a production build to the new GitHub Pages path `animation-lab-v1/`. It never replaces `board-motion-v1/`, `board-redesign-v1/` or the stable game.
 
-## Five experiments
+## Seven experiments
 
-1. **Archivo (transmutación):** A card lifts, receives electric energy, disintegrates from the lower edge under a jagged CSS mask, travels into a three-dimensional Archive well, emits a burst and increments a sample Archive counter. This is a layered prototype inspired by the uploaded GIF's choreography, not yet a true per-pixel shader dissolution.
-2. **Colocación:** Card arrives from a simulated hand, floats, rotates and settles through two GSAP motion beats. PixiJS generates a brief contact ring and dust/spark burst.
-3. **Poder:** The printed card receives a moving light effect and a demonstration counter increases by 3. Temporary energy arcs and a halo connect the card to the increase.
-4. **Impacto:** A directional projectile/arc connects a card to a Life crown, then the sample counter decreases from 9 to 8 with a shock response.
-5. **Estandarte:** Fabric stretches/unfurls, the text and original Champion cutout rise independently, then the banner settles.
+1. **Disolución etérea:** Electric arcs spread through the card; its illustration fragments into a glowing etched silhouette and strands of energy. A direct benchmark for the user-supplied animated reference.
+2. **Materialización:** The inverse choreography of dissolution: magical filaments converge to reconstruct a card before it settles into a physical state.
+3. **Archivo (transmutación):** A card lifts, receives electric energy, disintegrates from the lower edge under a jagged CSS mask, travels into a three-dimensional Archive well, emits a burst and increments a sample Archive counter. This is a layered prototype inspired by the uploaded GIF's choreography, not yet a true per-pixel shader dissolution.
+4. **Colocación:** Card arrives from a simulated hand, floats, rotates and settles through two GSAP motion beats. PixiJS generates a brief contact ring and dust/spark burst.
+5. **Poder:** The printed card receives a moving light effect and a demonstration counter increases by 3. Temporary energy arcs and a halo connect the card to the increase.
+6. **Impacto:** A directional projectile/arc connects a card to a Life crown, then the sample counter decreases from 9 to 8 with a shock response.
+7. **Estandarte:** Fabric stretches/unfurls, the text and original Champion cutout rise independently, then the banner settles.
 
 **Palette:** Cyan/teal arcane and subdued antique gold are comparisons, not approved faction-specific VFX.  
 **Controls:** Effect selection, faction card, palette, speed, particle intensity, replay, pause/resume and reset.  
@@ -36,7 +38,7 @@ Compare `Arcano` and `Dorado` for Archivo. Decide whether the energy visibly **t
 - The preview renders only when the user presses REPRODUCIR, rather than repeatedly emitting effects in the background.
 - The operating system's reduced-motion preference is respected initially, and the user can explicitly opt into complete motion for lab testing.
 - Mobile adaptation deferred.
-- Tests: existing `npm test` engine/React suite, TypeScript and Vite production build, plus `scripts/animation-lab-smoke.mjs` (real headless Chromium clicks through all five demonstrations and transport controls). The workflow also uploads a screenshot on success.
+- Tests: existing `npm test` engine/React suite, TypeScript and Vite production build, plus `scripts/animation-lab-smoke.mjs` (real headless Chromium clicks through all seven demonstrations and transport controls). The workflow also uploads a screenshot on success.
 
 ## Compatible inspiration galleries
 
