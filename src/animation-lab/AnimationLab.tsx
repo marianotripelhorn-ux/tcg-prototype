@@ -64,7 +64,8 @@ export default function AnimationLab(){
   const spectralV3Front=useRef<HTMLDivElement>(null);
   const spectralV3Shroud=useRef<HTMLDivElement>(null);
   const spectralV3Ground=useRef<HTMLDivElement>(null);
-  const v4Sigil=useRef<HTMLDivElement>(null);
+  const v4Orbits=useRef<HTMLDivElement>(null);
+  const v4CrownArcs=useRef<HTMLDivElement>(null);
   const v4Transfer=useRef<HTMLDivElement>(null);
   const v4CrownWash=useRef<HTMLDivElement>(null);
   const v4CrownRim=useRef<HTMLDivElement>(null);
@@ -119,7 +120,8 @@ export default function AnimationLab(){
     gsap.set(spectralV3Front.current,{autoAlpha:0,yPercent:105});
     gsap.set(spectralV3Shroud.current,{autoAlpha:0});
     gsap.set(spectralV3Ground.current,{autoAlpha:0,scaleX:.14});
-    gsap.set(v4Sigil.current,{autoAlpha:0,scale:.72,rotation:0});
+    gsap.set(v4Orbits.current,{autoAlpha:0,scale:.82,rotation:0});
+    gsap.set(v4CrownArcs.current,{autoAlpha:0,scale:.65,rotation:0});
     gsap.set(v4Transfer.current,{autoAlpha:0,clipPath:"inset(0% 100% 0% 0%)"});
     gsap.set(v4CrownWash.current,{autoAlpha:0,clipPath:"inset(0% 0% 100% 0%)"});
     gsap.set(v4CrownRim.current,{autoAlpha:0});
@@ -155,14 +157,15 @@ export default function AnimationLab(){
       rig=spectralRig.current,ghost=spectralGhost.current,veins=spectralEnergy.current,edge=spectralEdge.current,
       spectralFill=spectralV3Fill.current,spectralFront=spectralV3Front.current,
       spectralShroud=spectralV3Shroud.current,spectralGround=spectralV3Ground.current,
-      sigil=v4Sigil.current,transfer=v4Transfer.current,
+      orbits=v4Orbits.current,crownArcs=v4CrownArcs.current,
+      transfer=v4Transfer.current,
       crownWash=v4CrownWash.current,crownRim=v4CrownRim.current,
       delta=v4Delta.current,stoneResponse=v4StageResponse.current,
       mass=chiralSurface.current,leftMass=chiralLeft.current,rightMass=chiralRight.current,
       axis=chiralAxis.current,flood=chiralSolid.current,seal=chiralSeal.current,
       sheen=chiralSheen.current,stone=chiralStoneWave.current,
       crown=life.current,b=banner.current,bBody=bannerBody.current,fig=bannerFigure.current,fl=flash.current;
-    if(!c||!h||!a||!pow||!crown||!b||!bBody||!fig||!fl||!rig||!ghost||!veins||!edge||!spectralFill||!spectralFront||!spectralShroud||!spectralGround||!sigil||!transfer||!crownWash||!crownRim||!delta||!stoneResponse||!mass||!leftMass||!rightMass||!axis||!flood||!seal||!sheen||!stone)return;
+    if(!c||!h||!a||!pow||!crown||!b||!bBody||!fig||!fl||!rig||!ghost||!veins||!edge||!spectralFill||!spectralFront||!spectralShroud||!spectralGround||!orbits||!crownArcs||!transfer||!crownWash||!crownRim||!delta||!stoneResponse||!mass||!leftMass||!rightMass||!axis||!flood||!seal||!sheen||!stone)return;
     const activeColor=colors[flavor];
     const burst=(p:Point,n:number,force=1,mode:"scatter"|"suction"|"embers"="scatter",target?:Point)=>
       fx.current?.burst(p,activeColor,Math.round(n*intensity),force,mode,target);
@@ -201,13 +204,13 @@ export default function AnimationLab(){
         .to(h,{autoAlpha:rising?.38:.2,scale:1.08,duration:.3},"-=.13")
         .to(edge,{autoAlpha:rising?.78:.66,scale:1.01,duration:.28},"<")
         .to(spectralShroud,{autoAlpha:rising?.12:.43,duration:.34},"-=.20")
-        .to(spectralFill,{autoAlpha:Math.min(.9,.63+intensity*.13),
+        .to(spectralFill,{autoAlpha:Math.min(.95,.71+intensity*.13),
           clipPath:"inset(0% 0% 0% 0%)",duration:.61,ease:"power2.inOut"},"-=.08")
-        .to(spectralFront,{autoAlpha:.73,yPercent:rising?-104:104,
+        .to(spectralFront,{autoAlpha:.81,yPercent:rising?-104:104,
           duration:.65,ease:"power2.inOut"},"<")
-        .to(sigil,{autoAlpha:rising?.92:.68,scale:1,rotation:rising?0:-22,
+        .to(orbits,{autoAlpha:rising?.80:.74,scale:1,rotation:rising?15:-18,
           duration:.28,ease:"power2.out"},"-=.27")
-        .to(stoneResponse,{autoAlpha:rising?.33:.25,scaleX:1.48,duration:.28},"-=.1")
+        .to(stoneResponse,{autoAlpha:rising?.37:.29,scaleX:1.48,duration:.28},"-=.1")
         .to(stoneResponse,{autoAlpha:0,scaleX:2.9,duration:.43,ease:"power3.out"},"-=.02")
         .to(counter,{value:after,duration:.34,roundProps:"value",
           onUpdate:()=>{if(powerValue.current)powerValue.current.textContent=String(counter.value);}},"-=.38")
@@ -219,7 +222,7 @@ export default function AnimationLab(){
         .to(spectralFill,{autoAlpha:0,
           clipPath:rising?"inset(0% 0% 100% 0%)":"inset(100% 0% 0% 0%)",
           duration:.46,ease:"power2.inOut"},"-=.23")
-        .to(sigil,{autoAlpha:0,scale:rising?1.12:.89,duration:.35},"<")
+        .to(orbits,{autoAlpha:0,scale:rising?1.18:.87,rotation:rising?40:-38,duration:.35},"<")
         .to(spectralFront,{autoAlpha:0,duration:.20},"<")
         .to(edge,{autoAlpha:0,duration:.29},"<")
         .to(spectralShroud,{autoAlpha:0,duration:.38},"<")
@@ -234,14 +237,15 @@ export default function AnimationLab(){
       tl.to(rig,{x:-4,y:-5,scale:1.016,duration:.28,ease:"power2.out"})
         .to(edge,{autoAlpha:.74,duration:.22},"-=.12")
         .to(spectralShroud,{autoAlpha:.42,duration:.30},"<")
-        .to(spectralFill,{autoAlpha:.77,clipPath:"inset(0% 0% 0% 0%)",
+        .to(spectralFill,{autoAlpha:.85,clipPath:"inset(0% 0% 0% 0%)",
           duration:.50,ease:"power2.inOut"},"-=.09")
-        .to(sigil,{autoAlpha:.71,scale:.96,duration:.27},"-=.20")
-        .to(transfer,{autoAlpha:.98,clipPath:"inset(0% 0% 0% 0%)",
+        .to(orbits,{autoAlpha:.72,scale:.98,rotation:-18,duration:.27},"-=.20")
+        .to(transfer,{autoAlpha:1,clipPath:"inset(0% 0% 0% 0%)",
           duration:.38,ease:"power3.in"},"-=.06")
         .to(crownWash,{autoAlpha:.98,clipPath:"inset(0% 0% 0% 0%)",
           duration:.20,ease:"power2.in"},"-=.05")
-        .to(crownRim,{autoAlpha:.74,duration:.14},"<")
+        .to(crownRim,{autoAlpha:.83,duration:.14},"<")
+        .to(crownArcs,{autoAlpha:.87,scale:1.07,rotation:8,duration:.25,ease:"power2.out"},"<")
         .call(()=>{if(lifeValue.current)lifeValue.current.textContent="8";},undefined,"<")
         .to(crown,{x:5,rotation:2.2,scale:1.062,duration:.10,ease:"power2.out"},"<")
         .to(delta,{autoAlpha:.92,scale:1,y:15,duration:.18},"<")
@@ -253,9 +257,10 @@ export default function AnimationLab(){
         .to(crownWash,{autoAlpha:0,clipPath:"inset(100% 0% 0% 0%)",
           duration:.38},"<")
         .to(crownRim,{autoAlpha:0,duration:.32},"<")
+        .to(crownArcs,{autoAlpha:0,scale:1.42,rotation:-12,duration:.38,ease:"power2.out"},"<")
         .to(spectralFill,{autoAlpha:0,clipPath:"inset(100% 0% 0% 0%)",
           duration:.42,ease:"power2.out"},"-=.28")
-        .to(sigil,{autoAlpha:0,scale:1.1,duration:.23},"<")
+        .to(orbits,{autoAlpha:0,scale:1.12,rotation:-34,duration:.23},"<")
         .to(edge,{autoAlpha:0,duration:.26},"<")
         .to(spectralShroud,{autoAlpha:0,duration:.35},"<")
         .to(rig,{x:0,y:0,scale:1,duration:.28,ease:"power2.out"},"-=.18");
@@ -576,7 +581,7 @@ export default function AnimationLab(){
   };
   return <div className="animation-lab">
     <header className="lab-header">
-      <div className="lab-brand"><strong>DAGGERLIGHT</strong><span>ANIMATION LAB <i>04</i></span></div>
+      <div className="lab-brand"><strong>DAGGERLIGHT</strong><span>ANIMATION LAB <i>04.1</i></span></div>
       <div className="lab-header-actions">
         <span className="lab-renderer-status">{renderer}</span>
         <a href="./">VOLVER AL JUEGO <span aria-hidden="true">↗</span></a>
@@ -588,7 +593,7 @@ export default function AnimationLab(){
         <h1>Laboratorio de animaciones</h1>
         <p className="lab-lead">Pruebas visuales independientes. Ninguna modifica las reglas ni el tablero jugable.</p>
         <h2>01 / Elegí el efecto</h2>
-        <p className="lab-v4-note">Tres efectos nuevos con la identidad aprobada: <b>oro para potenciar</b> y <b>tinta negra para debilitar o dañar</b>. Una onda de material por efecto, sin partículas.</p>
+        <p className="lab-v4-note">Tres efectos refinados: <b>arcos finos y semicirculares</b> en lugar de símbolos, con <b>ondas de oro o tinta negra</b> ligeramente más densas. Sin partículas añadidas.</p>
         <p className="lab-identity-note">La disolución etérea refinada (v3) sigue disponible como referencia y los estudios anteriores se mantienen para comparar.</p>
         <div className="lab-effect-list">
           {demos.map(d=><button key={d.id} type="button"
@@ -665,8 +670,10 @@ export default function AnimationLab(){
               <div ref={spectralV3Fill} className="lab-spectral-v3-fill" aria-hidden="true"/>
               <div ref={spectralV3Front} className="lab-spectral-v3-front" aria-hidden="true"/>
               <div ref={spectralEnergy} className="lab-spectral-energy" aria-hidden="true"/>
-              <div ref={v4Sigil} className="lab-v4-card-sigil" aria-hidden="true">
-                <span/><b>✦</b>
+              <div ref={v4Orbits} className="lab-v4-orbits" aria-hidden="true">
+                <span className="lab-v4-orbit outer"/>
+                <span className="lab-v4-orbit middle"/>
+                <span className="lab-v4-orbit inner"/>
               </div>
               <svg ref={spectralEdge} className="lab-spectral-etching"
                 viewBox="0 0 210 294" preserveAspectRatio="none" aria-hidden="true">
@@ -697,6 +704,10 @@ export default function AnimationLab(){
               <div ref={v4CrownWash} className="lab-v4-crown-wash" aria-hidden="true"/>
               <div ref={v4CrownRim} className="lab-v4-crown-rim" aria-hidden="true"/>
               <strong ref={lifeValue}>9</strong>
+            </div>
+            <div ref={v4CrownArcs} className="lab-v4-impact-arcs" aria-hidden="true">
+              <span className="outer"/>
+              <span className="inner"/>
             </div>
           </div>
           <span ref={v4Delta} className={"lab-v4-delta"+(effect==="power-fall"||effect==="champion-impact"?" negative":"")+(effect==="champion-impact"?" damage":"")} aria-hidden="true">
