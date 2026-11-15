@@ -285,7 +285,7 @@ export default function AnimationLab(){
           <span className="lab-chip">GSAP + PIXIJS 8</span>
         </div>
         <div className={"lab-stage flavor-"+flavor+" scene-"+effect} ref={stage} aria-label={"Escenario experimental: "+selected.description}>
-          <div className="lab-stage-engraving"/>
+          <div className="lab-stage-engraving" style={{backgroundImage:`url("${import.meta.env.BASE_URL}board/arena-compass-source.png")`}}/>
           <div className="lab-stage-axis"><span>SINIESTRA</span><span>TRONO</span><span>DIESTRA</span></div>
           <div className="lab-slot-mark" aria-hidden="true"/>
           <div className="lab-card-anchor">
