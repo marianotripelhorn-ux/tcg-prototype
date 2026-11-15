@@ -389,7 +389,13 @@ export function Slot({
   onDropRelic?: ()=>void;
   hideFocusDuringFlight?: boolean;
 }) {
-  const focusAlreadyInCards = !!focusPlay && cards.some(played=>samePlay(played,focusPlay));
+  // A design can be played twice in one position. Only the most recent matching
+  // resolved play gets the active-card rendering, never every matching copy.
+  // A pending opening is not in roundPlays even if its artwork matches.
+  const focusedIndex=focusPlay && !pendingCard
+    ? cards.reduce((last,played,index)=>samePlay(played,focusPlay)?index:last,-1)
+    : -1;
+  const focusAlreadyInCards=focusedIndex>=0;
   const fieldCards=(manifestations||[]).filter(token=>token.position===position);
   const archivedKind=archiveCards?.find(card=>card.specialArchiveKind==="dagger")?.specialArchiveKind
     ||archiveCards?.find(card=>card.specialArchiveKind==="relic")?.specialArchiveKind;
@@ -439,12 +445,12 @@ export function Slot({
       <div className="slot-stack">
         <>
             {cards.map((played,index)=>(
-              <div className={"played-card"+(hideFocusDuringFlight&&samePlay(played,focusPlay)?" is-motion-landing":"")} key={`${played.card.id}-${index}`}
+              <div className={"played-card"+(hideFocusDuringFlight&&index===focusedIndex?" is-motion-landing":"")} key={`${played.card.id}-${index}`}
                 onMouseEnter={()=>onPreview?.(played.card)}
                 onMouseLeave={()=>onPreview?.(null)}
                 onFocusCapture={()=>onPreview?.(played.card)}
                 onBlurCapture={()=>onPreview?.(null)}>
-                {samePlay(played,focusPlay) ? (
+                {index===focusedIndex ? (
                   <CurrentBoardCard played={played} onInspect={onInspect} />
                 ) : (
                   <BattleCard played={played} onInspect={onInspect} />
