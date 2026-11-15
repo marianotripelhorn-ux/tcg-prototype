@@ -1,7 +1,7 @@
 /**
  * Real desktop browser smoke test for the isolated lab only.
  * Usage: start Vite preview on localhost:4173, then node scripts/animation-lab-smoke.mjs
- * Validates the actual React card, GSAP timeline controls, nine demos and Pixi canvas.
+ * Validates the actual React card, GSAP timeline controls, ten demos and Pixi canvas.
  */
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
@@ -27,12 +27,12 @@ try {
   await page.getByRole("heading",{name:"Laboratorio de animaciones"}).waitFor({timeout:12000});
   await page.locator(".lab-stage .lab-card .game-card").first().waitFor({timeout:12000});
   const buttons=page.locator(".lab-effect-option");
-  assert.equal(await buttons.count(),9,"Expected nine independent motion experiments");
+  assert.equal(await buttons.count(),10,"Expected ten independent motion experiments");
   await page.waitForTimeout(1100);
   const pixiStatus=(await page.locator(".lab-renderer-status").textContent())?.trim()??"unknown";
   console.log("PixiJS:",pixiStatus);
   // Software WebGL may be unavailable on some CI machines; GSAP must still work.
-  for(let index=0;index<9;index++){
+  for(let index=0;index<10;index++){
     await buttons.nth(index).click();
     const name=(await buttons.nth(index).textContent())?.trim();
     await page.getByRole("button",{name:/REPRODUCIR/}).click();
@@ -48,6 +48,22 @@ try {
     );
     console.log("Effect played:",name);
   }
+  // Verify that the new first study maps positive energy to antique gold and
+  // negative energy to a genuinely dark, filled material treatment.
+  await page.locator(".lab-effect-option").first().click();
+  const stage=page.locator(".lab-stage");
+  assert.ok((await stage.getAttribute("class"))?.includes("flavor-gold"),"Gold must be the default");
+  await page.getByRole("button",{name:/Negro/}).click();
+  assert.ok((await stage.getAttribute("class"))?.includes("flavor-shadow"),"Negative effect must select black");
+  const darkFill=await stage.evaluate(element=>getComputedStyle(element).getPropertyValue("--spectral-v3-ink").trim());
+  assert.equal(darkFill,"#060708","Negative polarity must be near-black ink, not just gray sparks");
+  await page.getByRole("button",{name:/REPRODUCIR/}).click();
+  await page.waitForFunction(
+    ()=>document.querySelector(".lab-transport-caption")?.textContent?.includes("EFECTO COMPLETADO"),
+    null,{timeout:10000}
+  );
+  await page.getByRole("button",{name:/Dorado/}).click();
+  assert.ok((await stage.getAttribute("class"))?.includes("flavor-gold"),"Positive palette must be recoverable");
   await page.locator(".lab-effect-option").first().click();
   await page.getByRole("button",{name:/REPRODUCIR/}).click();
   await page.getByRole("button",{name:/PAUSAR/}).click();
@@ -56,7 +72,7 @@ try {
   assert.match((await page.locator(".lab-transport-caption").textContent())??"",/Prueba reiniciada/);
   await page.screenshot({path:"/tmp/daggerlight-animation-lab-smoke.png"});
   assert.deepEqual(fatalErrors,[],"Browser page errors");
-  console.log("PASS: nine GSAP/PixiJS previews, replay controls and actual Daggerlight card.");
+  console.log("PASS: ten GSAP/PixiJS previews, replay controls and actual Daggerlight card.");
 } finally {
   await browser.close();
 }
