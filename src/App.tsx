@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ArchiveFlight, CardFlight, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
+import type { BoardMotionSequence } from "./board-redesign/motion";
+import { disableManifestations } from "./board-redesign/disableManifestations";
 import Tutorial from "./Tutorial";
 import { TUTORIAL_MATCH } from "./onboarding";
 import SplashScreen from "./SplashScreen";
@@ -364,7 +367,8 @@ export function Slot({
   onManifestInspect,
   onCopyTarget,
   onCopyArchive,
-  onDropRelic
+  onDropRelic,
+  hideFocusDuringFlight = false
 }: {
   side: "player" | "opponent";
   position: Position;
@@ -383,6 +387,7 @@ export function Slot({
   onCopyTarget?: (target:CopyTarget)=>void;
   onCopyArchive?: ()=>void;
   onDropRelic?: ()=>void;
+  hideFocusDuringFlight?: boolean;
 }) {
   const focusAlreadyInCards = !!focusPlay && cards.some(played=>samePlay(played,focusPlay));
   const fieldCards=(manifestations||[]).filter(token=>token.position===position);
@@ -434,7 +439,7 @@ export function Slot({
       <div className="slot-stack">
         <>
             {cards.map((played,index)=>(
-              <div className="played-card" key={`${played.card.id}-${index}`}
+              <div className={"played-card"+(hideFocusDuringFlight&&samePlay(played,focusPlay)?" is-motion-landing":"")} key={`${played.card.id}-${index}`}
                 onMouseEnter={()=>onPreview?.(played.card)}
                 onMouseLeave={()=>onPreview?.(null)}
                 onFocusCapture={()=>onPreview?.(played.card)}
@@ -447,7 +452,7 @@ export function Slot({
               </div>
             ))}
             {focusPlay && !focusAlreadyInCards && (
-              <div className="played-card current-play"
+              <div className={"played-card current-play"+(hideFocusDuringFlight?" is-motion-landing":"")}
                 onMouseEnter={()=>onPreview?.(focusPlay.card)}
                 onMouseLeave={()=>onPreview?.(null)}>
                 <CurrentBoardCard played={focusPlay} onInspect={onInspect} pending={!!pendingCard} />
@@ -489,6 +494,13 @@ export default function App() {
   const [selectedIndex,setSelectedIndex]=useState<number|null>(null);
   const [inspection,setInspection]=useState<Inspection|null>(null);
   const [duelPreview,setDuelPreview]=useState<DuelSummary|null>(null);
+  const [boardMotion,setBoardMotion]=useState<BoardMotionSequence|null>(null);
+  const boardMotionRef=useRef<BoardMotionSequence|null>(null);
+  const nextMotionId=useRef(0);
+  function setMotion(next:BoardMotionSequence|null){
+    boardMotionRef.current=next;
+    setBoardMotion(next);
+  }
   const [preDuel,setPreDuel]=useState<DuelPublicSnapshot|null>(null);
   const [duelStep,setDuelStep]=useState<"cards"|"result">("cards");
   const [finalStep,setFinalStep]=useState<"ceremony"|"actions">("ceremony");
@@ -503,11 +515,11 @@ export default function App() {
   const [specialMode,setSpecialMode]=useState<"relic"|"symmetry"|null>(null);
   const [specialError,setSpecialError]=useState("");
   const [specialInspection,setSpecialInspection]=useState<SpecialKind|null>(null);
-  const specialHand=game?.player.specialHand||[];
+  const specialHand=game?.manifestationsEnabled===false?[]:(game?.player.specialHand||[]);
   const availableDaggers=specialHand.filter(kind=>kind==="dagger").length;
-  const symmetryTargets=game?copyTargets(game.opponent):[];
+  const symmetryTargets=game&&game.manifestationsEnabled!==false?copyTargets(game.opponent):[];
 
-  const hand=game?.player.hand ?? [];
+  const hand=boardRedesign ? visibleHand(boardMotion,game?.player.hand ?? []) : (game?.player.hand ?? []);
   const selectedCard=useMemo(
     ()=>selectedIndex===null ? null : hand[selectedIndex] ?? null,
     [hand,selectedIndex]
@@ -541,6 +553,12 @@ export default function App() {
     clearPreviewTimer();
     setDuelPreview(null);
     setPreDuel(null);
+    const sequence=boardMotionRef.current;
+    if(sequence){
+      if(boardRedesign && sequence.roundEnded && sequence.phase==="duel")
+        setMotion({...sequence,phase:"archive"});
+      else setMotion(null);
+    }
     if (finishingMatch.current) {
       finishingMatch.current=false;
       startFinalCeremony();
@@ -550,7 +568,7 @@ export default function App() {
   function showDuelResult() {
     clearPreviewTimer();
     setDuelStep("result");
-    previewTimer.current=window.setTimeout(finishDuelPresentation,isReducedMotion()?650:1400);
+    previewTimer.current=window.setTimeout(finishDuelPresentation,isReducedMotion()?180:boardRedesign?900:1400);
   }
 
   function persistTurn(next:GameState) {
@@ -586,6 +604,7 @@ export default function App() {
     clearPreviewTimer();
     clearFinalTimer();
     finishingMatch.current=false;
+    setMotion(null);
     setPlayerChampion(saved.game.player.champion.id);
     setOpponentChampion(saved.rivalSelection);
     setAiDifficulty(saved.game.aiDifficulty??"normal");
@@ -596,7 +615,7 @@ export default function App() {
       championId:saved.game.player.champion.id,
       cardIds:[...saved.game.player.deckRecipe]
     }:null);
-    setGame(saved.game);
+    setGame(disableManifestations(cloneGame(saved.game)));
     setDuelPreview(null);
     setPreDuel(null);
     setSelectedIndex(null);
@@ -618,13 +637,14 @@ export default function App() {
     clearPreviewTimer();
     clearFinalTimer();
     finishingMatch.current=false;
+    setMotion(null);
     const opponent = rivalSelection==="random"
       ? championIds.filter(id=>id!==championId)[Math.floor(Math.random()*(championIds.length-1))]
       : rivalSelection;
     setPlayerChampion(championId);
     setOpponentChampion(rivalSelection);
     setAiDifficulty(difficulty);
-    const next=startGame(championId,opponent,Math.random,undefined,difficulty,deck?{player:deck}:undefined);
+    const next=disableManifestations(startGame(championId,opponent,Math.random,undefined,difficulty,deck?{player:deck}:undefined,false));
     setCurrentDeck(deck??null);
     const newMatch=newSavedMatch(next,rivalSelection);
     writeSavedMatch(newMatch);
@@ -680,6 +700,7 @@ export default function App() {
   }
 
   function goToMenu(destination:"home"|"champions"|"arcade"|"collection"|"table"|"decklab") {
+    setMotion(null);
     clearPreviewTimer();
     clearFinalTimer();
     finishingMatch.current=false;
@@ -702,11 +723,11 @@ export default function App() {
     finishingMatch.current=finished;
     setDuelStep("cards");
     setDuelPreview(duel);
-    previewTimer.current=window.setTimeout(showDuelResult,isReducedMotion()?750:2150);
+    previewTimer.current=window.setTimeout(showDuelResult,isReducedMotion()?220:boardRedesign?1380:2150);
   }
 
   function useSpecial(kind:"relic"|"symmetry",position?:Position,target?:CopyTarget) {
-    if(!game || game.phase!=="awaiting_player" || duelPreview)return;
+    if(!game || game.manifestationsEnabled===false || game.phase!=="awaiting_player" || duelPreview)return;
     try{
       const next=cloneGame(game);
       submitPlayerSpecial(next,kind,position,target);
@@ -716,7 +737,7 @@ export default function App() {
   }
 
   function playCard(handIndex:number, position:Position) {
-    if (!game || game.phase!=="awaiting_player" || duelPreview) return;
+    if (!game || game.phase!=="awaiting_player" || duelPreview || boardMotionRef.current) return;
     if (!legalPositions(game.player).includes(position)) return;
     setPreDuel({
       round:game.round,
@@ -726,8 +747,13 @@ export default function App() {
       opponentHealed:game.opponent.healedLife,
       score:{...game.duelScore}
     });
+    const origin=boardRedesign?handCardRect(handIndex):null;
     const next=cloneGame(game);
     submitPlayerPlay(next,handIndex,position,Math.random,Math.min(daggersToUse,availableDaggers));
+    if(boardRedesign && next.lastDuel){
+      setMotion({id:++nextMotionId.current,phase:"flight",before:game,
+        duel:next.lastDuel,roundEnded:next.round!==game.round,handIndex,origin});
+    }
     const newAuguries=next.events.slice(game.events.length).filter(event=>event.text.startsWith("Augurio ·"));
     const healingEvents=next.events.slice(game.events.length).filter(event=>event.text.includes("recupera 1 Vida"));
     setDuelAuguries([...newAuguries,...healingEvents].map(event=>event.text.replace(/^Augurio · /,"").replace(" · próxima carta "," · ")).slice(0,3));
@@ -739,13 +765,17 @@ export default function App() {
     setInspection(null);
     setHoveredPosition(null);
     setDrag(null);
-    showResolvedDuel(next.lastDuel,next.phase==="finished");
+    if(!boardRedesign || !next.lastDuel)showResolvedDuel(next.lastDuel,next.phase==="finished");
   }
 
   function chooseQuiero(wants:boolean) {
-    if (!game) return;
+    if (!game || boardMotionRef.current) return;
     const next=cloneGame(game);
     answerQuiero(next,wants);
+    if(boardRedesign && next.round!==game.round){
+      setMotion({id:++nextMotionId.current,phase:"archive",before:game,
+        duel:null,roundEnded:true,handIndex:null,origin:null});
+    }
     setGame(next);
     persistTurn(next);
     if(next.phase==="finished")startFinalCeremony();
@@ -762,7 +792,7 @@ export default function App() {
   }
 
   function zoneAt(x:number,y:number):Position|null {
-    if (!game || game.phase!=="awaiting_player" || duelPreview) return null;
+    if (!game || game.phase!=="awaiting_player" || duelPreview || boardMotionRef.current) return null;
     const element=document.elementFromPoint(x,y);
     const zone=element?.closest<HTMLElement>('[data-side="player"][data-position]');
     const position=(zone?.dataset.position as Position|undefined) ?? null;
@@ -770,7 +800,7 @@ export default function App() {
   }
 
   function handlePointerDown(event:ReactPointerEvent<HTMLButtonElement>, handIndex:number) {
-    if (!game || game.phase!=="awaiting_player" || duelPreview) return;
+    if (!game || game.phase!=="awaiting_player" || duelPreview || boardMotionRef.current) return;
     event.currentTarget.setPointerCapture(event.pointerId);
     setDrag({
       handIndex,
