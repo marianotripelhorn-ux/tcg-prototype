@@ -36,10 +36,12 @@ try {
     await buttons.nth(index).click();
     const name=(await buttons.nth(index).textContent())?.trim();
     await page.getByRole("button",{name:/REPRODUCIR/}).click();
-    await page.waitForTimeout(350);
-    const progress=await page.locator(".lab-progress-track > div")
-      .evaluate(node=>parseFloat(getComputedStyle(node).width));
-    assert.ok(progress>0,`GSAP timeline did not advance for ${name}`);
+    // Software-rendered WebGL can stall a few RAF frames in CI; poll instead
+    // of requiring an arbitrary 350ms progress threshold.
+    await page.waitForFunction(()=>{
+      const node=document.querySelector(".lab-progress-track > div");
+      return !!node && parseFloat(getComputedStyle(node).width)>0;
+    },null,{timeout:6500});
     await page.waitForFunction(
       ()=>document.querySelector(".lab-transport-caption")?.textContent?.includes("EFECTO COMPLETADO"),
       null,{timeout:10000}
