@@ -14,7 +14,7 @@
 .animation-lab .scene-power-rise .lab-card-anchor,
 .animation-lab .scene-power-fall .lab-card-anchor,
 .animation-lab .scene-champion-impact .lab-card-anchor{top:42%}
-/* These are inscribed ring segments, not symbols or new heraldry. */
+/* Continuous engraved rings; no standalone symbols or fractured arcs. */
 .animation-lab .lab-v4-orbits{
   position:absolute;inset:10% 12%;z-index:6;
   pointer-events:none;opacity:0;visibility:hidden;
@@ -29,16 +29,16 @@
   border-radius:50%;pointer-events:none;
 }
 .animation-lab .lab-v4-orbit.outer{
-  width:85%;border-top-color:currentColor;border-left-color:currentColor;
-  opacity:.68;transform:rotate(-21deg);
+  width:85%;border-color:currentColor;
+  opacity:.62;transform:rotate(-21deg);
 }
 .animation-lab .lab-v4-orbit.middle{
-  width:63%;border-right-color:currentColor;border-bottom-color:currentColor;
-  opacity:.78;transform:rotate(13deg);
+  width:63%;border-color:currentColor;
+  opacity:.74;transform:rotate(13deg);
 }
 .animation-lab .lab-v4-orbit.inner{
-  width:39%;border-top-color:currentColor;border-right-color:currentColor;
-  opacity:.57;transform:rotate(34deg);
+  width:39%;border-color:currentColor;
+  opacity:.52;transform:rotate(34deg);
 }
 .animation-lab .flavor-shadow .lab-v4-orbits{
   color:#aea69a;
@@ -75,7 +75,7 @@
   box-shadow:inset 0 0 0 10px #cbbba177,inset 0 -17px 25px #171819;
   background:radial-gradient(ellipse at 52% 47%,transparent 43%,#ffffff20 67%,transparent 82%);
 }
-/* Open semicircular impact traces sit outside the crown's clipped shape. */
+/* Two complete fine resonance rings sit outside the crown's clipped shape. */
 .animation-lab .lab-v4-impact-arcs{
   position:absolute;z-index:11;left:50%;top:57%;
   translate:-50% -50%;
@@ -89,12 +89,12 @@
   border:1.2px solid transparent;
 }
 .animation-lab .lab-v4-impact-arcs .outer{
-  width:100%;border-top-color:currentColor;border-right-color:currentColor;
-  transform:rotate(-21deg);opacity:.82;
+  width:100%;border-color:currentColor;
+  transform:rotate(-21deg);opacity:.76;
 }
 .animation-lab .lab-v4-impact-arcs .inner{
-  width:74%;border-bottom-color:currentColor;border-left-color:currentColor;
-  transform:rotate(18deg);opacity:.68;
+  width:74%;border-color:currentColor;
+  transform:rotate(18deg);opacity:.62;
 }
 .animation-lab .flavor-gold .lab-v4-impact-arcs{color:#e5c78b}
 .animation-lab .lab-life-crest{position:relative;isolation:isolate}
