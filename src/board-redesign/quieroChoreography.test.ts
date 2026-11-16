@@ -4,7 +4,7 @@ import { rivalAcceptedQuiero, shouldOfferQuiero } from "./quieroChoreography";
 
 function state(
   phase:GameState["phase"], score:{player:number;opponent:number},
-  turn:number,round=2,events:{kind:string;text:string}[]=[],mode:"ai"|"pvp"="ai"
+  turn:number,round=2,events:GameState["events"]=[],mode:"ai"|"pvp"="ai"
 ):GameState {
   return {phase,duelScore:score,turn,round,mode,events} as unknown as GameState;
 }
