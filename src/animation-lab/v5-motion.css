@@ -1,0 +1,133 @@
+/*
+ * DAGGERLIGHT / ANIMATION LAB V5 — Rest of the gameplay motion vocabulary
+ * Materialization, Archive, Placement and Champion Banner.
+ *
+ * Same approved V4.2 grammar: antique-gold/ink-black physical fills, precise
+ * FULL concentric rings, line-driven transfers, no particle showers and no
+ * invented emblems. Exclusive to ?lab=animations.
+ */
+.animation-lab .lab-effect-option.is-v5{
+  border-left:3px solid #e8ca88;
+  background:linear-gradient(90deg,#51442c 0%,#26302b 75%);
+}
+.animation-lab .lab-effect-option.is-v5.selected{
+  border-color:#f4dca4;
+  background:linear-gradient(90deg,#69512e,#29322b);
+}
+.animation-lab .lab-controls .lab-v5-note{
+  border-left:2px solid #d8bb78;padding:11px 12px;margin:0 0 12px;
+  background:linear-gradient(90deg,#b99b6229,transparent);
+  color:#ecdbc0;font-size:11px;line-height:1.5;
+}
+.animation-lab .lab-effect-list{
+  max-height:clamp(330px,49dvh,465px);
+  overflow-y:auto;overscroll-behavior:contain;
+  padding-right:5px;scrollbar-color:#897859 #242821;scrollbar-width:thin;
+}
+.animation-lab .lab-effect-list .lab-v5-divider{
+  font-size:10px;letter-spacing:.14em;color:#d8c398;
+  font-weight:850;text-transform:uppercase;
+  border-bottom:1px solid #9c886137;
+  padding:12px 0 7px;margin:2px 0 3px;
+}
+.animation-lab .scene-materialize-v5 .lab-card-anchor,
+.animation-lab .scene-archive-v5 .lab-card-anchor,
+.animation-lab .scene-placement-v5 .lab-card-anchor{
+  top:42%;
+}
+.animation-lab .lab-v5-channel{
+  position:absolute;inset:0;z-index:6;width:100%;height:100%;
+  opacity:0;visibility:hidden;pointer-events:none;overflow:visible;
+}
+.animation-lab .lab-v5-channel path{
+  fill:none;stroke-linecap:round;stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;
+  stroke:var(--spectral-v3-color,#d2ad6f);
+}
+.animation-lab .lab-v5-channel .lab-v5-channel-glow{
+  stroke-width:13px;
+  opacity:.21;
+  filter:blur(4px);
+}
+.animation-lab .lab-v5-channel .lab-v5-channel-line{
+  stroke-width:2.8px;
+  opacity:.94;
+  filter:drop-shadow(0 0 3px var(--spectral-v3-light,#f1d795));
+}
+.animation-lab .flavor-shadow .lab-v5-channel .lab-v5-channel-line{
+  stroke:#333336;
+  filter:drop-shadow(0 0 1px #ddd6ca);
+}
+.animation-lab .flavor-shadow .lab-v5-channel .lab-v5-channel-glow{
+  stroke:#141618;opacity:.5;
+}
+.animation-lab .lab-v5-archive-rings{
+  position:absolute;z-index:7;
+  left:72%;top:81%;width:clamp(138px,16vw,195px);
+  aspect-ratio:1;translate:-50% -50%;
+  display:grid;place-items:center;
+  opacity:0;visibility:hidden;pointer-events:none;
+  color:var(--spectral-v3-color,#d4b376);
+  transform-origin:center center;
+}
+.animation-lab .lab-v5-archive-rings span{
+  position:absolute;top:50%;left:50%;translate:-50% -50%;
+  border:1.1px solid currentColor;border-radius:50%;aspect-ratio:1;
+}
+.animation-lab .lab-v5-archive-rings span:nth-child(1){width:100%;opacity:.7}
+.animation-lab .lab-v5-archive-rings span:nth-child(2){width:72%;opacity:.53}
+.animation-lab .flavor-shadow .lab-v5-archive-rings{
+  color:#5e5952;filter:drop-shadow(0 0 1px #ece0d2);
+}
+.animation-lab .lab-v5-ground-contact{
+  position:absolute;z-index:6;left:47%;top:42%;
+  translate:-50% -50%;width:clamp(145px,23vw,310px);aspect-ratio:1;
+  opacity:0;visibility:hidden;pointer-events:none;
+  display:grid;place-items:center;color:var(--spectral-v3-color,#d4b376);
+}
+.animation-lab .lab-v5-ground-contact span{
+  position:absolute;top:50%;left:50%;translate:-50% -50%;
+  aspect-ratio:1;border:1px solid currentColor;border-radius:50%;
+}
+.animation-lab .lab-v5-ground-contact span:first-child{width:100%;opacity:.52}
+.animation-lab .lab-v5-ground-contact span:last-child{width:70%;opacity:.37}
+.animation-lab .flavor-shadow .lab-v5-ground-contact{
+  color:#2f3030;filter:drop-shadow(0 0 1px #b9afa2);
+}
+.animation-lab .lab-v5-banner-wash{
+  position:absolute;inset:0;z-index:2;
+  opacity:0;pointer-events:none;
+  clip-path:inset(0 100% 0 0);
+  background:linear-gradient(108deg,
+    transparent 8%,var(--spectral-v3-color,#c59d57) 36%,
+    var(--spectral-v3-light,#f5d18d) 48%,var(--spectral-v3-color,#c59d57) 62%,
+    transparent 96%);
+  mix-blend-mode:screen;
+}
+.animation-lab .flavor-shadow .lab-v5-banner-wash{
+  background:linear-gradient(110deg,transparent 0%,#151718 25%,
+    #060809 48%,#303033 70%,transparent 100%);
+  mix-blend-mode:multiply;
+}
+.animation-lab .lab-v5-banner-rings{
+  position:absolute;left:50%;top:40%;width:72%;aspect-ratio:1;
+  translate:-50% -50%;z-index:4;pointer-events:none;
+  opacity:0;visibility:hidden;display:grid;place-items:center;
+  transform-origin:center center;
+  color:var(--spectral-v3-light,#f0d99c);
+  filter:drop-shadow(0 0 3px var(--spectral-v3-color,#bba275));
+}
+.animation-lab .lab-v5-banner-rings span{
+  position:absolute;top:50%;left:50%;translate:-50% -50%;
+  aspect-ratio:1;border:1px solid currentColor;border-radius:50%;
+}
+.animation-lab .lab-v5-banner-rings span:nth-child(1){width:90%;opacity:.68}
+.animation-lab .lab-v5-banner-rings span:nth-child(2){width:62%;opacity:.43}
+.animation-lab .flavor-shadow .lab-v5-banner-rings{
+  color:#9e978c;filter:drop-shadow(0 0 1px #1a1b1b);
+}
+@media(prefers-reduced-motion:reduce){
+  .animation-lab .lab-v5-channel,.animation-lab .lab-v5-archive-rings,
+  .animation-lab .lab-v5-ground-contact,.animation-lab .lab-v5-banner-wash,
+  .animation-lab .lab-v5-banner-rings{transition:none!important;animation:none!important}
+}
