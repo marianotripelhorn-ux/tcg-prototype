@@ -1,0 +1,288 @@
+/*
+ * DAGGERLIGHT / PLAYABLE REACT BOARD — Gold & Shadow integration 01.
+ * Based on the approved v4.2/v5 animation laboratory: complete fine rings,
+ * substantive gold/ink color waves and physical card motion, no symbol glyphs,
+ * no random particles. Scoped to the latest React hybrid board only.
+ */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1{
+  --gs-gold:#d1ac6d;
+  --gs-gold-bright:#f3d89e;
+  --gs-ink:#080a0b;
+  --gs-ink-edge:#aaa49a;
+  --gs-ease:cubic-bezier(.21,.76,.26,1);
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-motion-flight{
+  --gs-ink-border:var(--gs-gold-bright);
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-flight-veil{
+  position:absolute;inset:0;z-index:8;pointer-events:none;
+  overflow:visible;opacity:0;
+  animation:gs-flight-veil 560ms var(--gs-ease) both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-flight-wave{
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,transparent 0%,#dfb977d9 29%,#f0d49cde 52%,#bc985dc7 69%,transparent 100%);
+  clip-path:inset(100% 0 0 0);
+  animation:gs-flight-fill 560ms var(--gs-ease) both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-flight-ring{
+  position:absolute;top:50%;left:50%;translate:-50% -50%;
+  aspect-ratio:1;border:1px solid var(--gs-gold-bright);
+  border-radius:50%;filter:drop-shadow(0 0 2px #c5a26a);
+  animation:gs-flight-ring 560ms var(--gs-ease) both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-flight-ring.outer{width:116%;animation-delay:0ms}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-flight-ring.middle{width:91%;animation-delay:35ms;opacity:.66}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-flight-ring.inner{width:64%;animation-delay:60ms;opacity:.5}
+@keyframes gs-flight-veil{
+  0%,48%{opacity:0}70%{opacity:.71}90%{opacity:.85}100%{opacity:0}
+}
+@keyframes gs-flight-fill{
+  0%,48%{clip-path:inset(100% 0 0 0)}
+  86%{clip-path:inset(0 0 0 0)}
+  100%{clip-path:inset(0 0 100% 0)}
+}
+@keyframes gs-flight-ring{
+  0%,53%{scale:.58;opacity:0}
+  81%{scale:.95;opacity:.76}
+  100%{scale:1.14;opacity:0}
+}
+
+/* Existing resolved duel values are the only trigger for these color waves. */
+:root[data-theme] .app-shell.board-redesign-v1 .duel-showcase-card{
+  --gs-effect:var(--gs-gold);
+  --gs-effect-rim:var(--gs-gold-bright);
+  --gs-effect-rgba:#d1ac6dd9;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-showcase-card.board-gs-loss{
+  --gs-effect:var(--gs-ink);
+  --gs-effect-rim:var(--gs-ink-edge);
+  --gs-effect-rgba:#080a0be8;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-showcase-face{
+  isolation:isolate;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-power-fx{
+  position:absolute;inset:0;z-index:7;
+  pointer-events:none;opacity:0;visibility:hidden;
+  overflow:hidden;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .power-resolved .board-gs-power-fx{
+  opacity:1;visibility:visible;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-power-wave{
+  position:absolute;inset:0;z-index:1;
+  background:linear-gradient(180deg,transparent 0%,var(--gs-effect-rgba) 34%,
+    var(--gs-effect-rgba) 63%,transparent 100%);
+  clip-path:inset(100% 0 0 0);
+}
+:root[data-theme] .app-shell.board-redesign-v1 .power-resolved.board-gs-gain .board-gs-power-wave{
+  animation:gs-power-rise .62s var(--gs-ease) both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .power-resolved.board-gs-loss .board-gs-power-wave{
+  clip-path:inset(0 0 100% 0);
+  animation:gs-power-fall .62s var(--gs-ease) both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-power-circle{
+  position:absolute;top:50%;left:50%;translate:-50% -50%;z-index:2;
+  border:1px solid var(--gs-effect-rim);border-radius:50%;aspect-ratio:1;
+  opacity:0;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-power-circle.outer{width:78%}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-power-circle.middle{width:58%}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-power-circle.inner{width:38%}
+:root[data-theme] .app-shell.board-redesign-v1 .power-resolved .board-gs-power-circle{
+  animation:gs-power-rings .62s var(--gs-ease) both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .power-resolved .board-gs-power-circle.middle{animation-delay:55ms}
+:root[data-theme] .app-shell.board-redesign-v1 .power-resolved .board-gs-power-circle.inner{animation-delay:95ms}
+@keyframes gs-power-rise{
+  0%{clip-path:inset(100% 0 0 0);opacity:0}
+  52%{opacity:.85}
+  80%{clip-path:inset(0 0 0 0);opacity:.81}
+  100%{clip-path:inset(0 0 100% 0);opacity:0}
+}
+@keyframes gs-power-fall{
+  0%{clip-path:inset(0 0 100% 0);opacity:0}
+  52%{opacity:.89}
+  80%{clip-path:inset(0 0 0 0);opacity:.82}
+  100%{clip-path:inset(100% 0 0 0);opacity:0}
+}
+@keyframes gs-power-rings{
+  0%{scale:.7;opacity:0}
+  48%{scale:1;opacity:.69}
+  100%{scale:1.18;opacity:0}
+}
+/* Disable the old one-sided decorative ribbon in favor of full circles. */
+:root[data-theme] .app-shell.board-redesign-v1 .power-resolved .duel-showcase-face::after{
+  content:none!important;
+}
+
+/* Real Champion Life changes: black for loss, gold for healing. */
+:root[data-theme] .app-shell.board-redesign-v1 .hybrid-life-unit .board-gs-crest-circles{
+  position:absolute;inset:0;z-index:3;pointer-events:none;
+  display:grid;place-items:center;overflow:hidden;
+  --gs-crown-ring:var(--gs-ink-edge);
+}
+:root[data-theme] .app-shell.board-redesign-v1 .hybrid-life-unit.is-healed .board-gs-crest-circles{
+  --gs-crown-ring:var(--gs-gold-bright);
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-crest-circles span{
+  position:absolute;top:50%;left:50%;translate:-50% -50%;
+  aspect-ratio:1;border:1px solid var(--gs-crown-ring);
+  border-radius:50%;opacity:0;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-crest-circles span:first-child{width:95%}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-crest-circles span:last-child{width:68%}
+:root[data-theme] .app-shell.board-redesign-v1 .is-damaged .board-gs-crest-circles span,
+:root[data-theme] .app-shell.board-redesign-v1 .is-healed .board-gs-crest-circles span{
+  animation:gs-crest-ring .72s var(--gs-ease) both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-crest-circles span:last-child{animation-delay:60ms}
+:root[data-theme] .app-shell.board-redesign-v1 .is-damaged .hybrid-life-wave{
+  border-color:#38393a!important;box-shadow:0 3px 11px #080a0b99!important;
+  background:linear-gradient(180deg,#080a0b00,#080a0bda);
+}
+:root[data-theme] .app-shell.board-redesign-v1 .is-healed .hybrid-life-wave{
+  background:linear-gradient(180deg,#f3d89e00,#cba466a9);
+}
+@keyframes gs-crest-ring{0%{opacity:0;scale:.6}36%{opacity:.8;scale:1}100%{opacity:0;scale:1.30}}
+
+/* One physical ink channel connects the actual winning card and losing Life. */
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-damage-channel{
+  position:fixed;inset:0;width:100vw;height:100vh;z-index:160;
+  pointer-events:none;overflow:visible;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-damage-channel .board-gs-channel-under{
+  fill:none;stroke:var(--gs-ink);stroke-width:12;opacity:.63;
+  stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;
+  animation:gs-damage-ink .56s var(--gs-ease) both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-damage-channel .board-gs-channel-line{
+  fill:none;stroke:#8a8479;stroke-width:1.6;opacity:.82;
+  stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;
+  animation:gs-damage-ink .56s var(--gs-ease) both;
+}
+@keyframes gs-damage-ink{0%{stroke-dashoffset:100;opacity:0}20%{opacity:.8}74%{stroke-dashoffset:0;opacity:.9}100%{stroke-dashoffset:0;opacity:0}}
+
+/* Archive capture: cards remain material and move into the correct Archive. */
+:root[data-theme] .app-shell.board-redesign-v1 .board-slot .played-card.board-gs-archiving{
+  position:relative;isolation:isolate;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-slot .played-card.board-gs-archiving::after{
+  content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
+  background:linear-gradient(180deg,#d7b17300 0%,#e0b46bcf 35%,#f2d89bcf 52%,#c7a264be 69%,#d7b17300);
+  clip-path:inset(100% 0 0 0);animation:gs-archive-wave .68s var(--gs-ease) both;
+}
+@keyframes gs-archive-wave{
+  0%{clip-path:inset(100% 0 0 0);opacity:0}
+  55%{clip-path:inset(0 0 0 0);opacity:.8}
+  100%{clip-path:inset(0 0 100% 0);opacity:0}
+}
+:root[data-theme] .app-shell.board-redesign-v1 .archive-count.board-gs-archive-target{
+  isolation:isolate;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .archive-count.board-gs-archive-target::before,
+:root[data-theme] .app-shell.board-redesign-v1 .archive-count.board-gs-archive-target::after{
+  content:"";position:absolute;left:50%;top:50%;translate:-50% -50%;
+  aspect-ratio:1;border-radius:50%;pointer-events:none;
+  border:1px solid var(--gs-gold);width:34px;
+  animation:gs-archive-circle .65s var(--gs-ease) both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .archive-count.board-gs-archive-target::after{
+  width:23px;animation-delay:55ms;opacity:.68;
+}
+@keyframes gs-archive-circle{
+  0%{scale:.65;opacity:0}38%{scale:1;opacity:.78}100%{scale:1.38;opacity:0}
+}
+
+/* Dealt cards materialize from the actual deck. Do not invent placeholder cards. */
+:root[data-theme] .app-shell.board-redesign-v1 .hand-zone .hand-card.board-gs-dealing{
+  position:relative;isolation:isolate;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .hand-zone .hand-card.board-gs-dealing::before{
+  content:"";position:absolute;inset:1px;z-index:10;pointer-events:none;
+  background:linear-gradient(0deg,#e3bd7f00,#dfb577b8 33%,#f0d69ad6 51%,#c6a062ba 72%,#e3bd7f00);
+  clip-path:inset(100% 0 0 0);animation:gs-deal-material .50s var(--gs-ease) both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .hand-zone .hand-card.board-gs-dealing::after{
+  content:"";position:absolute;top:50%;left:50%;translate:-50% -50%;z-index:11;
+  width:83%;aspect-ratio:1;pointer-events:none;border-radius:50%;
+  border:1px solid var(--gs-gold-bright);opacity:0;
+  animation:gs-deal-circle .50s var(--gs-ease) both;
+}
+@keyframes gs-deal-material{
+  0%{clip-path:inset(100% 0 0 0);opacity:0}
+  55%{clip-path:inset(0 0 0 0);opacity:.83}
+  100%{clip-path:inset(0 0 100% 0);opacity:0}
+}
+@keyframes gs-deal-circle{0%{opacity:0;scale:.72}55%{opacity:.7;scale:1}100%{opacity:0;scale:1.2}}
+
+/* Original physical Champion fabric, now with an embedded metal-light wave and full rings. */
+:root[data-theme] .app-shell.board-redesign-v1 .hybrid-champion-trigger{isolation:isolate}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-banner-overlay{
+  position:absolute;inset:0;z-index:3;pointer-events:none;
+  opacity:0;visibility:hidden;overflow:hidden;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .hybrid-champion-panel.is-expanded .board-gs-banner-overlay{
+  opacity:1;visibility:visible;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-banner-wave{
+  position:absolute;inset:0;
+  background:linear-gradient(112deg,transparent 7%,#bd975aaa 36%,#f1d49bb5 49%,#bd975aaa 64%,transparent 93%);
+  clip-path:inset(0 100% 0 0);mix-blend-mode:screen;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .hybrid-champion-panel.is-expanded .board-gs-banner-wave{
+  animation:gs-banner-sweep .65s var(--gs-ease) both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-banner-circle{
+  position:absolute;top:44%;left:50%;translate:-50% -50%;
+  aspect-ratio:1;border:1px solid #efd59e;border-radius:50%;opacity:0;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-banner-circle.outer{width:78%}
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-banner-circle.inner{width:55%}
+:root[data-theme] .app-shell.board-redesign-v1 .hybrid-champion-panel.is-expanded .board-gs-banner-circle{
+  animation:gs-banner-circle .65s var(--gs-ease) both;
+}
+@keyframes gs-banner-sweep{0%{clip-path:inset(0 100% 0 0);opacity:0}70%{clip-path:inset(0 0 0 0);opacity:.58}100%{clip-path:inset(0 0 0 100%);opacity:0}}
+@keyframes gs-banner-circle{0%{scale:.65;opacity:0}55%{scale:1;opacity:.38}100%{scale:1.18;opacity:0}}
+
+/* Duels show complete circles instead of spark/star pseudo-heraldry. */
+:root[data-theme] .app-shell.board-redesign-v1 .duel-cinematic{
+  --gs-duel-color:#d1ac6d;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-cinematic-opponent{
+  --gs-duel-color:#8d8980;
+  background:radial-gradient(ellipse at center,#08090bcc,#131410d6 75%)!important;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-cinematic-ring{
+  display:block!important;position:absolute;left:50%;top:49%;
+  width:min(31vw,300px);aspect-ratio:1;translate:-50% -50%;
+  border:1px solid var(--gs-duel-color);border-radius:50%;
+  pointer-events:none;opacity:0;
+  animation:gs-duel-complete-ring .85s var(--gs-ease) both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-cinematic-ring.second{
+  width:min(23vw,205px);animation-delay:110ms;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-cinematic-sparks{display:none!important}
+@keyframes gs-duel-complete-ring{0%{scale:.73;opacity:0}46%{scale:1;opacity:.7}100%{scale:1.23;opacity:0}}
+
+/* Replayable without running any motion when the user explicitly prefers reduced motion. */
+@media(prefers-reduced-motion:reduce){
+  :root[data-theme] .app-shell.board-redesign-v1 .board-gs-flight-veil,
+  :root[data-theme] .app-shell.board-redesign-v1 .board-gs-flight-wave,
+  :root[data-theme] .app-shell.board-redesign-v1 .board-gs-flight-ring,
+  :root[data-theme] .app-shell.board-redesign-v1 .board-gs-power-fx *,
+  :root[data-theme] .app-shell.board-redesign-v1 .board-gs-crest-circles *,
+  :root[data-theme] .app-shell.board-redesign-v1 .board-gs-damage-channel *,
+  :root[data-theme] .app-shell.board-redesign-v1 .board-gs-archive-target::before,
+  :root[data-theme] .app-shell.board-redesign-v1 .board-gs-archive-target::after,
+  :root[data-theme] .app-shell.board-redesign-v1 .board-gs-archiving::after,
+  :root[data-theme] .app-shell.board-redesign-v1 .board-gs-dealing::before,
+  :root[data-theme] .app-shell.board-redesign-v1 .board-gs-dealing::after,
+  :root[data-theme] .app-shell.board-redesign-v1 .board-gs-banner-overlay *,
+  :root[data-theme] .app-shell.board-redesign-v1 .duel-cinematic-ring{
+    animation:none!important;visibility:hidden!important;opacity:0!important;
+  }
+}
