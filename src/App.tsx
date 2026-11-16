@@ -1130,8 +1130,11 @@ export default function App() {
       }
     : duelPreview?preDuel:null;
   const pendingOpponent=duelPreview || boardMotion ? null : game.pendingOpponentPlay;
-  const focusPlayer=(boardRedesign?boardMotion?.duel?.playerPlay:null) ?? duelPreview?.playerPlay ?? null;
-  const focusOpponent=(boardRedesign?boardMotion?.duel?.opponentPlay:null) ?? duelPreview?.opponentPlay ?? pendingOpponent;
+  // Once the actual Archive flight has finished, no old duel card may
+  // reappear as a focus placeholder. Keep the original focus only while that
+  // previous round still physically exists on the board.
+  const focusPlayer=(boardRedesign&&showingPreviousRound?boardMotion?.duel?.playerPlay:null) ?? duelPreview?.playerPlay ?? null;
+  const focusOpponent=(boardRedesign&&showingPreviousRound?boardMotion?.duel?.opponentPlay:null) ?? duelPreview?.opponentPlay ?? pendingOpponent;
   const playerBoard=boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.player:game.player;
   const opponentBoard=boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.opponent:game.opponent;
   const playerBoardPlays=boardRedesign?visibleRoundPlays(boardMotion,"player"):null;
