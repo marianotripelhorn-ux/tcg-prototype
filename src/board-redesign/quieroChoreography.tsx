@@ -6,15 +6,16 @@ import type { GameState } from "../engine/types";
  * Never calculate eligibility or change score in the presentation layer.
  */
 export function shouldOfferQuiero(game:GameState):boolean {
-  return game.phase==="awaiting_quiero" &&
+  return game.mode!=="pvp" && game.phase==="awaiting_quiero" &&
     game.duelScore.player===0 && game.duelScore.opponent===2;
 }
 
 /** True only when the engine explicitly recorded the rival accepting a
  * third duel. A declined AI choice is already included in RoundSummary. */
 export function rivalAcceptedQuiero(before:GameState,after:GameState):boolean {
-  return before.round===after.round &&
+  return after.mode!=="pvp" && before.round===after.round &&
     after.turn===3 && after.phase==="awaiting_player" &&
+    after.duelScore.player===2 && after.duelScore.opponent===0 &&
     after.events.slice(before.events.length).some(event=>
       event.kind==="decision" && event.text==="IA: Quiero.");
 }
