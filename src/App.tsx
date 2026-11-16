@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArchiveFlight, CardFlight, DealMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
+import { ArchiveFlight, BoardDamageTransfer, CardFlight, DealMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
 import type { BoardMotionSequence } from "./board-redesign/motion";
 import { disableManifestations } from "./board-redesign/disableManifestations";
 import Tutorial from "./Tutorial";
@@ -181,10 +181,16 @@ function DuelPowerCard({played,side}:{played:EnginePlay;side:"player"|"opponent"
     return ()=>window.clearTimeout(timer);
   },[played,side]);
   return (
-    <div className={"duel-showcase-card"+(resolved?" power-resolved":"")} aria-label={`${played.card.name}, Poder ${printed} pasa a ${final}`}>
+    <div className={"duel-showcase-card"+(resolved?" power-resolved":"")+(delta>0?" board-gs-gain":delta<0?" board-gs-loss":"")} aria-label={`${played.card.name}, Poder ${printed} pasa a ${final}`}>
       <span className="duel-showcase-side">{side==="player"?"TU CARTA":"RIVAL"}</span>
       <div className="duel-showcase-face">
         <CardFace card={played.card}/>
+        {delta!==0 && <div className="board-gs-power-fx" aria-hidden="true">
+          <span className="board-gs-power-wave"/>
+          <span className="board-gs-power-circle outer"/>
+          <span className="board-gs-power-circle middle"/>
+          <span className="board-gs-power-circle inner"/>
+        </div>}
         <div className={"duel-showcase-power"+(delta<0?" is-loss":delta>0?" is-gain":" is-neutral")} aria-live="off">
           <small>PODER</small>
           <strong key={resolved?"final":"printed"}>{resolved?final:printed}</strong>
@@ -1048,7 +1054,6 @@ export default function App() {
             : <button type="button" className={"duel-cinematic duel-cinematic-"+duelPreview.outcome} onClick={finishDuelPresentation} aria-label="Saltar animación del resultado">
               <span className="duel-cinematic-ring" aria-hidden="true"/>
               <span className="duel-cinematic-ring second" aria-hidden="true"/>
-              <span className="duel-cinematic-sparks" aria-hidden="true">{duelPreview.outcome==="draw"?"◇  ◇":"✦  ✧  ✦"}</span>
               <span className="duel-cinematic-label">DUELO {duelPreview.turn}</span>
               <strong>{duelPreview.outcome==="player"?"VICTORIA":duelPreview.outcome==="opponent"?"DERROTA":"EMPATE"}</strong>
               <span className="duel-cinematic-powers">{duelPreview.playerPlay.finalPower ?? duelPreview.playerPlay.card.power} <i>—</i> {duelPreview.opponentPlay.finalPower ?? duelPreview.opponentPlay.card.power}</span>
@@ -1141,6 +1146,15 @@ export default function App() {
           deckRemaining={boardRedesign&&boardMotion&&boardMotion.phase!=="deal"?boardMotion.before.player.deck.length:game.player.deck.length}
           discardCount={boardRedesign&&boardMotion&&boardMotion.phase!=="deal"?boardMotion.before.player.discard.length:game.player.discard.length}
         />}
+        {boardRedesign && duelPreview && duelStep==="result" && preDuel &&
+          ((duelPreview.outcome==="player" && game.opponent.life<preDuel.opponentLife) ||
+           (duelPreview.outcome==="opponent" && game.player.life<preDuel.playerLife)) &&
+          <BoardDamageTransfer
+            attacker={duelPreview.outcome==="player"?"player":"opponent"}
+            victim={duelPreview.outcome==="player"?"opponent":"player"}
+            position={duelPreview.outcome==="player"?duelPreview.playerPlay.position:duelPreview.opponentPlay.position}
+            reducedMotion={isReducedMotion()}
+          />}
 
         <div className="action-line" role="status">
           {duelPreview
