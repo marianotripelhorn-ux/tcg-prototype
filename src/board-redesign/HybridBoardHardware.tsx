@@ -142,10 +142,10 @@ export function HybridRightRail({
 }
 
 export function HybridCommandRail({
-  game,pendingOpponent,selectedCard,latestEvent,duelResolving,transitionLabel,displayRound,displayTurn,onChooseQuiero
+  game,pendingOpponent,selectedCard,latestEvent,duelResolving,transitionLabel,displayRound,displayTurn,decisionOnField=false,onChooseQuiero
 }:{
   game:GameState;pendingOpponent:EnginePlay|null;selectedCard:CardDefinition|null;
-  latestEvent:string;duelResolving:boolean;transitionLabel?:string;displayRound?:number;displayTurn?:number;onChooseQuiero:(wants:boolean)=>void;
+  latestEvent:string;duelResolving:boolean;transitionLabel?:string;displayRound?:number;displayTurn?:number;decisionOnField?:boolean;onChooseQuiero:(wants:boolean)=>void;
 }) {
   let status=latestEvent;
   if (transitionLabel) status=transitionLabel;
@@ -182,7 +182,7 @@ export function HybridCommandRail({
       </details>
     </div>
     <div className="hybrid-command-status" role="status" aria-live="polite">{status}</div>
-    {game.phase==="awaiting_quiero" && !duelResolving
+    {game.phase==="awaiting_quiero" && !duelResolving && !decisionOnField
       ? <div className="hybrid-quiero-actions" role="group" aria-label="Decisión de tercer duelo"
           style={{backgroundImage:`linear-gradient(180deg,#080a08a8,#11180dbf),url("${bannerBackground}")`}}>
           <span className="hybrid-quiero-overline">TERCER DUELO</span>
