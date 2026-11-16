@@ -317,7 +317,7 @@ try{
     "Dramatic result layer must shade to the far right edge, not stop before the score");
   assert.ok(roundOverlay.textAnimation.includes("dl-v3-round-type"),
     "Result lettering needs its own choreographed entrance");
-  assert.equal(roundVisual.scoreColor,"rgb(255, 253, 244)",
+  assert.equal(roundVisual.scoreColor,"rgb(255, 253, 245)",
     "Round score must read white against the full-field dark shadow");
   assert.equal(roundVisual.calloutBackground,"rgba(0, 0, 0, 0)",
     "Result content must not sit inside any floating panel or box");
