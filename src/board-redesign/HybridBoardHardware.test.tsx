@@ -86,6 +86,10 @@ describe("Hybrid board is a view of the authoritative engine state",()=>{
     expect(resolving).not.toContain("hybrid-quiero-actions");
     const waiting=renderToStaticMarkup(createElement(HybridCommandRail,{...props,duelResolving:false}));
     expect(waiting).toContain("hybrid-quiero-actions");
+    expect(waiting).toContain("Decisión de tercer duelo");
+    expect(waiting).toContain("¿QUERÉS CONTINUAR?");
+    expect(waiting).toContain("hybrid-quiero-overline");
+    expect(waiting).toContain("url(");
     expect(waiting).toContain(">NO QUIERO</button>");
     expect(waiting).toContain(">QUIERO</button>");
   });
