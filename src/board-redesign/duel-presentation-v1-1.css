@@ -1,0 +1,200 @@
+/*
+ * DAGGERLIGHT / DUEL PRESENTATION 1.1
+ * The original game board remains present, slightly softened behind the duel.
+ * All source glows refer to engine-confirmed modifiers or state transitions.
+ */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo{
+  isolation:isolate;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-focus-screen{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:rgba(9,13,12,.14);
+  -webkit-backdrop-filter:blur(2.25px) saturate(.94);
+  backdrop-filter:blur(2.25px) saturate(.94);
+  animation:dl-duel-focus-in .32s ease-out both;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-pair{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto auto minmax(0,1fr);
+  align-items:center!important;
+  justify-items:center;
+  gap:clamp(8px,1.8vw,25px)!important;
+  width:min(100%,1040px)!important;
+  max-width:1040px;
+  overflow:visible;
+  position:relative;z-index:2;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-card{
+  position:relative;
+  min-width:0;
+  width:clamp(108px,12.5vw,177px);
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-column{
+  align-self:center;
+  display:flex;flex-direction:column;gap:6px;
+  width:min(100%,235px);min-width:0;
+  position:relative;z-index:5;
+  pointer-events:none;
+  opacity:0;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-column.has-effects{
+  opacity:1;
+  animation:dl-duel-effect-in .27s cubic-bezier(.17,.84,.28,1) both;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-column-player{
+  justify-self:end;align-items:flex-end;text-align:right;
+  padding-right:clamp(0px,.4vw,6px);
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-column-opponent{
+  justify-self:start;align-items:flex-start;text-align:left;
+  padding-left:clamp(0px,.4vw,6px);
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-column-kicker{
+  color:#ede2c7;
+  text-shadow:0 1px 5px #100d09;
+  font:800 clamp(8px,.75vw,11px)/1.1 Arial,sans-serif;
+  letter-spacing:.13em;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-note,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-remaining{
+  position:relative;min-width:0;max-width:100%;
+  padding:6px 10px;
+  border:1px solid rgba(203,177,124,.43);
+  background:linear-gradient(110deg,rgba(25,29,25,.94),rgba(39,40,33,.91));
+  box-shadow:0 3px 13px #0d0c0b4d;
+  color:#f4e8d3;
+  font:750 clamp(10px,.95vw,13px)/1.25 Arial,sans-serif;
+  text-shadow:0 1px 3px #090a08;
+  letter-spacing:.01em;
+  overflow-wrap:anywhere;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-note.is-bonus{
+  border-color:#c9ae798c;
+  box-shadow:inset 2px 0 #c2a56c,0 3px 13px #0d0c0b4d;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-note.is-penalty{
+  border-color:#847e70b0;
+  box-shadow:inset 2px 0 #767b73,0 3px 13px #0d0c0b4d;
+  color:#d9dad3;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-remaining{
+  padding:4px 7px;background:#20221fe8;border-color:#65615755;
+  color:#bcb8ae;font-size:10px;font-weight:650;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-column-player .duel-effect-note{
+  box-shadow:inset -2px 0 #bc9c61,0 3px 13px #0d0c0b4d;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-column-player .duel-effect-note.is-penalty{
+  box-shadow:inset -2px 0 #777e79,0 3px 13px #0d0c0b4d;
+}
+/* The old generic VS is removed from the JSX. Maintain visual tension through
+ * a clean centered gap, not an invented sigil or label. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-versus,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-choreo-causes{
+  display:none!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-choreo-comparison{
+  bottom:clamp(48px,6.8dvh,70px);
+  z-index:10;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-events{
+  display:none!important;
+}
+/* Board source glints remain below the softly blurred scrim. No gameplay state
+ * or DOM content is changed by these transient CSS classes. */
+:root[data-theme] .app-shell.board-redesign-v1 .board-slot.duel-source-position{
+  animation:dl-duel-slot-source .64s ease-out;
+  outline:2px solid #dbc38c7e;
+  outline-offset:-4px;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .archive-count.duel-source-archive{
+  animation:dl-duel-archive-source .68s ease-out;
+  box-shadow:0 0 0 2px #dcc08cbb,0 0 17px #f6cf91a1!important;
+  color:#f2dba6!important;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .hybrid-champion-panel.duel-source-champion .hybrid-champion-trigger{
+  animation:dl-duel-champion-source .62s ease-out;
+  box-shadow:0 0 0 1px #dabf86a0,0 0 24px #e0bf818a!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-settle .duel-focus-screen{
+  animation:dl-duel-focus-out .36s ease-in both;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-settle .duel-effect-column,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-settle .duel-showcase-heading,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-settle .duel-showcase-outcome,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-settle .duel-choreo-comparison{
+  opacity:0!important;transition:opacity .19s ease!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-settle .duel-showcase-skip{
+  opacity:0;pointer-events:none;
+}
+@keyframes dl-duel-focus-in{
+  from{opacity:0}to{opacity:1}
+}
+@keyframes dl-duel-focus-out{
+  from{opacity:1}to{opacity:0}
+}
+@keyframes dl-duel-effect-in{
+  from{opacity:0;transform:translateX(0) translateY(7px)}
+  to{opacity:1;transform:translateX(0) translateY(0)}
+}
+@keyframes dl-duel-slot-source{
+  0%{filter:brightness(1);box-shadow:none}
+  35%{filter:brightness(1.15);box-shadow:inset 0 0 24px #e9ca896e,0 0 14px #d6ab6c65}
+  100%{filter:brightness(1);box-shadow:none}
+}
+@keyframes dl-duel-archive-source{
+  0%{filter:brightness(1)}
+  40%{filter:brightness(1.42)}
+  100%{filter:brightness(1)}
+}
+@keyframes dl-duel-champion-source{
+  0%{filter:brightness(1)}
+  40%{filter:brightness(1.2)}
+  100%{filter:brightness(1)}
+}
+@media(max-width:760px){
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-pair{
+    width:100%!important;gap:clamp(5px,1.3vw,10px)!important;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-card{
+    width:clamp(76px,22vw,116px)!important;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-column{
+    gap:3px;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-column-kicker{
+    font-size:7px;letter-spacing:.02em;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-note{
+    font-size:9px;line-height:1.1;padding:4px 5px;
+    -webkit-line-clamp:3;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-remaining{
+    font-size:8px;padding:3px 5px;
+  }
+}
+@media(max-height:620px){
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-note{
+    padding:4px 6px;line-height:1.1;font-size:10px;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-pair{
+    max-height:72%!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-focus-screen,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-column,
+  :root[data-theme] .app-shell.board-redesign-v1 .board-slot.duel-source-position,
+  :root[data-theme] .app-shell.board-redesign-v1 .archive-count.duel-source-archive,
+  :root[data-theme] .app-shell.board-redesign-v1 .hybrid-champion-panel.duel-source-champion .hybrid-champion-trigger{
+    animation:none!important;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-focus-screen{
+    -webkit-backdrop-filter:none;backdrop-filter:none;
+  }
+}
