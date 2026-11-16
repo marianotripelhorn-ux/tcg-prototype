@@ -143,6 +143,10 @@ try{
     "Each card should have its own external explanation column");
   const layout=await duel.locator(".duel-showcase-pair").evaluate(el=>getComputedStyle(el).display);
   assert.equal(layout,"grid","External notes and both cards must use a deliberate four-column layout");
+  // The longer approach is intentional. Check physical layout only once both
+  // lifted cards have reached their final face-off geometry.
+  await page.locator('.duel-showcase-overlay[data-duel-beat="player-power"]')
+    .waitFor({state:"attached",timeout:6000});
   const panelLayout=await duel.evaluate(el=>{
     const names=[".duel-effect-column-player",".duel-choreo-side-player",
       ".duel-choreo-side-opponent",".duel-effect-column-opponent"];
