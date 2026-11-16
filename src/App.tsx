@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ArchiveFlight, CardFlight, DealMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
 import type { BoardMotionSequence } from "./board-redesign/motion";
 import { ArchiveReceiptTransition, ArchiveSweep, RoundTransition, archiveCountChange, completedRoundReceipt } from "./board-redesign/roundChoreography";
+import { QuieroChoiceStage, RivalQuieroStage, rivalAcceptedQuiero, shouldOfferQuiero } from "./board-redesign/quieroChoreography";
 import { DUEL_BEATS, DUEL_FINISH_MS, duelPowerReasons, powerIsRevealed, powerSourceCues, postDuelChampionCues } from "./board-redesign/duelChoreography";
 import type { DuelBeat } from "./board-redesign/duelChoreography";
 import { playDuelCue, unlockDuelAudio } from "./board-redesign/duelAudio";
@@ -638,6 +639,18 @@ export default function App() {
   const [boardMotion,setBoardMotion]=useState<BoardMotionSequence|null>(null);
   const boardMotionRef=useRef<BoardMotionSequence|null>(null);
   const nextMotionId=useRef(0);
+  const [quieroChoice,setQuieroChoice]=useState<boolean|null>(null);
+  const quieroChoiceTimer=useRef<number|null>(null);
+  const quieroPending=useRef(false);
+  const rivalQuieroPending=useRef(false);
+  function clearQuieroDecision(){
+    if(quieroChoiceTimer.current!==null)window.clearTimeout(quieroChoiceTimer.current);
+    quieroChoiceTimer.current=null;
+    quieroPending.current=false;
+    rivalQuieroPending.current=false;
+    setQuieroChoice(null);
+  }
+  useEffect(()=>()=>{if(quieroChoiceTimer.current!==null)window.clearTimeout(quieroChoiceTimer.current);},[]);
   function setMotion(next:BoardMotionSequence|null){
     boardMotionRef.current=next;
     setBoardMotion(next);
@@ -706,10 +719,15 @@ export default function App() {
     setPreDuel(null);
     const sequence=boardMotionRef.current;
     if(sequence){
-      if(boardRedesign && sequence.roundEnded && sequence.phase==="duel")
+      if(boardRedesign && sequence.roundEnded && sequence.phase==="duel"){
         setMotion({...sequence,phase:"round"});
-      else setMotion(null);
+      }else if(boardRedesign && rivalQuieroPending.current && sequence.phase==="duel"){
+        // This only happens if the engine actually recorded "IA: Quiero."
+        // after a 2–0 player lead. Keep the board frozen for one brief answer.
+        setMotion({...sequence,phase:"quiero-ai"});
+      }else setMotion(null);
     }
+    rivalQuieroPending.current=false;
     if (finishingMatch.current) {
       finishingMatch.current=false;
       startFinalCeremony();
@@ -804,6 +822,7 @@ export default function App() {
     }
     clearPreviewTimer();
     clearFinalTimer();
+    clearQuieroDecision();
     finishingMatch.current=false;
     setMotion(null);
     const opponent = rivalSelection==="random"
@@ -871,6 +890,7 @@ export default function App() {
     setMotion(null);
     clearPreviewTimer();
     clearFinalTimer();
+    clearQuieroDecision();
     finishingMatch.current=false;
     setDuelPreview(null);
     setPreDuel(null);
@@ -948,6 +968,7 @@ export default function App() {
     const origin=boardRedesign?(originOverride??handCardRect(handIndex)):null;
     const next=cloneGame(game);
     submitPlayerPlay(next,handIndex,position,Math.random,Math.min(daggersToUse,availableDaggers));
+    rivalQuieroPending.current=boardRedesign && rivalAcceptedQuiero(game,next);
     if(boardRedesign && next.lastDuel){
       setMotion({id:++nextMotionId.current,phase:"flight",before:game,
         duel:next.lastDuel,roundEnded:next.round!==game.round,handIndex,origin});
@@ -966,8 +987,10 @@ export default function App() {
     if(!boardRedesign || !next.lastDuel)showResolvedDuel(next.lastDuel,next.phase==="finished");
   }
 
-  function chooseQuiero(wants:boolean) {
-    if (!game || boardMotionRef.current) return;
+  function commitQuiero(wants:boolean) {
+    if(!game || game.phase!=="awaiting_quiero" || boardMotionRef.current)return;
+    // There is no alternative local resolution. The authoritative engine
+    // decides whether the third duel begins or the old round closes.
     const next=cloneGame(game);
     answerQuiero(next,wants);
     if(boardRedesign && next.round!==game.round){
@@ -978,6 +1001,24 @@ export default function App() {
     persistTurn(next);
     if(next.phase==="finished")startFinalCeremony();
     setSelectedIndex(null);
+    setQuieroChoice(null);
+    quieroPending.current=false;
+  }
+
+  function chooseQuiero(wants:boolean) {
+    if(!game || game.phase!=="awaiting_quiero" || boardMotionRef.current || quieroPending.current)return;
+    if(!boardRedesign || !shouldOfferQuiero(game)){
+      commitQuiero(wants);
+      return;
+    }
+    // Give the selected answer a short, unboxed response before exposing
+    // the actual resulting turn or the genuine end-of-round choreography.
+    quieroPending.current=true;
+    setQuieroChoice(wants);
+    quieroChoiceTimer.current=window.setTimeout(()=>{
+      quieroChoiceTimer.current=null;
+      commitQuiero(wants);
+    },isReducedMotion()?160:360);
   }
 
   function inspectPlay(played:EnginePlay) {
@@ -1104,6 +1145,8 @@ export default function App() {
   }
 
   const legal=game.phase==="awaiting_player" && !duelPreview && !boardMotion ? legalPositions(game.player) : [];
+  const showQuieroChoice=boardRedesign && shouldOfferQuiero(game) && !duelPreview && !boardMotion;
+  const showRivalQuiero=boardRedesign && boardMotion?.phase==="quiero-ai";
   const completedRound=boardRedesign?completedRoundReceipt(boardMotion,game):null;
   const showingPreviousRound=!!boardMotion && boardMotion.phase!=="archive-reveal" && boardMotion.phase!=="deal";
   // Display the round that is still physically on the table. The rules engine
@@ -1150,7 +1193,9 @@ export default function App() {
         : `DUELO ${game.turn} · ${game.initiative==="player"?"VOS ABRÍS":"IA ABRE"}`;
 
   return (
-    <main data-board-phase={boardRedesign?(boardMotion?.phase??"idle"):"classic"} className={"app-shell arena-v2"+(boardRedesign?" board-redesign-v1":"")}>
+    <main data-board-phase={boardRedesign?(boardMotion?.phase??"idle"):"classic"}
+      data-quiero-stage={showQuieroChoice?"choice":showRivalQuiero?"rival":"none"}
+      className={"app-shell arena-v2"+(boardRedesign?" board-redesign-v1":"")}>
       <div className="ambient ambient-one" />
       <div className="ambient ambient-two" />
 
@@ -1239,6 +1284,15 @@ export default function App() {
           </aside>
           <div className="arena-stage">
             <span className="arena-visually-hidden" role="status">{turnText}</span>
+            {showQuieroChoice&&<QuieroChoiceStage
+              score={game.duelScore} selected={quieroChoice} onChoose={chooseQuiero}/>}
+            {showRivalQuiero&&boardMotion&&<RivalQuieroStage
+              reducedMotion={isReducedMotion()}
+              onComplete={()=>{
+                const current=boardMotionRef.current;
+                if(current?.id===boardMotion.id&&current.phase==="quiero-ai")setMotion(null);
+              }}/>}
+
             {hoveredBoardCard && !duelPreview && !boardMotion && (
               <div className="arena-card-board-preview" aria-hidden="true">
                 <CardFace card={hoveredBoardCard}/>
@@ -1505,9 +1559,10 @@ export default function App() {
           selectedCard={selectedCard}
           latestEvent={latestEvent}
           duelResolving={!!duelPreview||!!boardMotion}
+          decisionOnField={showQuieroChoice}
           displayRound={displayed?.round??game.round}
           displayTurn={showingPreviousRound?(duelPreview?.turn??boardMotion?.duel?.turn??boardMotion?.before.turn??game.turn):game.turn}
-          transitionLabel={boardMotion?.phase==="flight"?"Jugando carta…":boardMotion?.phase==="round"?"Ronda finalizada…":boardMotion?.phase==="archive"?"Archivando cartas…":boardMotion?.phase==="archive-reveal"?"Archivos actualizados…":boardMotion?.phase==="deal"?"Repartiendo nueva mano…":undefined}
+          transitionLabel={boardMotion?.phase==="flight"?"Jugando carta…":boardMotion?.phase==="quiero-ai"?"El rival eligió Quiero · tercer duelo…":boardMotion?.phase==="round"?"Ronda finalizada…":boardMotion?.phase==="archive"?"Archivando cartas…":boardMotion?.phase==="archive-reveal"?"Archivos actualizados…":boardMotion?.phase==="deal"?"Repartiendo nueva mano…":undefined}
           onChooseQuiero={chooseQuiero}
         />}
 
