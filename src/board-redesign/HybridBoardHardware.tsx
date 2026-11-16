@@ -116,7 +116,7 @@ export function HybridRightRail({
     <LifeCrest side="opponent" life={opponentLife} healed={opponentHealed}/>
     <div className="hybrid-duel-tally" aria-label={`Duelos de esta ronda: vos ${score.player}, rival ${score.opponent}`}>
       <span className="hybrid-tally-label">DUELOS</span>
-      <strong>{score.player}–{score.opponent}</strong>
+      <strong className="hybrid-score-values"><span>{score.player}</span><i aria-hidden="true">–</i><span>{score.opponent}</span></strong>
       <span className="hybrid-tally-sides">VOS · RIVAL</span>
     </div>
     <LifeCrest side="player" life={playerLife} healed={playerHealed}/>
