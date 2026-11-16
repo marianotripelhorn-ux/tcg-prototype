@@ -22,6 +22,7 @@ import "./arena-v2-overrides.css";
 import "./arena-interaction-fix.css";
 import "./board-redesign/board.css";
 import "./board-redesign/motion.css";
+import "./board-redesign/gold-shadow.css";
 import "./animation-lab/lab.css";
 import "./animation-lab/chiral.css";
 import "./animation-lab/spectral-v3.css";
