@@ -212,10 +212,17 @@ try{
   assert.ok(resultPos,"Outcome word must appear ABOVE both cards");
   // Continue through the visible settle beat instead of abruptly dismissing
   // the lifted card faces. Then the existing real board/Archive flow resumes.
-  await page.locator(".duel-showcase-skip").click();
-  await page.locator('.duel-showcase-overlay[data-duel-beat="settle"]')
-    .waitFor({state:"attached",timeout:2000});
-  await page.locator(".duel-showcase-overlay").waitFor({state:"detached",timeout:3000});
+  // Result may have already begun its automatic settlement during the
+  // preceding geometry checks. Never click a button behind a settling overlay
+  // (which intercepts real pointer events but is correctly noninteractive).
+  if(await duel.count() && await duel.getAttribute("data-duel-beat")==="result"){
+    await duel.locator(".duel-showcase-skip").evaluate(el=>el.click());
+  }
+  if(await duel.count() && await duel.getAttribute("data-duel-beat")!=="settle"){
+    await page.locator('.duel-showcase-overlay[data-duel-beat="settle"]')
+      .waitFor({state:"attached",timeout:2200});
+  }
+  await page.locator(".duel-showcase-overlay").waitFor({state:"detached",timeout:3500});
   await page.waitForTimeout(700);
   const badges=page.locator(".current-board-card .live-power-badge");
   if(await badges.count()){
