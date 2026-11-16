@@ -142,10 +142,10 @@ export function HybridRightRail({
 }
 
 export function HybridCommandRail({
-  game,pendingOpponent,selectedCard,latestEvent,duelResolving,transitionLabel,onChooseQuiero
+  game,pendingOpponent,selectedCard,latestEvent,duelResolving,transitionLabel,displayRound,displayTurn,onChooseQuiero
 }:{
   game:GameState;pendingOpponent:EnginePlay|null;selectedCard:CardDefinition|null;
-  latestEvent:string;duelResolving:boolean;transitionLabel?:string;onChooseQuiero:(wants:boolean)=>void;
+  latestEvent:string;duelResolving:boolean;transitionLabel?:string;displayRound?:number;displayTurn?:number;onChooseQuiero:(wants:boolean)=>void;
 }) {
   let status=latestEvent;
   if (transitionLabel) status=transitionLabel;
@@ -191,7 +191,7 @@ export function HybridCommandRail({
           <button type="button" className="is-primary" onClick={()=>onChooseQuiero(true)}>QUIERO</button>
           <button type="button" onClick={()=>onChooseQuiero(false)}>NO QUIERO</button>
         </div>
-      : <div className="hybrid-command-round">RONDA <b>{game.round}</b> · DUELO <b>{game.turn}/3</b></div>}
+      : <div className="hybrid-command-round">RONDA <b>{displayRound??game.round}</b> · DUELO <b>{displayTurn??game.turn}/3</b></div>}
   </section>;
 }
 
