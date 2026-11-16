@@ -206,8 +206,9 @@ function DuelPowerCard({played,side}:{played:EnginePlay;side:"player"|"opponent"
   );
 }
 
-function DuelCardsPresentation({duel,onAdvance,auguryEvents}:{
+function DuelCardsPresentation({duel,onAdvance,auguryEvents,outcome=null}:{
   duel:DuelSummary;onAdvance:()=>void;auguryEvents:string[];
+  outcome?:"player"|"opponent"|"draw"|null;
 }) {
   const overlayRef=useRef<HTMLDivElement>(null);
   useLayoutEffect(()=>{
@@ -244,15 +245,19 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents}:{
     return ()=>animated.forEach(animation=>animation.cancel());
   },[duel]);
   return (
-    <div ref={overlayRef} className="duel-showcase-overlay" role="dialog" aria-modal="true" aria-label="Resolución de Poder de las cartas">
-      <span className="duel-showcase-heading">DUELO {duel.turn} · RESOLUCIÓN DE PODER</span>
+    <div ref={overlayRef} className={"duel-showcase-overlay"+(outcome?" is-board-outcome":"")} role="dialog" aria-modal="true" aria-label="Resolución de Poder de las cartas">
+      <span className="duel-showcase-heading">DUELO {duel.turn} · {outcome?"RESULTADO":"RESOLUCIÓN DE PODER"}</span>
+      {outcome && <div className={"duel-showcase-outcome duel-showcase-outcome-"+outcome}
+        role="status" aria-live="polite">
+        {outcome==="player"?"VICTORIA":outcome==="opponent"?"DERROTA":"EMPATE"}
+      </div>}
       <div className="duel-showcase-pair">
         <DuelPowerCard played={duel.playerPlay} side="player"/>
         <span className="duel-showcase-versus" aria-hidden="true">VS</span>
         <DuelPowerCard played={duel.opponentPlay} side="opponent"/>
       </div>
       {auguryEvents.length>0&&<div className="duel-showcase-events">{auguryEvents.map((event,index)=><span key={index}>{event}</span>)}</div>}
-      <button type="button" className="duel-showcase-skip" onClick={onAdvance}>SALTAR A RESULTADO →</button>
+      <button type="button" className="duel-showcase-skip" onClick={onAdvance}>{outcome?"OMITIR ANIMACIÓN":"SALTAR A RESULTADO →"}</button>
     </div>
   );
 }
@@ -1083,16 +1088,20 @@ export default function App() {
               </div>
             )}
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
-          {duelPreview && (duelStep==="cards"
-            ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries} onAdvance={showDuelResult}/>
-            : <button type="button" className={"duel-cinematic duel-cinematic-"+duelPreview.outcome} onClick={finishDuelPresentation} aria-label="Saltar animación del resultado">
-              <span className="duel-cinematic-ring" aria-hidden="true"/>
-              <span className="duel-cinematic-ring second" aria-hidden="true"/>
-              <span className="duel-cinematic-label">DUELO {duelPreview.turn}</span>
-              <strong>{duelPreview.outcome==="player"?"VICTORIA":duelPreview.outcome==="opponent"?"DERROTA":"EMPATE"}</strong>
-              <span className="duel-cinematic-powers">{duelPreview.playerPlay.finalPower ?? duelPreview.playerPlay.card.power} <i>—</i> {duelPreview.opponentPlay.finalPower ?? duelPreview.opponentPlay.card.power}</span>
-              <span className="duel-cinematic-skip">OMITIR ANIMACIÓN</span>
-            </button>
+          {duelPreview && (boardRedesign
+            ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries}
+                outcome={duelStep==="result"?duelPreview.outcome:null}
+                onAdvance={duelStep==="result"?finishDuelPresentation:showDuelResult}/>
+            : duelStep==="cards"
+              ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries} onAdvance={showDuelResult}/>
+              : <button type="button" className={"duel-cinematic duel-cinematic-"+duelPreview.outcome} onClick={finishDuelPresentation} aria-label="Saltar animación del resultado">
+                <span className="duel-cinematic-ring" aria-hidden="true"/>
+                <span className="duel-cinematic-ring second" aria-hidden="true"/>
+                <span className="duel-cinematic-label">DUELO {duelPreview.turn}</span>
+                <strong>{duelPreview.outcome==="player"?"VICTORIA":duelPreview.outcome==="opponent"?"DERROTA":"EMPATE"}</strong>
+                <span className="duel-cinematic-powers">{duelPreview.playerPlay.finalPower ?? duelPreview.playerPlay.card.power} <i>—</i> {duelPreview.opponentPlay.finalPower ?? duelPreview.opponentPlay.card.power}</span>
+                <span className="duel-cinematic-skip">OMITIR ANIMACIÓN</span>
+              </button>
           )}
           {positions.map(position=>(
             <div className="lane" key={position}>
@@ -1389,7 +1398,7 @@ export default function App() {
           </div>
         )}
 
-        {game.phase==="finished" && !duelPreview && (
+        {game.phase==="finished" && !duelPreview && !boardMotion && !finishingMatch.current && (
           <div className={"decision-overlay match-conclusion-stage"+(finalStep==="ceremony"?" is-ceremony":" is-actions")}>
             {finalStep==="ceremony" ? (
               <div className={"match-conclusion-ceremony match-final-"+game.winner} role="status" aria-live="polite">
