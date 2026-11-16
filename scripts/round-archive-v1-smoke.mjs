@@ -276,6 +276,12 @@ try{
   assert.equal(await ceremony.count(),1,"Round-end ceremony must be visible before Archive movement");
   assert.equal(await ceremony.locator(".board-round-score").count(),1,
     "Round ceremony must show the actual end-of-round duel score");
+  const oldRoundLabels=await page.evaluate(()=>({
+    top:document.querySelector(".arena-top-center span b")?.textContent?.trim(),
+    ribbon:document.querySelector(".hybrid-command-round b")?.textContent?.trim()
+  }));
+  assert.ok(oldRoundLabels.top&&oldRoundLabels.top===oldRoundLabels.ribbon,
+    "Top status and command rail must both show the actual still-physical round");
 
   await page.locator('main[data-board-phase="archive"]').waitFor({state:"attached",timeout:8000});
   const archival=page.locator(".board-slot .played-card.board-gs-archiving");
@@ -288,6 +294,13 @@ try{
     "Real Archive count update should have its own readable beat");
   assert.ok(await page.locator(".board-slot.archive-updated .archive-count").count()>0,
     "At least one genuinely changed Archive counter should highlight after capture");
+  const newRoundLabels=await page.evaluate(()=>({
+    top:document.querySelector(".arena-top-center span b")?.textContent?.trim(),
+    ribbon:document.querySelector(".hybrid-command-round b")?.textContent?.trim()
+  }));
+  assert.ok(newRoundLabels.top&&newRoundLabels.top===newRoundLabels.ribbon &&
+    newRoundLabels.top!==oldRoundLabels.top,
+    "Both displayed round labels must advance together when Archive receipts are visible");
   assert.equal(await page.locator(".board-slot .played-card").count(),0,
     "Archived cards must leave the board before counts are confirmed");
 
