@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { GameState } from "../engine/types";
 
 /**
@@ -56,6 +57,12 @@ export function RivalQuieroStage({onComplete,reducedMotion}:{
 }){
   // The actual AI answer is already present in GameState.events. This stage
   // only acknowledges it before exposing the third-duel controls.
+  const current=useRef(onComplete);
+  current.current=onComplete;
+  useEffect(()=>{
+    const timer=window.setTimeout(()=>current.current(),reducedMotion?260:960);
+    return ()=>window.clearTimeout(timer);
+  },[reducedMotion]);
   return <div className={"board-quiero-stage board-quiero-rival"+(reducedMotion?" is-reduced":"")}
     role="status" aria-live="polite" aria-label="El rival quiere disputar el tercer duelo">
     <div className="board-quiero-content">
