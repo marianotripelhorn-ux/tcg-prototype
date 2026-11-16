@@ -1504,6 +1504,8 @@ export default function App() {
           selectedCard={selectedCard}
           latestEvent={latestEvent}
           duelResolving={!!duelPreview||!!boardMotion}
+          displayRound={displayed?.round??game.round}
+          displayTurn={showingPreviousRound?(duelPreview?.turn??boardMotion?.duel?.turn??boardMotion?.before.turn??game.turn):game.turn}
           transitionLabel={boardMotion?.phase==="flight"?"Jugando carta…":boardMotion?.phase==="round"?"Ronda finalizada…":boardMotion?.phase==="archive"?"Archivando cartas…":boardMotion?.phase==="archive-reveal"?"Archivos actualizados…":boardMotion?.phase==="deal"?"Repartiendo nueva mano…":undefined}
           onChooseQuiero={chooseQuiero}
         />}
