@@ -173,13 +173,13 @@
   display:block!important;
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .played-card:has(.current-board-card){
-  height:clamp(88px,18dvh,200px)!important;max-height:62%!important;
+  height:clamp(88px,15dvh,170px)!important;max-height:53%!important;
   flex:0 1 auto!important;display:flex!important;align-items:stretch!important;
   justify-content:center;
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .battle-card{
   width:100%!important;max-width:100%!important;
-  height:clamp(42px,5.7dvh,66px)!important;min-width:0;
+  height:clamp(34px,4.8dvh,54px)!important;min-width:0;
   box-sizing:border-box;border:1px solid #767468!important;
   display:block!important;
 }
@@ -223,6 +223,7 @@
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-showcase-card{
   width:clamp(110px,12.5vw,177px);filter:drop-shadow(3px 13px 13px #0009);
+  animation:none!important;
   will-change:transform;
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-showcase-heading{
@@ -248,7 +249,10 @@
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-showcase-overlay ~ .lane .current-board-card{
   visibility:hidden!important;
 }
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-cinematic{
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-cinematic,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-cinematic-player,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-cinematic-opponent,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-cinematic-draw{
   background:transparent!important;backdrop-filter:none!important;
   box-shadow:none!important;overflow:visible!important;
   z-index:111!important;color:#18170f;
