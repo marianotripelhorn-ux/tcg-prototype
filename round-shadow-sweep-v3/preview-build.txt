@@ -1,0 +1,4 @@
+Daggerlight TCG — visual presentation preview
+Source branch: feature/round-archive-shadow-sweep-v3
+Build verified by the engine, production and real-browser CI workflow.
+Includes: Quiero / No quiero field choreography and geometrically centered round-result text.
