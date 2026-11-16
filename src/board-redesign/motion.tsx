@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, type ReactNode } from "react";
 import type { CardDefinition, Position } from "../types";
 import type { DuelSummary, EnginePlay, GameState } from "../engine/types";
 
-export type BoardMotionPhase = "flight" | "duel" | "round" | "archive" | "archive-reveal" | "deal";
+export type BoardMotionPhase = "flight" | "duel" | "quiero-ai" | "round" | "archive" | "archive-reveal" | "deal";
 export interface RectSnapshot { x:number;y:number;width:number;height:number }
 export interface BoardMotionSequence {
   id:number;
