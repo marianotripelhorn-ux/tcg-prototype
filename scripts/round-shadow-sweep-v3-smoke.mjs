@@ -58,6 +58,24 @@ try{
   const sideOpponent=page.locator(".hybrid-champion-panel.opponent");
   const sidePlayer=page.locator(".hybrid-champion-panel.player");
   assert.ok((await sidePlayer.getAttribute("class"))?.includes("is-expanded"),"Player banner initially expanded");
+  for (const [panel, surface] of [
+    [sideOpponent, ".hybrid-portrait-surface"],
+    [sidePlayer, ".hybrid-banner-fabric"]
+  ]) {
+    const faction=await panel.getAttribute("data-faction");
+    const art=await panel.locator(surface).evaluate(async el=>{
+      const image=getComputedStyle(el).backgroundImage;
+      const url=image.match(/^url\("(.*)"\)$/)?.[1];
+      if(!url)return {image,decoded:false};
+      const bitmap=new Image();
+      bitmap.src=url;
+      const decoded=await bitmap.decode().then(()=>bitmap.naturalWidth>0,()=>false);
+      return {image,decoded,blend:getComputedStyle(el,"::before").mixBlendMode};
+    });
+    assert.ok(faction && art.decoded && art.image.includes(`/champions/backgrounds/${faction}.webp`),
+      "Both champion surfaces must load their own faction's background artwork");
+    assert.equal(art.blend,"soft-light","Cloth texture must blend with the champion artwork");
+  }
   await sideOpponent.hover();
   await page.waitForTimeout(120);
   assert.ok((await sideOpponent.getAttribute("class"))?.includes("is-compact"),
@@ -125,6 +143,12 @@ try{
   await page.locator(".card-zoom-overlay .zoom-actions .primary-button").click({timeout:8000});
   const available=page.locator(".board-slot.player.drop-active");
   await available.first().waitFor({timeout:8000});
+  await page.mouse.move(1,1);
+  const restShadow=await available.first().evaluate(el=>getComputedStyle(el).boxShadow);
+  assert.ok(restShadow.includes("inset"),"A legal position must read as a recess in the stone");
+  await available.first().hover();
+  const activeShadow=await available.first().evaluate(el=>getComputedStyle(el).boxShadow);
+  assert.notEqual(activeShadow,restShadow,"Pointing at a legal position must emphasize its stone edge");
   await available.first().click();
   const flight=page.locator(".board-motion-flight .board-gs-flight-ring");
   await flight.first().waitFor({state:"attached",timeout:5500});

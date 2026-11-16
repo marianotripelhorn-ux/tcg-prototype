@@ -7,9 +7,10 @@
   --hd-crown: url("/board/ivory-ui/vida-crown.webp");
   --hd-lane-ribbon: url("/board/ivory-ui/ribbon-lanes.webp");
   --hd-score-ribbon: url("/board/ivory-ui/ribbon-score.webp");
-  --hd-shadow-contact: drop-shadow(calc(1 * var(--board-px, 1px)) calc(2 * var(--board-px, 1px)) calc(2 * var(--board-px, 1px)) #30201582);
-  --hd-shadow-cast: drop-shadow(calc(6 * var(--board-px, 1px)) calc(8 * var(--board-px, 1px)) calc(9 * var(--board-px, 1px)) #33241765);
-  --hd-shadow-raised: drop-shadow(calc(9 * var(--board-px, 1px)) calc(13 * var(--board-px, 1px)) calc(13 * var(--board-px, 1px)) #33241768);
+  --hd-shadow-contact: drop-shadow(calc(1.5 * var(--board-px, 1px)) calc(2.5 * var(--board-px, 1px)) calc(1.5 * var(--board-px, 1px)) #27160bb3);
+  --hd-shadow-low: drop-shadow(calc(4 * var(--board-px, 1px)) calc(6 * var(--board-px, 1px)) calc(5 * var(--board-px, 1px)) #30201580);
+  --hd-shadow-cast: drop-shadow(calc(8 * var(--board-px, 1px)) calc(12 * var(--board-px, 1px)) calc(10 * var(--board-px, 1px)) #33211391);
+  --hd-shadow-raised: drop-shadow(calc(13 * var(--board-px, 1px)) calc(18 * var(--board-px, 1px)) calc(15 * var(--board-px, 1px)) #33211387);
   --hd-text-shadow: calc(1 * var(--board-px, 1px)) calc(2 * var(--board-px, 1px)) calc(2 * var(--board-px, 1px)) #130b09d6;
 }
 
@@ -36,7 +37,7 @@
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .battlefield::after {
   background: var(--hd-lane-ribbon) center / 100% 100% no-repeat !important;
   clip-path: none;
-  filter: var(--hd-shadow-contact);
+  filter: var(--hd-shadow-contact) var(--hd-shadow-low);
 }
 
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-duel-tally {
@@ -79,21 +80,30 @@
   text-shadow: 0 1px 1px #fff6ddbb;
 }
 
-/* Use the new woven material while retaining each champion's faction art.
-   The crimson and gold factions can use the matching textile directly. */
+/* Legal targets read as recesses cut into the same stone. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-slot.drop-active {
+  background: linear-gradient(145deg, #8b613328, #d3a75135 45%, #ffe8b74d) !important;
+  box-shadow: inset 2px 3px 6px #50351e61, inset -1px -1px 0 #fff1cbb3, inset 0 0 0 1px #9b7138 !important;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-slot.drop-active:is(:hover, :focus-within) {
+  background: linear-gradient(145deg, #8b613336, #e6c1776b 45%, #ffe8b778) !important;
+  box-shadow: inset 2px 3px 7px #50351e70, inset -1px -1px 0 #ffefc5, inset 0 0 0 2px #9b7138 !important;
+}
+
+/* The faction artwork supplies the printed design. The HD cloth only
+   modulates its light and texture, using the original pennant silhouette. */
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-champion-panel {
   filter: var(--hd-shadow-contact) var(--hd-shadow-cast);
 }
 
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-portrait-surface {
   --hd-panel-fabric: var(--hd-compact-fabric);
-  background-image: var(--hd-faction-art);
   box-shadow: none;
 }
 
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-banner-fabric {
   --hd-panel-fabric: var(--hd-tall-fabric);
-  background-image: var(--hd-faction-art);
   clip-path: none;
   mask: var(--hd-panel-fabric) center / 100% 100% no-repeat;
   filter: none;
@@ -104,17 +114,10 @@
   position: absolute;
   inset: 0;
   background: var(--hd-panel-fabric) center / 100% 100% no-repeat;
-  filter: grayscale(1);
-  mix-blend-mode: luminosity;
-  opacity: .48;
+  filter: grayscale(1) brightness(1.2);
+  mix-blend-mode: soft-light;
+  opacity: .42;
   pointer-events: none;
-}
-
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 [data-faction="red"] .hybrid-portrait-surface::before,
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 [data-faction="saints"] .hybrid-banner-fabric::before {
-  filter: none;
-  mix-blend-mode: normal;
-  opacity: .7;
 }
 
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-banner-fabric::after {
@@ -153,7 +156,7 @@
 }
 
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .current-board-card:hover,
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-deck-object:hover,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-deck-object:is(:hover, :focus-visible, [aria-expanded="true"]),
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hand-zone .hand-card:not(:disabled):is(:hover, :focus-visible) {
   filter: var(--hd-shadow-contact) var(--hd-shadow-raised) !important;
 }
@@ -163,11 +166,16 @@
 }
 
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .battle-card {
-  filter: grayscale(.87) contrast(.92) var(--hd-shadow-contact) var(--hd-shadow-cast) !important;
+  filter: grayscale(.87) contrast(.92) var(--hd-shadow-contact) var(--hd-shadow-low) !important;
 }
 
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .battle-card:hover {
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .battle-card:is(:hover, :focus-visible),
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .current-board-card:focus-visible {
   filter: var(--hd-shadow-contact) var(--hd-shadow-raised) !important;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 :is(.arena-card-hover-preview, .arena-card-board-preview) {
+  filter: var(--hd-shadow-contact) var(--hd-shadow-raised);
 }
 
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .current-board-card .game-card,
@@ -175,7 +183,7 @@
   border: 1px solid #35271b !important;
   border-top-color: #b69a6a !important;
   border-left-color: #92805e !important;
-  box-shadow: inset -1px -1px 0 #190f07b8;
+  box-shadow: inset 1px 1px 0 #ffdc9b33, inset -1px -1px 0 #190f07b8, 1px 2px 0 #25190ec9;
 }
 
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-deck-face {
@@ -190,11 +198,5 @@
 
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-banner-fabric {
     --hd-panel-fabric: var(--hd-compact-fabric);
-  }
-
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 [data-faction="saints"] .hybrid-banner-fabric::before {
-    filter: grayscale(1);
-    mix-blend-mode: luminosity;
-    opacity: .48;
   }
 }

@@ -19,15 +19,12 @@ function ChampionPanel({
   onSelect:()=>void;
 }) {
   const champion = state.champion;
-  const bannerBackground = championBackgroundUrl(champion.faction);
+  const factionArt = {backgroundImage:`url("${championBackgroundUrl(champion.faction)}")`};
   const subtitle = championSubtitle(champion.name);
   return <section
     className={`hybrid-champion-panel ${side} ${expanded?"is-expanded":"is-compact"}`}
     data-faction={champion.faction}
-    style={{
-      "--hybrid-faction-accent":factionAccent[champion.faction],
-      "--hd-faction-art":`url("${bannerBackground}")`
-    } as CSSProperties}
+    style={{"--hybrid-faction-accent":factionAccent[champion.faction]} as CSSProperties}
   >
     <button
       type="button"
@@ -36,8 +33,8 @@ function ChampionPanel({
       aria-label={`${userLabel}: ${champion.name}. ${champion.text}. Mostrar datos del Campeón`}
       onClick={onSelect}
     >
-      <span className="hybrid-banner-fabric" aria-hidden="true"/>
-      <span className="hybrid-portrait-surface">
+      <span className="hybrid-banner-fabric" aria-hidden="true" style={factionArt}/>
+      <span className="hybrid-portrait-surface" style={factionArt}>
         <img className="hybrid-champion-art" src={championImageUrl(champion.id,true)} alt="" decoding="async"/>
         <span className="hybrid-panel-overline">{userLabel}</span>
         <span className="hybrid-mini-name">{championShortName(champion.name)}</span>
