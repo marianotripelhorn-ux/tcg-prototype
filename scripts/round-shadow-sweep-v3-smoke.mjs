@@ -304,7 +304,7 @@ try{
   assert.ok(roundVisual.shadow.includes("radial-gradient")&&roundVisual.shadow.includes("0.97"),
     "Entire ivory playing field must become almost black, not mid-grey");
   const roundOverlay=await ceremony.evaluate(el=>{
-    const actual=el.getBoundingClientRect(),stage=el.parentElement.getBoundingClientRect();
+    const actual=el.getBoundingClientRect(),stage=el.closest(".arena-main").getBoundingClientRect();
     const backdrop=getComputedStyle(el,"::before");
     return {
       leftDelta:Math.abs(actual.left-stage.left),
