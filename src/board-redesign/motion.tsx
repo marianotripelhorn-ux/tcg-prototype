@@ -128,6 +128,7 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
     const animatedCards:HTMLElement[]=[];
     const archiveTargets=new Set<HTMLElement>();
     const arrivalTimers:number[]=[];
+    let sweepTimer:number|null=null;
     const clearFx=()=>{
       animatedCards.forEach(card=>card.classList.remove("board-gs-archiving"));
       archiveTargets.forEach(target=>target.classList.remove("board-gs-archive-target"));
@@ -153,7 +154,7 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
       const laneIndex=position==="siniestra"?0:position==="trono"?1:2;
       // Travel with the left-to-right darkness, preserving each card's
       // real side/position Archive destination (never the score ribbon).
-      const delay=laneIndex*255+(side==="opponent"?0:155)+inSlot*95;
+      const delay=laneIndex*275+(side==="opponent"?0:150)+inSlot*105;
       const dx=b.left+b.width/2-(a.left+a.width/2);
       const dy=b.top+b.height/2-(a.top+a.height/2);
       const animation=card.animate([
@@ -161,13 +162,13 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
         {transform:"translate3d(0,-12px,0) scale(1.035)",opacity:1,offset:.2},
         {transform:`translate3d(${dx}px,${dy}px,0) rotate(-5deg) scale(.14)`,opacity:.45,offset:.87},
         {transform:`translate3d(${dx}px,${dy+8}px,0) rotate(-5deg) scale(.08)`,opacity:0,offset:1}
-      ],{duration:1210,easing:"cubic-bezier(.26,.73,.27,1)",delay,fill:"forwards"});
+      ],{duration:1440,easing:"cubic-bezier(.24,.69,.25,1)",delay,fill:"forwards"});
       // Archive rings respond at arrival instead of when the card leaves.
       arrivalTimers.push(window.setTimeout(()=>{
         destination.classList.remove("board-gs-archive-target");
         void destination.offsetWidth;
         destination.classList.add("board-gs-archive-target");
-      },delay+970));
+      },delay+1190));
       animations.push(animation);
     }
     // Unused hand cards are DISCARDED, not returned to the deck and not
@@ -186,10 +187,17 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
     }
     let cancelled=false;
     if(animations.length===0){done.current();return;}
-    Promise.all(animations.map(a=>a.finished.catch(()=>{}))).then(()=>{
+    // Keep the curtain mounted until its GPU transform has fully arrived at
+    // the right score. Without this clock the shadow is cut off abruptly by
+    // the faster Archive flights on sparse/early-ended rounds.
+    const curtainFinished=new Promise<void>(resolve=>{
+      sweepTimer=window.setTimeout(resolve,2640);
+    });
+    Promise.all([...animations.map(a=>a.finished.catch(()=>{})),curtainFinished]).then(()=>{
       if(!cancelled){clearFx();done.current();}
     });
-    return ()=>{cancelled=true;arrivalTimers.forEach(t=>window.clearTimeout(t));animations.forEach(a=>a.cancel());clearFx();};
+    return ()=>{cancelled=true;if(sweepTimer!==null)window.clearTimeout(sweepTimer);
+      arrivalTimers.forEach(t=>window.clearTimeout(t));animations.forEach(a=>a.cancel());clearFx();};
   },[sequenceId,reducedMotion]);
   return null;
 }
