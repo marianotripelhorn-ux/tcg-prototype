@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import type { CardDefinition, Position } from "../types";
 import type { DuelSummary, EnginePlay, GameState } from "../engine/types";
 
@@ -72,14 +72,20 @@ export function CardFlight({origin,position,children,onComplete,reducedMotion,se
     const dx=destination.x-origin.x,dy=destination.y-origin.y;
     const sx=destination.width/origin.width,sy=destination.height/origin.height;
     // A restrained rise, slight tabletop tilt and physically eased landing.
+    let holdTimer:number|null=null;
     const animation=node.animate([
       {transform:"translate3d(0,0,0) rotate(-3deg) scale(1)",filter:"drop-shadow(0 9px 12px #0008)",offset:0},
       {transform:`translate3d(${dx*.54}px,${dy*.54-29}px,0) rotate(2.8deg) scale(${(1+sx)*.57},${(1+sy)*.57})`,filter:"drop-shadow(0 24px 26px #0008)",offset:.58},
       {transform:`translate3d(${dx}px,${dy}px,0) rotate(-.9deg) scale(${sx},${sy})`,filter:"drop-shadow(0 13px 12px #0008)",offset:.91},
       {transform:`translate3d(${dx}px,${dy}px,0) rotate(0deg) scale(${sx},${sy})`,filter:"drop-shadow(0 4px 4px #0007)",offset:1}
-    ],{duration:560,easing:"cubic-bezier(.19,.8,.24,1)",fill:"forwards"});
-    animation.onfinish=()=>complete.current();
-    return ()=>{animation.onfinish=null;animation.cancel();};
+    ],{duration:770,easing:"cubic-bezier(.19,.8,.24,1)",fill:"forwards"});
+    animation.onfinish=()=>{
+      holdTimer=window.setTimeout(()=>complete.current(),230);
+    };
+    return ()=>{
+      animation.onfinish=null;animation.cancel();
+      if(holdTimer!==null)window.clearTimeout(holdTimer);
+    };
   },[origin?.x,origin?.y,origin?.width,origin?.height,position,reducedMotion,sequenceId]);
   if(!origin||reducedMotion)return null;
   return <div className="board-motion-flight" ref={el} aria-hidden="true"
@@ -137,7 +143,7 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
         {transform:"translate3d(0,-12px,0) scale(1.035)",opacity:1,offset:.2},
         {transform:`translate3d(${dx}px,${dy}px,0) rotate(-5deg) scale(.14)`,opacity:.45,offset:.87},
         {transform:`translate3d(${dx}px,${dy+8}px,0) rotate(-5deg) scale(.08)`,opacity:0,offset:1}
-      ],{duration:680,easing:"cubic-bezier(.26,.73,.27,1)",delay:i*65,fill:"forwards"});
+      ],{duration:900,easing:"cubic-bezier(.26,.73,.27,1)",delay:i*85,fill:"forwards"});
       animations.push(animation);
     }
     // An unused third hand card is discarded, never placed in an Archive.
@@ -151,7 +157,7 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
       animations.push(card.animate([
         {transform:"translate3d(0,0,0) scale(1)",opacity:1},
         {transform:`translate3d(${dx}px,${dy}px,0) rotate(12deg) scale(.25)`,opacity:0}
-      ],{duration:520,delay:140+i*50,easing:"cubic-bezier(.3,.78,.32,1)",fill:"forwards"}));
+      ],{duration:640,delay:170+i*65,easing:"cubic-bezier(.3,.78,.32,1)",fill:"forwards"}));
     }
     let cancelled=false;
     if(animations.length===0){done.current();return;}
@@ -185,7 +191,7 @@ export function DealMotion({sequenceId,reducedMotion,onComplete}:ArchiveFlightPr
         {transform:`translate3d(${dx}px,${dy}px,0) rotate(9deg) scale(.3)`,opacity:0,offset:0},
         {transform:"translate3d(0,-9px,0) rotate(-1deg) scale(1.025)",opacity:1,offset:.83},
         {transform:"translate3d(0,0,0) rotate(0deg) scale(1)",opacity:1,offset:1}
-      ],{duration:440,delay:index*90,easing:"cubic-bezier(.2,.72,.29,1)",fill:"forwards"}));
+      ],{duration:680,delay:index*105,easing:"cubic-bezier(.2,.72,.29,1)",fill:"forwards"}));
     });
     let cancelled=false;
     if(!animations.length){done.current();return;}
@@ -198,48 +204,3 @@ export function DealMotion({sequenceId,reducedMotion,onComplete}:ArchiveFlightPr
 }
 
 
-type BoardSide="player"|"opponent";
-interface BoardDamageTransferProps {
-  attacker:BoardSide;
-  victim:BoardSide;
-  position:Position;
-  reducedMotion:boolean;
-}
-/** A single restrained, physically aimed ink ribbon. It is mounted only if
- * the engine's already-resolved duel actually removed Champion Life.
- * The visible Life value is owned by GameState, never by the effect.
- */
-export function BoardDamageTransfer({
-  attacker,victim,position,reducedMotion
-}:BoardDamageTransferProps){
-  const [geometry,setGeometry]=useState<{path:string;width:number;height:number}|null>(null);
-  useLayoutEffect(()=>{
-    if(reducedMotion)return;
-    const update=()=>{
-      const root=document.querySelector(".app-shell.board-redesign-v1");
-      if(!root){setGeometry(null);return;}
-      const from=root.querySelector(
-        `.board-slot.${attacker}[data-position="${position}"] .current-board-card`
-      );
-      const to=root.querySelector(`.hybrid-life-unit.${victim} .hybrid-life-crest`);
-      const a=from?.getBoundingClientRect(),b=to?.getBoundingClientRect();
-      if(!a||!b||!a.width||!b.width){setGeometry(null);return;}
-      const x1=a.left+a.width/2,y1=a.top+a.height/2;
-      const x2=b.left+b.width/2,y2=b.top+b.height/2;
-      const cx=x1+(x2-x1)*.53,cy=y1+(y2-y1)*.53-32;
-      setGeometry({
-        path:`M ${x1.toFixed(2)} ${y1.toFixed(2)} Q ${cx.toFixed(2)} ${cy.toFixed(2)} ${x2.toFixed(2)} ${y2.toFixed(2)}`,
-        width:window.innerWidth,height:window.innerHeight
-      });
-    };
-    update();
-    window.addEventListener("resize",update);
-    return ()=>window.removeEventListener("resize",update);
-  },[attacker,victim,position,reducedMotion]);
-  if(reducedMotion||!geometry)return null;
-  return <svg className="board-gs-damage-channel" aria-hidden="true"
-    viewBox={`0 0 ${geometry.width} ${geometry.height}`} preserveAspectRatio="none">
-    <path className="board-gs-channel-under" d={geometry.path} pathLength={100}/>
-    <path className="board-gs-channel-line" d={geometry.path} pathLength={100}/>
-  </svg>;
-}
