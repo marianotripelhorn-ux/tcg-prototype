@@ -91,7 +91,7 @@
   transform-origin:100% 50%!important;
   will-change:transform,opacity;
   contain:paint;
-  animation:dl-v3-curtain-sweep 2580ms cubic-bezier(.23,.62,.22,1) both!important;
+  animation:dl-v3-curtain-sweep 1000ms cubic-bezier(.23,.62,.22,1) both!important;
 }
 /* The gentle illuminated moving boundary is a *separate* sibling so it never
  * inherits the curtain's shrinking scale. This prevents the old jagged jump. */
@@ -105,7 +105,7 @@
   transform:translate3d(-61%,0,0);
   opacity:0;
   will-change:transform,opacity;
-  animation:dl-v3-curtain-front 2580ms cubic-bezier(.23,.62,.22,1) both;
+  animation:dl-v3-curtain-front 1000ms cubic-bezier(.23,.62,.22,1) both;
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="archive"] .hybrid-duel-tally{
   animation:none!important;
@@ -116,7 +116,7 @@
   z-index:0;pointer-events:none;
   background:radial-gradient(ellipse at 55% 50%,rgba(242,241,212,.49),rgba(215,208,178,.16) 53%,transparent 80%);
   opacity:0;
-  animation:dl-v3-score-receive 2580ms ease-out both;
+  animation:dl-v3-score-receive 1000ms ease-out both;
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="archive"] .hybrid-score-values,
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="archive"] .hybrid-tally-sides{
@@ -173,7 +173,7 @@
     inset:0 0 34px 0!important;
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep{
-    animation:dl-v3-curtain-sweep 2580ms cubic-bezier(.23,.62,.22,1) both!important;
+    animation:dl-v3-curtain-sweep 1000ms cubic-bezier(.23,.62,.22,1) both!important;
   }
 }
 @media(prefers-reduced-motion:reduce){
