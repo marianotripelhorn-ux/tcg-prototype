@@ -340,13 +340,15 @@ try{
     const animation=el.getAnimations().find(a=>a.animationName==="dl-v3-curtain-sweep");
     const keyframes=animation?.effect?.getKeyframes()??[];
     return {
-      animation:s.animationName,stageRatio:el.offsetWidth/stage.width,
+      animation:s.animationName,duration:s.animationDuration,stageRatio:el.offsetWidth/stage.width,
       backdrop:s.backdropFilter,clip:s.clipPath,
       keyframes:keyframes.map(f=>({transform:f.transform,opacity:f.opacity,clipPath:f.clipPath}))
     };
   });
   assert.ok(sweepVisual.animation.includes("dl-v3-curtain-sweep"),
     "The curtain must use one continuous, GPU-friendly cinematic contraction");
+  assert.ok(parseFloat(sweepVisual.duration) <= 1.05,
+    "The curtain must finish in about a second, not the previous 2.58-second crawl");
   assert.ok(sweepVisual.stageRatio>.98&&sweepVisual.clip==="none",
     "No partial-field rectangle or polygon clipping should expose the right ivory edge");
   assert.equal(sweepVisual.backdrop,"none",
@@ -358,9 +360,12 @@ try{
   const movingFront=page.locator(".arena-stage > .board-archive-sweep-front");
   assert.equal(await movingFront.count(),1,
     "Independent bright wavefront must move smoothly alongside the dark curtain");
-  const edgeAnimation=await movingFront.evaluate(el=>getComputedStyle(el).animationName);
-  assert.ok(edgeAnimation.includes("dl-v3-curtain-front"),
-    "The moving glint should be independent of the contracting shadow");
+  const edgeAnimation=await movingFront.evaluate(el=>({
+    name:getComputedStyle(el).animationName,
+    seconds:parseFloat(getComputedStyle(el).animationDuration)
+  }));
+  assert.ok(edgeAnimation.name.includes("dl-v3-curtain-front") && edgeAnimation.seconds<=1.05,
+    "The moving glint must stay synchronized with the faster shadow");
   const tallyPulse=await page.locator(".hybrid-duel-tally").evaluate(el=>
     getComputedStyle(el,"::before").animationName);
   assert.ok(tallyPulse.includes("dl-v3-score-receive"),
