@@ -26,6 +26,7 @@ import "./animation-lab/lab.css";
 import "./animation-lab/chiral.css";
 import "./animation-lab/spectral-v3.css";
 import "./animation-lab/v4-motion.css";
+import "./animation-lab/v5-motion.css";
 
 initializeTheme();
 
