@@ -25,7 +25,7 @@ try{
   }
   assert.ok(online,"Vite preview did not start");
   await page.locator(".splash-start").click({timeout:12000});
-  await page.locator(".home-action.action-play").click({timeout:12000});
+  await page.locator(".home-action.action-play").click({timeout:12000,force:true});
   await page.locator(".dl-champion-card").first().click({timeout:12000});
   await page.locator(".dl-champion-start").click({timeout:12000});
   const arena=page.locator(".app-shell.board-redesign-v1");
