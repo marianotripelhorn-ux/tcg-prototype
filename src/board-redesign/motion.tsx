@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import type { CardDefinition, Position } from "../types";
 import type { DuelSummary, EnginePlay, GameState } from "../engine/types";
 
@@ -85,6 +85,12 @@ export function CardFlight({origin,position,children,onComplete,reducedMotion,se
   return <div className="board-motion-flight" ref={el} aria-hidden="true"
     style={{left:origin.x,top:origin.y,width:origin.width,height:origin.height}}>
     {children}
+    <span className="board-gs-flight-veil" aria-hidden="true">
+      <span className="board-gs-flight-wave"/>
+      <span className="board-gs-flight-ring outer"/>
+      <span className="board-gs-flight-ring middle"/>
+      <span className="board-gs-flight-ring inner"/>
+    </span>
   </div>;
 }
 
@@ -106,6 +112,12 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
     const arena=document.querySelector(".app-shell.board-redesign-v1 .battlefield");
     if(!arena){done.current();return;}
     const animations:Animation[]=[];
+    const animatedCards:HTMLElement[]=[];
+    const archiveTargets=new Set<HTMLElement>();
+    const clearFx=()=>{
+      animatedCards.forEach(card=>card.classList.remove("board-gs-archiving"));
+      archiveTargets.forEach(target=>target.classList.remove("board-gs-archive-target"));
+    };
     const cards=Array.from(arena.querySelectorAll<HTMLElement>(".board-slot .played-card"));
     for(let i=0;i<cards.length;i++){
       const card=cards[i];
@@ -114,6 +126,10 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
       if(!destination)continue;
       const a=card.getBoundingClientRect(),b=destination.getBoundingClientRect();
       if(!a.width||!a.height)continue;
+      card.classList.add("board-gs-archiving");
+      destination.classList.add("board-gs-archive-target");
+      animatedCards.push(card);
+      archiveTargets.add(destination);
       const dx=b.left+b.width/2-(a.left+a.width/2);
       const dy=b.top+b.height/2-(a.top+a.height/2);
       const animation=card.animate([
@@ -139,8 +155,10 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
     }
     let cancelled=false;
     if(animations.length===0){done.current();return;}
-    Promise.all(animations.map(a=>a.finished.catch(()=>{}))).then(()=>{if(!cancelled)done.current();});
-    return ()=>{cancelled=true;animations.forEach(a=>a.cancel());};
+    Promise.all(animations.map(a=>a.finished.catch(()=>{}))).then(()=>{
+      if(!cancelled){clearFx();done.current();}
+    });
+    return ()=>{cancelled=true;animations.forEach(a=>a.cancel());clearFx();};
   },[sequenceId,reducedMotion]);
   return null;
 }
@@ -156,9 +174,11 @@ export function DealMotion({sequenceId,reducedMotion,onComplete}:ArchiveFlightPr
     const source=document.querySelector<HTMLElement>(".app-shell.board-redesign-v1 .hybrid-deck-object");
     const deck=source?.getBoundingClientRect();
     const animations:Animation[]=[];
+    const clearFx=()=>cards.forEach(card=>card.classList.remove("board-gs-dealing"));
     cards.forEach((card,index)=>{
       const rect=card.getBoundingClientRect();
       if(!rect.width)return;
+      card.classList.add("board-gs-dealing");
       const dx=deck?deck.left+deck.width/2-(rect.left+rect.width/2):160;
       const dy=deck?deck.top+deck.height/2-(rect.top+rect.height/2):55;
       animations.push(card.animate([
@@ -169,8 +189,10 @@ export function DealMotion({sequenceId,reducedMotion,onComplete}:ArchiveFlightPr
     });
     let cancelled=false;
     if(!animations.length){done.current();return;}
-    Promise.all(animations.map(a=>a.finished.catch(()=>{}))).then(()=>{if(!cancelled)done.current();});
-    return ()=>{cancelled=true;animations.forEach(a=>a.cancel());};
+    Promise.all(animations.map(a=>a.finished.catch(()=>{}))).then(()=>{
+      if(!cancelled){clearFx();done.current();}
+    });
+    return ()=>{cancelled=true;animations.forEach(a=>a.cancel());clearFx();};
   },[sequenceId,reducedMotion]);
   return null;
 }
