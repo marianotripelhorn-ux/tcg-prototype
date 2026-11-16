@@ -96,12 +96,14 @@ function LifeCrest({side,life,healed}:{
   },[life]);
   return <div className={`hybrid-life-unit ${side}${change.direction?` ${change.direction}`:""}`} aria-label={`${side==="player"?"Tu Campeón":"Campeón rival"}: ${life} de 9 puntos de Vida`}>
     <span className="hybrid-life-label">{side==="player"?"TU VIDA":"VIDA RIVAL"}</span>
-    <div className="hybrid-life-crest">
+    <div className="board-gs-crest-anchor">
+      <div className="hybrid-life-crest">
+        <span className="hybrid-life-number" key={life}>{life}</span>
+        {change.direction && <span className="hybrid-life-wave" key={change.sequence} aria-hidden="true"/>}
+      </div>
       {change.direction && <span className="board-gs-crest-circles" aria-hidden="true" key={"gold-shadow-"+change.sequence}>
         <span/><span/>
       </span>}
-      <span className="hybrid-life-number" key={life}>{life}</span>
-      {change.direction && <span className="hybrid-life-wave" key={change.sequence} aria-hidden="true"/>}
     </div>
     {healed>0 && <span className="hybrid-healed-label">+{healed} RECUPERADA</span>}
   </div>;
