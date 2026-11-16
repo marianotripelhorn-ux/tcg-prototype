@@ -294,7 +294,28 @@ try{
       assert.ok(choiceVisual.widthRatio>.97&&choiceVisual.centerDelta<15,
         "Quiero must darken the whole ivory board and center the decision");
       assert.ok(choiceVisual.shadow.includes("radial-gradient"),
-        "Quiero must be a field eclipse, not a floating box");
+        "Quiero must retain the dramatic field-wide eclipse");
+      const originalBanner=await choice.locator(".board-quiero-banner").evaluate(el=>{
+        const s=getComputedStyle(el);
+        const bounds=el.getBoundingClientRect();
+        const main=el.closest(".arena-main").getBoundingClientRect();
+        const buttons=[...el.querySelectorAll("button")].map(b=>b.getBoundingClientRect());
+        return {
+          background:s.backgroundImage,
+          shape:s.clipPath,
+          color:s.borderTopColor,
+          centerDelta:Math.abs(bounds.left+bounds.width/2-(main.left+main.width/2)),
+          verticallyStacked:buttons.length===2&&buttons[1].top>buttons[0].bottom
+        };
+      });
+      assert.ok(originalBanner.background.includes("/champions/backgrounds/") &&
+        originalBanner.background.includes("linear-gradient"),
+        "Restore the original faction-textured hanging banner, not a generic new panel");
+      assert.ok(originalBanner.shape.includes("polygon") &&
+        originalBanner.color==="rgb(198, 163, 103)",
+        "Restore the original pointed bottom and warm gold border");
+      assert.ok(originalBanner.centerDelta<15&&originalBanner.verticallyStacked,
+        "Position the original banner in the center of the darkened board with stacked choices");
       await decline.click();
       assert.equal(await choice.locator(".board-quiero-selected").innerText(),"NO QUIERO",
         "The chosen refusal must briefly acknowledge the real player action");
