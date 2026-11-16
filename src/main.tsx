@@ -23,6 +23,7 @@ import "./arena-interaction-fix.css";
 import "./board-redesign/board.css";
 import "./board-redesign/motion.css";
 import "./board-redesign/gold-shadow.css";
+import "./board-redesign/refinement-v2.css";
 import "./animation-lab/lab.css";
 import "./animation-lab/chiral.css";
 import "./animation-lab/spectral-v3.css";
