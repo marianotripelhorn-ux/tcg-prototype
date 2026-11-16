@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { championBackgroundUrl, championImageUrl, championShortName, championSubtitle } from "../championArtwork";
 import { DEFAULT_PLAYER_NAME } from "../playerProfile";
 import { positionLabels, positions } from "../data";
@@ -13,10 +13,10 @@ const factionAccent:Record<string,string> = {
 };
 
 function ChampionPanel({
-  side, state, userLabel, expanded, onExpand, onHoverEnd
+  side, state, userLabel, expanded, onSelect
 }:{
   side:Side;state:PlayerState;userLabel:string;expanded:boolean;
-  onExpand:()=>void;onHoverEnd:()=>void;
+  onSelect:()=>void;
 }) {
   const champion = state.champion;
   const bannerBackground = championBackgroundUrl(champion.faction);
@@ -24,16 +24,13 @@ function ChampionPanel({
   return <section
     className={`hybrid-champion-panel ${side} ${expanded?"is-expanded":"is-compact"}`}
     style={{"--hybrid-faction-accent":factionAccent[champion.faction]} as CSSProperties}
-    onPointerLeave={event=>{if(event.pointerType==="mouse")onHoverEnd();}}
   >
     <button
       type="button"
       className="hybrid-champion-trigger"
       aria-expanded={expanded}
       aria-label={`${userLabel}: ${champion.name}. ${champion.text}. Mostrar datos del Campeón`}
-      onPointerEnter={event=>{if(event.pointerType==="mouse")onExpand();}}
-      onFocus={onExpand}
-      onClick={onExpand}
+      onClick={onSelect}
     >
       <span className="hybrid-banner-fabric" aria-hidden="true"
         style={{backgroundImage:`url("${bannerBackground}")`}}/>
@@ -53,8 +50,9 @@ function ChampionPanel({
         <span className="hybrid-banner-divider" />
         <span className="hybrid-banner-ability">{champion.text}</span>
       </span>
-      <img className="hybrid-champion-figure" src={championImageUrl(champion.id)}
-        alt="" aria-hidden="true" decoding="async"/>
+      <span className="hybrid-champion-figure-window" aria-hidden="true">
+        <img className="hybrid-champion-figure" src={championImageUrl(champion.id)} alt="" decoding="async"/>
+      </span>
       <span className="board-gs-banner-overlay" aria-hidden="true">
         <span className="board-gs-banner-wave"/>
         <span className="board-gs-banner-circle outer"/>
@@ -72,11 +70,9 @@ export function HybridSidebar({player,opponent,playerName}:{
   const ownName=playerName.trim()&&playerName!=="JUGADOR"?playerName.trim():DEFAULT_PLAYER_NAME;
   return <div className={`hybrid-sidebar-inner show-${expanded}`}>
     <ChampionPanel side="opponent" state={opponent} userLabel="RIVAL"
-      expanded={expanded==="opponent"} onExpand={()=>setExpanded("opponent")}
-      onHoverEnd={()=>setExpanded("player")}/>
+      expanded={expanded==="opponent"} onSelect={()=>setExpanded("opponent")}/>
     <ChampionPanel side="player" state={player} userLabel={ownName}
-      expanded={expanded==="player"} onExpand={()=>setExpanded("player")}
-      onHoverEnd={()=>{}}/>
+      expanded={expanded==="player"} onSelect={()=>setExpanded("player")}/>
     <span className="hybrid-sidebar-base" aria-hidden="true">DAGGERLIGHT <i>✧</i> QUIRALIDAD</span>
   </div>;
 }
@@ -91,7 +87,7 @@ function LifeCrest({side,life,healed}:{
     const direction=life<previousLife.current?"is-damaged":"is-healed";
     previousLife.current=life;
     setChange(current=>({direction,sequence:current.sequence+1}));
-    const timer=window.setTimeout(()=>setChange(current=>({...current,direction:""})),1100);
+    const timer=window.setTimeout(()=>setChange(current=>({...current,direction:""})),1450);
     return ()=>window.clearTimeout(timer);
   },[life]);
   return <div className={`hybrid-life-unit ${side}${change.direction?` ${change.direction}`:""}`} aria-label={`${side==="player"?"Tu Campeón":"Campeón rival"}: ${life} de 9 puntos de Vida`}>
@@ -160,7 +156,9 @@ export function HybridCommandRail({
   else if (game.phase==="awaiting_player") status="Tu turno · seleccioná una carta y su posición.";
   else if (game.phase==="finished") status="Partida terminada.";
 
-  return <section className="hybrid-command-rail" aria-label="Comandos del tablero">
+  const bannerBackground=championBackgroundUrl(game.player.champion.faction);
+  return <section className="hybrid-command-rail" aria-label="Comandos del tablero"
+    style={{backgroundImage:`linear-gradient(90deg,#080b08ef,#111810d8 50%,#070a08ed),url("${bannerBackground}")`}}>
     <div className="hybrid-command-left">
       <details className="hybrid-archive-details">
         <summary title="Ver cantidades de los seis Archivos">ARCHIVOS <span>⌄</span></summary>
@@ -185,15 +183,37 @@ export function HybridCommandRail({
     </div>
     <div className="hybrid-command-status" role="status" aria-live="polite">{status}</div>
     {game.phase==="awaiting_quiero" && !duelResolving
-      ? <div className="hybrid-quiero-actions">
-          <button type="button" onClick={()=>onChooseQuiero(false)}>NO QUIERO</button>
+      ? <div className="hybrid-quiero-actions" role="group" aria-label="Decisión de tercer duelo"
+          style={{backgroundImage:`linear-gradient(180deg,#080a08a8,#11180dbf),url("${bannerBackground}")`}}>
+          <span className="hybrid-quiero-overline">TERCER DUELO</span>
+          <strong>¿QUERÉS CONTINUAR?</strong>
+          <span className="hybrid-quiero-rule" aria-hidden="true"/>
           <button type="button" className="is-primary" onClick={()=>onChooseQuiero(true)}>QUIERO</button>
+          <button type="button" onClick={()=>onChooseQuiero(false)}>NO QUIERO</button>
         </div>
       : <div className="hybrid-command-round">RONDA <b>{game.round}</b> · DUELO <b>{game.turn}/3</b></div>}
   </section>;
 }
 
 export function HybridEngraving(){
-  return <div className="hybrid-engraving is-reference-compass" aria-hidden="true"
+  const engraving=useRef<HTMLDivElement>(null);
+  useLayoutEffect(()=>{
+    const node=engraving.current;
+    const root=node?.closest(".arena-main");
+    const field=root?.querySelector(".battlefield");
+    if(!node||!root||!field)return;
+    const align=()=>{
+      const area=root.getBoundingClientRect();
+      const ribbon=field.getBoundingClientRect();
+      const offset=(ribbon.left+ribbon.width/2)-(area.left+area.width/2);
+      node.style.setProperty("--hybrid-compass-offset",`${Math.max(-70,Math.min(70,offset)).toFixed(1)}px`);
+    };
+    align();
+    const observer=new ResizeObserver(align);
+    observer.observe(root);observer.observe(field);
+    window.addEventListener("resize",align);
+    return ()=>{observer.disconnect();window.removeEventListener("resize",align);};
+  },[]);
+  return <div ref={engraving} className="hybrid-engraving is-reference-compass" aria-hidden="true"
     style={{backgroundImage:`url("${import.meta.env.BASE_URL}board/arena-compass-source.png")`}}/>;
 }
