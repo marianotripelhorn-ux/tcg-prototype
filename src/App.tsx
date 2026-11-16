@@ -1,6 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ArchiveFlight, CardFlight, DealMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
 import type { BoardMotionSequence } from "./board-redesign/motion";
+import { DUEL_BEATS, DUEL_FINISH_MS, duelPowerReasons, powerIsRevealed } from "./board-redesign/duelChoreography";
+import type { DuelBeat } from "./board-redesign/duelChoreography";
+import { playDuelCue, unlockDuelAudio } from "./board-redesign/duelAudio";
 import { disableManifestations } from "./board-redesign/disableManifestations";
 import Tutorial from "./Tutorial";
 import { TUTORIAL_MATCH } from "./onboarding";
@@ -170,18 +173,23 @@ export function CardFace({
 }
 
 
-function DuelPowerCard({played,side}:{played:EnginePlay;side:"player"|"opponent"}) {
-  const [resolved,setResolved]=useState(false);
+function DuelPowerCard({played,side,beat,outcome}:{
+  played:EnginePlay;side:"player"|"opponent";beat:DuelBeat;outcome:"player"|"opponent"|"draw";
+}) {
   const printed=played.card.power;
   const final=played.finalPower??printed;
   const delta=final-printed;
+  const resolved=powerIsRevealed(beat,side);
+  const reasons=duelPowerReasons(played);
   const effect=playEffectFeedback(played);
-  useEffect(()=>{
-    const timer=window.setTimeout(()=>setResolved(true),side==="player"?980:1270);
-    return ()=>window.clearTimeout(timer);
-  },[played,side]);
+  const hasImpact=beat==="impact"||beat==="result";
+  const role=hasImpact&&outcome!=="draw"?(outcome===side?" is-duel-winner":" is-duel-loser"):"";
   return (
-    <div className={"duel-showcase-card"+(resolved?" power-resolved":"")+(delta>0?" board-gs-gain":delta<0?" board-gs-loss":"")} aria-label={`${played.card.name}, Poder ${printed} pasa a ${final}`}>
+    <div className={"duel-showcase-card duel-choreo-side-"+side+role+
+      (resolved?" power-resolved":"")+
+      (delta>0?" board-gs-gain":delta<0?" board-gs-loss":"")}
+      data-duel-side={side} data-power-state={resolved?"final":"printed"}
+      aria-label={played.card.name+", Poder "+(resolved?final:printed)}>
       <span className="duel-showcase-side">{side==="player"?"TU CARTA":"RIVAL"}</span>
       <div className="duel-showcase-face">
         <CardFace card={played.card}/>
@@ -194,20 +202,22 @@ function DuelPowerCard({played,side}:{played:EnginePlay;side:"player"|"opponent"
         <div className={"duel-showcase-power"+(delta<0?" is-loss":delta>0?" is-gain":" is-neutral")} aria-live="off">
           <small>PODER</small>
           <strong key={resolved?"final":"printed"}>{resolved?final:printed}</strong>
-          {delta!==0&&<span className="duel-showcase-delta">{formatPowerDelta(played)}</span>}
+          {resolved&&delta!==0&&<span className="duel-showcase-delta">{formatPowerDelta(played)}</span>}
         </div>
       </div>
-      <div className="duel-showcase-details">
-        <span className="duel-showcase-cardname">{played.card.name}</span>
-        {effect==="inactive"&&<span className="duel-showcase-failed">{played.card.effect==="augury_match3"?"AUGURIO FALLIDO":"HABILIDAD NO ACTIVADA"}</span>}
-        {effect==="activated"&&<span className="duel-showcase-activated">HABILIDAD ACTIVADA</span>}
-      </div>
+      {resolved && <div className="duel-choreo-causes" title={(played.notes??[]).join(" · ")}>
+        {reasons.visible.map((note,index)=><span key={index}
+          className={note.startsWith("−")||note.startsWith("-")?"is-penalty":note.startsWith("+")?"is-bonus":"is-neutral"}>
+          {note}</span>)}
+        {reasons.hidden>0&&<span className="is-neutral">+{reasons.hidden} efectos más</span>}
+        {reasons.visible.length===0&&effect==="inactive"&&<span className="is-neutral">HABILIDAD NO ACTIVADA</span>}
+      </div>}
     </div>
   );
 }
 
-function DuelCardsPresentation({duel,onAdvance,auguryEvents,outcome=null}:{
-  duel:DuelSummary;onAdvance:()=>void;auguryEvents:string[];
+function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null}:{
+  duel:DuelSummary;onAdvance:()=>void;auguryEvents:string[];beat:DuelBeat;
   outcome?:"player"|"opponent"|"draw"|null;
 }) {
   const overlayRef=useRef<HTMLDivElement>(null);
@@ -244,20 +254,28 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents,outcome=null}:{
     });
     return ()=>animated.forEach(animation=>animation.cancel());
   },[duel]);
+  const comparing=beat==="compare"||beat==="impact";
+  const outcomeText=outcome==="player"?"VICTORIA":outcome==="opponent"?"DERROTA":"EMPATE";
   return (
-    <div ref={overlayRef} className={"duel-showcase-overlay"+(outcome?" is-board-outcome":"")} role="dialog" aria-modal="true" aria-label="Resolución de Poder de las cartas">
-      <span className="duel-showcase-heading">DUELO {duel.turn} · {outcome?"RESULTADO":"RESOLUCIÓN DE PODER"}</span>
-      {outcome && <div className={"duel-showcase-outcome duel-showcase-outcome-"+outcome}
-        role="status" aria-live="polite">
-        {outcome==="player"?"VICTORIA":outcome==="opponent"?"DERROTA":"EMPATE"}
-      </div>}
+    <div ref={overlayRef} data-duel-beat={beat}
+      className={"duel-showcase-overlay duel-choreo duel-beat-"+beat+(outcome?" is-board-outcome":"")}
+      role="dialog" aria-modal="true" aria-label="Resolución de Poder de las cartas">
+      <span className="duel-showcase-heading">DUELO {duel.turn} · {outcome?"RESULTADO":comparing?"PODER FINAL":"RESOLUCIÓN DE PODER"}</span>
+      {outcome&&<div className={"duel-showcase-outcome duel-showcase-outcome-"+outcome}
+        role="status" aria-live="polite">{outcomeText}</div>}
       <div className="duel-showcase-pair">
-        <DuelPowerCard played={duel.playerPlay} side="player"/>
+        <DuelPowerCard played={duel.playerPlay} side="player" beat={beat} outcome={duel.outcome}/>
         <span className="duel-showcase-versus" aria-hidden="true">VS</span>
-        <DuelPowerCard played={duel.opponentPlay} side="opponent"/>
+        <DuelPowerCard played={duel.opponentPlay} side="opponent" beat={beat} outcome={duel.outcome}/>
       </div>
-      {auguryEvents.length>0&&<div className="duel-showcase-events">{auguryEvents.map((event,index)=><span key={index}>{event}</span>)}</div>}
-      <button type="button" className="duel-showcase-skip" onClick={onAdvance}>{outcome?"OMITIR ANIMACIÓN":"SALTAR A RESULTADO →"}</button>
+      {comparing&&<div className="duel-choreo-comparison" role="status">
+        PODER FINAL · {duel.playerPlay.finalPower??duel.playerPlay.card.power} — {duel.opponentPlay.finalPower??duel.opponentPlay.card.power}
+      </div>}
+      {(beat==="compare"||beat==="impact"||beat==="result")&&auguryEvents.length>0&&
+        <div className="duel-showcase-events">{auguryEvents.map((event,index)=><span key={index}>{event}</span>)}</div>}
+      <button type="button" className="duel-showcase-skip" onClick={onAdvance}>
+        {outcome?"CONTINUAR →":"SALTAR A RESULTADO →"}
+      </button>
     </div>
   );
 }
@@ -554,6 +572,12 @@ export default function App() {
   }
   const [preDuel,setPreDuel]=useState<DuelPublicSnapshot|null>(null);
   const [duelStep,setDuelStep]=useState<"cards"|"result">("cards");
+  const [duelBeat,setDuelBeat]=useState<DuelBeat>("approach");
+  const duelTimelineTimers=useRef<number[]>([]);
+  const [audioEnabled,setAudioEnabled]=useState(()=>{
+    try{return window.localStorage.getItem("daggerlight-duel-sfx")!=="off";}
+    catch{return true;}
+  });
   const [finalStep,setFinalStep]=useState<"ceremony"|"actions">("ceremony");
   const [duelAuguries,setDuelAuguries]=useState<string[]>([]);
   const previewTimer=useRef<number|null>(null);
@@ -577,6 +601,8 @@ export default function App() {
   );
 
   function clearPreviewTimer() {
+    duelTimelineTimers.current.forEach(timer=>window.clearTimeout(timer));
+    duelTimelineTimers.current=[];
     if (previewTimer.current!==null) {
       window.clearTimeout(previewTimer.current);
       previewTimer.current=null;
@@ -619,7 +645,12 @@ export default function App() {
   function showDuelResult() {
     clearPreviewTimer();
     setDuelStep("result");
-    previewTimer.current=window.setTimeout(finishDuelPresentation,isReducedMotion()?180:boardRedesign?1470:1400);
+    if(boardRedesign){
+      setDuelBeat("result");
+      duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,isReducedMotion()?430:1280));
+    }else{
+      previewTimer.current=window.setTimeout(finishDuelPresentation,isReducedMotion()?180:1400);
+    }
   }
 
   function persistTurn(next:GameState) {
@@ -773,8 +804,37 @@ export default function App() {
     }
     finishingMatch.current=finished;
     setDuelStep("cards");
+    setDuelBeat("approach");
     setDuelPreview(duel);
-    previewTimer.current=window.setTimeout(showDuelResult,isReducedMotion()?220:boardRedesign?2160:2150);
+    if(boardRedesign){
+      if(isReducedMotion()){
+        duelTimelineTimers.current.push(window.setTimeout(()=>{
+          setDuelBeat("result");
+          setDuelStep("result");
+        },90));
+        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,940));
+      }else{
+        playDuelCue("rise",audioEnabled);
+        DUEL_BEATS.slice(1).forEach(({at,beat})=>{
+          duelTimelineTimers.current.push(window.setTimeout(()=>{
+            setDuelBeat(beat);
+            if(beat==="player-power"||beat==="opponent-power"){
+              const play=beat==="player-power"?duel.playerPlay:duel.opponentPlay;
+              const delta=(play.finalPower??play.card.power)-play.card.power;
+              if(delta!==0)playDuelCue(delta>0?"gain":"loss",audioEnabled);
+            }
+            if(beat==="impact"&&duel.outcome!=="draw")playDuelCue("impact",audioEnabled);
+            if(beat==="result"){
+              setDuelStep("result");
+              playDuelCue(duel.outcome==="player"?"victory":duel.outcome==="opponent"?"defeat":"draw",audioEnabled);
+            }
+          },at));
+        });
+        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,DUEL_FINISH_MS));
+      }
+    }else{
+      previewTimer.current=window.setTimeout(showDuelResult,isReducedMotion()?220:2150);
+    }
   }
 
   function useSpecial(kind:"relic"|"symmetry",position?:Position,target?:CopyTarget) {
@@ -790,6 +850,7 @@ export default function App() {
   function playCard(handIndex:number, position:Position, originOverride?:ReturnType<typeof handCardRect>) {
     if (!game || game.phase!=="awaiting_player" || duelPreview || boardMotionRef.current) return;
     if (!legalPositions(game.player).includes(position)) return;
+    if(boardRedesign && audioEnabled)unlockDuelAudio();
     setPreDuel({
       round:game.round,
       playerLife:game.player.life,
@@ -1032,6 +1093,15 @@ export default function App() {
               {game.aiDifficulty==="easy"?"FÁCIL":game.aiDifficulty==="hard"?"DIFÍCIL":"NORMAL"}
             </span>
             <ThemeToggle compact/>
+            {boardRedesign&&<button type="button" className="duel-sfx-toggle"
+              aria-pressed={audioEnabled}
+              title={audioEnabled?"Silenciar sonidos de duelo":"Activar sonidos de duelo"}
+              onClick={()=>{
+                const next=!audioEnabled;
+                setAudioEnabled(next);
+                try{window.localStorage.setItem("daggerlight-duel-sfx",next?"on":"off");}catch{}
+                if(next)unlockDuelAudio();
+              }}>{audioEnabled?"SONIDO ON":"SONIDO OFF"}</button>}
             {(game.player.champion.faction==="ivory"||game.opponent.champion.faction==="ivory") &&
               <div className="arena-augury-control">
                 <button className="arena-icon-button" type="button" title="Consultar Augurio"
@@ -1090,10 +1160,11 @@ export default function App() {
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
           {duelPreview && (boardRedesign
             ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries}
-                outcome={duelStep==="result"?duelPreview.outcome:null}
+                beat={duelBeat} outcome={duelStep==="result"?duelPreview.outcome:null}
                 onAdvance={duelStep==="result"?finishDuelPresentation:showDuelResult}/>
             : duelStep==="cards"
-              ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries} onAdvance={showDuelResult}/>
+              ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries}
+                  beat="result" onAdvance={showDuelResult}/>
               : <button type="button" className={"duel-cinematic duel-cinematic-"+duelPreview.outcome} onClick={finishDuelPresentation} aria-label="Saltar animación del resultado">
                 <span className="duel-cinematic-ring" aria-hidden="true"/>
                 <span className="duel-cinematic-ring second" aria-hidden="true"/>
@@ -1161,6 +1232,7 @@ export default function App() {
           sequenceId={boardMotion.id} origin={boardMotion.origin}
           position={boardMotion.duel.playerPlay.position}
           reducedMotion={isReducedMotion()}
+          onLand={()=>playDuelCue("land",audioEnabled)}
           onComplete={()=>{
             const active=boardMotionRef.current;
             if(!active || active.id!==boardMotion.id || active.phase!=="flight")return;
