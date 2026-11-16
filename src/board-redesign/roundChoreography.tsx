@@ -58,13 +58,10 @@ export function RoundTransition({sequenceId,reducedMotion,onComplete,summary}:Ti
  * This never implies that Archive cards are deposited in the score panel.
  */
 export function ArchiveSweep() {
-  // Two independent compositor surfaces: a right-anchored dark curtain
-  // that contracts smoothly, and a sweeping edge that tracks its retreat.
-  // Avoid animating clip-path polygons or backdrop-filter every frame.
-  return <>
-    <div className="board-archive-sweep" aria-hidden="true"/>
-    <div className="board-archive-sweep-front" aria-hidden="true"/>
-  </>;
+  // One moving surface, including its own luminous edge. A single 650ms
+  // transform carries both together; separate animations drift and stutter.
+  // Engine-owned Archive cards still travel to their actual positions.
+  return <div className="board-archive-sweep" aria-hidden="true"/>;
 }
 
 export function ArchiveReceiptTransition({sequenceId,reducedMotion,onComplete}:TimedProps) {
