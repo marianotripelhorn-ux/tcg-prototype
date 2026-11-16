@@ -154,7 +154,7 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
       const laneIndex=position==="siniestra"?0:position==="trono"?1:2;
       // Travel with the left-to-right darkness, preserving each card's
       // real side/position Archive destination (never the score ribbon).
-      const delay=laneIndex*275+(side==="opponent"?0:150)+inSlot*105;
+      const delay=laneIndex*110+(side==="opponent"?0:75)+inSlot*55;
       const dx=b.left+b.width/2-(a.left+a.width/2);
       const dy=b.top+b.height/2-(a.top+a.height/2);
       const animation=card.animate([
@@ -162,13 +162,13 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
         {transform:"translate3d(0,-12px,0) scale(1.035)",opacity:1,offset:.2},
         {transform:`translate3d(${dx}px,${dy}px,0) rotate(-5deg) scale(.14)`,opacity:.45,offset:.87},
         {transform:`translate3d(${dx}px,${dy+8}px,0) rotate(-5deg) scale(.08)`,opacity:0,offset:1}
-      ],{duration:1440,easing:"cubic-bezier(.24,.69,.25,1)",delay,fill:"forwards"});
+      ],{duration:790,easing:"cubic-bezier(.24,.69,.25,1)",delay,fill:"forwards"});
       // Archive rings respond at arrival instead of when the card leaves.
       arrivalTimers.push(window.setTimeout(()=>{
         destination.classList.remove("board-gs-archive-target");
         void destination.offsetWidth;
         destination.classList.add("board-gs-archive-target");
-      },delay+1190));
+      },delay+625));
       animations.push(animation);
     }
     // Unused hand cards are DISCARDED, not returned to the deck and not
@@ -191,7 +191,7 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
     // the right score. Without this clock the shadow is cut off abruptly by
     // the faster Archive flights on sparse/early-ended rounds.
     const curtainFinished=new Promise<void>(resolve=>{
-      sweepTimer=window.setTimeout(resolve,2640);
+      sweepTimer=window.setTimeout(resolve,1070);
     });
     Promise.all([...animations.map(a=>a.finished.catch(()=>{})),curtainFinished]).then(()=>{
       if(!cancelled){clearFx();done.current();}
@@ -224,7 +224,7 @@ export function DealMotion({sequenceId,reducedMotion,onComplete}:ArchiveFlightPr
         {transform:`translate3d(${dx}px,${dy}px,0) rotate(9deg) scale(.3)`,opacity:0,offset:0},
         {transform:"translate3d(0,-9px,0) rotate(-1deg) scale(1.025)",opacity:1,offset:.83},
         {transform:"translate3d(0,0,0) rotate(0deg) scale(1)",opacity:1,offset:1}
-      ],{duration:940,delay:index*155,easing:"cubic-bezier(.2,.72,.29,1)",fill:"forwards"}));
+      ],{duration:700,delay:index*110,easing:"cubic-bezier(.2,.72,.29,1)",fill:"forwards"}));
     });
     let cancelled=false;
     if(!animations.length){done.current();return;}
