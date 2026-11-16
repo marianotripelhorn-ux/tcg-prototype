@@ -298,7 +298,9 @@ try{
       await decline.click();
       assert.equal(await choice.locator(".board-quiero-selected").innerText(),"NO QUIERO",
         "The chosen refusal must briefly acknowledge the real player action");
-      console.log("PASS: real 0–2 Quiero choice, full-field stage and NO QUIERO acknowledgment");
+      await choice.waitFor({state:"detached",timeout:4000});
+      await page.locator('main[data-board-phase="round"]').waitFor({state:"attached",timeout:4000});
+      console.log("PASS: real 0–2 Quiero choice, confirmed NO QUIERO and genuine round closure");
     }else{
       await page.locator(".hand-zone .hand-card").first().click();
       await page.locator(".card-zoom-overlay .zoom-actions .primary-button").click({timeout:10000});
