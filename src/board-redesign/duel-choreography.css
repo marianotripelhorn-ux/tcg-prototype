@@ -69,10 +69,10 @@
   opacity:0;transition:opacity .18s ease;
 }
 :root[data-theme] .app-shell.board-redesign-v1 .duel-beat-impact .is-duel-winner .duel-showcase-face{
-  animation:duel-winning-card .47s cubic-bezier(.14,.79,.25,1) both;
+  animation:duel-winning-card .32s cubic-bezier(.14,.79,.25,1) both;
 }
 :root[data-theme] .app-shell.board-redesign-v1 .duel-beat-impact .is-duel-loser .duel-showcase-face{
-  animation:duel-losing-card .52s cubic-bezier(.2,.7,.24,1) both;
+  animation:duel-losing-card .32s cubic-bezier(.2,.7,.24,1) both;
 }
 :root[data-theme] .app-shell.board-redesign-v1 .duel-beat-impact .is-duel-loser .duel-showcase-power{
   filter:grayscale(.55) brightness(.75);transition:filter .22s ease;
