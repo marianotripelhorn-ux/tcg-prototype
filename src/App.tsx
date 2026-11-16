@@ -1239,12 +1239,12 @@ export default function App() {
           </aside>
           <div className="arena-stage">
             <span className="arena-visually-hidden" role="status">{turnText}</span>
-            {hoveredBoardCard && !duelPreview && (
+            {hoveredBoardCard && !duelPreview && !boardMotion && (
               <div className="arena-card-board-preview" aria-hidden="true">
                 <CardFace card={hoveredBoardCard}/>
               </div>
             )}
-            {hoveredHandIndex!==null && hand[hoveredHandIndex] && !drag && !handExpanded && !duelPreview && (
+            {hoveredHandIndex!==null && hand[hoveredHandIndex] && !drag && !handExpanded && !duelPreview && !boardMotion && (
               <div className="arena-card-hover-preview" aria-hidden="true">
                 <CardFace card={hand[hoveredHandIndex]}/>
               </div>
