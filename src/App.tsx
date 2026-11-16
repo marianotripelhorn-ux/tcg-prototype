@@ -1285,9 +1285,11 @@ export default function App() {
           <div className="arena-stage">
             <span className="arena-visually-hidden" role="status">{turnText}</span>
             {showQuieroChoice&&<QuieroChoiceStage
-              score={game.duelScore} selected={quieroChoice} onChoose={chooseQuiero}/>}
+              score={game.duelScore} selected={quieroChoice} onChoose={chooseQuiero}
+              bannerImage={championBackgroundUrl(game.player.champion.faction)}/>}
             {showRivalQuiero&&boardMotion&&<RivalQuieroStage
               reducedMotion={isReducedMotion()}
+              bannerImage={championBackgroundUrl(game.opponent.champion.faction)}
               onComplete={()=>{
                 const current=boardMotionRef.current;
                 if(current?.id===boardMotion.id&&current.phase==="quiero-ai")setMotion(null);
