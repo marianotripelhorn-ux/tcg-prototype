@@ -165,7 +165,7 @@ try{
     "Both real final Power values must be visible at the result");
   assert.equal(await duel.locator(".duel-effect-column").count(),2,
     "The two outside explanation areas must survive until the outcome");
-  await page.screenshot({path:"/tmp/daggerlight-duel-v1-1-focused.png",fullPage:true});
+  // Do not interrupt a timed duel with an expensive software-rendered screenshot.
   assert.equal(await page.locator(".board-gs-damage-channel").count(),0,
     "The old line traveling to the Champion Life crest must be removed");
   assert.equal(await page.locator(".duel-cinematic").count(),0,
@@ -213,7 +213,14 @@ try{
   }
 
   assert.deepEqual(pageErrors,[],"The real playable board must not throw browser errors");
-  await page.screenshot({path:"/tmp/daggerlight-duel-v1-1-returned.png",fullPage:true});
+  // Screenshot capture is optional in software-rendered headless Chrome. It
+  // must never fail a fully verified gameplay sequence.
+  try {
+    await page.screenshot({path:"/tmp/daggerlight-duel-v1-1-returned.png",
+      fullPage:false,animations:"disabled",timeout:7500});
+  } catch(error) {
+    console.warn("Optional screenshot skipped:",error instanceof Error?error.message.slice(0,140):String(error));
+  }
   console.log("PASS: Duel Presentation v1.1: real AI match, subtle focus, outer reasons, no VS and return to board");
 }finally{
   await browser.close();
