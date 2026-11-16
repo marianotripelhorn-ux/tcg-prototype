@@ -28,8 +28,24 @@ try{
   // click handlers after mounting instead of fighting menu transform stability.
   await page.locator(".splash-start").evaluate(el=>el.click());
   await page.locator(".home-action.action-play").waitFor({state:"attached",timeout:15000});
-  await page.locator(".home-action.action-play").evaluate(el=>el.click());
-  await page.locator(".dl-champion-card").first().waitFor({state:"attached",timeout:15000});
+  // The homepage and Champion picker have large entrance transitions.
+  // Headless CI can mount a home button before its splash hand-off settles.
+  // Retry only the real Play button, never inject fake gameplay state.
+  for(let attempt=0;attempt<3;attempt++){
+    if(await page.locator(".dl-champion-card").count())break;
+    const play=page.locator(".home-action.action-play");
+    if(await play.count())await play.evaluate(el=>el.click());
+    try{
+      await page.locator(".dl-champion-card").first().waitFor({state:"attached",timeout:6500});
+      break;
+    }catch(error){
+      if(attempt===2){
+        const text=await page.locator("body").innerText().catch(()=>"");
+        throw new Error("Could not reach Champion picker. Page: "+
+          text.slice(0,550)+"; JS errors: "+pageErrors.join(" | ")+"; "+String(error));
+      }
+    }
+  }
   await page.locator(".dl-champion-card").first().evaluate(el=>el.click());
   await page.locator(".dl-champion-start").waitFor({state:"attached",timeout:15000});
   await page.locator(".dl-champion-start").evaluate(el=>el.click());
