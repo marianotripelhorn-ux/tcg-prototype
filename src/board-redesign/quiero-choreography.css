@@ -1,0 +1,202 @@
+/*
+ * DAGGERLIGHT / QUIERO — NO QUIERO: FIELD CHOREOGRAPHY
+ * Approved React Board v3, no pop-up plaques and no duplicate controls.
+ * All visible states follow GameState / RoundSummary, never heuristics.
+ */
+
+/* Center round scores on the full ivory playing field, INCLUDING its left
+ * background and right scoreboard—not in a reduced-width padding column. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition {
+  padding:0!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  align-items:center!important;justify-items:center!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition .board-round-ceremony {
+  margin:0!important;padding:0 14px!important;
+  justify-self:center!important;align-self:center!important;
+  text-align:center!important;
+  width:min(100%,680px)!important;max-width:min(100%,680px)!important;
+  box-sizing:border-box;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition .board-round-ceremony > * {
+  text-align:center!important;
+}
+
+/* A decision covers the actual ivory field; it is not a floating modal box. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-quiero-stage {
+  position:absolute!important;
+  inset:0 0 34px -20.5%;
+  z-index:70;pointer-events:auto;
+  display:grid;place-items:center;
+  isolation:isolate;
+  color:#fffdf4;
+  overflow:hidden;
+  background:transparent!important;
+  border:0!important;box-shadow:none!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-quiero-stage::before {
+  content:"";position:absolute;inset:0;z-index:-1;
+  background:radial-gradient(ellipse 90% 95% at 50% 44%,
+    rgba(9,14,18,.92) 0%,rgba(4,8,12,.965) 65%,rgba(2,5,8,.98) 100%);
+  opacity:1;
+  animation:dl-quiero-eclipse-in .28s ease-out both;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-quiero-stage="choice"] .arena-sidebar,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-quiero-stage="rival"] .arena-sidebar {
+  z-index:75!important; /* crisp Champion panels above the darkened ivory */
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-content {
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:min(100%,790px);box-sizing:border-box;
+  gap:clamp(10px,1.8dvh,20px);
+  padding:24px clamp(12px,3vw,50px);
+  margin:0;
+  text-align:center!important;
+  color:#fffdf5;
+  background:none!important;border:0!important;box-shadow:none!important;
+  animation:dl-quiero-content-enter .45s cubic-bezier(.16,.75,.28,1) both;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-kicker {
+  font:850 clamp(11px,1.05vw,15px)/1.2 Arial,sans-serif;
+  letter-spacing:.2em;text-transform:uppercase;color:#eff0ec;
+  text-shadow:0 2px 10px #000,0 0 15px #000;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-score {
+  display:flex;justify-content:center;align-items:center;
+  gap:clamp(20px,4vw,55px);
+  font:400 clamp(65px,8.8vw,142px)/.95 var(--board-display,Arial,sans-serif);
+  font-variant-numeric:tabular-nums;
+  color:#fffdf6;
+  text-shadow:0 3px 14px #000,0 0 30px #000;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-score i {
+  font:350 .5em/1 Arial,sans-serif;color:#dcd9cd;font-style:normal;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-title {
+  margin:0;padding:0;
+  max-width:100%;
+  color:#fff;
+  font:400 clamp(19px,2.2vw,32px)/1.13 var(--board-display,Arial,sans-serif);
+  letter-spacing:-.025em;
+  text-shadow:0 2px 12px #000,0 0 19px #000;
+  text-wrap:balance;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-description {
+  margin:0;
+  color:#e5e7e2;
+  font:550 clamp(12px,1.05vw,15px)/1.4 Arial,sans-serif;
+  text-shadow:0 2px 9px #000;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-choices {
+  display:flex;align-items:stretch;justify-content:center;
+  flex-wrap:wrap;gap:clamp(10px,1.7vw,24px);
+  width:100%;margin-top:clamp(4px,.7vw,10px);
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-choices button {
+  width:clamp(158px,18vw,248px);
+  max-width:100%;
+  min-height:clamp(51px,7dvh,69px);
+  padding:10px 14px;border:1px solid #dcc9a5;border-radius:0;
+  cursor:pointer;
+  font:850 clamp(14px,1.42vw,20px)/1.1 Arial,sans-serif;
+  letter-spacing:.11em;
+  box-shadow:0 8px 24px #0008;
+  text-shadow:none;
+  transition:transform .16s ease,background-color .16s ease,filter .16s ease;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-choices .board-quiero-yes {
+  background:#d7bc86;color:#151511;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-choices .board-quiero-no {
+  background:#101719;color:#f8f8f3;
+  border-color:#c8d0ce;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-choices button:hover:not(:disabled) {
+  transform:translate3d(0,-3px,0);
+  filter:brightness(1.12);
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-choices button:focus-visible,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-rival-continue:focus-visible {
+  outline:3px solid white;outline-offset:5px;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-choices button:disabled {
+  cursor:default;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-stage.is-committing .board-quiero-title,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-stage.is-committing .board-quiero-description,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-stage.is-committing .board-quiero-choices {
+  opacity:0;transform:translate3d(0,6px,0);
+  transition:opacity .18s ease,transform .18s ease;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-selected {
+  position:absolute;
+  top:calc(50% + clamp(45px,8vw,125px));
+  left:0;right:0;z-index:4;
+  color:#fffdf3;
+  font:400 clamp(24px,4vw,56px)/1 var(--board-display,Arial,sans-serif);
+  letter-spacing:.06em;
+  text-shadow:0 4px 18px #000,0 0 24px #000;
+  animation:dl-quiero-choice-affirm .32s cubic-bezier(.17,.8,.26,1) both;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-rival-word {
+  color:#fffdf2;
+  font:400 clamp(56px,9.5vw,150px)/1 var(--board-display,Arial,sans-serif);
+  text-shadow:0 3px 13px #000,0 0 27px #000;
+  letter-spacing:-.04em;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-rival-continue {
+  border:1px solid #d1c0a1;background:#171d1acc;color:#f4f0e7;
+  padding:10px 19px;margin-top:12px;cursor:pointer;
+  font:750 11px/1 Arial,sans-serif;letter-spacing:.11em;
+}
+@keyframes dl-quiero-eclipse-in {
+  from{opacity:0}to{opacity:1}
+}
+@keyframes dl-quiero-content-enter {
+  from{opacity:0;transform:translate3d(0,19px,0) scale(.97)}
+  to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+@keyframes dl-quiero-choice-affirm {
+  from{opacity:0;transform:translate3d(0,9px,0) scale(.95)}
+  to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+@media(max-width:760px){
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-quiero-stage{
+    inset:0 0 34px 0;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-content{
+    gap:9px;padding:18px 9px;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-score{
+    font-size:clamp(54px,12vw,86px);
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-choices button{
+    width:clamp(135px,35vw,180px);min-height:48px;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-title{
+    font-size:clamp(17px,3vw,23px);
+  }
+}
+@media(max-height:610px){
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-content{
+    gap:7px;padding:10px;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-score{
+    font-size:clamp(48px,7dvh,82px);
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-choices button{
+    min-height:43px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-stage::before,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-content,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-selected {
+    animation:none!important;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-choices button{
+    transition:none!important;
+  }
+}
