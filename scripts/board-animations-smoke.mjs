@@ -123,6 +123,24 @@ try{
   }
   const shieldCount=await page.locator(".battle-card .battle-crown:visible").count();
   assert.equal(shieldCount,0,"Previously played compact cards must not display shield icons");
+  for(const side of ["opponent","player"]){
+    const stack=page.locator(`.board-slot.${side} .slot-stack`).first();
+    const direction=await stack.evaluate(el=>({
+      align:getComputedStyle(el).justifyContent,
+      flex:getComputedStyle(el).flexDirection
+    }));
+    assert.equal(direction.align,side==="opponent"?"flex-end":"flex-start",
+      side+" previously played cards must attach to the center ribbon");
+    assert.equal(direction.flex,side==="player"?"column-reverse":"column");
+    const historic=stack.locator(".battle-card").first();
+    if(await historic.count()){
+      const size=await historic.evaluate(el=>{
+        const card=el.getBoundingClientRect(),slot=el.closest(".board-slot")?.getBoundingClientRect();
+        return {ratio:slot?.width?card.width/slot.width:0};
+      });
+      assert.ok(size.ratio>.6,side+" historical card should be nearly as wide as its slot");
+    }
+  }
 
   assert.deepEqual(pageErrors,[],"The real playable board must not throw browser errors");
   await page.screenshot({path:"/tmp/daggerlight-board-gold-shadow-smoke.png",fullPage:true});
