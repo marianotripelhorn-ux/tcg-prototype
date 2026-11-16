@@ -277,9 +277,28 @@ try{
       completedRound=true;break;
     }
     await page.locator('main[data-board-phase="idle"]').waitFor({state:"attached",timeout:14000});
-    const decline=page.locator(".hybrid-quiero-actions button").filter({hasText:"NO QUIERO"});
+    const decline=page.locator(".board-quiero-stage .board-quiero-no");
     if(await decline.count()){
-      await decline.evaluate(el=>el.click());
+      const choice=page.locator(".board-quiero-stage");
+      assert.equal(await choice.getAttribute("role"),"dialog","Quiero should be a keyboard-accessible field decision");
+      assert.equal(await page.locator(".hybrid-quiero-actions").count(),0,
+        "The old floating Quiero banner must not compete with the field choice");
+      const choiceVisual=await choice.evaluate(el=>{
+        const bounds=el.getBoundingClientRect();
+        const main=el.closest(".arena-main").getBoundingClientRect();
+        const selected=el.querySelector(".board-quiero-content").getBoundingClientRect();
+        return {widthRatio:bounds.width/main.width,
+          centerDelta:Math.abs(selected.left+selected.width/2-(main.left+main.width/2)),
+          shadow:getComputedStyle(el,"::before").backgroundImage};
+      });
+      assert.ok(choiceVisual.widthRatio>.97&&choiceVisual.centerDelta<15,
+        "Quiero must darken the whole ivory board and center the decision");
+      assert.ok(choiceVisual.shadow.includes("radial-gradient"),
+        "Quiero must be a field eclipse, not a floating box");
+      await decline.click();
+      assert.equal(await choice.locator(".board-quiero-selected").innerText(),"NO QUIERO",
+        "The chosen refusal must briefly acknowledge the real player action");
+      console.log("PASS: real 0–2 Quiero choice, full-field stage and NO QUIERO acknowledgment");
     }else{
       await page.locator(".hand-zone .hand-card").first().click();
       await page.locator(".card-zoom-overlay .zoom-actions .primary-button").click({timeout:10000});
@@ -344,6 +363,19 @@ try{
     "Round score must read white against the full-field dark shadow");
   assert.equal(roundVisual.calloutBackground,"rgba(0, 0, 0, 0)",
     "Result content must not sit inside any floating panel or box");
+  const centeredRound=await ceremony.evaluate(el=>{
+    const text=el.querySelector(".board-round-ceremony").getBoundingClientRect();
+    const main=el.closest(".arena-main").getBoundingClientRect();
+    return {
+      deltaX:Math.abs(text.left+text.width/2-(main.left+main.width/2)),
+      padding:getComputedStyle(el).paddingRight,
+      justify:getComputedStyle(el).justifyItems
+    };
+  });
+  assert.ok(centeredRound.deltaX<15&&centeredRound.padding==="0px"&&
+    centeredRound.justify==="center",
+    "Round result must be centered on the entire ivory board, not a padded column: "+
+      JSON.stringify(centeredRound));
   const oldRoundLabels=await page.evaluate(()=>({
     top:document.querySelector(".arena-top-center span b")?.textContent?.trim(),
     ribbon:document.querySelector(".hybrid-command-round b")?.textContent?.trim()
