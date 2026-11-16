@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ArchiveFlight, BoardDamageTransfer, CardFlight, DealMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { ArchiveFlight, CardFlight, DealMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
 import type { BoardMotionSequence } from "./board-redesign/motion";
 import { disableManifestations } from "./board-redesign/disableManifestations";
 import Tutorial from "./Tutorial";
@@ -177,7 +177,7 @@ function DuelPowerCard({played,side}:{played:EnginePlay;side:"player"|"opponent"
   const delta=final-printed;
   const effect=playEffectFeedback(played);
   useEffect(()=>{
-    const timer=window.setTimeout(()=>setResolved(true),side==="player"?520:950);
+    const timer=window.setTimeout(()=>setResolved(true),side==="player"?980:1270);
     return ()=>window.clearTimeout(timer);
   },[played,side]);
   return (
@@ -209,8 +209,42 @@ function DuelPowerCard({played,side}:{played:EnginePlay;side:"player"|"opponent"
 function DuelCardsPresentation({duel,onAdvance,auguryEvents}:{
   duel:DuelSummary;onAdvance:()=>void;auguryEvents:string[];
 }) {
+  const overlayRef=useRef<HTMLDivElement>(null);
+  useLayoutEffect(()=>{
+    const overlay=overlayRef.current;
+    const root=overlay?.closest(".app-shell.board-redesign-v1");
+    if(!root||!overlay||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+    const animated:Animation[]=[];
+    const cards=Array.from(overlay.querySelectorAll<HTMLElement>(".duel-showcase-card"));
+    const entries=[
+      {side:"player",position:duel.playerPlay.position},
+      {side:"opponent",position:duel.opponentPlay.position}
+    ];
+    entries.forEach(({side,position},index)=>{
+      const target=cards[index];
+      const source=root.querySelector<HTMLElement>(
+        `.board-slot.${side}[data-position="${position}"] .current-board-card`
+      );
+      const start=source?.getBoundingClientRect();
+      const end=target?.getBoundingClientRect();
+      if(!target||!start||!end||!start.width||!end.width)return;
+      const dx=start.left+start.width/2-(end.left+end.width/2);
+      const dy=start.top+start.height/2-(end.top+end.height/2);
+      const sx=Math.min(1.5,start.width/end.width);
+      const sy=Math.min(1.5,start.height/end.height);
+      animated.push(target.animate([
+        {transform:`translate3d(${dx}px,${dy}px,0) scale(${sx},${sy}) rotate(${index===0?-2:2}deg)`,
+          opacity:.95,filter:"drop-shadow(1px 4px 4px #0007)",offset:0},
+        {transform:`translate3d(${dx*.1}px,${dy*.15-13}px,0) scale(1.06) rotate(${index===0?1:-1}deg)`,
+          opacity:1,filter:"drop-shadow(4px 24px 22px #0008)",offset:.76},
+        {transform:"translate3d(0,0,0) scale(1) rotate(0deg)",
+          opacity:1,filter:"drop-shadow(3px 14px 13px #0009)",offset:1}
+      ],{duration:910,delay:index*95,easing:"cubic-bezier(.2,.75,.26,1)",fill:"both"}));
+    });
+    return ()=>animated.forEach(animation=>animation.cancel());
+  },[duel]);
   return (
-    <div className="duel-showcase-overlay" role="dialog" aria-modal="true" aria-label="Resolución de Poder de las cartas">
+    <div ref={overlayRef} className="duel-showcase-overlay" role="dialog" aria-modal="true" aria-label="Resolución de Poder de las cartas">
       <span className="duel-showcase-heading">DUELO {duel.turn} · RESOLUCIÓN DE PODER</span>
       <div className="duel-showcase-pair">
         <DuelPowerCard played={duel.playerPlay} side="player"/>
@@ -580,7 +614,7 @@ export default function App() {
   function showDuelResult() {
     clearPreviewTimer();
     setDuelStep("result");
-    previewTimer.current=window.setTimeout(finishDuelPresentation,isReducedMotion()?180:boardRedesign?900:1400);
+    previewTimer.current=window.setTimeout(finishDuelPresentation,isReducedMotion()?180:boardRedesign?1470:1400);
   }
 
   function persistTurn(next:GameState) {
@@ -735,7 +769,7 @@ export default function App() {
     finishingMatch.current=finished;
     setDuelStep("cards");
     setDuelPreview(duel);
-    previewTimer.current=window.setTimeout(showDuelResult,isReducedMotion()?220:boardRedesign?1380:2150);
+    previewTimer.current=window.setTimeout(showDuelResult,isReducedMotion()?220:boardRedesign?2160:2150);
   }
 
   function useSpecial(kind:"relic"|"symmetry",position?:Position,target?:CopyTarget) {
@@ -1146,15 +1180,6 @@ export default function App() {
           deckRemaining={boardRedesign&&boardMotion&&boardMotion.phase!=="deal"?boardMotion.before.player.deck.length:game.player.deck.length}
           discardCount={boardRedesign&&boardMotion&&boardMotion.phase!=="deal"?boardMotion.before.player.discard.length:game.player.discard.length}
         />}
-        {boardRedesign && duelPreview && duelStep==="result" && preDuel &&
-          ((duelPreview.outcome==="player" && game.opponent.life<preDuel.opponentLife) ||
-           (duelPreview.outcome==="opponent" && game.player.life<preDuel.playerLife)) &&
-          <BoardDamageTransfer
-            attacker={duelPreview.outcome==="player"?"player":"opponent"}
-            victim={duelPreview.outcome==="player"?"opponent":"player"}
-            position={duelPreview.outcome==="player"?duelPreview.playerPlay.position:duelPreview.opponentPlay.position}
-            reducedMotion={isReducedMotion()}
-          />}
 
         <div className="action-line" role="status">
           {duelPreview
