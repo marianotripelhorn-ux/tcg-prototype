@@ -12,7 +12,7 @@
 /* One uninterrupted field, right through the Life crests and score.
  * Previous v2 intentionally stopped at 73% and exposed bright ivory. */
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition{
-  inset:0 0 34px 0!important;
+  inset:0 0 34px -20.5%!important;
   padding:0 clamp(0px,19vw,330px) 0 0!important;
   width:auto!important;height:auto!important;
   border:0!important;background:none!important;box-shadow:none!important;
@@ -66,13 +66,19 @@
 }
 /* The hovering gold Archive receipt remains visually hidden from v2. */
 
+/* The ivory ground also extends behind the left banners.
+ * Keep the real Champion art above the dark surface while the ground dims. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="round"] .arena-sidebar{
+  z-index:75!important;
+}
+
 /* One full-bleed curtain to the very edge of the ivory stage.
  * It is STATIC GRADIENT + GPU TRANSFORM, no filter and no clip-path changes.
  * Contracting from the RIGHT edge means the left side of the board clears
  * first, and the remaining shadow appears to enter the scoreboard. */
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep{
   position:absolute!important;
-  inset:0 0 34px 0!important;
+  inset:0 0 34px -20.5%!important;
   width:auto!important;height:auto!important;
   z-index:16!important;
   pointer-events:none!important;
@@ -90,7 +96,7 @@
 /* The gentle illuminated moving boundary is a *separate* sibling so it never
  * inherits the curtain's shrinking scale. This prevents the old jagged jump. */
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep-front{
-  position:absolute;inset:0 0 34px 0;
+  position:absolute;inset:0 0 34px -20.5%;
   z-index:23;pointer-events:none;
   background:linear-gradient(90deg,
     transparent 41%,rgba(219,234,230,.02) 45%,
@@ -159,6 +165,12 @@
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-score{
     font-size:clamp(52px,11vw,83px)!important;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep{
+    inset:0 0 34px 0!important;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep-front{
+    inset:0 0 34px 0!important;
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep{
     animation:dl-v3-curtain-sweep 2580ms cubic-bezier(.23,.62,.22,1) both!important;
