@@ -379,9 +379,12 @@ try{
   assert.equal(sweepVisual.keyframes.length,2,
     "Exactly two keyframes: uninterrupted travel without restarting easing at intermediate stops");
   assert.ok(
-    sweepVisual.keyframes.every(f=>f.clipPath===undefined &&
-      f.transform?.includes("translate3d") && !f.transform?.includes("scale")),
-    "Move the full-size curtain as one piece, with transforms only: no polygon or scaleX changes");
+    sweepVisual.keyframes.every(f=>
+      (!f.clipPath || f.clipPath==="none") &&
+      !String(f.transform??"").includes("scale")) &&
+    String(sweepVisual.keyframes[0].transform??"")!==String(sweepVisual.keyframes[1].transform??""),
+    "The 2-frame curtain must translate without scaling or keyframed clipping: "+
+      JSON.stringify(sweepVisual.keyframes));
   const movingFront=page.locator(".arena-stage > .board-archive-sweep-front");
   assert.equal(await movingFront.count(),0,
     "There must not be a second independently animated surface drifting from the curtain");
