@@ -264,6 +264,23 @@ try{
       const phase=root?.getAttribute("data-board-phase");
       if(phase && window.__daggerlightPhaseLog.at(-1)!==phase)
         window.__daggerlightPhaseLog.push(phase);
+      // The receipt is intentionally only 350ms. Capture its real rendered
+      // DOM at the phase transition, before a browser or CI process can miss
+      // the entire frame while polling.
+      if(phase==="archive-reveal" && !window.__daggerlightReceiptSnapshot){
+        const receipt=document.querySelector(".board-archive-receipt");
+        const top=document.querySelector(".arena-top-center span b");
+        const ribbon=document.querySelector(".hybrid-command-round b");
+        window.__daggerlightReceiptSnapshot={
+          present:!!receipt,
+          clipped:receipt?getComputedStyle(receipt).clipPath:null,
+          visibleWidth:receipt?.getBoundingClientRect().width??null,
+          archiveUpdates:document.querySelectorAll(".board-slot.archive-updated .archive-count").length,
+          playedCards:document.querySelectorAll(".board-slot .played-card").length,
+          top:top?.textContent?.trim(),
+          ribbon:ribbon?.textContent?.trim()
+        };
+      }
     };
     record();
     new MutationObserver(record).observe(root,{
@@ -454,27 +471,22 @@ try{
   assert.ok(tallyPulse.includes("dl-v3-score-receive"),
     "The real score rail must visibly receive the approaching shadow");
 
-  await page.locator('main[data-board-phase="archive-reveal"]')
-    .waitFor({state:"attached",timeout:10000});
-  assert.equal(await page.locator(".board-archive-receipt").count(),1,
-    "Real Archive receipt remains available to assistive technologies");
-  const receipt=await page.locator(".board-archive-receipt").evaluate(el=>
-    ({clipped:getComputedStyle(el).clipPath,visibleWidth:el.getBoundingClientRect().width}));
+  await page.waitForFunction(()=>!!window.__daggerlightReceiptSnapshot,
+    undefined,{timeout:10000});
+  const receipt=await page.evaluate(()=>window.__daggerlightReceiptSnapshot);
+  assert.ok(receipt.present,"Real Archive receipt must be available to assistive technologies");
   assert.ok(receipt.clipped.includes("inset(50%)")&&receipt.visibleWidth<=1,
     "Do not paint an additional floating golden Archive caption");
-  assert.ok(await page.locator(".board-slot.archive-updated .archive-count").count()>0,
+  assert.ok(receipt.archiveUpdates>0,
     "At least one genuinely changed Archive counter should highlight after capture");
-  const newRoundLabels=await page.evaluate(()=>({
-    top:document.querySelector(".arena-top-center span b")?.textContent?.trim(),
-    ribbon:document.querySelector(".hybrid-command-round b")?.textContent?.trim()
-  }));
-  assert.ok(newRoundLabels.top&&newRoundLabels.top===newRoundLabels.ribbon &&
-    newRoundLabels.top!==oldRoundLabels.top,
+  assert.ok(receipt.top&&receipt.top===receipt.ribbon &&
+    receipt.top!==oldRoundLabels.top,
     "Both displayed round labels must advance together when Archive receipts are visible");
-  assert.equal(await page.locator(".board-slot .played-card").count(),0,
+  assert.equal(receipt.playedCards,0,
     "Archived cards must leave the board before counts are confirmed");
 
-  await page.locator('main[data-board-phase="deal"]').waitFor({state:"attached",timeout:5500});
+  await page.waitForFunction(()=>window.__daggerlightPhaseLog?.includes("deal"),
+    undefined,{timeout:10000});
   await page.locator('main[data-board-phase="idle"]').waitFor({state:"attached",timeout:10000});
   assert.ok(await page.locator(".hand-zone .hand-card").count()>=1,
     "The next real playable hand should be present after dealing");
