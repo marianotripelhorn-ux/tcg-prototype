@@ -72,10 +72,10 @@
   z-index:75!important;
 }
 
-/* One full-bleed curtain to the very edge of the ivory stage.
- * It is STATIC GRADIENT + GPU TRANSFORM, no filter and no clip-path changes.
- * Contracting from the RIGHT edge means the left side of the board clears
- * first, and the remaining shadow appears to enter the scoreboard. */
+/* One uninterrupted full-bleed curtain to the ivory stage's far-right edge.
+ * Move the WHOLE surface right, exposing the board left-to-right in one
+ * compositor-only transform tween. No scaling, per-segment easing, filtering
+ * or expensive clipping. A static glint is attached to the revealing edge. */
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep{
   position:absolute!important;
   inset:0 0 34px -20.5%!important;
@@ -88,24 +88,18 @@
   -webkit-clip-path:none!important;
   -webkit-backdrop-filter:none!important;
   backdrop-filter:none!important;
-  transform-origin:100% 50%!important;
-  will-change:transform,opacity;
+  will-change:transform;
   contain:paint;
-  animation:dl-v3-curtain-sweep 1000ms cubic-bezier(.23,.62,.22,1) both!important;
+  animation:dl-v3-curtain-sweep 650ms cubic-bezier(.32,.02,.68,1) both!important;
 }
-/* The gentle illuminated moving boundary is a *separate* sibling so it never
- * inherits the curtain's shrinking scale. This prevents the old jagged jump. */
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep-front{
-  position:absolute;inset:0 0 34px -20.5%;
-  z-index:23;pointer-events:none;
+/* The luminous trailing edge is part of the SAME moving layer.
+ * It can never drift out of sync with the shadow itself. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep::before{
+  content:"";position:absolute;top:0;bottom:0;left:0;width:clamp(34px,4vw,68px);
+  pointer-events:none;
   background:linear-gradient(90deg,
-    transparent 41%,rgba(219,234,230,.02) 45%,
-    rgba(203,218,220,.11) 48%,rgba(252,250,236,.25) 50%,
-    rgba(197,218,226,.12) 52%,rgba(224,231,219,.03) 55%,transparent 59%);
-  transform:translate3d(-61%,0,0);
-  opacity:0;
-  will-change:transform,opacity;
-  animation:dl-v3-curtain-front 1000ms cubic-bezier(.23,.62,.22,1) both;
+    rgba(247,246,229,.55) 0%,rgba(218,225,215,.22) 8%,
+    rgba(188,204,209,.07) 47%,transparent 100%);
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="archive"] .hybrid-duel-tally{
   animation:none!important;
@@ -138,19 +132,8 @@
   100%{opacity:0;transform:scaleX(1)}
 }
 @keyframes dl-v3-curtain-sweep {
-  0%,12%{transform:translate3d(0,0,0) scaleX(1);opacity:1}
-  59%{transform:translate3d(0,0,0) scaleX(.52);opacity:1}
-  83%{transform:translate3d(0,0,0) scaleX(.14);opacity:.93}
-  95%{transform:translate3d(0,0,0) scaleX(.045);opacity:.6}
-  100%{transform:translate3d(0,0,0) scaleX(.012);opacity:0}
-}
-@keyframes dl-v3-curtain-front {
-  0%{transform:translate3d(-61%,0,0);opacity:0}
-  12%{transform:translate3d(-60%,0,0);opacity:.5}
-  59%{transform:translate3d(0%,0,0);opacity:.89}
-  83%{transform:translate3d(44%,0,0);opacity:.76}
-  96%{transform:translate3d(58%,0,0);opacity:.34}
-  100%{transform:translate3d(62%,0,0);opacity:0}
+  from{transform:translate3d(0,0,0)}
+  to{transform:translate3d(103%,0,0)}
 }
 @keyframes dl-v3-score-receive {
   0%,62%{opacity:0}
@@ -169,11 +152,8 @@
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep{
     inset:0 0 34px 0!important;
   }
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep-front{
-    inset:0 0 34px 0!important;
-  }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep{
-    animation:dl-v3-curtain-sweep 1000ms cubic-bezier(.23,.62,.22,1) both!important;
+    animation:dl-v3-curtain-sweep 650ms cubic-bezier(.32,.02,.68,1) both!important;
   }
 }
 @media(prefers-reduced-motion:reduce){
@@ -181,15 +161,11 @@
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition::after,
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition .board-round-ceremony,
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep,
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep-front,
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="archive"] .hybrid-duel-tally::before{
     animation:none!important;
     will-change:auto;
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep{
     transform:none!important;opacity:.78!important;clip-path:none!important;
-  }
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep-front{
-    display:none!important;
   }
 }
