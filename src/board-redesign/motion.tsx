@@ -151,7 +151,9 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
       const inSlot=groupIndex.get(slotKey)??0;
       groupIndex.set(slotKey,inSlot+1);
       const laneIndex=position==="siniestra"?0:position==="trono"?1:2;
-      const delay=(side==="opponent"?0:320)+laneIndex*130+inSlot*105;
+      // Travel with the left-to-right darkness, preserving each card's
+      // real side/position Archive destination (never the score ribbon).
+      const delay=laneIndex*255+(side==="opponent"?0:155)+inSlot*95;
       const dx=b.left+b.width/2-(a.left+a.width/2);
       const dy=b.top+b.height/2-(a.top+a.height/2);
       const animation=card.animate([
