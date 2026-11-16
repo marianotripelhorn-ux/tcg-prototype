@@ -1,0 +1,129 @@
+/*
+ * DAGGERLIGHT — ROUND & ARCHIVE CHOREOGRAPHY v1
+ * Scoped visual continuation of React Duel Presentation v1.1.
+ * Never overrides game logic or the original card faces.
+ */
+
+/* A stronger focus than v1.1: gentle central vignette and perceptible blur.
+ * The two original playing cards stay above the screen. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-focus-screen{
+  background:radial-gradient(ellipse at 50% 45%,
+    rgba(8,11,9,.26) 9%,rgba(8,11,9,.35) 61%,rgba(8,11,9,.44) 100%)!important;
+  -webkit-backdrop-filter:blur(3.2px) saturate(.87)!important;
+  backdrop-filter:blur(3.2px) saturate(.87)!important;
+  animation-duration:.42s!important;
+}
+
+/* Unneeded narration is gone: the duel's top strip already identifies
+ * its round and turn. Keep only the meaningful final outcome. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-heading{
+  display:none!important;
+}
+
+/* Round closure is a single quiet ceremony on the existing board surface. */
+:root[data-theme] .app-shell.board-redesign-v1 .board-round-transition{
+  position:absolute;inset:0;z-index:85;pointer-events:none;
+  display:flex;justify-content:center;align-items:center;
+  isolation:isolate;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-round-transition::before{
+  content:"";position:absolute;inset:0;z-index:-1;
+  background:radial-gradient(ellipse at center,#0e140f23 15%,#14171148 100%);
+  -webkit-backdrop-filter:blur(1.8px);
+  backdrop-filter:blur(1.8px);
+  animation:dl-round-focus .52s ease-out both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-round-ceremony{
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  gap:clamp(9px,1.2dvh,14px);
+  text-align:center;position:relative;z-index:2;
+  padding:22px 20px;max-width:min(80vw,540px);
+  color:#e8d9b7;text-shadow:0 2px 7px #12120b,0 0 21px #251b0da9;
+  animation:dl-round-enter .68s cubic-bezier(.21,.77,.25,1) both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-round-kicker{
+  color:#f3e2bc;letter-spacing:.17em;
+  font:850 clamp(12px,1.25vw,17px)/1.1 Arial,sans-serif;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-round-score{
+  display:flex;align-items:center;justify-content:center;gap:clamp(16px,3vw,42px);
+  color:#f2e1bb;
+  font:500 clamp(56px,7vw,102px)/1 var(--board-display,Georgia,serif);
+  font-variant-numeric:tabular-nums;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-round-score i{
+  color:#c5b58f;font:200 .45em/1 Georgia,serif;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-round-outcome{
+  color:#f1dfb4;font:800 clamp(12px,1.35vw,17px)/1.2 Arial,sans-serif;
+  letter-spacing:.1em;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-round-reason{
+  color:#e1d3b8;letter-spacing:.11em;
+  font:700 clamp(10px,1.0vw,13px)/1.1 Arial,sans-serif;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .board-archive-receipt{
+  position:absolute;z-index:85;left:50%;top:57%;translate:-50% 0;
+  pointer-events:none;max-width:90%;white-space:nowrap;
+  font:850 clamp(11px,1.15vw,15px)/1.1 Arial,sans-serif;
+  color:#dac49a;text-shadow:0 1px 6px #15150d,0 0 15px #5e4419;
+  letter-spacing:.14em;text-align:center;
+  animation:dl-archive-ack .8s ease-out both;
+}
+/* A card that reaches an Archive briefly lights its true destination.
+ * The new engine-owned number is revealed only in archive-reveal. */
+:root[data-theme] .app-shell.board-redesign-v1 .board-slot .played-card.board-gs-archiving::after{
+  animation-duration:1.2s!important;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .archive-count.board-gs-archive-target::before,
+:root[data-theme] .app-shell.board-redesign-v1 .archive-count.board-gs-archive-target::after{
+  animation-duration:.87s!important;
+}
+:root[data-theme] .app-shell.board-redesign-v1[data-board-phase="archive-reveal"] .board-slot.archive-updated .archive-count{
+  color:#a37a36!important;
+  animation:dl-archive-count-confirm .78s cubic-bezier(.2,.65,.32,1) both;
+  text-shadow:0 0 13px #d1ad68d8,0 1px 0 #f7ebca;
+  font-weight:850!important;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .hand-zone .hand-card.board-gs-dealing::before,
+:root[data-theme] .app-shell.board-redesign-v1 .hand-zone .hand-card.board-gs-dealing::after{
+  animation-duration:.90s!important;
+}
+@keyframes dl-round-focus{
+  from{opacity:0}to{opacity:1}
+}
+@keyframes dl-round-enter{
+  0%{opacity:0;transform:translateY(16px) scale(.96)}
+  65%{opacity:1}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes dl-archive-ack{
+  0%{opacity:0;transform:translateY(7px)}
+  25%,75%{opacity:1}
+  100%{opacity:0;transform:translateY(-2px)}
+}
+@keyframes dl-archive-count-confirm{
+  0%{filter:brightness(1);scale:1}
+  40%{filter:brightness(1.22);scale:1.2}
+  100%{filter:brightness(1);scale:1}
+}
+@media(max-height:620px){
+  :root[data-theme] .app-shell.board-redesign-v1 .board-round-ceremony{
+    gap:5px;padding:10px 12px;
+  }
+  :root[data-theme] .app-shell.board-redesign-v1 .board-round-score{
+    font-size:clamp(48px,6vw,78px);
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-focus-screen{
+    animation:none!important;
+    -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  }
+  :root[data-theme] .app-shell.board-redesign-v1 .board-round-transition::before,
+  :root[data-theme] .app-shell.board-redesign-v1 .board-round-ceremony,
+  :root[data-theme] .app-shell.board-redesign-v1 .board-archive-receipt,
+  :root[data-theme] .app-shell.board-redesign-v1 .board-slot.archive-updated .archive-count{
+    animation:none!important;
+  }
+}
