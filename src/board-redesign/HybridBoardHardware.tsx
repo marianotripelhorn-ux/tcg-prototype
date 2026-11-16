@@ -55,6 +55,11 @@ function ChampionPanel({
       </span>
       <img className="hybrid-champion-figure" src={championImageUrl(champion.id)}
         alt="" aria-hidden="true" decoding="async"/>
+      <span className="board-gs-banner-overlay" aria-hidden="true">
+        <span className="board-gs-banner-wave"/>
+        <span className="board-gs-banner-circle outer"/>
+        <span className="board-gs-banner-circle inner"/>
+      </span>
     </button>
   </section>;
 }
@@ -92,6 +97,9 @@ function LifeCrest({side,life,healed}:{
   return <div className={`hybrid-life-unit ${side}${change.direction?` ${change.direction}`:""}`} aria-label={`${side==="player"?"Tu Campeón":"Campeón rival"}: ${life} de 9 puntos de Vida`}>
     <span className="hybrid-life-label">{side==="player"?"TU VIDA":"VIDA RIVAL"}</span>
     <div className="hybrid-life-crest">
+      {change.direction && <span className="board-gs-crest-circles" aria-hidden="true" key={"gold-shadow-"+change.sequence}>
+        <span/><span/>
+      </span>}
       <span className="hybrid-life-number" key={life}>{life}</span>
       {change.direction && <span className="hybrid-life-wave" key={change.sequence} aria-hidden="true"/>}
     </div>
