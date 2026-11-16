@@ -1,0 +1,224 @@
+/* Desktop board measurements from the 1795 × 876 ivory reference.
+   Scaling lengths instead of the DOM keeps live card and animation anchors in viewport pixels. */
+@media (min-width: 761px) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 {
+    --board-px: min(calc(100vw / 1795), calc(100dvh / 876));
+    --board-header: calc(56 * var(--board-px));
+    --board-footer: calc(38 * var(--board-px));
+    --board-ribbon: calc(44 * var(--board-px));
+    display: grid;
+    place-items: center;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-game-frame {
+    width: calc(1795 * var(--board-px));
+    height: calc(876 * var(--board-px));
+    grid-template-rows: var(--board-header) minmax(0, 1fr) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-topbar {
+    height: var(--board-header) !important;
+    min-height: var(--board-header) !important;
+    padding-inline: calc(23 * var(--board-px)) !important;
+    gap: calc(16 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-top-wordmark {
+    font-size: calc(39 * var(--board-px)) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-top-center {
+    gap: calc(15 * var(--board-px)) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-top-center > span {
+    font-size: calc(24 * var(--board-px)) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-top-center > i {
+    height: calc(14 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .game-tools {
+    gap: calc(9 * var(--board-px)) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .game-tools :is(.hybrid-board-toggle, .duel-sfx-toggle) {
+    padding: calc(7 * var(--board-px)) calc(10 * var(--board-px)) !important;
+    font-size: max(8px, calc(10 * var(--board-px)));
+    white-space: nowrap;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .game-tools .arena-icon-button {
+    width: calc(33 * var(--board-px));
+    height: calc(33 * var(--board-px));
+    padding: 0;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .game-tools .arena-icon-button svg {
+    width: min(75%, calc(19 * var(--board-px)));
+    height: min(75%, calc(19 * var(--board-px)));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-sidebar {
+    margin: calc(14 * var(--board-px)) calc(19 * var(--board-px)) 0 calc(22 * var(--board-px)) !important;
+    height: calc(100% - var(--board-footer) - 14 * var(--board-px)) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-sidebar-inner {
+    grid-template-rows: calc(210 * var(--board-px)) minmax(0, 1fr);
+    gap: calc(12 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-sidebar-inner.show-opponent {
+    grid-template-rows: minmax(0, 1fr) calc(210 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-banner-fabric {
+    inset: 0 0 calc(56 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-banner-body {
+    top: calc(24 * var(--board-px));
+    left: calc(16 * var(--board-px));
+    right: calc(16 * var(--board-px));
+    gap: calc(8 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-banner-owner,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-banner-name,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-mini-name {
+    font-size: calc(28 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-banner-owner::after {
+    margin-block: calc(12 * var(--board-px)) calc(8 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-banner-subtitle {
+    font-size: max(11px, calc(18 * var(--board-px)));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-banner-ability {
+    font-size: max(11px, calc(18 * var(--board-px)));
+    max-height: calc(158 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-champion-figure-window,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-sidebar-inner.show-opponent .hybrid-champion-figure-window {
+    height: calc(168 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .battlefield {
+    inset: 7.56% 29.87% 26.59% 11.74%;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .battlefield::after {
+    left: calc(-15 * var(--board-px));
+    right: calc(-15 * var(--board-px));
+    height: var(--board-ribbon);
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .battlefield .lane {
+    grid-template-rows: minmax(0, 1fr) var(--board-ribbon) minmax(0, 1fr) !important;
+    padding-inline: calc(11 * var(--board-px)) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .lane-axis span {
+    font-size: calc(30 * var(--board-px)) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-slot {
+    padding: calc(20 * var(--board-px)) 0 !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .slot-stack {
+    gap: calc(5 * var(--board-px)) !important;
+    padding: calc(4 * var(--board-px)) 0 !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .played-card:has(.current-board-card) {
+    height: calc(184 * var(--board-px)) !important;
+    max-height: 100% !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .battle-card {
+    height: calc(42 * var(--board-px)) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .current-board-card .live-power-badge {
+    width: calc(42 * var(--board-px));
+    height: calc(46 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .current-board-card .live-power-badge b {
+    font-size: calc(28 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hand-zone {
+    bottom: calc(var(--board-footer) + 2 * var(--board-px));
+    height: calc(182 * var(--board-px)) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hand-zone .hand {
+    gap: calc(18 * var(--board-px)) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-life-unit {
+    gap: calc(8 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-life-unit.opponent {
+    top: calc(65 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-life-unit.player {
+    top: calc(419 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-life-crest {
+    width: calc(158 * var(--board-px));
+    height: calc(198 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-life-number {
+    font-size: calc(82 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-duel-tally {
+    top: calc(301 * var(--board-px));
+    width: calc(258 * var(--board-px));
+    height: calc(108 * var(--board-px));
+    min-height: 0;
+    padding: 0 calc(9 * var(--board-px)) 0 calc(88 * var(--board-px)) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-duel-tally strong {
+    font-size: calc(47 * var(--board-px)) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-deck-holder {
+    right: calc(32 * var(--board-px));
+    bottom: calc(var(--board-footer) + 5 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-deck-object {
+    height: calc(201 * var(--board-px));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-deck-count {
+    margin-top: calc(13 * var(--board-px));
+    font-size: max(9px, calc(11 * var(--board-px)));
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-command-rail {
+    position: absolute !important;
+    inset: auto 0 0 calc(-305.15 * var(--board-px)) !important;
+    width: auto !important;
+    max-width: none;
+    height: var(--board-footer);
+    min-height: 0;
+    padding: 0 calc(26 * var(--board-px)) !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr) minmax(0, 1fr);
+  }
+}

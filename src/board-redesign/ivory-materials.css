@@ -1,0 +1,200 @@
+/* Light falls from the upper left across the ivory board. These surfaces
+   sit on the existing geometry and leave the motion layers intact. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 {
+  --hd-stone: url("/board/ivory-ui/arena-ivory-limestone.webp");
+  --hd-compact-fabric: url("/board/ivory-ui/banner-crimson.webp");
+  --hd-tall-fabric: url("/board/ivory-ui/banner-gold.webp");
+  --hd-crown: url("/board/ivory-ui/vida-crown.webp");
+  --hd-lane-ribbon: url("/board/ivory-ui/ribbon-lanes.webp");
+  --hd-score-ribbon: url("/board/ivory-ui/ribbon-score.webp");
+  --hd-shadow-contact: drop-shadow(calc(1 * var(--board-px, 1px)) calc(2 * var(--board-px, 1px)) calc(2 * var(--board-px, 1px)) #30201582);
+  --hd-shadow-cast: drop-shadow(calc(6 * var(--board-px, 1px)) calc(8 * var(--board-px, 1px)) calc(9 * var(--board-px, 1px)) #33241765);
+  --hd-shadow-raised: drop-shadow(calc(9 * var(--board-px, 1px)) calc(13 * var(--board-px, 1px)) calc(13 * var(--board-px, 1px)) #33241768);
+  --hd-text-shadow: calc(1 * var(--board-px, 1px)) calc(2 * var(--board-px, 1px)) calc(2 * var(--board-px, 1px)) #130b09d6;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-engraving {
+  background: #d3c2a7 var(--hd-stone) calc(50% + var(--hybrid-compass-offset, 0px)) center / 104% 100% no-repeat !important;
+  filter: none;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-topbar {
+  background: #11100e url("/board/ivory-ui/band-upper.webp") center / 101% 113% no-repeat !important;
+  box-shadow: 1px 4px 7px #30201559;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-command-rail {
+  background: #14120f url("/board/ivory-ui/band-lower.webp") center / 101% 124% no-repeat !important;
+  border-top: 0;
+  box-shadow: none;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 :is(.arena-top-wordmark, .arena-top-center > span, .lane-axis span, .hybrid-life-number, .hybrid-tally-sides, .hybrid-score-values, .hybrid-command-status) {
+  text-shadow: var(--hd-text-shadow) !important;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .battlefield::after {
+  background: var(--hd-lane-ribbon) center / 100% 100% no-repeat !important;
+  clip-path: none;
+  filter: var(--hd-shadow-contact);
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-duel-tally {
+  background: none;
+  clip-path: none;
+  overflow: visible;
+  isolation: isolate;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-duel-tally::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: var(--hd-score-ribbon) center / 100% 100% no-repeat;
+  filter: var(--hd-shadow-contact) var(--hd-shadow-cast);
+  pointer-events: none;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="archive"] .hybrid-duel-tally::before {
+  mask: var(--hd-score-ribbon) center / 100% 100% no-repeat;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-life-crest {
+  background: var(--hd-crown) center / 100% 100% no-repeat;
+  clip-path: none;
+  mask: var(--hd-crown) center / 100% 100% no-repeat;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-gs-crest-anchor {
+  filter: var(--hd-shadow-contact) var(--hd-shadow-cast);
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 :is(.hybrid-life-label, .hybrid-deck-count) {
+  color: #211810;
+  text-shadow: 0 1px 1px #fff6ddc7;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 :is(.board-slot .archive-count, .board-slot .slot-capacity) {
+  text-shadow: 0 1px 1px #fff6ddbb;
+}
+
+/* Use the new woven material while retaining each champion's faction art.
+   The crimson and gold factions can use the matching textile directly. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-champion-panel {
+  filter: var(--hd-shadow-contact) var(--hd-shadow-cast);
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-portrait-surface {
+  --hd-panel-fabric: var(--hd-compact-fabric);
+  background-image: var(--hd-faction-art);
+  box-shadow: none;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-banner-fabric {
+  --hd-panel-fabric: var(--hd-tall-fabric);
+  background-image: var(--hd-faction-art);
+  clip-path: none;
+  mask: var(--hd-panel-fabric) center / 100% 100% no-repeat;
+  filter: none;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 :is(.hybrid-banner-fabric, .hybrid-portrait-surface)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--hd-panel-fabric) center / 100% 100% no-repeat;
+  filter: grayscale(1);
+  mix-blend-mode: luminosity;
+  opacity: .48;
+  pointer-events: none;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 [data-faction="red"] .hybrid-portrait-surface::before,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 [data-faction="saints"] .hybrid-banner-fabric::before {
+  filter: none;
+  mix-blend-mode: normal;
+  opacity: .7;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-banner-fabric::after {
+  background: linear-gradient(90deg, #180f0959, #180f091f 65%, transparent);
+  pointer-events: none;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-portrait-surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid #e8c2827d;
+  background: linear-gradient(180deg, transparent 52%, #1007058c 100%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-champion-art {
+  position: relative;
+  z-index: 1;
+  filter: var(--hd-shadow-contact);
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 :is(.hybrid-mini-name, .hybrid-panel-overline, .hybrid-banner-body) {
+  text-shadow: var(--hd-text-shadow), 0 0 4px #170c08b5;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-champion-figure {
+  filter: var(--hd-shadow-contact) var(--hd-shadow-cast);
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .current-board-card,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hand-zone .hand-card,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-deck-object {
+  filter: var(--hd-shadow-contact) var(--hd-shadow-cast) !important;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .current-board-card:hover,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-deck-object:hover,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hand-zone .hand-card:not(:disabled):is(:hover, :focus-visible) {
+  filter: var(--hd-shadow-contact) var(--hd-shadow-raised) !important;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hand-zone .hand-card.is-selected {
+  filter: drop-shadow(0 0 3px #b08535) var(--hd-shadow-raised) !important;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .battle-card {
+  filter: grayscale(.87) contrast(.92) var(--hd-shadow-contact) var(--hd-shadow-cast) !important;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .battle-card:hover {
+  filter: var(--hd-shadow-contact) var(--hd-shadow-raised) !important;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .current-board-card .game-card,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hand-zone .hand-card .game-card {
+  border: 1px solid #35271b !important;
+  border-top-color: #b69a6a !important;
+  border-left-color: #92805e !important;
+  box-shadow: inset -1px -1px 0 #190f07b8;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-deck-face {
+  border-color: #9d7e4c #49351d #49351d #b99b67;
+}
+
+@media (max-width: 760px) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-engraving {
+    background-size: cover !important;
+    background-position: center !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-banner-fabric {
+    --hd-panel-fabric: var(--hd-compact-fabric);
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 [data-faction="saints"] .hybrid-banner-fabric::before {
+    filter: grayscale(1);
+    mix-blend-mode: luminosity;
+    opacity: .48;
+  }
+}

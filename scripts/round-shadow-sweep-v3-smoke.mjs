@@ -78,12 +78,17 @@ try{
   assert.ok(panelRect&&windowRect&&windowRect.y>panelRect.y+panelRect.height*.48,
     "The character illustration must remain in the bottom portion of its banner");
 
+  const stageBox=await page.locator(".arena-game-frame").boundingBox();
+  assert.ok(stageBox && Math.abs(stageBox.height / stageBox.width - 876 / 1795)<.001,
+    "The desktop stage must keep the proportions of the ivory mockup");
   const command=page.locator(".hybrid-command-rail");
   const commandBox=await command.boundingBox();
-  assert.ok(commandBox && commandBox.x<=2 &&
-    commandBox.width>=1595,"Textured bottom command ribbon must span entire viewport");
+  assert.ok(commandBox && Math.abs(commandBox.x-stageBox.x)<2 &&
+    Math.abs(commandBox.width-stageBox.width)<2 &&
+    Math.abs(commandBox.y+commandBox.height-stageBox.y-stageBox.height)<2,
+    "The bottom band must span the stage and align to its bottom edge");
   const commandBg=await command.evaluate(el=>getComputedStyle(el).backgroundImage);
-  assert.ok(commandBg.includes("url("),"Bottom ribbon should reuse the Champion banner artwork");
+  assert.ok(commandBg.includes("/ivory-ui/band-lower.webp"),"Bottom band must use the ivory board artwork");
 
   const score=page.locator(".hybrid-duel-tally");
   const scoreText=score.locator("strong");

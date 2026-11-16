@@ -23,7 +23,11 @@ function ChampionPanel({
   const subtitle = championSubtitle(champion.name);
   return <section
     className={`hybrid-champion-panel ${side} ${expanded?"is-expanded":"is-compact"}`}
-    style={{"--hybrid-faction-accent":factionAccent[champion.faction]} as CSSProperties}
+    data-faction={champion.faction}
+    style={{
+      "--hybrid-faction-accent":factionAccent[champion.faction],
+      "--hd-faction-art":`url("${bannerBackground}")`
+    } as CSSProperties}
   >
     <button
       type="button"
@@ -32,9 +36,8 @@ function ChampionPanel({
       aria-label={`${userLabel}: ${champion.name}. ${champion.text}. Mostrar datos del Campeón`}
       onClick={onSelect}
     >
-      <span className="hybrid-banner-fabric" aria-hidden="true"
-        style={{backgroundImage:`url("${bannerBackground}")`}}/>
-      <span className="hybrid-portrait-surface" style={{backgroundImage:`url("${bannerBackground}")`}}>
+      <span className="hybrid-banner-fabric" aria-hidden="true"/>
+      <span className="hybrid-portrait-surface">
         <img className="hybrid-champion-art" src={championImageUrl(champion.id,true)} alt="" decoding="async"/>
         <span className="hybrid-panel-overline">{userLabel}</span>
         <span className="hybrid-mini-name">{championShortName(champion.name)}</span>
@@ -157,8 +160,7 @@ export function HybridCommandRail({
   else if (game.phase==="finished") status="Partida terminada.";
 
   const bannerBackground=championBackgroundUrl(game.player.champion.faction);
-  return <section className="hybrid-command-rail" aria-label="Comandos del tablero"
-    style={{backgroundImage:`linear-gradient(90deg,#080b08ef,#111810d8 50%,#070a08ed),url("${bannerBackground}")`}}>
+  return <section className="hybrid-command-rail" aria-label="Comandos del tablero">
     <div className="hybrid-command-left">
       <details className="hybrid-archive-details">
         <summary title="Ver cantidades de los seis Archivos">ARCHIVOS <span>⌄</span></summary>
@@ -214,6 +216,5 @@ export function HybridEngraving(){
     window.addEventListener("resize",align);
     return ()=>{observer.disconnect();window.removeEventListener("resize",align);};
   },[]);
-  return <div ref={engraving} className="hybrid-engraving is-reference-compass" aria-hidden="true"
-    style={{backgroundImage:`url("${import.meta.env.BASE_URL}board/arena-compass-source.png")`}}/>;
+  return <div ref={engraving} className="hybrid-engraving is-reference-compass" aria-hidden="true"/>;
 }
