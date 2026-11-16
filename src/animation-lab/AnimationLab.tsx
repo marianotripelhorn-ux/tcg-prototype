@@ -7,10 +7,14 @@ import type { Faction } from "../types";
 import { ParticleField, type FXController, type Point } from "./ParticleField";
 import { chiralWaveMask,clamp01 } from "./chiralWave";
 
-type EffectId="power-rise"|"power-fall"|"champion-impact"|"spectral-refined"|"chiral-wave"|"chiral-seal"|"spectral"|"summon"|"archive"|"placement"|"power"|"damage"|"banner";
+type EffectId="materialize-v5"|"archive-v5"|"placement-v5"|"banner-v5"|"power-rise"|"power-fall"|"champion-impact"|"spectral-refined"|"chiral-wave"|"chiral-seal"|"spectral"|"summon"|"archive"|"placement"|"power"|"damage"|"banner";
 type Flavor="gold"|"shadow";
 type Demo={id:EffectId;label:string;description:string;principle:string;duration:string};
 const demos:Demo[]=[
+  {id:"materialize-v5",label:"01 · Materialización (v5)",duration:"~ 1,9 s",description:"La carta emerge de una superficie dorada, primero como silueta y después como objeto físico. Tres círculos completos anticipan su aparición.",principle:"Buildup en la piedra → contorno → imagen revelada → carta real. Sin chispas."},
+  {id:"archive-v5",label:"02 · Archivo (v5)",duration:"~ 1,8 s",description:"Una cinta de energía conecta la carta con el Archivo; la carta se pliega y es absorbida, sin estallar en partículas.",principle:"El Archivo almacena. La carta viaja físicamente hacia el receptáculo y el contador confirma su llegada."},
+  {id:"placement-v5",label:"03 · Colocación (v5)",duration:"~ 1,4 s",description:"Un desplazamiento físico desde la mano termina con un contacto firme; un único pulso circular y una tenue ola dorada responden sobre la piedra.",principle:"Peso primero, magia después. Una colocación contundente sin espectáculo de chispas."},
+  {id:"banner-v5",label:"04 · Estandarte (v5)",duration:"~ 1,8 s",description:"El estandarte se despliega como tela y una onda dorada recorre su superficie; círculos finos sostienen la entrada del Campeón.",principle:"Tela, grabado y presencia del Campeón. La luz acompaña la materia en vez de reemplazarla."},
   {id:"power-rise",label:"01 · Ascenso de Poder (v4)",duration:"~ 1,9 s",description:"El oro se concentra en el material, sube por la carta y activa su Poder. Buildup contenido, una onda firme y resolución precisa.",principle:"Dorado: la carta gana fuerza a través de un cambio físico de luz y color. Sin partículas."},
   {id:"power-fall",label:"02 · Pérdida de Poder (v4)",duration:"~ 1,9 s",description:"Una masa de tinta negra enfría la ilustración, desciende y reduce el Poder. La carta sigue siendo reconocible.",principle:"Negro: absorber luz y debilitar la carta debe sentirse distinto a simplemente invertir el efecto positivo."},
   {id:"champion-impact",label:"03 · Herida del Campeón (v4)",duration:"~ 2,0 s",description:"Una onda negra y sólida viaja desde la carta hasta la corona, que responde con una pérdida de Vida.",principle:"Un impacto que une físicamente la carta y el Campeón: carga, transferencia, golpe y silencio."},
@@ -42,7 +46,7 @@ function jaggedDissolve(progress:number):string{
   return "polygon("+points.join(",")+")";
 }
 export default function AnimationLab(){
-  const [effect,setEffect]=useState<EffectId>("power-rise");
+  const [effect,setEffect]=useState<EffectId>("materialize-v5");
   const [faction,setFaction]=useState<Faction>("red");
   const [cardId,setCardId]=useState(cards.red);
   const [flavor,setFlavor]=useState<Flavor>("gold");
@@ -51,7 +55,7 @@ export default function AnimationLab(){
   const [playing,setPlaying]=useState(false);
   const [paused,setPaused]=useState(false);
   const [renderer,setRenderer]=useState("Inicializando PixiJS…");
-  const [info,setInfo]=useState("Tres estudios nuevos: potenciar, debilitar e impactar. Una onda, un resultado.");
+  const [info,setInfo]=useState("V5: materialización, Archivo, colocación y estandarte, con círculos completos y ondas de materia.");
   const [allowMotion,setAllowMotion]=useState(()=>!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const stage=useRef<HTMLDivElement>(null);
   const card=useRef<HTMLDivElement>(null);
@@ -71,6 +75,13 @@ export default function AnimationLab(){
   const v4CrownRim=useRef<HTMLDivElement>(null);
   const v4Delta=useRef<HTMLSpanElement>(null);
   const v4StageResponse=useRef<HTMLDivElement>(null);
+  const v5Bridge=useRef<SVGSVGElement>(null);
+  const v5BridgeLine=useRef<SVGPathElement>(null);
+  const v5BridgeGlow=useRef<SVGPathElement>(null);
+  const v5ArchiveRings=useRef<HTMLDivElement>(null);
+  const v5GroundContact=useRef<HTMLDivElement>(null);
+  const v5BannerWash=useRef<HTMLDivElement>(null);
+  const v5BannerRings=useRef<HTMLDivElement>(null);
   const chiralSurface=useRef<HTMLDivElement>(null);
   const chiralLeft=useRef<HTMLDivElement>(null);
   const chiralRight=useRef<HTMLDivElement>(null);
@@ -111,7 +122,7 @@ export default function AnimationLab(){
     if(archiveValue.current)archiveValue.current.textContent="3";
     if(powerValue.current)powerValue.current.textContent=String(currentCard.power);
     if(lifeValue.current)lifeValue.current.textContent="9";
-    gsap.set(card.current,{x:0,y:0,scale:1,rotation:0,autoAlpha:effect==="banner"||effect==="summon"?0:1,filter:"brightness(1)",clipPath:"none"});
+    gsap.set(card.current,{x:0,y:0,scale:1,rotation:0,autoAlpha:effect==="banner"||effect==="summon"||effect==="banner-v5"||effect==="materialize-v5"?0:1,filter:"brightness(1)",clipPath:"none"});
     gsap.set(spectralRig.current,{x:0,y:0,rotation:0,scale:1,filter:"none"});
     gsap.set(spectralGhost.current,{autoAlpha:0,scale:1,clipPath:"none",filter:"none"});
     gsap.set(spectralEnergy.current,{autoAlpha:0,scale:1,rotation:-14,xPercent:-38});
@@ -127,6 +138,13 @@ export default function AnimationLab(){
     gsap.set(v4CrownRim.current,{autoAlpha:0});
     gsap.set(v4Delta.current,{autoAlpha:0,x:0,y:0,scale:.84});
     gsap.set(v4StageResponse.current,{autoAlpha:0,xPercent:-50,yPercent:-50,scaleX:.08});
+    gsap.set(v5Bridge.current,{autoAlpha:0});
+    gsap.set(v5BridgeLine.current,{strokeDashoffset:0});
+    gsap.set(v5BridgeGlow.current,{strokeDashoffset:0});
+    gsap.set(v5ArchiveRings.current,{autoAlpha:0,scale:.62,rotation:0});
+    gsap.set(v5GroundContact.current,{autoAlpha:0,scale:.54,rotation:0});
+    gsap.set(v5BannerWash.current,{autoAlpha:0,clipPath:"inset(0% 100% 0% 0%)"});
+    gsap.set(v5BannerRings.current,{autoAlpha:0,scale:.70,rotation:0});
     gsap.set(chiralSurface.current,{autoAlpha:0,scaleX:1,transformOrigin:"center center"});
     gsap.set(chiralLeft.current,{opacity:1,clipPath:chiralWaveMask("left",0)});
     gsap.set(chiralRight.current,{opacity:1,clipPath:chiralWaveMask("right",0)});
@@ -137,10 +155,10 @@ export default function AnimationLab(){
     gsap.set(chiralStoneWave.current,{autoAlpha:0,xPercent:-50,yPercent:-50,scaleX:.12});
     gsap.set(halo.current,{autoAlpha:0,scale:.6,rotation:0});
     gsap.set(flash.current,{autoAlpha:0,scale:1});
-    gsap.set(archive.current,{autoAlpha:effect==="archive"?1:0,scale:1,rotation:0});
+    gsap.set(archive.current,{autoAlpha:effect==="archive"||effect==="archive-v5"?1:0,scale:1,rotation:0});
     gsap.set(power.current,{autoAlpha:effect==="power"||effect==="chiral-seal"||effect==="power-rise"||effect==="power-fall"?1:0,scale:1,y:0});
     gsap.set(life.current,{autoAlpha:effect==="damage"||effect==="champion-impact"?1:0,scale:1,x:0,y:0,rotation:0});
-    gsap.set(banner.current,{autoAlpha:effect==="banner"?1:0,scaleY:1,rotation:0,clipPath:"none"});
+    gsap.set(banner.current,{autoAlpha:effect==="banner"||effect==="banner-v5"?1:0,scaleY:1,rotation:0,clipPath:"none"});
     gsap.set(bannerBody.current,{autoAlpha:effect==="banner"?1:0,y:0});
     gsap.set(bannerFigure.current,{autoAlpha:effect==="banner"?1:0,y:0,x:0,scale:1});
   }
@@ -161,11 +179,14 @@ export default function AnimationLab(){
       transfer=v4Transfer.current,
       crownWash=v4CrownWash.current,crownRim=v4CrownRim.current,
       delta=v4Delta.current,stoneResponse=v4StageResponse.current,
+      bridge=v5Bridge.current,bridgeLine=v5BridgeLine.current,bridgeGlow=v5BridgeGlow.current,
+      archiveRings=v5ArchiveRings.current,contact=v5GroundContact.current,
+      bannerWash=v5BannerWash.current,bannerRings=v5BannerRings.current,
       mass=chiralSurface.current,leftMass=chiralLeft.current,rightMass=chiralRight.current,
       axis=chiralAxis.current,flood=chiralSolid.current,seal=chiralSeal.current,
       sheen=chiralSheen.current,stone=chiralStoneWave.current,
       crown=life.current,b=banner.current,bBody=bannerBody.current,fig=bannerFigure.current,fl=flash.current;
-    if(!c||!h||!a||!pow||!crown||!b||!bBody||!fig||!fl||!rig||!ghost||!veins||!edge||!spectralFill||!spectralFront||!spectralShroud||!spectralGround||!orbits||!crownArcs||!transfer||!crownWash||!crownRim||!delta||!stoneResponse||!mass||!leftMass||!rightMass||!axis||!flood||!seal||!sheen||!stone)return;
+    if(!c||!h||!a||!pow||!crown||!b||!bBody||!fig||!fl||!rig||!ghost||!veins||!edge||!spectralFill||!spectralFront||!spectralShroud||!spectralGround||!orbits||!crownArcs||!transfer||!crownWash||!crownRim||!delta||!stoneResponse||!bridge||!bridgeLine||!bridgeGlow||!archiveRings||!contact||!bannerWash||!bannerRings||!mass||!leftMass||!rightMass||!axis||!flood||!seal||!sheen||!stone)return;
     const activeColor=colors[flavor];
     const burst=(p:Point,n:number,force=1,mode:"scatter"|"suction"|"embers"="scatter",target?:Point)=>
       fx.current?.burst(p,activeColor,Math.round(n*intensity),force,mode,target);
@@ -575,13 +596,13 @@ export default function AnimationLab(){
   };
   const chooseEffect=(next:EffectId)=>{
     setEffect(next);
-    if(next==="power-rise")setFlavor("gold");
+    if(next==="power-rise"||next==="materialize-v5"||next==="archive-v5"||next==="placement-v5"||next==="banner-v5")setFlavor("gold");
     if(next==="power-fall"||next==="champion-impact")setFlavor("shadow");
     setInfo("Efecto seleccionado · Presioná REPRODUCIR");
   };
   return <div className="animation-lab">
     <header className="lab-header">
-      <div className="lab-brand"><strong>DAGGERLIGHT</strong><span>ANIMATION LAB <i>04.1</i></span></div>
+      <div className="lab-brand"><strong>DAGGERLIGHT</strong><span>ANIMATION LAB <i>05</i></span></div>
       <div className="lab-header-actions">
         <span className="lab-renderer-status">{renderer}</span>
         <a href="./">VOLVER AL JUEGO <span aria-hidden="true">↗</span></a>
@@ -593,14 +614,17 @@ export default function AnimationLab(){
         <h1>Laboratorio de animaciones</h1>
         <p className="lab-lead">Pruebas visuales independientes. Ninguna modifica las reglas ni el tablero jugable.</p>
         <h2>01 / Elegí el efecto</h2>
-        <p className="lab-v4-note">Tres efectos refinados: <b>arcos finos y semicirculares</b> en lugar de símbolos, con <b>ondas de oro o tinta negra</b> ligeramente más densas. Sin partículas añadidas.</p>
-        <p className="lab-identity-note">La disolución etérea refinada (v3) sigue disponible como referencia y los estudios anteriores se mantienen para comparar.</p>
+        <p className="lab-v5-note">Cuatro estudios nuevos sobre la base aprobada v4.2: <b>círculos completos, ondas doradas o tinta negra y respuesta física</b>. No generan partículas.</p>
+        <p className="lab-identity-note">Los efectos de Poder, daño y disolución ya aprobados se conservan. Los prototipos anteriores también siguen accesibles para comparar.</p>
         <div className="lab-effect-list">
-          {demos.map(d=><button key={d.id} type="button"
-            className={"lab-effect-option"+(effect===d.id?" selected":"")+(["power-rise","power-fall","champion-impact"].includes(d.id)?" is-v4":d.id==="spectral-refined"?" is-v3":d.id.startsWith("chiral")?" is-v2":d.id==="spectral"?" is-legacy":"")}
-            aria-pressed={effect===d.id} onClick={()=>chooseEffect(d.id)}>
+          {demos.map((d,i)=><div className="lab-effect-row" key={d.id}>
+            {i===7&&<div className="lab-v5-divider">Estudios anteriores · comparación</div>}
+            <button type="button"
+              className={"lab-effect-option"+(effect===d.id?" selected":"")+(d.id.endsWith("-v5")?" is-v5":["power-rise","power-fall","champion-impact"].includes(d.id)?" is-v4":d.id==="spectral-refined"?" is-v3":d.id.startsWith("chiral")?" is-v2":d.id==="spectral"?" is-legacy":"")}
+              aria-pressed={effect===d.id} onClick={()=>chooseEffect(d.id)}>
               <span>{d.label}</span><small>{d.duration}</small>
-            </button>)}
+            </button>
+          </div>)}
         </div>
         <h2>02 / Personalizá la prueba</h2>
         <label className="lab-field">Carta real de Daggerlight
@@ -691,6 +715,12 @@ export default function AnimationLab(){
             </div>
             <div ref={halo} className="lab-card-halo" aria-hidden="true"/>
           </div>
+          <svg ref={v5Bridge} className="lab-v5-channel" aria-hidden="true" preserveAspectRatio="none">
+            <path ref={v5BridgeGlow} className="lab-v5-channel-glow"/>
+            <path ref={v5BridgeLine} className="lab-v5-channel-line"/>
+          </svg>
+          <div ref={v5ArchiveRings} className="lab-v5-archive-rings" aria-hidden="true"><span/><span/></div>
+          <div ref={v5GroundContact} className="lab-v5-ground-contact" aria-hidden="true"><span/><span/></div>
           <div className="lab-archive-well" ref={archive}>
             <span>ARCHIVO</span><strong ref={archiveValue}>3</strong><small>TRONO · VOS</small>
           </div>
@@ -719,6 +749,8 @@ export default function AnimationLab(){
               <span>Rey de Latalia</span><p>Podés jugar dos cartas en Diestra.</p>
             </div>
             <img ref={bannerFigure} src={championImageUrl("dextral")} alt="" className="lab-banner-figure"/>
+            <div ref={v5BannerWash} className="lab-v5-banner-wash" aria-hidden="true"/>
+            <div ref={v5BannerRings} className="lab-v5-banner-rings" aria-hidden="true"><span/><span/></div>
           </div>
           <div className="lab-chiral-stone-wave" ref={chiralStoneWave} aria-hidden="true"/>
           <div className="lab-spectral-v3-shroud" ref={spectralV3Shroud} aria-hidden="true"/>
