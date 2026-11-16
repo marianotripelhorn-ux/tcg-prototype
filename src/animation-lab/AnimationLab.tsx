@@ -209,6 +209,128 @@ export default function AnimationLab(){
       tl.to(c,{opacity:1,duration:.18}).to(fl,{autoAlpha:.55,duration:.13}).to(fl,{autoAlpha:0,duration:.13});
       tl.timeScale(2).play();return;
     }
+    if(effect==="materialize-v5"){
+      // The reverse of ethereal dissolution: engraving first, then a dense
+      // continuous golden plate, then the real printed card. Zero particles.
+      gsap.set(rig,{y:13,scale:.94,rotation:-.6});
+      gsap.set(c,{autoAlpha:1,clipPath:"inset(0% 0% 100% 0%)",filter:"brightness(1.22) saturate(1.08)"});
+      gsap.set(ghost,{autoAlpha:0,clipPath:"none"});
+      gsap.set(spectralFill,{autoAlpha:0,clipPath:"inset(0% 0% 0% 0%)"});
+      gsap.set(spectralFront,{autoAlpha:0,yPercent:110});
+      tl.to(stoneResponse,{autoAlpha:.39,scaleX:1.48,duration:.38,ease:"power2.out"})
+        .to(edge,{autoAlpha:.90,scale:1.014,duration:.30},"-=.24")
+        .to(orbits,{autoAlpha:.74,scale:1.03,rotation:12,duration:.42},"<")
+        .to(h,{autoAlpha:.29,scale:1.08,duration:.32},"<")
+        .to(ghost,{autoAlpha:.54,filter:"brightness(1.2)",duration:.26},"-=.19")
+        .to(spectralFill,{autoAlpha:Math.min(.91,.69+intensity*.13),
+          duration:.48,ease:"power2.inOut"},"-=.10")
+        .to(c,{clipPath:"inset(0% 0% 0% 0%)",duration:.65,ease:"power2.inOut"},"-=.12")
+        .to(spectralFront,{autoAlpha:.77,yPercent:-108,duration:.66,
+          ease:"power2.inOut"},"<")
+        .to(rig,{y:-6,scale:1.025,rotation:0,duration:.34,ease:"power2.out"},"-=.30")
+        .to(spectralFill,{autoAlpha:0,duration:.39},"-=.20")
+        .to(ghost,{autoAlpha:0,duration:.33},"<")
+        .to(c,{filter:"brightness(1) saturate(1)",duration:.35},"<")
+        .to(edge,{autoAlpha:0,scale:1.07,duration:.33},"<")
+        .to(orbits,{autoAlpha:0,scale:1.22,rotation:30,duration:.35},"<")
+        .to(spectralFront,{autoAlpha:0,duration:.20},"<")
+        .to(stoneResponse,{autoAlpha:0,scaleX:2.65,duration:.45},"<")
+        .to(h,{autoAlpha:0,duration:.30},"<")
+        .to(rig,{y:0,scale:1,rotation:0,duration:.34,ease:"power2.out"},"-=.16");
+    }
+
+    if(effect==="archive-v5"){
+      // Physical capture, not destruction. The SVG channel is laid out from
+      // real DOM geometry so the same effect works for every desktop width.
+      const from=pCard(),to=pArchive();
+      const bounds=stage.current?.getBoundingClientRect();
+      if(bounds){
+        bridge.setAttribute("viewBox",`0 0 ${bounds.width} ${bounds.height}`);
+        const cx=from.x+(to.x-from.x)*.39;
+        const cy=from.y+(to.y-from.y)*.69;
+        const curve=`M ${from.x} ${from.y} Q ${cx} ${cy} ${to.x} ${to.y}`;
+        bridgeLine.setAttribute("d",curve);
+        bridgeGlow.setAttribute("d",curve);
+        const length=bridgeLine.getTotalLength();
+        gsap.set([bridgeLine,bridgeGlow],{strokeDasharray:length,strokeDashoffset:length});
+      }
+      gsap.set(spectralFill,{autoAlpha:0,clipPath:"inset(100% 0% 0% 0%)"});
+      tl.to(rig,{y:-8,scale:1.024,rotation:-.4,duration:.28})
+        .to(edge,{autoAlpha:.81,duration:.25},"-=.12")
+        .to(orbits,{autoAlpha:.67,scale:1.04,rotation:12,duration:.31},"<")
+        .to(spectralFill,{autoAlpha:Math.min(.91,.72+intensity*.11),
+          clipPath:"inset(0% 0% 0% 0%)",duration:.50,
+          ease:"power2.inOut"},"-=.13")
+        .to(bridge,{autoAlpha:.88,duration:.16},"-=.15")
+        .to(bridgeLine,{strokeDashoffset:0,duration:.57,ease:"power2.inOut"},"<")
+        .to(bridgeGlow,{strokeDashoffset:0,duration:.57,ease:"power2.inOut"},"<")
+        .to(rig,{x:to.x-from.x,y:to.y-from.y,scale:.19,
+          rotation:-13,duration:.73,ease:"power3.inOut"},"-=.39")
+        .to(archiveRings,{autoAlpha:.76,scale:1.04,duration:.28,ease:"power2.out"},"-=.29")
+        .to(c,{autoAlpha:0,duration:.10},"-=.11")
+        .call(()=>{if(archiveValue.current)archiveValue.current.textContent="4";},undefined,"<")
+        .to(a,{scale:1.14,duration:.15,ease:"power2.out"},"<")
+        .to(a,{scale:1,duration:.27,ease:"power2.out"})
+        .to(archiveRings,{autoAlpha:0,scale:1.36,duration:.37},"-=.26")
+        .to(bridge,{autoAlpha:0,duration:.29},"<")
+        .to(spectralFill,{autoAlpha:0,duration:.26},"<")
+        .to(orbits,{autoAlpha:0,duration:.21},"<")
+        .to(edge,{autoAlpha:0,duration:.20},"<");
+    }
+
+    if(effect==="placement-v5"){
+      // The card has tangible weight. Magic appears only when the physical
+      // card makes contact with the engraved stone (not during its flight).
+      const width=stage.current?.clientWidth??950;
+      const height=stage.current?.clientHeight??600;
+      gsap.set(rig,{x:-Math.min(width*.33,330),y:Math.min(height*.30,165),
+        rotation:-13,scale:.55,filter:"drop-shadow(6px 16px 13px #0006)"});
+      gsap.set(spectralFill,{autoAlpha:0,clipPath:"inset(100% 0% 0% 0%)"});
+      tl.to(rig,{x:-31,y:-35,rotation:3.5,scale:1.045,
+          filter:"drop-shadow(13px 24px 16px #0008)",duration:.65,
+          ease:"power3.inOut"})
+        .to(rig,{x:4,y:6,rotation:-1.5,scale:.975,
+          filter:"drop-shadow(2px 5px 5px #0005)",duration:.17,
+          ease:"power3.in"})
+        .to(contact,{autoAlpha:.69,scale:1.08,duration:.19,ease:"power2.out"},"<")
+        .to(stoneResponse,{autoAlpha:.32,scaleX:1.4,duration:.23},"<")
+        .to(orbits,{autoAlpha:.61,scale:1.05,rotation:7,duration:.23},"<")
+        .to(spectralFill,{autoAlpha:.49,
+          clipPath:"inset(0% 0% 0% 0%)",duration:.24},"<")
+        .to(rig,{x:0,y:0,rotation:0,scale:1,filter:"none",
+          duration:.27,ease:"back.out(1.45)"})
+        .to(contact,{autoAlpha:0,scale:1.35,duration:.35},"-=.20")
+        .to(stoneResponse,{autoAlpha:0,scaleX:2.45,duration:.39},"<")
+        .to(orbits,{autoAlpha:0,scale:1.2,rotation:22,duration:.31},"<")
+        .to(spectralFill,{autoAlpha:0,duration:.30},"<");
+    }
+
+    if(effect==="banner-v5"){
+      // Actual cloth unfurls; restrained metallic lighting runs across the
+      // fabric before the Champion and wording become legible.
+      gsap.set(b,{scaleY:.20,transformOrigin:"center top",
+        clipPath:"polygon(0 0,100% 0,100% 75%,50% 84%,0 75%)",opacity:.55});
+      gsap.set(bBody,{y:-22,autoAlpha:0});
+      gsap.set(fig,{y:96,scale:.88,autoAlpha:0});
+      gsap.set(bannerWash,{autoAlpha:0,clipPath:"inset(0% 100% 0% 0%)"});
+      tl.to(b,{scaleY:1,opacity:1,duration:.69,ease:"power3.out"})
+        .to(b,{clipPath:"polygon(0 0,100% 0,100% 92%,50% 100%,0 92%)",
+          duration:.43,ease:"power2.out"},"<")
+        .to(bannerWash,{autoAlpha:.57,
+          clipPath:"inset(0% 0% 0% 0%)",duration:.48,
+          ease:"power2.inOut"},"-=.35")
+        .to(bannerRings,{autoAlpha:.32,scale:1,rotation:10,duration:.38},"-=.33")
+        .to(bBody,{y:0,autoAlpha:1,duration:.39,ease:"power2.out"},"-=.30")
+        .to(fig,{y:0,scale:1,autoAlpha:1,duration:.49,
+          ease:"power2.out"},"-=.36")
+        .to(bannerWash,{autoAlpha:0,
+          clipPath:"inset(0% 0% 0% 100%)",duration:.35},"-=.17")
+        .to(bannerRings,{autoAlpha:0,scale:1.24,rotation:29,
+          duration:.34},"<")
+        .to(b,{rotation:-.4,duration:.10},"-=.10")
+        .to(b,{rotation:0,duration:.25,ease:"power2.out"});
+    }
+
     if(effect==="power-rise"||effect==="power-fall"){
       // A fixed physical material wave changes the actual card state.
       // No particle emission: color field, fine engraving, and one stone pulse.
