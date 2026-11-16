@@ -119,9 +119,13 @@
 }
 
 /* Real Champion Life changes: black for loss, gold for healing. */
+:root[data-theme] .app-shell.board-redesign-v1 .board-gs-crest-anchor{
+  position:relative;display:grid;place-items:center;min-width:0;overflow:visible;
+}
 :root[data-theme] .app-shell.board-redesign-v1 .hybrid-life-unit .board-gs-crest-circles{
-  position:absolute;inset:0;z-index:3;pointer-events:none;
-  display:grid;place-items:center;overflow:hidden;
+  position:absolute;left:50%;top:50%;translate:-50% -50%;
+  width:calc(100% + 22px);aspect-ratio:1;z-index:4;pointer-events:none;
+  display:grid;place-items:center;overflow:visible;
   --gs-crown-ring:var(--gs-ink-edge);
 }
 :root[data-theme] .app-shell.board-redesign-v1 .hybrid-life-unit.is-healed .board-gs-crest-circles{
