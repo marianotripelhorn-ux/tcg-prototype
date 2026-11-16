@@ -27,6 +27,8 @@ export function QuieroChoiceStage({
   onChoose:(wants:boolean)=>void;
 }){
   const locked=selected!==null;
+  const firstChoice=useRef<HTMLButtonElement>(null);
+  useEffect(()=>{firstChoice.current?.focus();},[]);
   return <section className={"board-quiero-stage"+(locked?" is-committing":"")}
     role="dialog" aria-modal="true" aria-labelledby="board-quiero-title"
     aria-describedby="board-quiero-explainer">
@@ -40,7 +42,7 @@ export function QuieroChoiceStage({
         Podés disputar un punto más o cerrar la ronda.
       </p>
       <div className="board-quiero-choices" role="group" aria-label="Elegí si disputar el tercer duelo">
-        <button type="button" className={"board-quiero-yes"+(selected===true?" is-picked":"")}
+        <button ref={firstChoice} type="button" className={"board-quiero-yes"+(selected===true?" is-picked":"")}
           disabled={locked} onClick={()=>onChoose(true)}>QUIERO</button>
         <button type="button" className={"board-quiero-no"+(selected===false?" is-picked":"")}
           disabled={locked} onClick={()=>onChoose(false)}>NO QUIERO</button>
@@ -60,7 +62,7 @@ export function RivalQuieroStage({onComplete,reducedMotion}:{
   const current=useRef(onComplete);
   current.current=onComplete;
   useEffect(()=>{
-    const timer=window.setTimeout(()=>current.current(),reducedMotion?260:960);
+    const timer=window.setTimeout(()=>current.current(),reducedMotion?260:840);
     return ()=>window.clearTimeout(timer);
   },[reducedMotion]);
   return <div className={"board-quiero-stage board-quiero-rival"+(reducedMotion?" is-reduced":"")}
