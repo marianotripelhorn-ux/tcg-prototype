@@ -40,7 +40,7 @@ export function QuieroChoiceStage({
         <span>{score.player}</span><i>—</i><span>{score.opponent}</span>
       </div>
       <div className="board-quiero-banner" style={{
-        backgroundImage:`linear-gradient(180deg,#080a08bd,#11180de3),url("${bannerImage}")`
+        backgroundImage:`linear-gradient(180deg,#080a08a8,#11180dbf),url("${bannerImage}")`
       }}>
         <span className="board-quiero-banner-overline">TERCER DUELO</span>
         <h2 id="board-quiero-title" className="board-quiero-title">¿QUERÉS CONTINUAR?</h2>
@@ -78,7 +78,7 @@ export function RivalQuieroStage({onComplete,reducedMotion,bannerImage}:{
     <div className="board-quiero-content">
       <span className="board-quiero-kicker">EL RIVAL DECIDE</span>
       <div className="board-quiero-banner" style={{
-        backgroundImage:`linear-gradient(180deg,#080a08bd,#11180de3),url("${bannerImage}")`
+        backgroundImage:`linear-gradient(180deg,#080a08a8,#11180dbf),url("${bannerImage}")`
       }}>
         <span className="board-quiero-banner-overline">TERCER DUELO</span>
         <strong className="board-quiero-rival-word">QUIERO</strong>
