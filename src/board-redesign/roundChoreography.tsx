@@ -68,7 +68,7 @@ export function ArchiveReceiptTransition({sequenceId,reducedMotion,onComplete}:T
   const current=useRef(onComplete);
   current.current=onComplete;
   useEffect(()=>{
-    const timer=window.setTimeout(()=>current.current(),reducedMotion?230:480);
+    const timer=window.setTimeout(()=>current.current(),reducedMotion?230:350);
     return ()=>window.clearTimeout(timer);
   },[sequenceId,reducedMotion]);
   return <div className="board-archive-receipt" role="status" aria-live="polite">
