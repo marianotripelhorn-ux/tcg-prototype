@@ -44,6 +44,7 @@ interface CardFlightProps {
   position:Position;
   children:ReactNode;
   onComplete:()=>void;
+  onLand?:()=>void;
   reducedMotion:boolean;
   sequenceId:number;
 }
@@ -52,20 +53,24 @@ interface CardFlightProps {
  * A WAAPI flight only animates the compositor transform; it never re-renders or
  * modifies the underlying CardDefinition or game action.
  */
-export function CardFlight({origin,position,children,onComplete,reducedMotion,sequenceId}:CardFlightProps){
+export function CardFlight({origin,position,children,onComplete,onLand,reducedMotion,sequenceId}:CardFlightProps){
   const el=useRef<HTMLDivElement>(null);
   const complete=useRef(onComplete);
   complete.current=onComplete;
+  const landed=useRef(onLand);
+  landed.current=onLand;
   useLayoutEffect(()=>{
     const node=el.current;
     if(!node)return;
     if(reducedMotion||!origin){
+      landed.current?.();
       complete.current();
       return;
     }
     const target=document.querySelector(`.board-slot.player[data-position="${position}"] .current-board-card`);
     const destination=makeRectSnapshot(target);
     if(!destination){
+      landed.current?.();
       complete.current();
       return;
     }
@@ -80,6 +85,7 @@ export function CardFlight({origin,position,children,onComplete,reducedMotion,se
       {transform:`translate3d(${dx}px,${dy}px,0) rotate(0deg) scale(${sx},${sy})`,filter:"drop-shadow(0 4px 4px #0007)",offset:1}
     ],{duration:770,easing:"cubic-bezier(.19,.8,.24,1)",fill:"forwards"});
     animation.onfinish=()=>{
+      landed.current?.();
       holdTimer=window.setTimeout(()=>complete.current(),230);
     };
     return ()=>{
