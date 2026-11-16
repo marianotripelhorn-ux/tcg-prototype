@@ -52,6 +52,17 @@ export function RoundTransition({sequenceId,reducedMotion,onComplete,summary}:Ti
   </div>;
 }
 
+/**
+ * The on-field darkness pulls toward the existing right-hand duel score
+ * while original played cards move to the engine's per-lane Archives.
+ * This never implies that Archive cards are deposited in the score panel.
+ */
+export function ArchiveSweep() {
+  return <div className="board-archive-sweep" aria-hidden="true">
+    <span className="board-archive-sweep-edge"/>
+  </div>;
+}
+
 export function ArchiveReceiptTransition({sequenceId,reducedMotion,onComplete}:TimedProps) {
   const current=useRef(onComplete);
   current.current=onComplete;

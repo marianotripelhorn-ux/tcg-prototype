@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ArchiveFlight, CardFlight, DealMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
 import type { BoardMotionSequence } from "./board-redesign/motion";
-import { ArchiveReceiptTransition, RoundTransition, archiveCountChange, completedRoundReceipt } from "./board-redesign/roundChoreography";
+import { ArchiveReceiptTransition, ArchiveSweep, RoundTransition, archiveCountChange, completedRoundReceipt } from "./board-redesign/roundChoreography";
 import { DUEL_BEATS, DUEL_FINISH_MS, duelPowerReasons, powerIsRevealed, powerSourceCues, postDuelChampionCues } from "./board-redesign/duelChoreography";
 import type { DuelBeat } from "./board-redesign/duelChoreography";
 import { playDuelCue, unlockDuelAudio } from "./board-redesign/duelAudio";
@@ -1239,25 +1239,26 @@ export default function App() {
           </aside>
           <div className="arena-stage">
             <span className="arena-visually-hidden" role="status">{turnText}</span>
-            {hoveredBoardCard && !duelPreview && (
+            {hoveredBoardCard && !duelPreview && !boardMotion && (
               <div className="arena-card-board-preview" aria-hidden="true">
                 <CardFace card={hoveredBoardCard}/>
               </div>
             )}
-            {hoveredHandIndex!==null && hand[hoveredHandIndex] && !drag && !handExpanded && !duelPreview && (
+            {hoveredHandIndex!==null && hand[hoveredHandIndex] && !drag && !handExpanded && !duelPreview && !boardMotion && (
               <div className="arena-card-hover-preview" aria-hidden="true">
                 <CardFace card={hand[hoveredHandIndex]}/>
               </div>
             )}
+        {boardRedesign && boardMotion?.phase==="round" && <RoundTransition
+          sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
+          summary={completedRound}
+          onComplete={()=>{
+            const current=boardMotionRef.current;
+            if(current?.id===boardMotion.id&&current.phase==="round")
+              setMotion({...current,phase:"archive"});
+          }}/>}
+        {boardRedesign && boardMotion?.phase==="archive" && <ArchiveSweep/>}
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
-          {boardRedesign && boardMotion?.phase==="round" && <RoundTransition
-            sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
-            summary={completedRound}
-            onComplete={()=>{
-              const current=boardMotionRef.current;
-              if(current?.id===boardMotion.id&&current.phase==="round")
-                setMotion({...current,phase:"archive"});
-            }}/>}
           {boardRedesign && boardMotion?.phase==="archive-reveal" && <ArchiveReceiptTransition
             sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
             onComplete={()=>{
