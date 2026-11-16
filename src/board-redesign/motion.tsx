@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, type ReactNode } from "react";
 import type { CardDefinition, Position } from "../types";
 import type { DuelSummary, EnginePlay, GameState } from "../engine/types";
 
-export type BoardMotionPhase = "flight" | "duel" | "archive" | "deal";
+export type BoardMotionPhase = "flight" | "duel" | "round" | "archive" | "archive-reveal" | "deal";
 export interface RectSnapshot { x:number;y:number;width:number;height:number }
 export interface BoardMotionSequence {
   id:number;
@@ -19,13 +19,14 @@ export interface BoardMotionSequence {
  * enough to move them visibly to the six corresponding Archive counters.
  */
 export function visibleRoundPlays(motion:BoardMotionSequence|null,side:"player"|"opponent"):EnginePlay[]|null {
-  if(!motion || motion.phase==="deal") return null;
+  if(!motion || motion.phase==="deal" || motion.phase==="archive-reveal") return null;
   const previous=motion.before[side].roundPlays;
   if(!motion.duel) return previous;
   return [...previous,side==="player"?motion.duel.playerPlay:motion.duel.opponentPlay];
 }
 export function visibleHand(motion:BoardMotionSequence|null, fallback:CardDefinition[]):CardDefinition[]{
   if(!motion || motion.phase==="deal")return fallback;
+  if(motion.phase==="archive-reveal")return [];
   if(motion.handIndex===null)return motion.before.player.hand;
   return motion.before.player.hand.filter((_,index)=>index!==motion.handIndex);
 }
@@ -83,10 +84,10 @@ export function CardFlight({origin,position,children,onComplete,onLand,reducedMo
       {transform:`translate3d(${dx*.54}px,${dy*.54-29}px,0) rotate(2.8deg) scale(${(1+sx)*.57},${(1+sy)*.57})`,filter:"drop-shadow(0 24px 26px #0008)",offset:.58},
       {transform:`translate3d(${dx}px,${dy}px,0) rotate(-.9deg) scale(${sx},${sy})`,filter:"drop-shadow(0 13px 12px #0008)",offset:.91},
       {transform:`translate3d(${dx}px,${dy}px,0) rotate(0deg) scale(${sx},${sy})`,filter:"drop-shadow(0 4px 4px #0007)",offset:1}
-    ],{duration:770,easing:"cubic-bezier(.19,.8,.24,1)",fill:"forwards"});
+    ],{duration:900,easing:"cubic-bezier(.19,.8,.24,1)",fill:"forwards"});
     animation.onfinish=()=>{
       landed.current?.();
-      holdTimer=window.setTimeout(()=>complete.current(),230);
+      holdTimer=window.setTimeout(()=>complete.current(),260);
     };
     return ()=>{
       animation.onfinish=null;animation.cancel();
@@ -126,11 +127,14 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
     const animations:Animation[]=[];
     const animatedCards:HTMLElement[]=[];
     const archiveTargets=new Set<HTMLElement>();
+    const arrivalTimers:number[]=[];
     const clearFx=()=>{
       animatedCards.forEach(card=>card.classList.remove("board-gs-archiving"));
       archiveTargets.forEach(target=>target.classList.remove("board-gs-archive-target"));
     };
     const cards=Array.from(arena.querySelectorAll<HTMLElement>(".board-slot .played-card"));
+    // Opponent then player; across each side: Siniestra, Trono, Diestra.
+    const groupIndex=new Map<string,number>();
     for(let i=0;i<cards.length;i++){
       const card=cards[i];
       const parent=card.closest<HTMLElement>(".board-slot");
@@ -139,9 +143,15 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
       const a=card.getBoundingClientRect(),b=destination.getBoundingClientRect();
       if(!a.width||!a.height)continue;
       card.classList.add("board-gs-archiving");
-      destination.classList.add("board-gs-archive-target");
       animatedCards.push(card);
       archiveTargets.add(destination);
+      const side=parent?.classList.contains("player")?"player":"opponent";
+      const position=parent?.dataset.position??"trono";
+      const slotKey=side+":"+position;
+      const inSlot=groupIndex.get(slotKey)??0;
+      groupIndex.set(slotKey,inSlot+1);
+      const laneIndex=position==="siniestra"?0:position==="trono"?1:2;
+      const delay=(side==="opponent"?0:320)+laneIndex*130+inSlot*105;
       const dx=b.left+b.width/2-(a.left+a.width/2);
       const dy=b.top+b.height/2-(a.top+a.height/2);
       const animation=card.animate([
@@ -149,7 +159,13 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
         {transform:"translate3d(0,-12px,0) scale(1.035)",opacity:1,offset:.2},
         {transform:`translate3d(${dx}px,${dy}px,0) rotate(-5deg) scale(.14)`,opacity:.45,offset:.87},
         {transform:`translate3d(${dx}px,${dy+8}px,0) rotate(-5deg) scale(.08)`,opacity:0,offset:1}
-      ],{duration:900,easing:"cubic-bezier(.26,.73,.27,1)",delay:i*85,fill:"forwards"});
+      ],{duration:1210,easing:"cubic-bezier(.26,.73,.27,1)",delay,fill:"forwards"});
+      // Archive rings respond at arrival instead of when the card leaves.
+      arrivalTimers.push(window.setTimeout(()=>{
+        destination.classList.remove("board-gs-archive-target");
+        void destination.offsetWidth;
+        destination.classList.add("board-gs-archive-target");
+      },delay+970));
       animations.push(animation);
     }
     // An unused third hand card is discarded, never placed in an Archive.
@@ -163,14 +179,14 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
       animations.push(card.animate([
         {transform:"translate3d(0,0,0) scale(1)",opacity:1},
         {transform:`translate3d(${dx}px,${dy}px,0) rotate(12deg) scale(.25)`,opacity:0}
-      ],{duration:640,delay:170+i*65,easing:"cubic-bezier(.3,.78,.32,1)",fill:"forwards"}));
+      ],{duration:850,delay:190+i*115,easing:"cubic-bezier(.3,.78,.32,1)",fill:"forwards"}));
     }
     let cancelled=false;
     if(animations.length===0){done.current();return;}
     Promise.all(animations.map(a=>a.finished.catch(()=>{}))).then(()=>{
       if(!cancelled){clearFx();done.current();}
     });
-    return ()=>{cancelled=true;animations.forEach(a=>a.cancel());clearFx();};
+    return ()=>{cancelled=true;arrivalTimers.forEach(t=>window.clearTimeout(t));animations.forEach(a=>a.cancel());clearFx();};
   },[sequenceId,reducedMotion]);
   return null;
 }
@@ -197,7 +213,7 @@ export function DealMotion({sequenceId,reducedMotion,onComplete}:ArchiveFlightPr
         {transform:`translate3d(${dx}px,${dy}px,0) rotate(9deg) scale(.3)`,opacity:0,offset:0},
         {transform:"translate3d(0,-9px,0) rotate(-1deg) scale(1.025)",opacity:1,offset:.83},
         {transform:"translate3d(0,0,0) rotate(0deg) scale(1)",opacity:1,offset:1}
-      ],{duration:680,delay:index*105,easing:"cubic-bezier(.2,.72,.29,1)",fill:"forwards"}));
+      ],{duration:940,delay:index*155,easing:"cubic-bezier(.2,.72,.29,1)",fill:"forwards"}));
     });
     let cancelled=false;
     if(!animations.length){done.current();return;}
