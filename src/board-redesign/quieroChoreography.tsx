@@ -21,10 +21,11 @@ export function rivalAcceptedQuiero(before:GameState,after:GameState):boolean {
 }
 
 export function QuieroChoiceStage({
-  score,selected,onChoose
+  score,selected,onChoose,bannerImage
 }:{
   score:{player:number;opponent:number};
   selected:boolean|null;
+  bannerImage:string;
   onChoose:(wants:boolean)=>void;
 }){
   const locked=selected!==null;
@@ -34,29 +35,35 @@ export function QuieroChoiceStage({
     role="dialog" aria-modal="true" aria-labelledby="board-quiero-title"
     aria-describedby="board-quiero-explainer">
     <div className="board-quiero-content">
-      <span className="board-quiero-kicker">DECISIÓN · TERCER DUELO</span>
+      <span className="board-quiero-kicker">DECISIÓN DE RONDA</span>
       <div className="board-quiero-score" aria-label={`Marcador: vos ${score.player}; rival ${score.opponent}`}>
         <span>{score.player}</span><i>—</i><span>{score.opponent}</span>
       </div>
-      <h2 id="board-quiero-title" className="board-quiero-title">¿DISPUTÁS EL TERCER DUELO?</h2>
-      <p id="board-quiero-explainer" className="board-quiero-description">
-        Podés disputar un punto más o cerrar la ronda.
-      </p>
-      <div className="board-quiero-choices" role="group" aria-label="Elegí si disputar el tercer duelo">
-        <button ref={firstChoice} type="button" className={"board-quiero-yes"+(selected===true?" is-picked":"")}
-          disabled={locked} onClick={()=>onChoose(true)}>QUIERO</button>
-        <button type="button" className={"board-quiero-no"+(selected===false?" is-picked":"")}
-          disabled={locked} onClick={()=>onChoose(false)}>NO QUIERO</button>
+      <div className="board-quiero-banner" style={{
+        backgroundImage:`linear-gradient(180deg,#080a08bd,#11180de3),url("${bannerImage}")`
+      }}>
+        <span className="board-quiero-banner-overline">TERCER DUELO</span>
+        <h2 id="board-quiero-title" className="board-quiero-title">¿QUERÉS CONTINUAR?</h2>
+        <span className="board-quiero-banner-rule" aria-hidden="true"/>
+        <p id="board-quiero-explainer" className="board-quiero-description">
+          Podés disputar un punto más o cerrar la ronda.
+        </p>
+        <div className="board-quiero-choices" role="group" aria-label="Elegí si disputar el tercer duelo">
+          <button ref={firstChoice} type="button" className={"board-quiero-yes"+(selected===true?" is-picked":"")}
+            disabled={locked} onClick={()=>onChoose(true)}>QUIERO</button>
+          <button type="button" className={"board-quiero-no"+(selected===false?" is-picked":"")}
+            disabled={locked} onClick={()=>onChoose(false)}>NO QUIERO</button>
+        </div>
+        {locked&&<span className="board-quiero-selected" role="status" aria-live="polite">
+          {selected?"QUIERO":"NO QUIERO"}
+        </span>}
       </div>
-      {locked&&<span className="board-quiero-selected" role="status" aria-live="polite">
-        {selected?"QUIERO":"NO QUIERO"}
-      </span>}
     </div>
   </section>;
 }
 
-export function RivalQuieroStage({onComplete,reducedMotion}:{
-  onComplete:()=>void;reducedMotion:boolean;
+export function RivalQuieroStage({onComplete,reducedMotion,bannerImage}:{
+  onComplete:()=>void;reducedMotion:boolean;bannerImage:string;
 }){
   // The actual AI answer is already present in GameState.events. This stage
   // only acknowledges it before exposing the third-duel controls.
@@ -70,10 +77,16 @@ export function RivalQuieroStage({onComplete,reducedMotion}:{
     role="status" aria-live="polite" aria-label="El rival quiere disputar el tercer duelo">
     <div className="board-quiero-content">
       <span className="board-quiero-kicker">EL RIVAL DECIDE</span>
-      <strong className="board-quiero-rival-word">QUIERO</strong>
-      <span className="board-quiero-description">HABRÁ TERCER DUELO</span>
-      <button className="board-quiero-rival-continue" type="button" onClick={onComplete}
-        aria-label="Continuar al tercer duelo">CONTINUAR</button>
+      <div className="board-quiero-banner" style={{
+        backgroundImage:`linear-gradient(180deg,#080a08bd,#11180de3),url("${bannerImage}")`
+      }}>
+        <span className="board-quiero-banner-overline">TERCER DUELO</span>
+        <strong className="board-quiero-rival-word">QUIERO</strong>
+        <span className="board-quiero-banner-rule" aria-hidden="true"/>
+        <span className="board-quiero-description">HABRÁ TERCER DUELO</span>
+        <button className="board-quiero-rival-continue" type="button" onClick={onComplete}
+          aria-label="Continuar al tercer duelo">CONTINUAR</button>
+      </div>
     </div>
   </div>;
 }
