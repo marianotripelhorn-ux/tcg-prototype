@@ -196,3 +196,50 @@ export function DealMotion({sequenceId,reducedMotion,onComplete}:ArchiveFlightPr
   },[sequenceId,reducedMotion]);
   return null;
 }
+
+
+type BoardSide="player"|"opponent";
+interface BoardDamageTransferProps {
+  attacker:BoardSide;
+  victim:BoardSide;
+  position:Position;
+  reducedMotion:boolean;
+}
+/** A single restrained, physically aimed ink ribbon. It is mounted only if
+ * the engine's already-resolved duel actually removed Champion Life.
+ * The visible Life value is owned by GameState, never by the effect.
+ */
+export function BoardDamageTransfer({
+  attacker,victim,position,reducedMotion
+}:BoardDamageTransferProps){
+  const [geometry,setGeometry]=useState<{path:string;width:number;height:number}|null>(null);
+  useLayoutEffect(()=>{
+    if(reducedMotion)return;
+    const update=()=>{
+      const root=document.querySelector(".app-shell.board-redesign-v1");
+      if(!root){setGeometry(null);return;}
+      const from=root.querySelector(
+        `.board-slot.${attacker}[data-position="${position}"] .current-board-card`
+      );
+      const to=root.querySelector(`.hybrid-life-unit.${victim} .hybrid-life-crest`);
+      const a=from?.getBoundingClientRect(),b=to?.getBoundingClientRect();
+      if(!a||!b||!a.width||!b.width){setGeometry(null);return;}
+      const x1=a.left+a.width/2,y1=a.top+a.height/2;
+      const x2=b.left+b.width/2,y2=b.top+b.height/2;
+      const cx=x1+(x2-x1)*.53,cy=y1+(y2-y1)*.53-32;
+      setGeometry({
+        path:`M ${x1.toFixed(2)} ${y1.toFixed(2)} Q ${cx.toFixed(2)} ${cy.toFixed(2)} ${x2.toFixed(2)} ${y2.toFixed(2)}`,
+        width:window.innerWidth,height:window.innerHeight
+      });
+    };
+    update();
+    window.addEventListener("resize",update);
+    return ()=>window.removeEventListener("resize",update);
+  },[attacker,victim,position,reducedMotion]);
+  if(reducedMotion||!geometry)return null;
+  return <svg className="board-gs-damage-channel" aria-hidden="true"
+    viewBox={`0 0 ${geometry.width} ${geometry.height}`} preserveAspectRatio="none">
+    <path className="board-gs-channel-under" d={geometry.path} pathLength={100}/>
+    <path className="board-gs-channel-line" d={geometry.path} pathLength={100}/>
+  </svg>;
+}
