@@ -200,3 +200,106 @@
     transition:none!important;
   }
 }
+
+/*
+ * Heritage banner restoration: preserves the original narrow, faction-art
+ * hanging standard, gold outline, tapered bottom, vertical choices and
+ * "¿QUERÉS CONTINUAR?" wording. The field-wide eclipse and engine-driven
+ * choice sequence remain independently owned by the presentation stage.
+ */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner {
+  position:relative;isolation:isolate;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex:none;
+  width:clamp(258px,26vw,370px);
+  max-width:min(92vw,100%);
+  min-height:clamp(300px,43dvh,388px);
+  gap:clamp(8px,1.15dvh,13px);
+  padding:22px 26px 53px;
+  box-sizing:border-box;
+  color:#f4edda;text-align:center;
+  background-color:#171913;
+  background-size:cover;background-position:center top;
+  border:1px solid #c6a367;
+  clip-path:polygon(0 0,100% 0,100% 87%,50% 100%,0 87%);
+  filter:drop-shadow(0 15px 20px #0009);
+  animation:dl-quiero-banner-unfurl .43s cubic-bezier(.19,.7,.27,1) both;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner::before {
+  content:"";position:absolute;inset:4px 5px 17%;
+  z-index:-1;pointer-events:none;
+  border:1px solid #d7b88165;border-bottom:0;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner-overline {
+  color:#ead2a1;
+  font:700 10px/1.2 Arial,sans-serif;letter-spacing:.18em;
+  text-shadow:0 2px 4px #000a;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner-rule {
+  width:100%;height:1px;flex:none;
+  background:linear-gradient(90deg,transparent,#f3d69c,transparent);
+  margin:1px 0;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner .board-quiero-title {
+  font:400 clamp(19px,1.85vw,27px)/1.13 var(--board-display,Arial,sans-serif);
+  letter-spacing:-.03em;
+  color:#f5f2e9;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner .board-quiero-description {
+  font:500 clamp(11px,.95vw,13px)/1.32 Arial,sans-serif;
+  color:#ede9dd;
+  max-width:245px;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner .board-quiero-choices {
+  flex-direction:column;flex-wrap:nowrap;align-items:stretch;
+  gap:8px;margin-top:3px;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner .board-quiero-choices button {
+  width:100%;min-height:43px;padding:11px 12px;
+  border:1px solid #ead09b;border-radius:0;
+  font:800 clamp(12px,1.2vw,16px)/1 Arial,sans-serif;
+  letter-spacing:.09em;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner .board-quiero-choices .board-quiero-yes {
+  color:#101209;background:#d9ba7d;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner .board-quiero-choices .board-quiero-no {
+  color:#ede7d8;background:#151912df;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner .board-quiero-selected {
+  top:42%;font-size:clamp(24px,3.5vw,45px);
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-rival .board-quiero-banner {
+  min-height:clamp(240px,32dvh,315px);
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-rival .board-quiero-rival-word {
+  font-size:clamp(42px,5vw,78px);
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-rival .board-quiero-rival-continue {
+  margin-top:6px;min-width:65%;
+}
+@keyframes dl-quiero-banner-unfurl {
+  0% {opacity:0;transform:translate3d(0,-11px,0) scaleY(.94)}
+  100% {opacity:1;transform:translate3d(0,0,0) scaleY(1)}
+}
+@media(max-width:760px) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner {
+    width:min(340px,87vw);
+    min-height:clamp(270px,41dvh,335px);
+    padding:18px 20px 46px;
+    gap:8px;
+  }
+}
+@media(max-height:610px) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner {
+    min-height:245px;padding:12px 20px 35px;gap:6px;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner .board-quiero-choices button {
+    min-height:35px;padding:7px 11px;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner {
+    animation:none!important;
+  }
+}
