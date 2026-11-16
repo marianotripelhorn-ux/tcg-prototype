@@ -340,7 +340,7 @@ try{
     const animation=el.getAnimations().find(a=>a.animationName==="dl-v3-curtain-sweep");
     const keyframes=animation?.effect?.getKeyframes()??[];
     return {
-      animation:s.animationName,stageRatio:r.width/stage.width,
+      animation:s.animationName,stageRatio:el.offsetWidth/stage.width,
       backdrop:s.backdropFilter,clip:s.clipPath,
       keyframes:keyframes.map(f=>({transform:f.transform,opacity:f.opacity,clipPath:f.clipPath}))
     };
