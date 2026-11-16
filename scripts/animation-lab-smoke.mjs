@@ -1,7 +1,7 @@
 /**
  * Real desktop browser smoke test for the isolated lab only.
  * Usage: start Vite preview on localhost:4173, then node scripts/animation-lab-smoke.mjs
- * Validates the actual React card, GSAP timeline controls, thirteen demos and Pixi canvas.
+ * Validates the actual React card, GSAP timeline controls, seventeen demos and Pixi canvas.
  */
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
@@ -27,7 +27,7 @@ try {
   await page.getByRole("heading",{name:"Laboratorio de animaciones"}).waitFor({timeout:12000});
   await page.locator(".lab-stage .lab-card .game-card").first().waitFor({timeout:12000});
   const buttons=page.locator(".lab-effect-option");
-  assert.equal(await buttons.count(),13,"Expected thirteen independent motion experiments");
+  assert.equal(await buttons.count(),17,"Expected seventeen independent motion experiments");
   // V4.1 art-direction regression: no invented glyphs or standalone sigils.
   assert.equal(await page.locator(".lab-v4-card-sigil").count(),0,
     "The old emblem must be removed, not merely hidden");
@@ -35,7 +35,7 @@ try {
     "The card accents must be three fine full circles");
   assert.equal(await page.locator(".lab-v4-impact-arcs span").count(),2,
     "The Champion impact must have two fine full circles");
-  for(const selector of [".lab-v4-orbits .lab-v4-orbit",".lab-v4-impact-arcs span"]){
+  for(const selector of [".lab-v4-orbits .lab-v4-orbit",".lab-v4-impact-arcs span",".lab-v5-archive-rings span",".lab-v5-ground-contact span",".lab-v5-banner-rings span"]){
     const rings=await page.locator(selector).evaluateAll(nodes=>nodes.map(node=>{
       const style=getComputedStyle(node);
       return ["Top","Right","Bottom","Left"].map(side=>({
@@ -55,7 +55,7 @@ try {
   const pixiStatus=(await page.locator(".lab-renderer-status").textContent())?.trim()??"unknown";
   console.log("PixiJS:",pixiStatus);
   // Software WebGL may be unavailable on some CI machines; GSAP must still work.
-  for(let index=0;index<13;index++){
+  for(let index=0;index<17;index++){
     await buttons.nth(index).click();
     const name=(await buttons.nth(index).textContent())?.trim();
     await page.getByRole("button",{name:/REPRODUCIR/}).click();
@@ -75,19 +75,19 @@ try {
   // remains the source for both Power studies, while Vida always starts at 9.
   const basePower=Number((await page.locator(".lab-power-badge strong").textContent())?.trim());
   assert.ok(Number.isFinite(basePower),"The selected Daggerlight card must have a numeric Power value");
-  await buttons.nth(0).click();
+  await buttons.nth(4).click();
   assert.ok((await page.locator(".lab-stage").getAttribute("class"))?.includes("flavor-gold"),"Power boost must choose gold");
   await page.getByRole("button",{name:/REPRODUCIR/}).click();
   await page.waitForFunction(()=>document.querySelector(".lab-transport-caption")?.textContent?.includes("EFECTO COMPLETADO"),null,{timeout:10000});
   assert.equal(Number((await page.locator(".lab-power-badge strong").textContent())?.trim()),basePower+3,
     "Power gain must show an illustrative +3");
-  await buttons.nth(1).click();
+  await buttons.nth(5).click();
   assert.ok((await page.locator(".lab-stage").getAttribute("class"))?.includes("flavor-shadow"),"Power drain must choose near-black ink");
   await page.getByRole("button",{name:/REPRODUCIR/}).click();
   await page.waitForFunction(()=>document.querySelector(".lab-transport-caption")?.textContent?.includes("EFECTO COMPLETADO"),null,{timeout:10000});
   assert.equal(Number((await page.locator(".lab-power-badge strong").textContent())?.trim()),Math.max(0,basePower-3),
     "Power drain must be bounded at zero");
-  await buttons.nth(2).click();
+  await buttons.nth(6).click();
   assert.ok((await page.locator(".lab-stage").getAttribute("class"))?.includes("flavor-shadow"),"Damage must choose near-black ink");
   await page.getByRole("button",{name:/REPRODUCIR/}).click();
   await page.waitForFunction(()=>document.querySelector(".lab-transport-caption")?.textContent?.includes("EFECTO COMPLETADO"),null,{timeout:10000});
@@ -95,7 +95,7 @@ try {
   console.log("PASS: Gold Power increase, black Power decrease, black Champion damage");
   // Verify that the approved spectral reference still maps positive energy to antique gold and
   // negative energy to a genuinely dark, filled material treatment.
-  await buttons.nth(3).click();
+  await buttons.nth(7).click();
   await page.getByRole("button",{name:/Dorado/}).click();
   const stage=page.locator(".lab-stage");
   assert.ok((await stage.getAttribute("class"))?.includes("flavor-gold"),"Gold must be the default");
@@ -118,7 +118,7 @@ try {
   assert.match((await page.locator(".lab-transport-caption").textContent())??"",/Prueba reiniciada/);
   await page.screenshot({path:"/tmp/daggerlight-animation-lab-smoke.png"});
   assert.deepEqual(fatalErrors,[],"Browser page errors");
-  console.log("PASS: thirteen GSAP/PixiJS previews, replay controls and actual Daggerlight card.");
+  console.log("PASS: seventeen GSAP/PixiJS previews, replay controls and actual Daggerlight card.");
 } finally {
   await browser.close();
 }
