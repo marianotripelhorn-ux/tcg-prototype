@@ -24,10 +24,15 @@ try{
     await page.waitForTimeout(300);
   }
   assert.ok(online,"Vite preview did not start");
-  await page.locator(".splash-start").click({timeout:12000});
-  await page.locator(".home-action.action-play").click({timeout:12000,force:true});
-  await page.locator(".dl-champion-card").first().click({timeout:12000});
-  await page.locator(".dl-champion-start").click({timeout:12000});
+  // Existing menu uses substantial entry motion. Dispatch the same React
+  // click handlers after mounting instead of fighting menu transform stability.
+  await page.locator(".splash-start").evaluate(el=>el.click());
+  await page.locator(".home-action.action-play").waitFor({state:"attached",timeout:15000});
+  await page.locator(".home-action.action-play").evaluate(el=>el.click());
+  await page.locator(".dl-champion-card").first().waitFor({state:"attached",timeout:15000});
+  await page.locator(".dl-champion-card").first().evaluate(el=>el.click());
+  await page.locator(".dl-champion-start").waitFor({state:"attached",timeout:15000});
+  await page.locator(".dl-champion-start").evaluate(el=>el.click());
   const arena=page.locator(".app-shell.board-redesign-v1");
   await arena.waitFor({timeout:15000});
   await page.locator(".hybrid-right-rail .hybrid-life-unit").first().waitFor({timeout:10000});
