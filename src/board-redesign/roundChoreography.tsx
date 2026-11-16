@@ -33,7 +33,7 @@ export function RoundTransition({sequenceId,reducedMotion,onComplete,summary}:Ti
   const current=useRef(onComplete);
   current.current=onComplete;
   useEffect(()=>{
-    const timer=window.setTimeout(()=>current.current(),reducedMotion?240:1450);
+    const timer=window.setTimeout(()=>current.current(),reducedMotion?240:1900);
     return ()=>window.clearTimeout(timer);
   },[sequenceId,reducedMotion]);
   const reason=summary?.reason==="player_no_quiero"?"NO QUIERO":
@@ -58,9 +58,13 @@ export function RoundTransition({sequenceId,reducedMotion,onComplete,summary}:Ti
  * This never implies that Archive cards are deposited in the score panel.
  */
 export function ArchiveSweep() {
-  return <div className="board-archive-sweep" aria-hidden="true">
-    <span className="board-archive-sweep-edge"/>
-  </div>;
+  // Two independent compositor surfaces: a right-anchored dark curtain
+  // that contracts smoothly, and a sweeping edge that tracks its retreat.
+  // Avoid animating clip-path polygons or backdrop-filter every frame.
+  return <>
+    <div className="board-archive-sweep" aria-hidden="true"/>
+    <div className="board-archive-sweep-front" aria-hidden="true"/>
+  </>;
 }
 
 export function ArchiveReceiptTransition({sequenceId,reducedMotion,onComplete}:TimedProps) {
