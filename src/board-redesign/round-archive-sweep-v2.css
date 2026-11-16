@@ -15,9 +15,11 @@
   backdrop-filter:blur(4.5px) saturate(.78)!important;
   animation-duration:.48s!important;
 }
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-pair,
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-outcome{
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-pair{
   position:relative;z-index:3;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-outcome{
+  z-index:45; /* retain the original absolute positioning above the cards */
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-choreo-comparison{
   color:#fffef9!important;
