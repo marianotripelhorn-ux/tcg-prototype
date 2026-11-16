@@ -578,6 +578,8 @@ export default function App() {
     try{return window.localStorage.getItem("daggerlight-duel-sfx")!=="off";}
     catch{return true;}
   });
+  const audioEnabledRef=useRef(audioEnabled);
+  audioEnabledRef.current=audioEnabled;
   const [finalStep,setFinalStep]=useState<"ceremony"|"actions">("ceremony");
   const [duelAuguries,setDuelAuguries]=useState<string[]>([]);
   const previewTimer=useRef<number|null>(null);
@@ -814,19 +816,19 @@ export default function App() {
         },90));
         duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,940));
       }else{
-        playDuelCue("rise",audioEnabled);
+        playDuelCue("rise",audioEnabledRef.current);
         DUEL_BEATS.slice(1).forEach(({at,beat})=>{
           duelTimelineTimers.current.push(window.setTimeout(()=>{
             setDuelBeat(beat);
             if(beat==="player-power"||beat==="opponent-power"){
               const play=beat==="player-power"?duel.playerPlay:duel.opponentPlay;
               const delta=(play.finalPower??play.card.power)-play.card.power;
-              if(delta!==0)playDuelCue(delta>0?"gain":"loss",audioEnabled);
+              if(delta!==0)playDuelCue(delta>0?"gain":"loss",audioEnabledRef.current);
             }
-            if(beat==="impact"&&duel.outcome!=="draw")playDuelCue("impact",audioEnabled);
+            if(beat==="impact"&&duel.outcome!=="draw")playDuelCue("impact",audioEnabledRef.current);
             if(beat==="result"){
               setDuelStep("result");
-              playDuelCue(duel.outcome==="player"?"victory":duel.outcome==="opponent"?"defeat":"draw",audioEnabled);
+              playDuelCue(duel.outcome==="player"?"victory":duel.outcome==="opponent"?"defeat":"draw",audioEnabledRef.current);
             }
           },at));
         });
@@ -1099,6 +1101,7 @@ export default function App() {
               onClick={()=>{
                 const next=!audioEnabled;
                 setAudioEnabled(next);
+                audioEnabledRef.current=next;
                 try{window.localStorage.setItem("daggerlight-duel-sfx",next?"on":"off");}catch{}
                 if(next)unlockDuelAudio();
               }}>{audioEnabled?"SONIDO ON":"SONIDO OFF"}</button>}
