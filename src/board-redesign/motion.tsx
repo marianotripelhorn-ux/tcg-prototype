@@ -168,17 +168,18 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete}:ArchiveFligh
       },delay+970));
       animations.push(animation);
     }
-    // An unused third hand card is discarded, never placed in an Archive.
+    // Unused hand cards are DISCARDED, not returned to the deck and not
+    // archived. Let them dissolve into the lower hand shadow rather than
+    // incorrectly flying toward the physical deck object.
     const remaining=Array.from(document.querySelectorAll<HTMLElement>(".app-shell.board-redesign-v1 .hand-zone .hand-card"));
-    const discard=document.querySelector<HTMLElement>(".hybrid-deck-object");
-    const discardRect=discard?.getBoundingClientRect();
     for(let i=0;i<remaining.length;i++){
       const card=remaining[i],rect=card.getBoundingClientRect();
-      const dx=discardRect?(discardRect.left+discardRect.width/2)-(rect.left+rect.width/2):170;
-      const dy=discardRect?(discardRect.top+discardRect.height/2)-(rect.top+rect.height/2):70;
+      const dx=i%2===0?-16:16;
+      const dy=Math.max(35,rect.height*.45);
       animations.push(card.animate([
-        {transform:"translate3d(0,0,0) scale(1)",opacity:1},
-        {transform:`translate3d(${dx}px,${dy}px,0) rotate(12deg) scale(.25)`,opacity:0}
+        {transform:"translate3d(0,0,0) scale(1)",opacity:1,offset:0},
+        {transform:"translate3d(0,-7px,0) scale(.98)",opacity:.92,offset:.27},
+        {transform:`translate3d(${dx}px,${dy}px,0) rotate(8deg) scale(.62)`,opacity:0,offset:1}
       ],{duration:850,delay:190+i*115,easing:"cubic-bezier(.3,.78,.32,1)",fill:"forwards"}));
     }
     let cancelled=false;
