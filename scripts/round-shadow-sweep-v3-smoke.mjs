@@ -118,6 +118,8 @@ try{
   const compassValue=await page.locator(".hybrid-engraving")
     .evaluate(el=>getComputedStyle(el).getPropertyValue("--hybrid-compass-offset").trim());
   assert.ok(compassValue.endsWith("px"),"Compass image must align to measured ribbon center");
+  const compassBg=await page.locator(".hybrid-engraving").evaluate(el=>getComputedStyle(el).backgroundImage);
+  assert.ok(compassBg.includes("/ivory-ui/arena-ivory-limestone.webp"),"The compass layer must use the HD limestone artwork");
 
   await page.locator(".hand-zone .hand-card").first().click();
   await page.locator(".card-zoom-overlay .zoom-actions .primary-button").click({timeout:8000});

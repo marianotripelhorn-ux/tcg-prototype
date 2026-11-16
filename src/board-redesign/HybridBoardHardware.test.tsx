@@ -54,11 +54,10 @@ describe("Hybrid board is a view of the authoritative engine state",()=>{
     expect(html).toContain("Tu turno");
   });
 
-  it("uses the original compass artwork with the Vite public base",()=>{
+  it("renders the decorative compass layer",()=>{
     const html=renderToStaticMarkup(createElement(HybridEngraving));
     expect(html).toContain("hybrid-engraving");
-    expect(html).toContain("board/arena-compass-source.png");
-    expect(html).toContain("aria-hidden");
+    expect(html).toContain('aria-hidden="true"');
   });
 
   it("does not mutate engine state as a side effect of rendering the hardware",()=>{
