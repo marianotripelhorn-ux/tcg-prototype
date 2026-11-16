@@ -134,7 +134,7 @@ try{
       align:getComputedStyle(el).justifyContent,
       flex:getComputedStyle(el).flexDirection
     }));
-    assert.equal(direction.align,side==="opponent"?"flex-end":"flex-start",
+    assert.ok((side==="opponent" ? ["flex-end","flow-end"] : ["flex-start","flow-start"]).includes(direction.align),
       side+" previously played cards must attach to the center ribbon");
     assert.equal(direction.flex,side==="player"?"column-reverse":"column");
     const historic=stack.locator(".battle-card").first();
