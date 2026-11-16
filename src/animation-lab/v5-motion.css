@@ -24,6 +24,8 @@
   overflow-y:auto;overscroll-behavior:contain;
   padding-right:5px;scrollbar-color:#897859 #242821;scrollbar-width:thin;
 }
+.animation-lab .lab-effect-row{min-width:0}
+.animation-lab .lab-effect-row .lab-effect-option{width:100%}
 .animation-lab .lab-effect-list .lab-v5-divider{
   font-size:10px;letter-spacing:.14em;color:#d8c398;
   font-weight:850;text-transform:uppercase;
