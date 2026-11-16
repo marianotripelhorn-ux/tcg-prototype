@@ -1,0 +1,201 @@
+/*
+ * DAGGERLIGHT — Round Shadow Sweep v2
+ * Replace the old localized grey result box with an arena-sized shadow.
+ * The shadow converges on the existing right-hand score while actual cards
+ * fly to their six real Archives. No new panel, asset or gameplay rule.
+ */
+
+/* The original duel scrim sat behind the board due to a negative z-index.
+ * Put the translucent shadow ABOVE the ivory board but BELOW the real cards. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-focus-screen{
+  z-index:0!important;
+  background:radial-gradient(ellipse 80% 85% at 48% 46%,
+    rgba(3,5,7,.66) 0%, rgba(3,5,7,.74) 58%, rgba(3,5,7,.84) 100%)!important;
+  -webkit-backdrop-filter:blur(4.5px) saturate(.78)!important;
+  backdrop-filter:blur(4.5px) saturate(.78)!important;
+  animation-duration:.48s!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-pair,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-outcome{
+  position:relative;z-index:3;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-choreo-comparison{
+  color:#fffef9!important;
+  text-shadow:0 2px 7px #020303,0 0 16px #020303,0 0 2px #020303!important;
+  font-weight:900!important;
+  letter-spacing:.13em;
+  z-index:7!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-side{
+  color:#fffef5!important;
+  text-shadow:0 2px 7px #050605,0 0 13px #020303!important;
+  letter-spacing:.1em;
+  font-weight:900!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-outcome{
+  color:#fffdf4!important;
+  text-shadow:0 2px 6px #050605,0 0 18px #000!important;
+}
+/* Side modifiers already have excellent dark plates; retain them and
+ * increase only the marginal kicker's contrast. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-effect-column-kicker{
+  color:#fffdf4!important;text-shadow:0 2px 6px #050605,0 0 11px #000!important;
+}
+
+/* Remove the center-only floating box. The whole stage is the surface. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition{
+  position:absolute!important;
+  inset:0!important;
+  padding:0 27% 34px 0;
+  box-sizing:border-box;
+  z-index:60;
+  display:grid;place-items:center;
+  isolation:isolate;
+  pointer-events:none;
+  background:none!important;
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  overflow:visible;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition::before{
+  content:"";position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(90deg,
+    rgba(3,5,7,.91) 0%,rgba(4,7,8,.93) 62%,
+    rgba(4,7,8,.88) 76%,rgba(4,6,8,.36) 96%,rgba(4,6,8,.12) 100%)!important;
+  -webkit-backdrop-filter:blur(5px) saturate(.68)!important;
+  backdrop-filter:blur(5px) saturate(.68)!important;
+  animation:dl-shadow-round-in .44s ease-out both;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition .board-round-ceremony{
+  position:relative!important;
+  width:auto!important;
+  max-width:min(66vw,650px)!important;
+  min-width:0;
+  padding:0 24px!important;
+  background:none!important;
+  border:0!important;
+  box-shadow:none!important;
+  text-align:center!important;
+  color:#fff!important;
+  text-shadow:0 3px 10px #000,0 0 22px #000!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-kicker{
+  color:#fff!important;
+  font:900 clamp(13px,1.18vw,18px)/1.2 Arial,sans-serif!important;
+  letter-spacing:.18em!important;
+  text-shadow:0 2px 10px #000,0 0 15px #000!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-score{
+  color:#fffdf4!important;
+  font-family:var(--board-display,'Archivo Black',Arial,sans-serif)!important;
+  font-size:clamp(62px,7.0vw,106px)!important;
+  letter-spacing:-.04em!important;
+  text-shadow:0 4px 12px #000,0 0 21px #000!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-score i{
+  color:#f3f1eb!important;
+  font:.48em/1 Arial,sans-serif!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-outcome{
+  color:#fff!important;
+  font:900 clamp(13px,1.3vw,19px)/1.22 Arial,sans-serif!important;
+  text-shadow:0 2px 8px #000,0 0 17px #000!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-reason{
+  color:#f1f0ec!important;
+  text-shadow:0 2px 8px #000!important;
+  font:800 clamp(10px,.94vw,14px)/1.15 Arial,sans-serif!important;
+}
+
+/* The curtain persists after the text clears and contracts toward the
+ * existing score ribbon (center ~90% from stage left, ~43% from top).
+ * It is a pure visual layer: no card is ever put inside the score. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep{
+  position:absolute;
+  inset:0 0 34px 0;
+  z-index:16;pointer-events:none;
+  isolation:isolate;
+  background:linear-gradient(90deg,#050707ef 0%,#07090bf2 78%,#101111dc 100%);
+  -webkit-backdrop-filter:blur(3.2px) saturate(.78);
+  backdrop-filter:blur(3.2px) saturate(.78);
+  clip-path:polygon(0 0,85% 0,85% 100%,0 100%);
+  animation:dl-archive-shadow-to-score 2.2s cubic-bezier(.32,.03,.7,1) forwards;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep .board-archive-sweep-edge{
+  position:absolute;inset:0;
+  pointer-events:none;
+  background:linear-gradient(90deg,transparent 55%,#d6b5790f 76%,#dabf8a44 93%,#dfbd8340 100%);
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="archive"] .battlefield{
+  z-index:22!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="round"] .hybrid-right-rail,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="archive"] .hybrid-right-rail{
+  z-index:35!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="archive"] .hybrid-duel-tally{
+  animation:dl-score-absorbs-shadow 2.2s ease-in-out both;
+}
+
+/* No additional floating golden archive captions: Archive counters themselves
+ * confirm the arrival, and the live status remains accessible. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-archive-receipt{
+  position:absolute!important;
+  left:0!important;top:0!important;
+  width:1px!important;height:1px!important;
+  padding:0!important;margin:0!important;
+  border:0!important;overflow:hidden!important;
+  clip-path:inset(50%)!important;
+  animation:none!important;
+}
+@keyframes dl-shadow-round-in{
+  from{opacity:0}to{opacity:1}
+}
+@keyframes dl-archive-shadow-to-score{
+  0%{clip-path:polygon(0 0,85% 0,85% 100%,0 100%);opacity:1}
+  25%{clip-path:polygon(17% 0,93% 0,93% 100%,17% 100%);opacity:.98}
+  52%{clip-path:polygon(42% 0,100% 0,100% 100%,42% 100%);opacity:.98}
+  77%{clip-path:polygon(77% 32%,100% 32%,100% 58%,77% 58%);opacity:.9}
+  90%{clip-path:polygon(84% 38%,100% 38%,100% 51%,84% 51%);opacity:.58}
+  100%{clip-path:polygon(89% 42%,94% 42%,94% 46%,89% 46%);opacity:0}
+}
+@keyframes dl-score-absorbs-shadow{
+  0%,68%{filter:brightness(1);box-shadow:none}
+  82%{filter:brightness(1.35) drop-shadow(0 0 8px #d9c3998a)}
+  100%{filter:brightness(1);box-shadow:none}
+}
+@media(max-width:760px){
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition{
+    padding:0 0 38px 0;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition .board-round-ceremony{
+    max-width:94vw!important;padding:0 12px!important;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-score{
+    font-size:clamp(48px,10vw,80px)!important;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep{
+    animation-name:dl-archive-shadow-to-score-mobile;
+  }
+}
+@keyframes dl-archive-shadow-to-score-mobile{
+  0%{clip-path:polygon(0 0,100% 0,100% 100%,0 100%);opacity:1}
+  55%{clip-path:polygon(35% 0,100% 0,100% 100%,35% 100%);opacity:.94}
+  85%{clip-path:polygon(60% 15%,100% 15%,100% 42%,60% 42%);opacity:.7}
+  100%{clip-path:polygon(85% 24%,98% 24%,98% 32%,85% 32%);opacity:0}
+}
+@media(prefers-reduced-motion:reduce){
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-focus-screen{
+    -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition::before,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="archive"] .hybrid-duel-tally{
+    animation:none!important;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep{
+    opacity:.6;clip-path:polygon(0 0,80% 0,80% 100%,0 100%);
+    -webkit-backdrop-filter:none;backdrop-filter:none;
+  }
+}
