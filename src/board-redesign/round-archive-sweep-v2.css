@@ -47,8 +47,8 @@
 /* Remove the center-only floating box. The whole stage is the surface. */
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition{
   position:absolute!important;
-  inset:0!important;
-  padding:0 27% 34px 0;
+  inset:0 27% 0 0!important;
+  padding:0 0 34px 0;
   box-sizing:border-box;
   z-index:60;
   display:grid;place-items:center;
@@ -63,8 +63,8 @@
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition::before{
   content:"";position:absolute;inset:0;z-index:-1;
   background:linear-gradient(90deg,
-    rgba(3,5,7,.91) 0%,rgba(4,7,8,.93) 62%,
-    rgba(4,7,8,.88) 76%,rgba(4,6,8,.36) 96%,rgba(4,6,8,.12) 100%)!important;
+    rgba(3,5,7,.93) 0%,rgba(4,7,8,.93) 75%,
+    rgba(4,7,8,.84) 100%)!important;
   -webkit-backdrop-filter:blur(5px) saturate(.68)!important;
   backdrop-filter:blur(5px) saturate(.68)!important;
   animation:dl-shadow-round-in .44s ease-out both;
@@ -121,7 +121,7 @@
   background:linear-gradient(90deg,#050707ef 0%,#07090bf2 78%,#101111dc 100%);
   -webkit-backdrop-filter:blur(3.2px) saturate(.78);
   backdrop-filter:blur(3.2px) saturate(.78);
-  clip-path:polygon(0 0,85% 0,85% 100%,0 100%);
+  clip-path:polygon(0 0,73% 0,73% 100%,0 100%);
   animation:dl-archive-shadow-to-score 2.2s cubic-bezier(.32,.03,.7,1) forwards;
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep .board-archive-sweep-edge{
@@ -155,7 +155,7 @@
   from{opacity:0}to{opacity:1}
 }
 @keyframes dl-archive-shadow-to-score{
-  0%{clip-path:polygon(0 0,85% 0,85% 100%,0 100%);opacity:1}
+  0%{clip-path:polygon(0 0,73% 0,73% 100%,0 100%);opacity:1}
   25%{clip-path:polygon(17% 0,93% 0,93% 100%,17% 100%);opacity:.98}
   52%{clip-path:polygon(42% 0,100% 0,100% 100%,42% 100%);opacity:.98}
   77%{clip-path:polygon(77% 32%,100% 32%,100% 58%,77% 58%);opacity:.9}
@@ -169,6 +169,7 @@
 }
 @media(max-width:760px){
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition{
+    inset:0!important;
     padding:0 0 38px 0;
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition .board-round-ceremony{
