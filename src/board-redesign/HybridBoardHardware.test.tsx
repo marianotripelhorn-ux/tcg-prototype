@@ -31,7 +31,8 @@ describe("Hybrid board is a view of the authoritative engine state",()=>{
     expect(html).toContain("hybrid-life-number");
     expect(html).toContain(">7</span>");
     expect(html).toContain(">9</span>");
-    expect(html).toContain("0–1");
+    expect(html).toContain("hybrid-score-values");
+    expect(html).toContain("<span>0</span><i aria-hidden=\"true\">–</i><span>1</span>");
     expect(html).toContain("VOS · RIVAL");
     expect(html).toContain("Mazo:");
     expect(html).toContain("board/cardback-gold.png");
