@@ -71,6 +71,34 @@ try {
     );
     console.log("Effect played:",name);
   }
+
+  // V5: test the four new outcomes, independently of game state.
+  const replayNew=async(index)=>{
+    await buttons.nth(index).click();
+    await page.getByRole("button",{name:/REPRODUCIR/}).click();
+    await page.waitForFunction(
+      ()=>document.querySelector(".lab-transport-caption")?.textContent?.includes("EFECTO COMPLETADO"),
+      null,{timeout:12000}
+    );
+  };
+  await replayNew(0);
+  const materializedOpacity=await page.locator(".lab-card").first()
+    .evaluate(el=>parseFloat(getComputedStyle(el).opacity));
+  assert.ok(materializedOpacity>.95,"Materialization must leave the real card visible");
+  await replayNew(1);
+  assert.equal((await page.locator(".lab-archive-well strong").textContent())?.trim(),"4",
+    "Archive capture must visibly increase sample archive count");
+  const archiveCurve=await page.locator(".lab-v5-channel-line").getAttribute("d");
+  assert.ok(archiveCurve?.includes(" Q "),"Archive must have a geometric source-to-well transfer path");
+  await replayNew(2);
+  const placedOpacity=await page.locator(".lab-card").first()
+    .evaluate(el=>parseFloat(getComputedStyle(el).opacity));
+  assert.ok(placedOpacity>.95,"Placement must leave the real card on the table");
+  await replayNew(3);
+  const bannerOpacity=await page.locator(".lab-banner-content")
+    .evaluate(el=>parseFloat(getComputedStyle(el).opacity));
+  assert.ok(bannerOpacity>.95,"Banner must finish with its original typography visible");
+  console.log("PASS: v5 materialization, Archive count, card placement and Champion banner");
   // Validate v4's illustrative gameplay values: the original printed card
   // remains the source for both Power studies, while Vida always starts at 9.
   const basePower=Number((await page.locator(".lab-power-badge strong").textContent())?.trim());
