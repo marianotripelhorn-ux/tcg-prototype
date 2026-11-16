@@ -52,6 +52,10 @@ try{
   await sidePlayer.locator(".hybrid-champion-trigger").click();
   assert.ok((await sidePlayer.getAttribute("class"))?.includes("is-expanded"),
     "Player Champion should expand again on click");
+  const fabricDisplay=await sidePlayer.locator(".hybrid-banner-fabric")
+    .evaluate(el=>getComputedStyle(el).display);
+  assert.equal(fabricDisplay,"block",
+    "The fabric must remain mounted for smooth opening AND closing transitions");
   const bannerWindow=sidePlayer.locator(".hybrid-champion-figure-window");
   const panelRect=await sidePlayer.boundingBox();
   const windowRect=await bannerWindow.boundingBox();
@@ -74,6 +78,11 @@ try{
     return b.left>=a.left && b.right<=a.right+1;
   });
   assert.ok(scoreFits,"Score numerals must fit completely inside the side banner");
+  const scoreSpacing=await score.locator(".hybrid-score-values").evaluate(el=>{
+    const parts=Array.from(el.children).map(child=>child.getBoundingClientRect());
+    return parts.length===3&&parts[0].right+3<parts[1].left&&parts[1].right+3<parts[2].left;
+  });
+  assert.ok(scoreSpacing,"Both score numerals must have clear space around the center dash");
 
   const currentLife=await page.locator(".hybrid-life-unit.player .hybrid-life-number").textContent();
   assert.ok(currentLife?.trim(),"Real Champion Life must be present");
@@ -109,17 +118,24 @@ try{
   assert.ok(liftCount>0,"The real printed cards must lift from their board slots into the middle");
   assert.equal(await page.locator(".duel-showcase-card").count(),2,
     "Real duel must contain the two original printed cards");
+  assert.equal(await page.locator(".duel-showcase-details:visible").count(),0,
+    "Face-off must not show an extra card/champion name plaque");
   await page.locator(".duel-showcase-skip").click();
-  await page.locator(".duel-cinematic").waitFor({timeout:8000});
+  await page.locator(".duel-showcase-outcome").waitFor({state:"visible",timeout:8000});
   assert.equal(await page.locator(".board-gs-damage-channel").count(),0,
     "The old line traveling to the Champion Life crest must be removed");
-  const resultBg=await page.locator(".duel-cinematic")
-    .evaluate(el=>getComputedStyle(el).backgroundColor);
-  assert.equal(resultBg,"rgba(0, 0, 0, 0)",
-    "Result should appear on the board without a black rectangle");
-  assert.equal(await page.locator(".duel-cinematic-ring").count(),2,
-    "Result should display two complete rings, never fantasy glyph symbols");
-  await page.locator(".duel-cinematic").click();
+  assert.equal(await page.locator(".duel-cinematic").count(),0,
+    "The React board outcome should stay inside the card face-off, not create a second overlay");
+  assert.equal(await page.locator(".duel-showcase-card").count(),2,
+    "Both original cards must remain visible while the duel result appears");
+  const resultPos=await page.evaluate(()=>{
+    const title=document.querySelector(".duel-showcase-outcome");
+    const card=document.querySelector(".duel-showcase-face");
+    const a=title?.getBoundingClientRect(),b=card?.getBoundingClientRect();
+    return !!a&&!!b&&a.bottom<b.top;
+  });
+  assert.ok(resultPos,"Outcome word must appear ABOVE the two cards, below round and duel header");
+  await page.locator(".duel-showcase-skip").click();
   await page.waitForTimeout(1000);
   const badges=page.locator(".current-board-card .live-power-badge");
   if(await badges.count()){
@@ -134,7 +150,7 @@ try{
       align:getComputedStyle(el).justifyContent,
       flex:getComputedStyle(el).flexDirection
     }));
-    assert.ok((side==="opponent" ? ["flex-end","flow-end"] : ["flex-start","flow-start"]).includes(direction.align),
+    assert.ok(["flex-end","flow-end"].includes(direction.align),
       side+" previously played cards must attach to the center ribbon");
     assert.equal(direction.flex,side==="player"?"column-reverse":"column");
     const historic=stack.locator(".battle-card").first();
@@ -149,7 +165,7 @@ try{
 
   assert.deepEqual(pageErrors,[],"The real playable board must not throw browser errors");
   await page.screenshot({path:"/tmp/daggerlight-board-gold-shadow-smoke.png",fullPage:true});
-  console.log("PASS: full-width React board, click-only banners, lifted duel, no rectangle or damage cable, correct cards and score");
+  console.log("PASS: React v3: top-aligned cards, spaced score, persistent face-off and high result title, continuous banner transitions");
 }finally{
   await browser.close();
 }
