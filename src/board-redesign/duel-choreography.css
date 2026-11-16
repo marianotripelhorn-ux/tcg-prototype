@@ -1,0 +1,126 @@
+/*
+ * DAGGERLIGHT / DUEL CHOREOGRAPHY V1
+ * Presentation-only overlay on the approved React board v3.
+ * Gold adds, graphite/black subtracts, no new icons or rectangular duel panels.
+ */
+:root[data-theme] .app-shell.board-redesign-v1 .duel-sfx-toggle{
+  flex:none;min-width:62px;padding:5px 7px;border:1px solid #a38b5d94;
+  border-radius:0;background:#1b1c17b8;color:#dfd0ae;
+  font:700 9px/1.2 Arial,sans-serif;letter-spacing:.05em;cursor:pointer;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-sfx-toggle[aria-pressed="false"]{
+  color:#aaa39a;border-color:#77716a77;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-sfx-toggle:focus-visible{
+  outline:2px solid #c19a5d;outline-offset:3px;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-choreo{
+  isolation:isolate;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-choreo .duel-showcase-card{
+  position:relative;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-choreo .duel-showcase-heading{
+  transition:opacity .18s ease;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-choreo .duel-choreo-causes{
+  position:absolute;left:50%;top:calc(100% + 9px);z-index:25;
+  translate:-50% 0;width:clamp(145px,17vw,244px);
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  pointer-events:none;text-align:center;
+  animation:duel-reason-in .27s cubic-bezier(.2,.7,.3,1) both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-choreo .duel-choreo-causes span{
+  display:block;max-width:100%;
+  color:#47351c;font:800 clamp(9px,.75vw,11px)/1.2 Arial,sans-serif;
+  letter-spacing:.015em;text-shadow:0 1px 1px #f9edc6,0 1px 7px #f8f1e4;
+  text-wrap:balance;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-choreo .duel-choreo-causes .is-penalty{
+  color:#221e1b;text-shadow:0 1px #e9dfc9,0 1px 8px #b4ada1;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-choreo .duel-choreo-causes .is-neutral{
+  color:#61584a;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-choreo .duel-choreo-comparison{
+  position:absolute;z-index:20;bottom:clamp(46px,6.7dvh,72px);left:50%;
+  translate:-50% 0;white-space:nowrap;pointer-events:none;
+  color:#43351f;text-shadow:0 1px #fff,0 0 9px #f6eacb;
+  font:850 clamp(11px,1.15vw,16px)/1.2 Arial,sans-serif;
+  letter-spacing:.15em;
+  animation:duel-reason-in .29s ease-out both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-choreo .duel-showcase-skip{
+  position:absolute;right:clamp(8px,2vw,30px);bottom:clamp(8px,2vh,20px);
+  z-index:135;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-choreo .duel-showcase-events{
+  position:absolute;bottom:clamp(12px,2.2dvh,28px);left:50%;
+  translate:-50% 0;max-width:45%;
+  pointer-events:none;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-choreo .duel-showcase-events span{
+  color:#463421;font-size:10px;font-weight:750;text-shadow:0 1px #fff;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-beat-compare .duel-showcase-versus{
+  opacity:.45;transition:opacity .25s ease;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-beat-impact .duel-showcase-versus{
+  opacity:0;transition:opacity .18s ease;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-beat-impact .is-duel-winner .duel-showcase-face{
+  animation:duel-winning-card .47s cubic-bezier(.14,.79,.25,1) both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-beat-impact .is-duel-loser .duel-showcase-face{
+  animation:duel-losing-card .52s cubic-bezier(.2,.7,.24,1) both;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-beat-impact .is-duel-loser .duel-showcase-power{
+  filter:grayscale(.55) brightness(.75);transition:filter .22s ease;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-beat-result .is-duel-loser .duel-showcase-face{
+  filter:saturate(.73) brightness(.85);transition:filter .28s ease;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-beat-result .is-duel-winner .duel-showcase-face{
+  filter:drop-shadow(0 0 13px #c9a36a78);transition:filter .26s ease;
+}
+:root[data-theme] .app-shell.board-redesign-v1 .duel-choreo .duel-showcase-delta{
+  font-variant-numeric:tabular-nums;
+}
+@keyframes duel-reason-in{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes duel-winning-card{
+  0%{transform:translate3d(0,0,0) scale(1)}
+  40%{transform:translate3d(0,-9px,0) scale(1.055)}
+  100%{transform:translate3d(0,-3px,0) scale(1.025)}
+}
+@keyframes duel-losing-card{
+  0%{transform:translate3d(0,0,0) rotate(0deg);opacity:1}
+  38%{transform:translate3d(0,6px,0) rotate(-1.5deg);opacity:.95}
+  100%{transform:translate3d(0,0,0) rotate(0deg);opacity:1}
+}
+@media(max-width:760px), (max-height:620px){
+  :root[data-theme] .app-shell.board-redesign-v1 .duel-choreo .duel-choreo-causes{
+    width:clamp(116px,31vw,155px);top:calc(100% + 4px);
+    gap:2px;
+  }
+  :root[data-theme] .app-shell.board-redesign-v1 .duel-choreo .duel-choreo-causes span{
+    font-size:8px;line-height:1.1;
+  }
+  :root[data-theme] .app-shell.board-redesign-v1 .duel-choreo .duel-choreo-comparison{
+    bottom:48px;font-size:10px;letter-spacing:.04em;
+  }
+  :root[data-theme] .app-shell.board-redesign-v1 .duel-choreo .duel-showcase-events{display:none;}
+}
+@media(prefers-reduced-motion:reduce){
+  :root[data-theme] .app-shell.board-redesign-v1 .duel-choreo *,
+  :root[data-theme] .app-shell.board-redesign-v1 .duel-choreo *::before,
+  :root[data-theme] .app-shell.board-redesign-v1 .duel-choreo *::after{
+    animation-duration:.01ms!important;
+    transition-duration:.01ms!important;
+  }
+  :root[data-theme] .app-shell.board-redesign-v1 .duel-choreo .duel-choreo-causes{
+    opacity:1;transform:none;
+  }
+}
