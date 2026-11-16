@@ -347,25 +347,27 @@ try{
   });
   assert.ok(sweepVisual.animation.includes("dl-v3-curtain-sweep"),
     "The curtain must use one continuous, GPU-friendly cinematic contraction");
-  assert.ok(parseFloat(sweepVisual.duration) <= 1.05,
-    "The curtain must finish in about a second, not the previous 2.58-second crawl");
+  assert.ok(parseFloat(sweepVisual.duration) <= .70,
+    "The shadow must sweep across the field in roughly 650ms");
   assert.ok(sweepVisual.stageRatio>.98&&sweepVisual.clip==="none",
     "No partial-field rectangle or polygon clipping should expose the right ivory edge");
   assert.equal(sweepVisual.backdrop,"none",
     "Animating live backdrop filters would make the shadow choppy");
-  assert.ok(sweepVisual.keyframes.length>=3 &&
-    sweepVisual.keyframes.some(f=>f.transform?.includes("scaleX")) &&
-    sweepVisual.keyframes.every(f=>f.clipPath===undefined),
-    "Only compositor transforms and opacity are allowed; no clip-path keyframes");
+  assert.equal(sweepVisual.keyframes.length,2,
+    "Exactly two keyframes: uninterrupted travel without restarting easing at intermediate stops");
+  assert.ok(
+    sweepVisual.keyframes.every(f=>f.clipPath===undefined &&
+      f.transform?.includes("translate3d") && !f.transform?.includes("scale")),
+    "Move the full-size curtain as one piece, with transforms only: no polygon or scaleX changes");
   const movingFront=page.locator(".arena-stage > .board-archive-sweep-front");
-  assert.equal(await movingFront.count(),1,
-    "Independent bright wavefront must move smoothly alongside the dark curtain");
-  const edgeAnimation=await movingFront.evaluate(el=>({
-    name:getComputedStyle(el).animationName,
-    seconds:parseFloat(getComputedStyle(el).animationDuration)
+  assert.equal(await movingFront.count(),0,
+    "There must not be a second independently animated surface drifting from the curtain");
+  const attachedEdge=await curtain.evaluate(el=>({
+    gradient:getComputedStyle(el,"::before").backgroundImage,
+    activeAnimations:el.getAnimations().filter(a=>a.playState==="running").length
   }));
-  assert.ok(edgeAnimation.name.includes("dl-v3-curtain-front") && edgeAnimation.seconds<=1.05,
-    "The moving glint must stay synchronized with the faster shadow");
+  assert.ok(attachedEdge.gradient.includes("linear-gradient"),
+    "The luminous edge must be attached to the same moving curtain");
   const tallyPulse=await page.locator(".hybrid-duel-tally").evaluate(el=>
     getComputedStyle(el,"::before").animationName);
   assert.ok(tallyPulse.includes("dl-v3-score-receive"),
@@ -399,7 +401,7 @@ try{
   for(const phase of ["round","archive","archive-reveal","deal","idle"])
     assert.ok(phases.includes(phase),"Real match must include "+phase+" stage");
   assert.deepEqual(pageErrors,[],"Full round and Archive must have no runtime errors");
-  console.log("PASS: full-bleed dramatic round veil, compositor-only shadow + wavefront, score absorption and genuine Archives");
+  console.log("PASS: one continuous fast curtain, attached edge, score absorption, real Archives and earlier new hand");
 }finally{
   await browser.close();
 }
