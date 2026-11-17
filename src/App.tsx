@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ArchiveFlight, CardFlight, DealMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
 import type { BoardMotionSequence } from "./board-redesign/motion";
-import { ArchiveReceiptTransition, ArchiveSweep, RoundTransition, archiveCountChange, completedRoundReceipt } from "./board-redesign/roundChoreography";
+import { ArchiveReceiptTransition, RoundTransition, archiveCountChange, completedRoundReceipt } from "./board-redesign/roundChoreography";
+import { DuelResultStinger, NewRoundStinger } from "./board-redesign/stingerMotion";
 import { QuieroChoiceStage, RivalQuieroStage, rivalAcceptedQuiero, shouldOfferQuiero } from "./board-redesign/quieroChoreography";
 import { DUEL_BEATS, DUEL_FINISH_MS, duelPowerReasons, powerIsRevealed, powerSourceCues, postDuelChampionCues } from "./board-redesign/duelChoreography";
 import type { DuelBeat } from "./board-redesign/duelChoreography";
@@ -337,14 +338,15 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,be
     });
   },[beat,duel,before,after]);
   const comparing=beat==="compare"||beat==="impact";
-  const outcomeText=outcome==="player"?"VICTORIA":outcome==="opponent"?"DERROTA":"EMPATE";
   return (
     <div ref={overlayRef} data-duel-beat={beat}
       className={"duel-showcase-overlay duel-choreo duel-beat-"+beat+(outcome?" is-board-outcome":"")}
       role="dialog" aria-modal="true" aria-label="Resolución de Poder de las cartas">
       <div className="duel-focus-screen" aria-hidden="true"/>
-      {outcome&&<div className={"duel-showcase-outcome duel-showcase-outcome-"+outcome}
-        role="status" aria-live="polite">{outcomeText}</div>}
+      {outcome&&beat==="result"&&<DuelResultStinger duel={duel}/>}
+      {outcome&&beat==="settle"&&<span className="arena-visually-hidden" role="status">
+        {duel.outcome==="player"?"VICTORIA":duel.outcome==="opponent"?"DERROTA":"EMPATE"}
+      </span>}
       <div className="duel-showcase-pair">
         <DuelEffectsPanel played={duel.playerPlay} side="player" beat={beat}/>
         <DuelPowerCard played={duel.playerPlay} side="player" beat={beat} outcome={duel.outcome}/>
@@ -1167,7 +1169,7 @@ export default function App() {
   const showQuieroChoice=boardRedesign && shouldOfferQuiero(game) && !duelPreview && !boardMotion;
   const showRivalQuiero=boardRedesign && boardMotion?.phase==="quiero-ai";
   const completedRound=boardRedesign?completedRoundReceipt(boardMotion,game):null;
-  const showingPreviousRound=!!boardMotion && boardMotion.phase!=="archive-reveal" && boardMotion.phase!=="deal";
+  const showingPreviousRound=!!boardMotion && boardMotion.phase!=="archive-reveal" && boardMotion.phase!=="deal" && boardMotion.phase!=="round-wipe-reveal";
   // Display the round that is still physically on the table. The rules engine
   // may already have reset the duel score and drawn the next hand.
   const displayed:DuelPublicSnapshot|null=boardRedesign&&boardMotion&&showingPreviousRound
@@ -1347,7 +1349,19 @@ export default function App() {
             if(current?.id===boardMotion.id&&current.phase==="round")
               setMotion({...current,phase:"archive"});
           }}/>}
-        {boardRedesign && boardMotion?.phase==="archive" && <ArchiveSweep/>}
+        {boardRedesign && (boardMotion?.phase==="round-wipe"||boardMotion?.phase==="round-wipe-reveal") && <NewRoundStinger
+          sequenceId={boardMotion.id} round={game.round} reducedMotion={isReducedMotion()}
+          onCovered={()=>{
+            const current=boardMotionRef.current;
+            if(current?.id===boardMotion.id&&current.phase==="round-wipe")
+              setMotion({...current,phase:"round-wipe-reveal"});
+          }}
+          onComplete={()=>{
+            const current=boardMotionRef.current;
+            if(current?.id===boardMotion.id&&current.phase==="round-wipe-reveal")
+              setMotion(null);
+          }}/>}
+
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
           {boardRedesign && boardMotion?.phase==="archive-reveal" && <ArchiveReceiptTransition
             sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
@@ -1450,8 +1464,12 @@ export default function App() {
           sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
           onComplete={()=>{
             const current=boardMotionRef.current;
-            if(current?.id===boardMotion.id&&current.phase==="archive")
-              setMotion({...current,phase:"archive-reveal"});
+            if(current?.id===boardMotion.id&&current.phase==="archive"){
+              // After actual cards enter their Archives, the curtain covers the
+              // old board. Only at full cover do we swap to the already
+              // committed new-round GameState and genuine hand.
+              setMotion({...current,phase:game.phase==="finished"?"archive-reveal":"round-wipe"});
+            }
           }}/>}
         {boardRedesign && boardMotion?.phase==="deal" && <DealMotion
           sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
@@ -1610,7 +1628,7 @@ export default function App() {
           phoneDeck={phoneBoard?{remaining:deckView.deck.length,discarded:deckView.discard.length}:undefined}
           displayRound={displayed?.round??game.round}
           displayTurn={showingPreviousRound?(duelPreview?.turn??boardMotion?.duel?.turn??boardMotion?.before.turn??game.turn):game.turn}
-          transitionLabel={boardMotion?.phase==="flight"?"Jugando carta…":boardMotion?.phase==="quiero-ai"?"El rival eligió Quiero · tercer duelo…":boardMotion?.phase==="round"?"Ronda finalizada…":boardMotion?.phase==="archive"?"Archivando cartas…":boardMotion?.phase==="archive-reveal"?"Archivos actualizados…":boardMotion?.phase==="deal"?"Repartiendo nueva mano…":undefined}
+          transitionLabel={boardMotion?.phase==="flight"?"Jugando carta…":boardMotion?.phase==="quiero-ai"?"El rival eligió Quiero · tercer duelo…":boardMotion?.phase==="round"?"Ronda finalizada…":boardMotion?.phase==="archive"?"Archivando cartas…":boardMotion?.phase==="round-wipe"||boardMotion?.phase==="round-wipe-reveal"?"Nueva ronda…":boardMotion?.phase==="archive-reveal"?"Archivos actualizados…":boardMotion?.phase==="deal"?"Repartiendo nueva mano…":undefined}
           onChooseQuiero={chooseQuiero}
         />}
 
