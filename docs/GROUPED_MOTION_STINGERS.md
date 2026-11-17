@@ -19,7 +19,7 @@ There are no particle systems, spark trails, or decorative animation emitters in
 | --- | ---: | --- | --- |
 | Player card committed via `submitPlayerPlay` | **270 ms** | Real card travels from measured hand rect to the committed player's lane; its down-right matte shadow stretches at lift and tightens at landing | `flight` → `duel` |
 | Engine-resolved duel `result` beat | **640 ms** | Single notched ribbon holds the two authentic `finalPower` values and `outcome` in the same grouped surface; white-on-matte-black typography | `result` → `settle` (after ribbon fully exits) |
-| A completed round's cards finish flying into real Archives | **800 ms** | One broad-curved matte-black wipe covers the **entire ivory arena**, including the hand and score. At full cover (336ms), the actual already-committed new game round replaces the visible old board underneath. `RONDA N` is centered white Archivo Black and moves with the shape; wipe continues right and clears by 800ms | `archive` → `round-wipe` → `round-wipe-reveal` → idle |
+| A completed round's cards finish flying into real Archives | **800 ms** | One broad-curved matte-black wipe covers the **entire ivory arena**, including the hand and score. After the 298ms cover WAAPI animation actually finishes, the actual already-committed new game round replaces the visible old board underneath. `RONDA N` is centered white Archivo Black and moves with the shape; wipe continues right and clears after an 86ms covered hold and 407ms exit (~791ms total) | `archive` → `round-wipe` → `round-wipe-reveal` → idle |
 
 The next-round reveal is **presentation-only**: there is no new deal, random decision, scoring rule, Archive calculation or card draw in this code. The real next hand and Archives were already determined by the engine. A truly finished match retains its original final-ceremony path rather than advertising a round that cannot start.
 
@@ -44,4 +44,4 @@ The resulting Power and outcome are announced with a grouped `role=status` label
 
 ## Visual QA notes
 
-Watch for the 270ms card landing in a tiny or heavily stacked lane; the 640ms result's legibility at narrow widths; the curved wipe's connected edge and uninterrupted 800ms passage over the whole board including the old and new hand. The overlay is one surface: do not split its round number into a separate moving graphic.
+Watch for the 270ms card landing in a tiny or heavily stacked lane; the 640ms result's legibility at narrow widths; the curved wipe's connected edge and uninterrupted 800ms passage over the whole board including the old and new hand. The overlay is one surface: do not split its round number into a separate moving graphic. An animation-finished callback controls the actual board swap so dropped frames cannot reveal new cards before full cover.
