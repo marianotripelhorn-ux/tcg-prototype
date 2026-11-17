@@ -34,19 +34,18 @@
   position:absolute!important;
   z-index:120;
   left:50%;top:49%;
-  width:min(91%,820px);
-  min-height:clamp(106px,18dvh,166px);
+  width:min(94vw,1160px);
+  min-height:clamp(148px,22dvh,194px);
   box-sizing:border-box;
   padding:clamp(16px,2.8vw,29px) clamp(23px,4.4vw,52px);
   display:grid;place-items:center;
   background:#08090b;
   color:#fff;
-  border:1px solid #161719;
+  box-shadow:inset 0 3px #eee,inset 0 -3px #eee;
   clip-path:polygon(0 0,100% 0,100% 33%,96% 50%,100% 67%,100% 100%,0 100%,0 67%,4% 50%,0 33%);
   translate:-50% -50%;
   pointer-events:none;
-  box-shadow:none;
-  will-change:transform;
+  will-change:transform,opacity;
   animation:dl-duel-notched-ribbon 640ms both;
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-contents{
@@ -70,15 +69,25 @@
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-result{
   color:#fff;
-  font:400 clamp(21px,3.5vw,52px)/1.05 var(--board-display,'Archivo Black',Arial,sans-serif);
+  font:400 clamp(28px,4.7vw,70px)/1.05 var(--board-display,'Archivo Black',Arial,sans-serif);
   letter-spacing:-.045em;
   overflow-wrap:anywhere;
+  font-style:italic;
 }
-/* The scrim and the card pair share the result ribbon's clock. */
+/* Keep the real board visible during Power. The result is a separate,
+ * full-width graphic beat instead of more dimming on an already dark board. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-focus-screen {
+  background:radial-gradient(ellipse at 48% 46%,#0b0d1059,#07080b9c)!important;
+  overflow:hidden;
+}
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-result .duel-focus-screen::after {
   content:"";
-  position:absolute;inset:0;
-  background:linear-gradient(112deg,#07080be8 0% 20%,#090b0ca8 20% 77%,#07080be8 77%);
+  position:absolute;
+  inset:8% -1% 9%;
+  background:
+    linear-gradient(168deg,transparent 20%,#e7e3d3 20% 20.65%,transparent 20.65% 79%,#a5a196 79% 79.65%,transparent 79.65%),
+    linear-gradient(110deg,#08090b 0% 28%,#2a2b2d 28% 69%,#101113 69%);
+  clip-path:polygon(0 16%,100% 0,100% 84%,0 100%);
   animation:dl-duel-result-shadow 640ms both;
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-result .duel-showcase-pair {
@@ -94,7 +103,8 @@
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-contents::before {top:9%}
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-contents::after {bottom:9%}
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-duel-stinger:is([data-outcome="player"],[data-outcome="opponent"]) {
-  --dl-score-scale:.12;
+  --dl-score-scale:.16;
+  --dl-score-near-scale:.38;
   --dl-score-opacity:0;
 }
 @keyframes dl-duel-notched-ribbon{
@@ -111,6 +121,12 @@
     transform:translate3d(-6px,0,0) rotate(-.35deg) scale(1);
     animation-timing-function:cubic-bezier(.45,.08,.72,.72);
   }
+  93%{
+    transform:translate3d(calc(var(--dl-score-x,115vw)*.79),calc(var(--dl-score-y,0px)*.79),0)
+      rotate(0) scale(var(--dl-score-near-scale,1));
+    opacity:.92;
+    animation-timing-function:ease-in;
+  }
   100%{
     transform:translate3d(var(--dl-score-x,115vw),var(--dl-score-y,0px),0)
       rotate(0) scale(var(--dl-score-scale,1));
@@ -118,12 +134,13 @@
   }
 }
 @keyframes dl-duel-result-shadow {
-  0%,100%{opacity:0}
-  12.5%,76%{opacity:1}
+  0%{opacity:1;transform:translate3d(-102%,0,0)}
+  34.375%,71.875%{opacity:1;transform:translate3d(0,0,0)}
+  100%{opacity:0;transform:translate3d(102%,0,0)}
 }
 @keyframes dl-duel-result-pair {
   0%,12.5%,100%{opacity:1}
-  34.375%,76%{opacity:.32}
+  34.375%,76%{opacity:.22}
 }
 
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-settle .duel-focus-screen {
@@ -221,14 +238,14 @@
     font-size:clamp(36px,10vw,76px);
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger{
-    top:51%;width:95%;min-height:100px;padding:16px 22px;
+    top:51%;width:96vw;min-height:130px;padding:20px 19px;
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-contents{
     grid-template-columns:minmax(0,1fr) minmax(90px,1.5fr) minmax(0,1fr);
     gap:7px;
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-result{
-    font-size:clamp(16px,4.6vw,31px);
+    font-size:clamp(17px,5.3vw,32px);
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-power strong{
     font-size:clamp(25px,6vw,41px);

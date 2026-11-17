@@ -16,7 +16,11 @@ export function DuelResultStinger({duel,onComplete}:{
     const stageRect=stage.getBoundingClientRect();
     const target=score.getBoundingClientRect();
     node.style.setProperty("--dl-score-x",`${target.left+target.width/2-stageRect.left-node.offsetLeft}px`);
-    node.style.setProperty("--dl-score-y",`${target.top+target.height/2-stageRect.top-node.offsetTop}px`);
+    const fieldTop=root?.querySelector(".arena-main")?.getBoundingClientRect().top??stageRect.top;
+    // On phone the score is above the arena's stacking context. Carry the
+    // ribbon to the visible edge below it before the real digits respond.
+    const targetY=Math.max(target.top+target.height/2,fieldTop+18);
+    node.style.setProperty("--dl-score-y",`${targetY-stageRect.top-node.offsetTop}px`);
   },[duel]);
   const playerPower=duel.playerPlay.finalPower??duel.playerPlay.card.power;
   const opponentPower=duel.opponentPlay.finalPower??duel.opponentPlay.card.power;
