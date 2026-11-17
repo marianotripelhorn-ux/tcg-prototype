@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import type { DuelSummary } from "../engine/types";
 
 /** The engine owns finalPower and outcome. Text and ribbon share one surface. */
@@ -22,27 +22,80 @@ export function DuelResultStinger({duel}:{duel:DuelSummary}) {
  * was established before the wipe began. No rule is recalculated here.
  */
 export function NewRoundStinger({
-  round,sequenceId,reducedMotion,onCovered,onComplete
+  round,sequenceId,reducedMotion,covered,onCovered,onComplete
 }:{
   round:number;
   sequenceId:number;
   reducedMotion:boolean;
+  covered:boolean;
   onCovered:()=>void;
   onComplete:()=>void;
 }){
+  const ink=useRef<HTMLDivElement>(null);
+  const entry=useRef<Animation|null>(null);
   const latest=useRef({onCovered,onComplete});
   latest.current={onCovered,onComplete};
-  useEffect(()=>{
-    const coverTimer=window.setTimeout(()=>latest.current.onCovered(),reducedMotion?0:336);
-    const finishTimer=window.setTimeout(()=>latest.current.onComplete(),reducedMotion?75:830);
+
+  // Only a real completed compositor animation can cover the old board.
+  // Unlike a fixed timer, this cannot swap the scene prematurely when
+  // the browser drops/defers frames on a slower desktop or phone.
+  useLayoutEffect(()=>{
+    const node=ink.current;
+    if(!node)return;
+    if(reducedMotion){
+      const timer=window.setTimeout(()=>latest.current.onCovered(),0);
+      return ()=>window.clearTimeout(timer);
+    }
+    let cancelled=false;
+    const cover=node.animate([
+      {transform:"translate3d(-125%,0,0)"},
+      {transform:"translate3d(0,0,0)"}
+    ],{duration:298,easing:"cubic-bezier(.22,.75,.28,1)",fill:"forwards"});
+    entry.current=cover;
+    void cover.finished.then(()=>{
+      if(!cancelled)latest.current.onCovered();
+    }).catch(()=>{});
     return ()=>{
-      window.clearTimeout(coverTimer);
-      window.clearTimeout(finishTimer);
+      cancelled=true;cover.cancel();entry.current=null;
     };
   },[sequenceId,reducedMotion]);
+
+  // React has now committed the engine's already-resolved next board and
+  // hand underneath the fully covered ink. Keep a short visible hold on
+  // RONDA N; then the very same graphic and text continue off the right.
+  useLayoutEffect(()=>{
+    if(!covered)return;
+    const node=ink.current;
+    if(!node)return;
+    if(reducedMotion){
+      const timer=window.setTimeout(()=>latest.current.onComplete(),60);
+      return ()=>window.clearTimeout(timer);
+    }
+    let cancelled=false;
+    let exit:Animation|null=null;
+    const timer=window.setTimeout(()=>{
+      if(cancelled)return;
+      // Preserve the fully covered geometry before cancelling entry fill.
+      node.style.transform="translate3d(0,0,0)";
+      entry.current?.cancel();
+      entry.current=null;
+      exit=node.animate([
+        {transform:"translate3d(0,0,0)"},
+        {transform:"translate3d(120%,0,0)"}
+      ],{duration:407,easing:"cubic-bezier(.28,.64,.22,1)",fill:"forwards"});
+      void exit.finished.then(()=>{
+        if(!cancelled)latest.current.onComplete();
+      }).catch(()=>{});
+    },86);
+    return ()=>{
+      cancelled=true;window.clearTimeout(timer);exit?.cancel();
+    };
+  },[covered,sequenceId,reducedMotion]);
+
   return <div className={"dl-new-round-stage"+(reducedMotion?" is-reduced":"")}
+    data-wipe-stage={covered?"reveal":"cover"}
     role="status" aria-live="polite" aria-label={`Comienza ronda ${round}`}>
-    <div className="dl-new-round-ink">
+    <div className="dl-new-round-ink" ref={ink}>
       <span className="dl-new-round-number">RONDA {round}</span>
     </div>
   </div>;
