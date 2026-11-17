@@ -88,7 +88,8 @@
 /* The real ivory board remains underneath one moving, curved, matte surface.
  * Its round number moves with the same DOM element, never as a separate layer.
  * The width and curved appendages overhang the field, so the old board is
- * completely covered before the rendered GameState switches at 336ms. */
+ * completely covered before the rendered GameState switches after the actual
+ * 298ms compositor cover finishes. */
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-main > .dl-new-round-stage{
   position:absolute;
   inset:0 0 34px 0;
@@ -104,8 +105,8 @@
   background:#090a0b;
   color:#fff;
   will-change:transform;
-  transform:translate3d(-120%,0,0);
-  animation:dl-curved-new-round 800ms cubic-bezier(.28,.64,.22,1) both;
+  transform:translate3d(-125%,0,0);
+  animation:none!important; /* WAAPI cover/hold/exit controls each real frame */
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink::before,
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink::after{
@@ -131,11 +132,6 @@
   text-align:center;
   white-space:nowrap;
   font-variant-numeric:tabular-nums;
-}
-@keyframes dl-curved-new-round{
-  0%{transform:translate3d(-125%,0,0)}
-  37%,53%{transform:translate3d(0,0,0)}
-  100%{transform:translate3d(120%,0,0)}
 }
 /* All previous archive captures happen BEFORE the wipe.
  * During the cover frame the completed next-round board and hand replace the
