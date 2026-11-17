@@ -1606,21 +1606,6 @@ export default function App() {
           </aside>}
           </div>
         </section>
-        {/* The stinger spans the entire ivory playfield INCLUDING the hand,
-            Archives, score and Champion background. It must not be clipped
-            to the narrower central lane stage. */}
-        {boardRedesign && (boardMotion?.phase==="round-wipe"||boardMotion?.phase==="round-wipe-reveal") && <NewRoundStinger
-          sequenceId={boardMotion.id} round={game.round} reducedMotion={isReducedMotion()}
-          onCovered={()=>{
-            const current=boardMotionRef.current;
-            if(current?.id===boardMotion.id&&current.phase==="round-wipe")
-              setMotion({...current,phase:"round-wipe-reveal"});
-          }}
-          onComplete={()=>{
-            const current=boardMotionRef.current;
-            if(current?.id===boardMotion.id&&current.phase==="round-wipe-reveal")
-              setMotion(null);
-          }}/>}
         {boardRedesign && <HybridCommandRail
           game={game}
           pendingOpponent={pendingOpponent}
@@ -1636,6 +1621,22 @@ export default function App() {
         />}
 
           </div>
+          {/* The stinger spans the entire ivory playfield INCLUDING the hand,
+                      Archives, score and Champion background. It must not be clipped
+                      to the narrower central lane stage. */}
+                  {boardRedesign && (boardMotion?.phase==="round-wipe"||boardMotion?.phase==="round-wipe-reveal") && <NewRoundStinger
+                    sequenceId={boardMotion.id} round={game.round} reducedMotion={isReducedMotion()}
+                    onCovered={()=>{
+                      const current=boardMotionRef.current;
+                      if(current?.id===boardMotion.id&&current.phase==="round-wipe")
+                        setMotion({...current,phase:"round-wipe-reveal"});
+                    }}
+                    onComplete={()=>{
+                      const current=boardMotionRef.current;
+                      if(current?.id===boardMotion.id&&current.phase==="round-wipe-reveal")
+                        setMotion(null);
+                    }}/>}
+          
         </div>
 
         {game.manifestationsEnabled!==false && specialInspection && <ManifestCardDialog kind={specialInspection} onClose={()=>setSpecialInspection(null)}/>}
