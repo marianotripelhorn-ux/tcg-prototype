@@ -1,0 +1,179 @@
+/*
+ * Daggerlight — Stinger motion pass.
+ * Three grouped motion surfaces, sourced entirely from resolved GameState:
+ * 270ms hand-to-lane card/shadow, 640ms duel-result notched ribbon,
+ * 800ms new-round matte curved wipe. No emitted particles or extra engine state.
+ */
+
+/* The matte shadow belongs to the very same flying real card. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-motion-flight{
+  will-change:transform;filter:none!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-motion-flight > .game-card{
+  position:relative;z-index:2;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-motion-flight > .dl-flight-shadow{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:rgba(4,6,7,.86);
+  border-radius:2px;
+  filter:blur(3px);
+  transform:translate3d(4px,7px,0);
+  opacity:.4;
+  transform-origin:50% 55%;
+  will-change:transform,opacity;
+}
+/* No old landing rings, circular emitters or stray decorative shards. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-motion-flight .board-gs-flight-veil,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .board-gs-power-fx{
+  display:none!important;
+}
+
+/* Single matte notched ribbon, including both numeric values and outcome.
+ * The lettering is never independently translated from its graphic. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger {
+  position:absolute!important;
+  z-index:120;
+  left:50%;top:49%;
+  width:min(91%,820px);
+  min-height:clamp(106px,18dvh,166px);
+  box-sizing:border-box;
+  padding:clamp(16px,2.8vw,29px) clamp(23px,4.4vw,52px);
+  display:grid;place-items:center;
+  background:#08090b;
+  color:#fff;
+  border:1px solid #161719;
+  clip-path:polygon(0 0,100% 0,100% 33%,96% 50%,100% 67%,100% 100%,0 100%,0 67%,4% 50%,0 33%);
+  translate:-50% -50%;
+  pointer-events:none;
+  box-shadow:none;
+  will-change:transform;
+  animation:dl-duel-notched-ribbon 640ms cubic-bezier(.26,.75,.27,1) both;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-contents{
+  width:100%;display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(115px,2.1fr) minmax(0,1fr);
+  align-items:center;gap:clamp(10px,2vw,24px);
+  text-align:center;line-height:1;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-power{
+  display:flex;flex-direction:column;align-items:center;
+  gap:8px;min-width:0;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-power small{
+  color:#fff;
+  font:800 clamp(9px,.9vw,13px)/1.15 Arial,sans-serif;
+  letter-spacing:.14em;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-power strong{
+  color:#fff;font:400 clamp(30px,4.7vw,64px)/1 var(--board-display,'Archivo Black',Arial,sans-serif);
+  font-variant-numeric:tabular-nums;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-result{
+  color:#fff;
+  font:400 clamp(21px,3.5vw,52px)/1.05 var(--board-display,'Archivo Black',Arial,sans-serif);
+  letter-spacing:-.045em;
+  overflow-wrap:anywhere;
+}
+@keyframes dl-duel-notched-ribbon{
+  0%{transform:translate3d(-115vw,0,0)}
+  27%{transform:translate3d(9px,0,0)}
+  40%,70%{transform:translate3d(0,0,0)}
+  100%{transform:translate3d(115vw,0,0)}
+}
+/* No separate floating gold/white outcome title competing with the ribbon. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-outcome{
+  display:none!important;
+}
+
+/* The real ivory board remains underneath one moving, curved, matte surface.
+ * Its round number moves with the same DOM element, never as a separate layer.
+ * The width and curved appendages overhang the field, so the old board is
+ * completely covered before the rendered GameState switches at 336ms. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .dl-new-round-stage{
+  position:absolute;
+  inset:0 0 34px -20.5%;
+  z-index:115;
+  overflow:hidden;
+  pointer-events:auto;
+  isolation:isolate;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink{
+  position:absolute;inset:0;
+  z-index:1;
+  display:grid;place-items:center;
+  background:#090a0b;
+  color:#fff;
+  will-change:transform;
+  transform:translate3d(-120%,0,0);
+  animation:dl-curved-new-round 800ms cubic-bezier(.28,.64,.22,1) both;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink::before,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink::after{
+  content:"";position:absolute;
+  top:-14%;height:128%;
+  width:clamp(100px,17vw,265px);
+  background:#090a0b;
+  border-radius:50%;
+  pointer-events:none;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink::before{
+  right:calc(100% - clamp(55px,8vw,130px));
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink::after{
+  left:calc(100% - clamp(55px,8vw,130px));
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-number{
+  position:relative;z-index:3;
+  color:#fff;
+  font:400 clamp(50px,8.2vw,118px)/1 'Archivo Black',Arial,sans-serif;
+  letter-spacing:-.045em;
+  text-shadow:none;
+  text-align:center;
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+@keyframes dl-curved-new-round{
+  0%{transform:translate3d(-125%,0,0)}
+  37%,53%{transform:translate3d(0,0,0)}
+  100%{transform:translate3d(120%,0,0)}
+}
+/* All previous archive captures happen BEFORE the wipe.
+ * During the cover frame the completed next-round board and hand replace the
+ * previous round in one state-driven React commit, still fully occluded. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="round-wipe"] .battlefield,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="round-wipe-reveal"] .battlefield{
+  transform:none!important;
+}
+
+@media(max-width:760px){
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .dl-new-round-stage{
+    inset:0 0 34px 0;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-number{
+    font-size:clamp(36px,10vw,76px);
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger{
+    top:51%;width:95%;min-height:100px;padding:16px 22px;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-contents{
+    grid-template-columns:minmax(0,1fr) minmax(90px,1.5fr) minmax(0,1fr);
+    gap:7px;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-result{
+    font-size:clamp(16px,4.6vw,31px);
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-power strong{
+    font-size:clamp(25px,6vw,41px);
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink{
+    animation:none!important;
+    transform:none!important;
+    will-change:auto;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-motion-flight .dl-flight-shadow{
+    display:none!important;
+  }
+}
