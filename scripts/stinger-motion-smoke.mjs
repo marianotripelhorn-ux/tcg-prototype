@@ -107,7 +107,7 @@ async function instrument(page){
         const style=getComputedStyle(ribbon);
         const rect=ribbon.getBoundingClientRect();
         const frames=ribbon.getAnimations()[0]?.effect?.getKeyframes()??[];
-        m.ribbons.push({
+        const receipt={
           rest:frames.filter(frame=>frame.computedOffset>.2&&frame.computedOffset<.78)
             .map(frame=>({offset:frame.computedOffset,transform:frame.transform})),
           duration:style.animationDuration,
@@ -119,7 +119,23 @@ async function instrument(page){
           resultIsChild:!!ribbon.querySelector(".dl-duel-stinger-result"),
           width:rect.width,
           scoreDestination:style.getPropertyValue("--dl-score-x")!==""&&style.getPropertyValue("--dl-score-y")!==""
-        });
+        };
+        m.ribbons.push(receipt);
+        const sampleHold=()=>{
+          if(!ribbon.isConnected)return;
+          const time=ribbon.getAnimations()[0]?.currentTime;
+          if(typeof time!=="number"||time<225){requestAnimationFrame(sampleHold);return;}
+          if(time>=450)return;
+          const rect=ribbon.getBoundingClientRect();
+          const plate=getComputedStyle(root.querySelector(".duel-focus-screen"),"::after");
+          receipt.hold={
+            visibleWidth:Math.min(rect.right,innerWidth)-Math.max(rect.left,0),
+            height:rect.height,
+            angle:plate.clipPath,
+            opacity:Number(plate.opacity)
+          };
+        };
+        requestAnimationFrame(sampleHold);
       }
 
       const wipe=document.querySelector(".dl-new-round-stage");
@@ -228,26 +244,6 @@ async function runMatch(label,viewport,isMobile){
     await page.waitForFunction(()=>window.__motionCapture.flights.length>0,undefined,{timeout:7000});
     // Inspect the natural result and verify the single grouped graphic.
     await page.waitForFunction(()=>window.__motionCapture.ribbons.length>0,undefined,{timeout:12000});
-    const hold=await page.waitForFunction(()=>{
-      const ribbon=document.querySelector(".dl-duel-stinger");
-      const time=ribbon?.getAnimations()[0]?.currentTime;
-      if(typeof time!=="number"||time<225||time>=450)return null;
-      const rect=ribbon.getBoundingClientRect();
-      const shadow=document.querySelector(".duel-focus-screen");
-      const plate=getComputedStyle(shadow,"::after");
-      return {
-        visibleWidth:Math.min(rect.right,innerWidth)-Math.max(rect.left,0),
-        height:rect.height,
-        angle:plate.clipPath,
-        opacity:Number(plate.opacity)
-      };
-    },undefined,{timeout:8000});
-    const frame=await hold.jsonValue();
-    assert.ok(frame.visibleWidth>=viewport.width*.7&&frame.height>=120,
-      label+": result must fill most of the viewport at its readable hold");
-    assert.ok(frame.angle.startsWith("polygon")&&frame.opacity>=.95,
-      label+": full-width diagonal result plate must visibly reach its hold");
-    await page.screenshot({path:`/tmp/daggerlight-round-shadow-sweep-v3-${label}-duel.png`});
     await duel.waitFor({state:"detached",timeout:9000});
     let data=await page.evaluate(()=>window.__motionCapture);
     const flight=data.flights[0];
@@ -260,6 +256,11 @@ async function runMatch(label,viewport,isMobile){
       label+": down-right shadow must stretch during the lift");
     assert.equal(flight.ringCount,0,label+": do not emit decorative rings or particles");
     const ribbon=data.ribbons[0];
+    const frame=ribbon?.hold;
+    assert.ok(frame&&frame.visibleWidth>=viewport.width*.7&&frame.height>=120,
+      label+": result must fill most of the viewport at its readable hold");
+    assert.ok(frame.angle.startsWith("polygon")&&frame.opacity>=.95,
+      label+": full-width diagonal result plate must visibly reach its hold");
     assert.ok(ribbon&&ribbon.duration==="0.64s"&&ribbon.motion.includes("dl-duel-notched-ribbon"),
       label+": 640ms result animation missing");
     assert.ok(ribbon.rest.some((frame,i)=>{
