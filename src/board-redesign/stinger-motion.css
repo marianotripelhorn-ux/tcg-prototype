@@ -89,9 +89,9 @@
  * Its round number moves with the same DOM element, never as a separate layer.
  * The width and curved appendages overhang the field, so the old board is
  * completely covered before the rendered GameState switches at 336ms. */
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .dl-new-round-stage{
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-main > .dl-new-round-stage{
   position:absolute;
-  inset:0 0 34px -20.5%;
+  inset:0 0 34px 0;
   z-index:115;
   overflow:hidden;
   pointer-events:auto;
@@ -146,7 +146,7 @@
 }
 
 @media(max-width:760px){
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .dl-new-round-stage{
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-main > .dl-new-round-stage{
     inset:0 0 34px 0;
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-number{
