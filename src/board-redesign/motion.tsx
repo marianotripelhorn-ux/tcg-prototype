@@ -56,6 +56,7 @@ interface CardFlightProps {
  */
 export function CardFlight({origin,position,children,onComplete,onLand,reducedMotion,sequenceId}:CardFlightProps){
   const el=useRef<HTMLDivElement>(null);
+  const shadow=useRef<HTMLSpanElement>(null);
   const complete=useRef(onComplete);
   complete.current=onComplete;
   const landed=useRef(onLand);
@@ -77,33 +78,35 @@ export function CardFlight({origin,position,children,onComplete,onLand,reducedMo
     }
     const dx=destination.x-origin.x,dy=destination.y-origin.y;
     const sx=destination.width/origin.width,sy=destination.height/origin.height;
-    // A restrained rise, slight tabletop tilt and physically eased landing.
+    // One physical 270ms hand→lane flight. Only transforms animate; the
+    // matte down-right shadow is a child that stretches then tightens.
     let holdTimer:number|null=null;
     const animation=node.animate([
-      {transform:"translate3d(0,0,0) rotate(-3deg) scale(1)",filter:"drop-shadow(0 9px 12px #0008)",offset:0},
-      {transform:`translate3d(${dx*.54}px,${dy*.54-29}px,0) rotate(2.8deg) scale(${(1+sx)*.57},${(1+sy)*.57})`,filter:"drop-shadow(0 24px 26px #0008)",offset:.58},
-      {transform:`translate3d(${dx}px,${dy}px,0) rotate(-.9deg) scale(${sx},${sy})`,filter:"drop-shadow(0 13px 12px #0008)",offset:.91},
-      {transform:`translate3d(${dx}px,${dy}px,0) rotate(0deg) scale(${sx},${sy})`,filter:"drop-shadow(0 4px 4px #0007)",offset:1}
-    ],{duration:900,easing:"cubic-bezier(.19,.8,.24,1)",fill:"forwards"});
+      {transform:"translate3d(0,0,0) rotate(0deg) scale(1)",offset:0},
+      {transform:`translate3d(${dx*.53}px,${dy*.53-13}px,0) rotate(1.25deg) scale(${1+(sx-1)*.53},${1+(sy-1)*.53})`,offset:.50},
+      {transform:`translate3d(${dx*.96}px,${dy*.96-3}px,0) rotate(-.7deg) scale(${sx*1.025},${sy*1.025})`,offset:.86},
+      {transform:`translate3d(${dx}px,${dy}px,0) rotate(0deg) scale(${sx},${sy})`,offset:1}
+    ],{duration:270,easing:"cubic-bezier(.2,.68,.27,1)",fill:"forwards"});
+    const shadowAnimation=shadow.current?.animate([
+      {transform:"translate3d(4px,7px,0) scale(1)",opacity:.4,offset:0},
+      {transform:"translate3d(16px,30px,0) scale(1.19,1.15)",opacity:.82,offset:.51},
+      {transform:"translate3d(7px,13px,0) scale(1.08,1.05)",opacity:.56,offset:.85},
+      {transform:"translate3d(3px,4px,0) scale(.98,1)",opacity:.34,offset:1}
+    ],{duration:270,easing:"cubic-bezier(.2,.68,.27,1)",fill:"forwards"});
     animation.onfinish=()=>{
       landed.current?.();
-      holdTimer=window.setTimeout(()=>complete.current(),260);
+      holdTimer=window.setTimeout(()=>complete.current(),18);
     };
     return ()=>{
-      animation.onfinish=null;animation.cancel();
+      animation.onfinish=null;animation.cancel();shadowAnimation?.cancel();
       if(holdTimer!==null)window.clearTimeout(holdTimer);
     };
   },[origin?.x,origin?.y,origin?.width,origin?.height,position,reducedMotion,sequenceId]);
   if(!origin||reducedMotion)return null;
   return <div className="board-motion-flight" ref={el} aria-hidden="true"
     style={{left:origin.x,top:origin.y,width:origin.width,height:origin.height}}>
+    <span className="dl-flight-shadow" ref={shadow} aria-hidden="true"/>
     {children}
-    <span className="board-gs-flight-veil" aria-hidden="true">
-      <span className="board-gs-flight-wave"/>
-      <span className="board-gs-flight-ring outer"/>
-      <span className="board-gs-flight-ring middle"/>
-      <span className="board-gs-flight-ring inner"/>
-    </span>
   </div>;
 }
 
