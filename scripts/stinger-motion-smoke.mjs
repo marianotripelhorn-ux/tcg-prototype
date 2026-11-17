@@ -119,6 +119,12 @@ async function instrument(page){
           font:ink?getComputedStyle(ink.querySelector(".dl-new-round-number")).fontFamily:"",
           white:ink?getComputedStyle(ink.querySelector(".dl-new-round-number")).color:"",
           covers:!!field&&Math.abs(rect.left-field.left)<2&&Math.abs(rect.right-field.right)<2,
+          geometry:{
+            stage:{left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom,width:rect.width},
+            field:field?{left:field.left,right:field.right,top:field.top,bottom:field.bottom,width:field.width}:null,
+            parent:wipe.parentElement?.className,
+            computed:{position:getComputedStyle(wipe).position,inset:getComputedStyle(wipe).inset},
+          },
           groupedText:!!ink?.querySelector(".dl-new-round-number"),
           keyframes:ink?.getAnimations().find(a=>a.animationName==="dl-curved-new-round")?.effect?.getKeyframes().map(f=>f.transform)??[]
         };
@@ -234,7 +240,8 @@ async function runMatch(label,viewport,isMobile){
     for(const phase of ["flight","duel","round","archive","round-wipe","round-wipe-reveal","idle"])
       assert.ok(data.phases.includes(phase),label+": missing real match phase "+phase);
     const wipe=data.wipe,swap=data.swap;
-    assert.ok(wipe?.groupedText&&wipe.covers,label+": whole ivory field and hand must be covered");
+    console.log("MOTION DIAGNOSTIC "+label+" "+JSON.stringify({wipe,swap}));
+    assert.ok(wipe?.groupedText&&wipe.covers,label+": whole ivory field and hand must be covered: "+JSON.stringify(wipe?.geometry??wipe));
     assert.ok(wipe.duration==="0.8s"&&wipe.motion.includes("dl-curved-new-round"),
       label+": curved stinger must be 800ms");
     assert.ok(wipe.radius.includes("50%"),label+": broad curved front is missing");
