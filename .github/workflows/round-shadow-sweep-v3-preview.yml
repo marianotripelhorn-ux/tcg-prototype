@@ -10,7 +10,7 @@ permissions:
   actions: write
 
 concurrency:
-  group: daggerlight-round-shadow-sweep-v3-preview
+  group: daggerlight-grouped-motion-validation
   cancel-in-progress: true
 
 jobs:
