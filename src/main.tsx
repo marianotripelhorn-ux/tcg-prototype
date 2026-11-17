@@ -43,11 +43,13 @@ import "./animation-lab/v5-motion.css";
 
 initializeTheme();
 
-const isAnimationLab = new URLSearchParams(window.location.search).get("lab") === "animations";
+const lab = new URLSearchParams(window.location.search).get("lab");
 const AnimationLab = React.lazy(() => import("./animation-lab/AnimationLab"));
+const MotionStudy = React.lazy(() => import("./motion-study/MotionStudy"));
+const Study = lab === "motion-study" ? MotionStudy : lab === "animations" ? AnimationLab : null;
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    {isAnimationLab ? <Suspense fallback={<div className="lab-boot">Preparando el laboratorio de animaciones…</div>}><AnimationLab /></Suspense> : <App />}
+    {Study ? <Suspense fallback={<div className="lab-boot">Preparando el estudio de movimiento…</div>}><Study /></Suspense> : <App />}
   </React.StrictMode>
 );

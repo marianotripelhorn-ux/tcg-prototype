@@ -330,9 +330,55 @@ async function runMatch(label,viewport,isMobile){
   }finally{await page.close();}
 }
 
+async function runStudy(label,viewport,reducedMotion){
+  const page=await browser.newPage({viewport,deviceScaleFactor:1,reducedMotion});
+  const failures=[];
+  page.on("pageerror",error=>failures.push(error.message));
+  try{
+    await page.goto(ROOT+"?lab=motion-study",{waitUntil:"domcontentloaded"});
+    const stage=page.locator(".ms-stage");
+    const next=async id=>stage.and(page.locator('[data-scene="'+id+'"]')).waitFor({state:"visible"});
+    await next("entry");
+    assert.equal(await page.locator(".ms-chapters button").count(),11);
+    await page.getByRole("button",{name:"Reproducir todo",exact:true}).click();
+    if(reducedMotion==="no-preference"){
+      await next("power");
+      await stage.locator(".ms-delta").waitFor({state:"visible"});
+      await page.screenshot({path:"/tmp/daggerlight-round-shadow-sweep-v3-motion-study-"+label+".png"});
+      await next("life");
+      await page.waitForFunction(()=>document.querySelector(".ms-score strong")?.textContent==="0–2" &&
+        document.querySelector("[data-life=player] b")?.textContent==="7");
+      await next("finish");
+      await page.getByRole("button",{name:"Reproducir todo",exact:true}).waitFor({state:"visible"});
+    }else{
+      await page.getByRole("button",{name:"Detener",exact:true}).click();
+      await page.getByRole("button",{name:"Poder",exact:true}).click();
+      await next("power");
+      const poses=await stage.locator(".ms-flying-card").evaluateAll(cards=>cards.map(card=>getComputedStyle(card).opacity));
+      assert.ok(poses.every(opacity=>opacity==="1"),"Reduced motion should show finished poses immediately");
+      await page.screenshot({path:"/tmp/daggerlight-round-shadow-sweep-v3-motion-study-"+label+".png"});
+    }
+    await page.getByRole("button",{name:"Quiero / No quiero",exact:true}).click();
+    await next("decision");
+    await page.getByRole("button",{name:"Quiero",exact:true}).click();
+    assert.ok(await page.getByText("Continúa el duelo",{exact:true}).isVisible());
+    await page.getByRole("button",{name:"No quiero",exact:true}).click();
+    await next("archive");
+    await page.waitForFunction(()=>document.querySelector(".ms-archive strong")?.textContent==="1");
+    const hasPageOverflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);
+    assert.ok(!hasPageOverflow,label+": study must fit the viewport");
+    assert.deepEqual(failures,[],label+": study has runtime errors");
+    console.log("PASS "+label+": new full-match animation study, playback and decision");
+  }finally{await page.close();}
+}
+
 try{
   await runMatch("desktop",{width:1600,height:900},false);
   await runMatch("mobile",{width:390,height:844},true);
+  await Promise.all([
+    runStudy("desktop",{width:1600,height:900},"no-preference"),
+    runStudy("mobile",{width:390,height:844},"reduce")
+  ]);
 }finally{
   await browser.close();
 }
