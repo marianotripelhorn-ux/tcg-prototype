@@ -1626,6 +1626,7 @@ export default function App() {
                       to the narrower central lane stage. */}
                   {boardRedesign && (boardMotion?.phase==="round-wipe"||boardMotion?.phase==="round-wipe-reveal") && <NewRoundStinger
                     sequenceId={boardMotion.id} round={game.round} reducedMotion={isReducedMotion()}
+                    covered={boardMotion.phase==="round-wipe-reveal"}
                     onCovered={()=>{
                       const current=boardMotionRef.current;
                       if(current?.id===boardMotion.id&&current.phase==="round-wipe")
