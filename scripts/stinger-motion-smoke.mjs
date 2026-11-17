@@ -340,18 +340,30 @@ async function runStudy(label,viewport,reducedMotion){
     const next=async id=>stage.and(page.locator('[data-scene="'+id+'"]')).waitFor({state:"visible"});
     await next("entry");
     assert.equal(await page.locator(".ms-chapters button").count(),11);
-    await page.getByRole("button",{name:"Reproducir todo",exact:true}).click();
     if(reducedMotion==="no-preference"){
-      await next("power");
-      await stage.locator(".ms-delta").waitFor({state:"visible"});
-      await page.waitForFunction(()=>document.querySelector('[data-card="rival"] .live-power-badge b')?.textContent==="8");
-      await page.screenshot({path:"/tmp/daggerlight-round-shadow-sweep-v3-motion-study-"+label+".png"});
-      await next("life");
-      await page.waitForFunction(()=>document.querySelector(".ms-score strong")?.textContent==="0–2" &&
-        document.querySelector("[data-life=player] b")?.textContent==="7");
+      await stage.evaluate(field=>{
+        const states=window.__motionStudyStates={scenes:[],power:false,life:false};
+        const read=()=>{
+          const scene=field.dataset.scene;
+          if(!states.scenes.includes(scene))states.scenes.push(scene);
+          if(scene==="power"&&field.querySelector('[data-card="rival"] .live-power-badge b')?.textContent==="8")states.power=true;
+          if(scene==="life"&&field.querySelector(".ms-score strong")?.textContent==="0–2" &&
+            field.querySelector("[data-life=player] b")?.textContent==="7")states.life=true;
+        };
+        new MutationObserver(read).observe(field,{attributes:true,childList:true,subtree:true,characterData:true,attributeFilter:["data-scene"]});
+        read();
+      });
+      await page.getByRole("button",{name:"Reproducir todo",exact:true}).click();
       await next("finish");
       await page.getByRole("button",{name:"Reproducir todo",exact:true}).waitFor({state:"visible"});
+      const states=await page.evaluate(()=>window.__motionStudyStates);
+      assert.equal(states.scenes.length,11,"Playback must show all match scenes");
+      assert.ok(states.power&&states.life,"Power and Life must update during playback");
+      await page.getByRole("button",{name:"Poder",exact:true}).click();
+      await stage.and(page.locator('[data-scene="power"][data-playback="still"]')).waitFor({state:"visible"});
+      await page.screenshot({path:"/tmp/daggerlight-round-shadow-sweep-v3-motion-study-"+label+".png"});
     }else{
+      await page.getByRole("button",{name:"Reproducir todo",exact:true}).click();
       await page.getByRole("button",{name:"Detener",exact:true}).click();
       await page.getByRole("button",{name:"Poder",exact:true}).click();
       await next("power");
