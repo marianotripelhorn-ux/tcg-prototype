@@ -33,6 +33,7 @@ import "./board-redesign/round-shadow-sweep-v3.css";
 import "./board-redesign/quiero-choreography.css";
 import "./board-redesign/ivory-materials.css";
 import "./board-redesign/ivory-layout.css";
+import "./board-redesign/ivory-mobile.css";
 import "./animation-lab/lab.css";
 import "./animation-lab/chiral.css";
 import "./animation-lab/spectral-v3.css";

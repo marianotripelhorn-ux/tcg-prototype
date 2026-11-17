@@ -1,0 +1,606 @@
+.hybrid-game-tools {
+  display: contents;
+}
+
+@media (max-width: 760px) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 {
+    --phone-left: max(8px, env(safe-area-inset-left));
+    --phone-right: max(8px, env(safe-area-inset-right));
+    --phone-bottom: env(safe-area-inset-bottom, 0px);
+    --phone-top: env(safe-area-inset-top, 0px);
+    --phone-header: calc(50px + var(--phone-top));
+    --phone-plaque: clamp(44px, 8dvh, 56px);
+    --phone-hand: min(clamp(74px, 15dvh, 120px), 32vw);
+    --phone-ribbon: 27px;
+    height: auto;
+    overflow: visible;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-game-frame {
+    grid-template-rows: var(--phone-header) minmax(0, 1fr) !important;
+    height: max(100dvh, calc(var(--phone-min-height, 464px) + var(--phone-top) + var(--phone-bottom)));
+    max-height: none;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-game-frame:has(.manifest-hand) {
+    --phone-min-height: 520px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-topbar {
+    grid-template: "word score tools" auto "round score tools" auto / minmax(0, 1fr) auto auto !important;
+    align-content: center;
+    gap: 2px 10px;
+    height: var(--phone-header) !important;
+    min-height: 0 !important;
+    padding: var(--phone-top) var(--phone-right) 0 var(--phone-left) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-top-wordmark {
+    grid-area: word;
+    font-size: clamp(15px, 4.5vw, 21px) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-top-center {
+    grid-area: round;
+    justify-content: flex-start;
+    gap: 4px !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-top-center > span {
+    color: #ead4a5 !important;
+    font: 700 10px/1 Arial, sans-serif !important;
+    letter-spacing: .03em !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-top-center > i {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-top-center > em {
+    font-size: 8px;
+    padding: 2px 3px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-score {
+    grid-area: score;
+    display: grid;
+    justify-items: center;
+    align-self: center;
+    color: #eed6a7;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-score strong {
+    color: #fff9ec;
+    font: 400 20px/1.1 var(--board-display);
+    font-variant-numeric: tabular-nums;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-score small {
+    margin-top: 3px;
+    font: 700 9px/1 Arial, sans-serif;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-game-tools {
+    position: relative;
+    display: block;
+    grid-area: tools;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-menu {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 5px;
+    color: #f3e5c9;
+    background: transparent;
+    border: 0;
+    font: 700 11px/1 Arial, sans-serif;
+    cursor: pointer;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-game-tools .game-tools {
+    position: absolute;
+    z-index: 5;
+    inset: calc(100% + 3px) 0 auto auto;
+    width: max-content;
+    max-width: calc(100vw - var(--phone-left) - var(--phone-right));
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 3px !important;
+    padding: 5px;
+    border: 1px solid #a58450;
+    background: #191812;
+    box-shadow: 3px 6px 12px #150d07a0;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-game-tools .game-tools[hidden] {
+    display: none !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-game-tools .game-tools button {
+    min-height: 44px;
+    padding-inline: 8px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-game-tools .game-tools .arena-icon-button {
+    width: 44px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-game-tools .game-tools .theme-toggle {
+    display: inline-flex !important;
+    min-width: 44px;
+    justify-content: center;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-main {
+    overflow: visible;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage {
+    display: grid !important;
+    grid-template-rows: [rival] var(--phone-plaque) [board] minmax(140px, 1fr)
+      [player] var(--phone-plaque) [hand] auto [controls] auto !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    padding: 6px var(--phone-right) 0 var(--phone-left) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion {
+    position: relative;
+    min-width: 0;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion.opponent {
+    grid-row: rival;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion.player {
+    grid-row: player;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion-button {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    padding: 0 44px 0 4px;
+    border: 1px solid #8d7247;
+    background-color: #221b15;
+    background-size: cover;
+    background-position: center 36%;
+    color: #fff9ec;
+    text-align: left;
+    box-shadow: 1px 2px 3px #291407a1, 4px 6px 10px #38231555;
+    cursor: pointer;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion-button::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: linear-gradient(90deg, #18120c13, #17120de3 77%);
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-portrait {
+    align-self: stretch;
+    width: 50px;
+    min-width: 0;
+    object-fit: cover;
+    object-position: center 14%;
+    filter: var(--hd-shadow-contact);
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion-name {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    text-shadow: 1px 2px 2px #120a05;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion-name small {
+    color: #e9cd95;
+    font: 700 9px/1 Arial, sans-serif;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion-name strong {
+    overflow: hidden;
+    font: 400 13px/1.12 var(--board-display);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion .hybrid-life-unit {
+    position: absolute;
+    inset: 0 8px 0 auto;
+    justify-content: center;
+    width: auto;
+    pointer-events: none;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion .hybrid-life-label {
+    display: none;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion .hybrid-life-crest {
+    width: 27px;
+    height: 34px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion .hybrid-life-number {
+    font-size: 18px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .battlefield {
+    position: relative !important;
+    grid-row: board;
+    inset: auto !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .battlefield::after {
+    left: 0;
+    right: 0;
+    height: var(--phone-ribbon);
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .battlefield .lane {
+    grid-template-rows: minmax(0, 1fr) var(--phone-ribbon) minmax(0, 1fr) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .lane-axis span {
+    font-size: 12px !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-slot {
+    padding: 4px 3px !important;
+    background: #6849230c !important;
+    box-shadow: inset 0 0 0 1px #674b2726, inset 1px 2px 3px #7e543623 !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-slot::before {
+    display: none;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-slot :is(.archive-count, .slot-capacity) {
+    z-index: 3;
+    padding: 0 !important;
+    font-size: 10px !important;
+    font-variant-numeric: tabular-nums;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-slot .archive-count {
+    right: 5px !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-slot .slot-capacity {
+    left: 5px !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .archive-caption {
+    display: none;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-slot.opponent .slot-stack {
+    padding: 0 0 12px !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-slot.player .slot-stack {
+    padding: 12px 0 0 !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-slot .played-card:has(.current-board-card) {
+    --phone-board-card: clamp(62px, 17dvh, 128px);
+    height: var(--phone-board-card) !important;
+    flex: 0 1 var(--phone-board-card);
+    max-height: 100% !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .battle-card {
+    width: 100% !important;
+    height: clamp(23px, 4.5dvh, 33px) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .current-board-card .live-power-badge {
+    top: 2px !important;
+    left: 2px !important;
+    width: 17px;
+    min-width: 0;
+    height: 17px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .current-board-card .live-power-badge b {
+    font-size: 12px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .current-board-card .live-power-badge small {
+    display: none;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-place {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    width: 100%;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-place:focus-visible {
+    outline: 2px solid #5b3916;
+    outline-offset: -3px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .manifest-board-zone {
+    z-index: 3;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 :is(.hand-zone, .hand-zone.is-open) {
+    position: relative !important;
+    grid-row: hand !important;
+    inset: auto !important;
+    height: auto !important;
+    min-height: calc(var(--phone-hand) + 12px) !important;
+    padding: 6px 0 !important;
+    margin-inline: calc(-1 * var(--phone-left)) calc(-1 * var(--phone-right));
+    border-top: 1px solid #a17d46 !important;
+    background: #161410 !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage .hand-zone .hand-layout {
+    height: auto !important;
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 5px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hand-zone .hand {
+    flex: 0 0 auto;
+    height: var(--phone-hand) !important;
+    padding-inline: var(--phone-left) var(--phone-right);
+    gap: 9px !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hand-zone .manifest-hand,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hand-zone:is(:hover, .is-open) .manifest-hand {
+    position: relative !important;
+    inset: auto !important;
+    width: auto !important;
+    height: 50px !important;
+    margin-inline: var(--phone-left) var(--phone-right);
+    overflow: visible !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-quiero {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: center;
+    gap: 4px 8px;
+    min-height: var(--phone-hand);
+    padding-inline: var(--phone-left) var(--phone-right);
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hand-zone:has(.hybrid-phone-quiero) .hand-layout {
+    display: none !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-quiero p {
+    grid-column: 1 / -1;
+    margin: 0 0 2px;
+    color: #f8e8c7;
+    font: 700 13px/1.2 Arial, sans-serif;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-quiero button {
+    min-height: 44px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-command-rail {
+    position: relative !important;
+    grid-row: controls;
+    grid-template-columns: minmax(0, 1fr) auto;
+    inset: auto !important;
+    width: auto !important;
+    max-width: none;
+    min-height: calc(44px + var(--phone-bottom));
+    margin-inline: calc(-1 * var(--phone-left)) calc(-1 * var(--phone-right));
+    padding: 0 var(--phone-right) var(--phone-bottom) var(--phone-left) !important;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-command-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-command-left {
+    gap: 8px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-command-left .hybrid-history-details {
+    display: block;
+    position: static;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-command-left summary,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-deck summary {
+    display: flex;
+    align-items: center;
+    min-width: 44px;
+    min-height: 44px;
+    gap: 4px;
+    padding: 0 3px;
+    list-style: none;
+    color: #e8d3a7;
+    font: 700 11px/1 Arial, sans-serif;
+    cursor: pointer;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-deck summary::-webkit-details-marker {
+    display: none;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-history-popover {
+    left: var(--phone-left);
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-deck .hybrid-deck-info {
+    right: var(--phone-right);
+    bottom: 100%;
+    margin-bottom: 5px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .card-zoom-overlay {
+    align-items: end;
+    padding: 0;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .card-zoom-panel,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion-dialog {
+    width: min(100%, 480px);
+    max-width: none;
+    max-height: calc(100dvh - 12px - var(--phone-top));
+    margin-inline: auto;
+    overflow: auto;
+    padding: 12px max(12px, var(--phone-right)) calc(12px + var(--phone-bottom)) max(12px, var(--phone-left));
+    border: 1px solid #a28554;
+    border-radius: 10px 10px 0 0;
+    color: #f7eedc;
+    background: #1a1813;
+    box-shadow: 0 -6px 26px #100c0788;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion-dialog {
+    inset: auto 0 0;
+    margin-block: 0;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion-dialog::backdrop {
+    background: #100b08a0;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion-detail {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: minmax(72px, 30%) minmax(0, 1fr);
+    align-items: end;
+    gap: 10px;
+    min-height: 100px;
+    padding-inline: 5px 11px;
+    overflow: hidden;
+    border: 1px solid #8d7247;
+    background-size: cover;
+    background-position: center 36%;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion-detail::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: linear-gradient(105deg, #17100c0a, #16120de0 75%);
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion-detail img {
+    width: 100%;
+    height: min(118px, 24dvh);
+    object-fit: contain;
+    object-position: center bottom;
+    filter: var(--hd-shadow-contact);
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion-detail h2 {
+    margin: 12px 0;
+    color: #fff9ec;
+    font: 400 16px/1.2 var(--board-display);
+    text-shadow: 1px 2px 2px #0b0805;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion-dialog p {
+    font: 500 15px/1.45 Arial, sans-serif;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion-dialog form {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-champion-dialog form button {
+    min-height: 44px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .card-zoom-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 29%) minmax(0, 1fr);
+    align-items: start;
+    padding-top: 47px;
+    gap: 10px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .card-zoom-panel::before {
+    display: none;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .zoom-card-frame {
+    width: 100%;
+    grid-area: 1 / 1;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .zoom-close {
+    top: 0;
+    right: 2px;
+    width: 44px;
+    height: 44px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .zoom-actions {
+    grid-area: 1 / 2;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    padding: 0;
+    border: 0;
+    color: #f7eedc;
+    background: transparent;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .zoom-actions strong {
+    color: #fff5e3;
+    font-size: 15px;
+    white-space: normal;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .zoom-actions span {
+    color: #e5cca2;
+    font-size: 11px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .zoom-actions .primary-button {
+    min-height: 44px;
+    font-size: 11px;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-phone-card-rule {
+    margin: 5px 0 0;
+    color: #f1e2ca;
+    font: 500 14px/1.35 Arial, sans-serif;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .card-zoom-panel .manifest-inspect-rule {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+}

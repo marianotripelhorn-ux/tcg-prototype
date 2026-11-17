@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ArchiveFlight, CardFlight, DealMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
 import type { BoardMotionSequence } from "./board-redesign/motion";
 import { ArchiveReceiptTransition, ArchiveSweep, RoundTransition, archiveCountChange, completedRoundReceipt } from "./board-redesign/roundChoreography";
@@ -36,11 +36,23 @@ import { capacity, legalPositions } from "./engine/rules";
 import type { AIDifficulty, DuelSummary, EnginePlay, GameState, ActiveManifestation, SpecialKind } from "./engine/types";
 import { ManifestCard, ManifestCardDialog } from "./ManifestCard";
 import { formatPowerDelta, playEffectFeedback, playPowerDelta } from "./engine/presentation";
-import { HybridSidebar, HybridRightRail, HybridCommandRail, HybridEngraving } from "./board-redesign/HybridBoardHardware";
+import { HybridSidebar, HybridPhoneChampion, HybridRightRail, HybridCommandRail, HybridEngraving } from "./board-redesign/HybridBoardHardware";
 import { appendMatchHistory, clearSavedMatch, completedMatch, newSavedMatch, readMatchHistory, readSavedMatch, summarizeHistory, writeSavedMatch } from "./persistence";
 import type { SavedMatch } from "./persistence";
 import { analyticsAvailable, analyticsOptedIn, sendCompletedMatch, setAnalyticsConsent } from "./telemetry";
 import type { CardDefinition, Faction, Position } from "./types";
+
+const PHONE_BOARD_QUERY="(max-width: 760px)";
+
+function subscribePhoneBoard(onChange:()=>void) {
+  const viewport=window.matchMedia(PHONE_BOARD_QUERY);
+  viewport.addEventListener("change",onChange);
+  return ()=>viewport.removeEventListener("change",onChange);
+}
+
+function isPhoneBoard() {
+  return window.matchMedia(PHONE_BOARD_QUERY).matches;
+}
 
 type DragState = {
   handIndex: number;
@@ -503,7 +515,8 @@ export function Slot({
   onCopyTarget,
   onCopyArchive,
   onDropRelic,
-  hideFocusDuringFlight = false
+  hideFocusDuringFlight = false,
+  phoneBoard = false
 }: {
   side: "player" | "opponent";
   position: Position;
@@ -524,6 +537,7 @@ export function Slot({
   onCopyArchive?: ()=>void;
   onDropRelic?: ()=>void;
   hideFocusDuringFlight?: boolean;
+  phoneBoard?: boolean;
 }) {
   // A design can be played twice in one position. Only the most recent matching
   // resolved play gets the active-card rendering, never every matching copy.
@@ -549,6 +563,8 @@ export function Slot({
           onDropRelic();
         }} : undefined}
     >
+      {phoneBoard && active && <button type="button" className="hybrid-phone-place"
+        aria-label={`Jugar en ${positionLabels[position]}`}/>}
       {archivedKind
         ? <button type="button" className="archive-count manifest-archive-button"
           aria-label={`Archivo: ${archive} cartas. ${onCopyArchive&&archiveCards?.some(card=>card.specialArchiveKind==="dagger") ? "Copiar Daga Etérea" : "Inspeccionar carta especial"}`}
@@ -621,6 +637,9 @@ export default function App() {
   const [screen,setScreen]=useState<"home"|"champions"|"arcade"|"collection"|"table"|"decklab"|"multiplayer"|"playtest">("home");
   const [playerName,setPlayerName]=useState(()=>readPlayerName());
   const [boardRedesign,setBoardRedesign]=useState(()=>new URLSearchParams(window.location.search).get("board")!=="classic");
+  const narrowBoard=useSyncExternalStore(subscribePhoneBoard,isPhoneBoard,()=>false);
+  const phoneBoard=boardRedesign&&narrowBoard;
+  const [phoneToolsOpen,setPhoneToolsOpen]=useState(false);
   const [handExpanded,setHandExpanded]=useState(false);
   const [hoveredHandIndex,setHoveredHandIndex]=useState<number|null>(null);
   const [hoveredBoardCard,setHoveredBoardCard]=useState<CardDefinition|null>(null);
@@ -1191,6 +1210,8 @@ export default function App() {
       : game.phase==="finished"
         ? "PARTIDA TERMINADA"
         : `DUELO ${game.turn} · ${game.initiative==="player"?"VOS ABRÍS":"IA ABRE"}`;
+  const score=displayed?.score??game.duelScore;
+  const deckView=boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.player:game.player;
 
   return (
     <main data-board-phase={boardRedesign?(boardMotion?.phase??"idle"):"classic"}
@@ -1211,13 +1232,22 @@ export default function App() {
             </span>
             {arcadeRun && <em>ARCADE · {arcadeRun.index+1}/{arcadeRun.opponents.length}</em>}
           </div>
-          <div className="game-tools">
+          {phoneBoard && <div className="hybrid-phone-score"
+            aria-label={`Duelos de esta ronda: vos ${score.player}, rival ${score.opponent}`}>
+            <strong>{score.player}–{score.opponent}</strong><small>VOS · RIVAL</small>
+          </div>}
+          <div className="hybrid-game-tools">
+          {phoneBoard && <button type="button" className="hybrid-phone-menu"
+            aria-expanded={phoneToolsOpen} aria-controls="arena-game-tools"
+            onClick={()=>setPhoneToolsOpen(open=>!open)}>Menú</button>}
+          <div className="game-tools" id="arena-game-tools" hidden={phoneBoard&&!phoneToolsOpen}>
             <button type="button" className="hybrid-board-toggle"
               disabled={!!boardMotion}
               title={boardRedesign?"Mostrar el tablero React anterior":"Ver el nuevo tablero híbrido"}
               onClick={()=>{
                 const next=!boardRedesign;
                 setBoardRedesign(next);
+                setPhoneToolsOpen(false);
                 setHoveredHandIndex(null);
                 setMotion(null);
                 setHandExpanded(false);
@@ -1250,16 +1280,17 @@ export default function App() {
               </div>
             }
             <button className="arena-icon-button" type="button" aria-label="Abrir tutorial"
-              title="Ayuda" onClick={()=>setTutorialOpen(true)}><ArenaIcon name="help"/></button>
+              title="Ayuda" onClick={()=>{setPhoneToolsOpen(false);setTutorialOpen(true);}}><ArenaIcon name="help"/></button>
             <button className="arena-icon-button" type="button" aria-label="Volver al menú"
-              title="Volver al inicio" onClick={()=>{clearPreviewTimer();goToMenu("home");}}>
+              title="Volver al inicio" onClick={()=>{setPhoneToolsOpen(false);clearPreviewTimer();goToMenu("home");}}>
               <ArenaIcon name="exit"/></button>
+          </div>
           </div>
         </section>
 
         <div className={"arena-main"+(handExpanded?" hand-expanded":"")}>
           {boardRedesign && <HybridEngraving/>}
-          <aside className="arena-sidebar" aria-label="Campeones y marcador">
+          {!phoneBoard && <aside className="arena-sidebar" aria-label="Campeones y marcador">
             {boardRedesign ? <HybridSidebar player={game.player} opponent={game.opponent} playerName={playerName}/> : <>
             <ChampionBar side="opponent" championId={game.opponent.champion.id}
               faction={game.opponent.champion.faction} name={game.opponent.champion.name}
@@ -1281,10 +1312,13 @@ export default function App() {
             <div className="arena-sidebar-hand-art" aria-hidden="true"
               style={{backgroundImage:`linear-gradient(0deg,#171816a8,#17181670),url("${championBackgroundUrl(game.player.champion.faction)}")`}}/>
             </>}
-          </aside>
+          </aside>}
           <div className="arena-stage">
             <span className="arena-visually-hidden" role="status">{turnText}</span>
-            {showQuieroChoice&&<QuieroChoiceStage
+            {phoneBoard && <HybridPhoneChampion side="opponent" state={game.opponent} userLabel="RIVAL"
+              life={displayed?.opponentLife??game.opponent.life}
+              healed={displayed?.opponentHealed??game.opponent.healedLife}/>}
+            {showQuieroChoice&&!phoneBoard&&<QuieroChoiceStage
               score={game.duelScore} selected={quieroChoice} onChoose={chooseQuiero}
               bannerImage={championBackgroundUrl(game.player.champion.faction)}/>}
             {showRivalQuiero&&boardMotion&&<RivalQuieroStage
@@ -1384,6 +1418,7 @@ export default function App() {
                 onManifestInspect={setSpecialInspection}
                 onDropRelic={game.manifestationsEnabled!==false?()=>useSpecial("relic",position):undefined}
                 hideFocusDuringFlight={!!boardMotion && boardMotion.phase==="flight"}
+                phoneBoard={phoneBoard}
                 active={specialMode==="relic"
                    ? game.player.roundPlays.every(p=>p.position!==position)
                    : (hoveredPosition===position || (!!selectedCard&&!drag)) && legal.includes(position)}
@@ -1423,14 +1458,18 @@ export default function App() {
           onComplete={()=>{
             if(boardMotionRef.current?.id===boardMotion.id)setMotion(null);
           }}/>}
-        {boardRedesign && <HybridRightRail
+        {phoneBoard && <HybridPhoneChampion side="player" state={game.player}
+          userLabel={playerName.trim()&&playerName!=="JUGADOR"?playerName.trim():DEFAULT_PLAYER_NAME}
+          life={displayed?.playerLife??game.player.life}
+          healed={displayed?.playerHealed??game.player.healedLife}/>}
+        {boardRedesign&&!phoneBoard && <HybridRightRail
           playerLife={displayed?.playerLife??game.player.life}
           opponentLife={displayed?.opponentLife??game.opponent.life}
           playerHealed={displayed?.playerHealed??game.player.healedLife}
           opponentHealed={displayed?.opponentHealed??game.opponent.healedLife}
-          score={displayed?.score??game.duelScore}
-          deckRemaining={boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.player.deck.length:game.player.deck.length}
-          discardCount={boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.player.discard.length:game.player.discard.length}
+          score={score}
+          deckRemaining={deckView.deck.length}
+          discardCount={deckView.discard.length}
         />}
 
         <div className="action-line" role="status">
@@ -1446,6 +1485,11 @@ export default function App() {
           aria-label="Tu mano"
           style={{backgroundImage:`linear-gradient(0deg,#111713e8,#1d241bd9),url("${championBackgroundUrl(game.player.champion.faction)}")`}}
         >
+          {phoneBoard&&showQuieroChoice && <div className="hybrid-phone-quiero" role="group" aria-label="Decisión de tercer duelo">
+            <p>¿Jugás el tercer duelo?</p>
+            <button type="button" className="secondary-button" disabled={quieroChoice!==null} onClick={()=>chooseQuiero(false)}>NO QUIERO</button>
+            <button type="button" className="primary-button" disabled={quieroChoice!==null} onClick={()=>chooseQuiero(true)}>QUIERO</button>
+          </div>}
           <button type="button" className="arena-hand-toggle" aria-expanded={handExpanded}
             aria-label={handExpanded?"Contraer mano":"Desplegar mano"}
             onClick={()=>{setHandExpanded(!handExpanded);setHoveredHandIndex(null);}}>
@@ -1474,6 +1518,7 @@ export default function App() {
                 key={`${card.id}-${index}`}
                 style={{animationDelay:`${index*115}ms`}}
                 data-motion-hand-index={index}
+                aria-pressed={phoneBoard ? selectedIndex===index : undefined}
                 disabled={game.phase!=="awaiting_player" || !!duelPreview || !!boardMotion}
                 onPointerEnter={()=>setHoveredHandIndex(index)}
 
@@ -1562,6 +1607,7 @@ export default function App() {
           latestEvent={latestEvent}
           duelResolving={!!duelPreview||!!boardMotion}
           decisionOnField={showQuieroChoice}
+          phoneDeck={phoneBoard?{remaining:deckView.deck.length,discarded:deckView.discard.length}:undefined}
           displayRound={displayed?.round??game.round}
           displayTurn={showingPreviousRound?(duelPreview?.turn??boardMotion?.duel?.turn??boardMotion?.before.turn??game.turn):game.turn}
           transitionLabel={boardMotion?.phase==="flight"?"Jugando carta…":boardMotion?.phase==="quiero-ai"?"El rival eligió Quiero · tercer duelo…":boardMotion?.phase==="round"?"Ronda finalizada…":boardMotion?.phase==="archive"?"Archivando cartas…":boardMotion?.phase==="archive-reveal"?"Archivos actualizados…":boardMotion?.phase==="deal"?"Repartiendo nueva mano…":undefined}
@@ -1614,6 +1660,7 @@ export default function App() {
                         ? ` · Poder final ${inspection.finalPower}`
                         : ""}
                   </span>
+                  {phoneBoard && <p className="hybrid-phone-card-rule">{inspection.card.text}</p>}
                 </div>
                 {game.phase==="awaiting_player" && inspection.handIndex!==undefined && !duelPreview && !boardMotion && (
                   <button
@@ -1623,7 +1670,7 @@ export default function App() {
                       setSelectedIndex(inspection.handIndex!);
                       setInspection(null);
                     }}
-                  >SELECCIONAR</button>
+                  >{phoneBoard?"ELEGIR CARTA":"SELECCIONAR"}</button>
                 )}
               </div>
             </div>

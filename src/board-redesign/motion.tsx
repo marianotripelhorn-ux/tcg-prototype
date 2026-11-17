@@ -210,7 +210,9 @@ export function DealMotion({sequenceId,reducedMotion,onComplete}:ArchiveFlightPr
   useLayoutEffect(()=>{
     if(reducedMotion){done.current();return;}
     const cards=Array.from(document.querySelectorAll<HTMLElement>(".app-shell.board-redesign-v1 .hand-zone .hand-card"));
-    const source=document.querySelector<HTMLElement>(".app-shell.board-redesign-v1 .hybrid-deck-object");
+    const source=document.querySelector<HTMLElement>(
+      ".app-shell.board-redesign-v1 :is(.hybrid-deck-object, .hybrid-phone-deck summary)"
+    );
     const deck=source?.getBoundingClientRect();
     const animations:Animation[]=[];
     const clearFx=()=>cards.forEach(card=>card.classList.remove("board-gs-dealing"));

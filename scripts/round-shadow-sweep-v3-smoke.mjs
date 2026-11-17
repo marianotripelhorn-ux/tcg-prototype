@@ -524,8 +524,34 @@ try{
   const phases=await page.evaluate(()=>window.__daggerlightPhaseLog);
   for(const phase of ["round","archive","archive-reveal","deal","idle"])
     assert.ok(phases.includes(phase),"Real match must include "+phase+" stage");
-  assert.deepEqual(pageErrors,[],"Full round and Archive must have no runtime errors");
   console.log("PASS: one continuous fast curtain, attached edge, score absorption, real Archives and earlier new hand");
+
+  await page.setViewportSize({width:390,height:744});
+  await page.locator(".hybrid-phone-champion.opponent").waitFor();
+  const phoneBoxes=await page.locator(".arena-stage").evaluate(stage=>{
+    const bounds=selector=>stage.querySelector(selector).getBoundingClientRect();
+    const rival=bounds(".hybrid-phone-champion.opponent");
+    const field=bounds(".battlefield");
+    const player=bounds(".hybrid-phone-champion.player");
+    const hand=bounds(".hand-zone");
+    const footer=bounds(".hybrid-command-rail");
+    return rival.bottom<=field.top+1 && field.bottom<=player.top+1 &&
+      player.bottom<=hand.top+1 && hand.bottom<=footer.top+1 &&
+      footer.bottom<=window.innerHeight+1 && document.documentElement.scrollWidth<=window.innerWidth;
+  });
+  assert.ok(phoneBoxes,"Portrait board and hand must fit above the browser's bottom edge");
+  const mobileCounts=await page.locator(".board-slot .archive-count").allInnerTexts();
+  assert.ok(mobileCounts.length===6&&mobileCounts.every(value=>/^\d+$/.test(value.trim())),
+    "The six mobile Archive positions must show only their live counts");
+  assert.equal(await page.locator(".hybrid-life-label:visible, .current-board-card .live-power-badge small:visible").count(),0,
+    "Mobile crowns and active cards must show the numbers without duplicate labels");
+  await page.locator(".hand-zone .hand-card").first().click();
+  await page.locator(".card-zoom-overlay .zoom-actions .primary-button").click();
+  const phoneTarget=page.locator(".board-slot.player.drop-active .hybrid-phone-place");
+  await phoneTarget.first().waitFor();
+  assert.ok(await phoneTarget.first().getAttribute("aria-label"),"A mobile legal lane must be operable by its position name");
+  assert.deepEqual(pageErrors,[],"Desktop and portrait boards must have no runtime errors");
+  console.log("PASS: portrait layout, bare Archive counters and legal mobile targets");
 }finally{
   await browser.close();
 }

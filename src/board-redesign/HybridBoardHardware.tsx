@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { championBackgroundUrl, championImageUrl, championShortName, championSubtitle } from "../championArtwork";
 import { DEFAULT_PLAYER_NAME } from "../playerProfile";
 import { positionLabels, positions } from "../data";
@@ -105,6 +105,33 @@ function LifeCrest({side,life,healed}:{
   </div>;
 }
 
+export function HybridPhoneChampion({side,state,userLabel,life,healed}:{
+  side:Side;state:PlayerState;userLabel:string;life:number;healed:number;
+}) {
+  const titleId=useId();
+  const dialog=useRef<HTMLDialogElement>(null);
+  const {champion}=state;
+  const art={backgroundImage:`url("${championBackgroundUrl(champion.faction)}")`};
+  return <section className={`hybrid-phone-champion ${side}`}>
+    <button type="button" className="hybrid-phone-champion-button" style={art}
+      aria-haspopup="dialog" onClick={()=>dialog.current?.showModal()}>
+      <img className="hybrid-phone-portrait" src={championImageUrl(champion.id,true)} alt=""/>
+      <span className="hybrid-phone-champion-name">
+        <small>{userLabel}</small><strong>{championShortName(champion.name)}</strong>
+      </span>
+    </button>
+    <LifeCrest side={side} life={life} healed={healed}/>
+    <dialog className="hybrid-phone-champion-dialog" ref={dialog} aria-labelledby={titleId}>
+      <div className="hybrid-phone-champion-detail" style={art}>
+        <img src={championImageUrl(champion.id)} alt="" loading="lazy"/>
+        <h2 id={titleId}>{champion.name}</h2>
+      </div>
+      <p>{champion.text}</p>
+      <form method="dialog"><button type="submit" className="secondary-button">Cerrar</button></form>
+    </dialog>
+  </section>;
+}
+
 export function HybridRightRail({
   playerLife,opponentLife,playerHealed,opponentHealed,score,deckRemaining,discardCount
 }:{
@@ -142,16 +169,18 @@ export function HybridRightRail({
 }
 
 export function HybridCommandRail({
-  game,pendingOpponent,selectedCard,latestEvent,duelResolving,transitionLabel,displayRound,displayTurn,decisionOnField=false,onChooseQuiero
+  game,pendingOpponent,selectedCard,latestEvent,duelResolving,transitionLabel,displayRound,displayTurn,decisionOnField=false,phoneDeck,onChooseQuiero
 }:{
   game:GameState;pendingOpponent:EnginePlay|null;selectedCard:CardDefinition|null;
-  latestEvent:string;duelResolving:boolean;transitionLabel?:string;displayRound?:number;displayTurn?:number;decisionOnField?:boolean;onChooseQuiero:(wants:boolean)=>void;
+  latestEvent:string;duelResolving:boolean;transitionLabel?:string;displayRound?:number;displayTurn?:number;decisionOnField?:boolean;
+  phoneDeck?:{remaining:number;discarded:number};onChooseQuiero:(wants:boolean)=>void;
 }) {
   let status=latestEvent;
   if (transitionLabel) status=transitionLabel;
   else if (duelResolving) status="Resolviendo el duelo…";
   else if (game.phase==="awaiting_quiero") status="La ronda está 0–2. ¿Querés disputar el tercer duelo?";
-  else if (pendingOpponent) status=`El rival abrió con ${pendingOpponent.card.name} en ${positionLabels[pendingOpponent.position]}. Elegí tu respuesta.`;
+  else if (pendingOpponent) status=`El rival abrió con ${pendingOpponent.card.name} en ${positionLabels[pendingOpponent.position]}.`
+    +(phoneDeck?"":" Elegí tu respuesta.");
   else if (selectedCard) status=`${selectedCard.name} seleccionada · elegí una posición legal.`;
   else if (game.phase==="awaiting_player") status="Tu turno · seleccioná una carta y su posición.";
   else if (game.phase==="finished") status="Partida terminada.";
@@ -181,6 +210,13 @@ export function HybridCommandRail({
       </details>
     </div>
     <div className="hybrid-command-status" role="status" aria-live="polite">{status}</div>
+    {phoneDeck && <details className="hybrid-phone-deck">
+      <summary>MAZO · <b>{phoneDeck.remaining}</b></summary>
+      <div className="hybrid-deck-info">
+        <b>MAZO</b><span>{phoneDeck.remaining} restantes</span><span>{phoneDeck.discarded} descartadas</span>
+        <small>Se recicla al inicio de la ronda cuando quedan menos de tres cartas.</small>
+      </div>
+    </details>}
     {game.phase==="awaiting_quiero" && !duelResolving && !decisionOnField
       ? <div className="hybrid-quiero-actions" role="group" aria-label="Decisión de tercer duelo"
           style={{backgroundImage:`linear-gradient(180deg,#080a08a8,#11180dbf),url("${bannerBackground}")`}}>
