@@ -141,13 +141,16 @@ async function playCard(page){
   await page.locator('main[data-board-phase="idle"]').waitFor({state:"attached",timeout:14000});
   const first=page.locator(".hand-zone .hand-card").first();
   await first.waitFor({state:"visible",timeout:10000});
-  const origin=await first.evaluate(el=>{const r=el.getBoundingClientRect();return{x:r.left,y:r.top,width:r.width,height:r.height};});
   await first.click();
   await page.locator(".card-zoom-overlay .zoom-actions .primary-button")
     .waitFor({state:"attached",timeout:7000});
   await page.locator(".card-zoom-overlay .zoom-actions .primary-button").evaluate(el=>el.click());
   const lane=page.locator(".board-slot.player.drop-active").first();
   await lane.waitFor({state:"attached",timeout:8000});
+  // The first interaction changes the selected card's transform. Measure the
+  // true selected-hand origin immediately before committing this real play,
+  // exactly when CardFlight snapshots its starting geometry.
+  const origin=await first.evaluate(el=>{const r=el.getBoundingClientRect();return{x:r.left,y:r.top,width:r.width,height:r.height};});
   await lane.evaluate(el=>el.click());
   return origin;
 }
@@ -203,7 +206,7 @@ async function runMatch(label,viewport,isMobile){
     assert.equal(flight.duration,270,label+": card hand-to-slot animation must be 270ms");
     assert.equal(flight.shadowDuration,270,label+": shadow must follow the same 270ms clock");
     assert.ok(Math.abs(flight.left-origin.x)<10 && Math.abs(flight.top-origin.y)<10,
-      label+": card must originate from its actual hand location");
+      label+": card must originate from its selected hand position: "+JSON.stringify({origin,flight}));
     assert.ok(flight.shadowKeyframes.some(k=>String(k).includes("30px")),
       label+": down-right shadow must stretch during the lift");
     assert.equal(flight.ringCount,0,label+": do not emit decorative rings or particles");
