@@ -59,6 +59,7 @@ async function instrument(page){
           const stage=document.querySelector(".dl-new-round-stage")?.getBoundingClientRect();
           const field=root?.querySelector(".arena-main")?.getBoundingClientRect();
           m.swap={
+            time:performance.now(),
             sameInk:ink===currentWipe,
             inkTransform:ink?getComputedStyle(ink).transform:"",
             fullyCovered:!!ink && Math.abs(new DOMMatrix(getComputedStyle(ink).transform).m41)<2,
@@ -91,7 +92,10 @@ async function instrument(page){
         ribbon.dataset.smokeCaptured="true";
         const style=getComputedStyle(ribbon);
         const rect=ribbon.getBoundingClientRect();
+        const frames=ribbon.getAnimations()[0]?.effect?.getKeyframes()??[];
         m.ribbons.push({
+          rest:frames.filter(frame=>frame.computedOffset>.2&&frame.computedOffset<.78)
+            .map(frame=>({offset:frame.computedOffset,transform:frame.transform})),
           duration:style.animationDuration,
           motion:style.animationName,
           shape:style.clipPath,background:style.backgroundColor,color:style.color,
@@ -111,8 +115,9 @@ async function instrument(page){
         const rect=wipe.getBoundingClientRect();
         const field=root?.querySelector(".arena-main")?.getBoundingClientRect();
         currentWipe=ink;
+        const cover=ink?.getAnimations()[0];
         m.wipe={
-          coverMs:ink?.getAnimations().find(a=>a.effect?.getTiming().duration===298)?.effect?.getTiming().duration??null,
+          coverMs:cover?.effect?.getTiming().duration??null,
           motion:style?.animationName,
           background:style?.backgroundColor,
           radius:pseudo?.borderRadius,
@@ -127,8 +132,17 @@ async function instrument(page){
             computed:{position:getComputedStyle(wipe).position,inset:getComputedStyle(wipe).inset},
           },
           groupedText:!!ink?.querySelector(".dl-new-round-number"),
-          keyframes:ink?.getAnimations().find(a=>a.effect?.getTiming().duration===298)?.effect?.getKeyframes().map(f=>f.transform)??[]
+          keyframes:cover?.effect?.getKeyframes().map(f=>f.transform)??[]
         };
+        if(ink){
+          const watchExit=new MutationObserver(()=>{
+            const exit=ink.getAnimations()[0];
+            m.wipe.exitMs=exit?.effect?.getTiming().duration??null;
+            m.wipe.exitStart=performance.now();
+            watchExit.disconnect();
+          });
+          watchExit.observe(ink,{attributes:true,attributeFilter:["style"]});
+        }
       }
     }
     read();
@@ -213,6 +227,10 @@ async function runMatch(label,viewport,isMobile){
     const ribbon=data.ribbons[0];
     assert.ok(ribbon&&ribbon.duration==="0.64s"&&ribbon.motion.includes("dl-duel-notched-ribbon"),
       label+": 640ms result animation missing");
+    assert.ok(ribbon.rest.some((frame,i)=>{
+      const next=ribbon.rest[i+1];
+      return next&&frame.transform===next.transform&&next.offset-frame.offset>=.35;
+    }),label+": grouped result needs a stable reading beat after settling");
     assert.ok(ribbon.shape.includes("polygon")&&ribbon.background==="rgb(8, 9, 11)",
       label+": original notched silhouette needs one matte-black surface");
     assert.equal(ribbon.color,"rgb(255, 255, 255)",label+": white result lettering");
@@ -246,8 +264,10 @@ async function runMatch(label,viewport,isMobile){
     const wipe=data.wipe,swap=data.swap;
     console.log("MOTION DIAGNOSTIC "+label+" "+JSON.stringify({wipe,swap}));
     assert.ok(wipe?.groupedText&&wipe.covers,label+": whole ivory field and hand must be covered: "+JSON.stringify(wipe?.geometry??wipe));
-    assert.ok(wipe.coverMs===298&&wipe.keyframes.length===2,
-      label+": curved stinger must be a real 298ms compositor cover with one grouped surface");
+    assert.ok(wipe.coverMs===224&&wipe.keyframes.length===2,
+      label+": curved stinger must enter in one 224ms compositor movement");
+    assert.ok(wipe.exitMs===384&&wipe.exitStart-swap?.time>=150,
+      label+": the round number needs a readable hold at full cover before the continuous exit");
     assert.ok(wipe.radius.includes("50%"),label+": broad curved front is missing");
     assert.equal(wipe.background,"rgb(9, 10, 11)",label+": background must be matte black");
     assert.ok(wipe.font.includes("Archivo Black")&&wipe.white==="rgb(255, 255, 255)",

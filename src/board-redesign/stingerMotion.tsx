@@ -50,7 +50,7 @@ export function NewRoundStinger({
     const cover=node.animate([
       {transform:"translate3d(-125%,0,0)"},
       {transform:"translate3d(0,0,0)"}
-    ],{duration:298,easing:"cubic-bezier(.22,.75,.28,1)",fill:"forwards"});
+    ],{duration:224,easing:"cubic-bezier(.20,.74,.26,1)",fill:"forwards"});
     entry.current=cover;
     void cover.finished.then(()=>{
       if(!cancelled)latest.current.onCovered();
@@ -82,11 +82,11 @@ export function NewRoundStinger({
       exit=node.animate([
         {transform:"translate3d(0,0,0)"},
         {transform:"translate3d(120%,0,0)"}
-      ],{duration:407,easing:"cubic-bezier(.28,.64,.22,1)",fill:"forwards"});
+      ],{duration:384,easing:"cubic-bezier(.42,.10,.58,.94)",fill:"forwards"});
       void exit.finished.then(()=>{
         if(!cancelled)latest.current.onComplete();
       }).catch(()=>{});
-    },86);
+    },184);
     return ()=>{
       cancelled=true;window.clearTimeout(timer);exit?.cancel();
     };

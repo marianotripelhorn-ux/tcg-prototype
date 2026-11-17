@@ -78,21 +78,25 @@ export function CardFlight({origin,position,children,onComplete,onLand,reducedMo
     }
     const dx=destination.x-origin.x,dy=destination.y-origin.y;
     const sx=destination.width/origin.width,sy=destination.height/origin.height;
-    // One physical 270ms hand→lane flight. Only transforms animate; the
-    // matte down-right shadow is a child that stretches then tightens.
+    const direction=dx<0?-1:1;
+    const liftEasing="cubic-bezier(.22,.78,.30,1)";
+    const landingEasing="cubic-bezier(.32,.05,.25,1)";
+    const timing:KeyframeAnimationOptions={duration:270,fill:"forwards"};
     let holdTimer:number|null=null;
     const animation=node.animate([
-      {transform:"translate3d(0,0,0) rotate(0deg) scale(1)",offset:0},
-      {transform:`translate3d(${dx*.53}px,${dy*.53-13}px,0) rotate(1.25deg) scale(${1+(sx-1)*.53},${1+(sy-1)*.53})`,offset:.50},
-      {transform:`translate3d(${dx*.96}px,${dy*.96-3}px,0) rotate(-.7deg) scale(${sx*1.025},${sy*1.025})`,offset:.86},
+      {transform:"translate3d(0,0,0) rotate(0deg) scale(1)",offset:0,easing:liftEasing},
+      {transform:`translate3d(${dx*.60}px,${dy*.60-14}px,0) rotate(${direction*2.8}deg) scale(${1+(sx-1)*.60},${1+(sy-1)*.60})`,offset:.44,easing:landingEasing},
+      {transform:`translate3d(${dx*.98}px,${dy*.98-2}px,0) rotate(${direction*-.8}deg) scale(${sx*1.03},${sy*1.03})`,offset:.76},
+      {transform:`translate3d(${dx}px,${dy}px,0) rotate(${direction*.24}deg) scale(${sx*.995},${sy*.995})`,offset:.90},
       {transform:`translate3d(${dx}px,${dy}px,0) rotate(0deg) scale(${sx},${sy})`,offset:1}
-    ],{duration:270,easing:"cubic-bezier(.2,.68,.27,1)",fill:"forwards"});
+    ],timing);
     const shadowAnimation=shadow.current?.animate([
-      {transform:"translate3d(4px,7px,0) scale(1)",opacity:.4,offset:0},
-      {transform:"translate3d(16px,30px,0) scale(1.19,1.15)",opacity:.82,offset:.51},
-      {transform:"translate3d(7px,13px,0) scale(1.08,1.05)",opacity:.56,offset:.85},
+      {transform:"translate3d(4px,7px,0) scale(1)",opacity:.4,offset:0,easing:liftEasing},
+      {transform:"translate3d(16px,30px,0) scale(1.19,1.15)",opacity:.82,offset:.44,easing:landingEasing},
+      {transform:"translate3d(7px,13px,0) scale(1.08,1.05)",opacity:.58,offset:.76},
+      {transform:"translate3d(3px,4px,0) scale(.98,1)",opacity:.34,offset:.90},
       {transform:"translate3d(3px,4px,0) scale(.98,1)",opacity:.34,offset:1}
-    ],{duration:270,easing:"cubic-bezier(.2,.68,.27,1)",fill:"forwards"});
+    ],timing);
     animation.onfinish=()=>{
       landed.current?.();
       holdTimer=window.setTimeout(()=>complete.current(),18);
