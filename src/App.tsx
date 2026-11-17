@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ArchiveFlight, CardFlight, DealMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
 import type { BoardMotionSequence } from "./board-redesign/motion";
+import { ArchiveReceiptTransition, RoundTransition, archiveCountChange, completedRoundReceipt } from "./board-redesign/roundChoreography";
 import { DUEL_BEATS, DUEL_FINISH_MS, duelPowerReasons, powerIsRevealed, powerSourceCues, postDuelChampionCues } from "./board-redesign/duelChoreography";
 import type { DuelBeat } from "./board-redesign/duelChoreography";
 import { playDuelCue, unlockDuelAudio } from "./board-redesign/duelAudio";
@@ -262,7 +263,7 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,be
           opacity:1,filter:"drop-shadow(4px 24px 22px #0008)",offset:.76},
         {transform:"translate3d(0,0,0) scale(1) rotate(0deg)",
           opacity:1,filter:"drop-shadow(3px 14px 13px #0009)",offset:1}
-      ],{duration:910,delay:index*95,easing:"cubic-bezier(.2,.75,.26,1)",fill:"both"}));
+      ],{duration:1180,delay:index*120,easing:"cubic-bezier(.2,.75,.26,1)",fill:"both"}));
     });
     return ()=>animated.forEach(animation=>animation.cancel());
   },[duel]);
@@ -288,7 +289,7 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,be
       animations.push(card.animate([
         {transform:"translate3d(0,0,0) scale(1)",opacity:1},
         {transform:'translate3d('+dx+'px,'+dy+'px,0) scale('+(to.width/from.width)+','+(to.height/from.height)+')',opacity:.06}
-      ],{duration:360,easing:"cubic-bezier(.34,.02,.65,1)",fill:"both"}));
+      ],{duration:510,easing:"cubic-bezier(.34,.02,.65,1)",fill:"both"}));
     });
     return ()=>animations.forEach(a=>a.cancel());
   },[beat,duel]);
@@ -319,7 +320,7 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,be
       const cls="duel-source-"+cue.kind;
       node.classList.add(cls);
       sourceNodes.current.push({node,cls});
-      sourceTimers.current.push(window.setTimeout(()=>node.classList.remove(cls),720));
+      sourceTimers.current.push(window.setTimeout(()=>node.classList.remove(cls),940));
     });
   },[beat,duel,before,after]);
   const comparing=beat==="compare"||beat==="impact";
@@ -329,7 +330,6 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,be
       className={"duel-showcase-overlay duel-choreo duel-beat-"+beat+(outcome?" is-board-outcome":"")}
       role="dialog" aria-modal="true" aria-label="Resolución de Poder de las cartas">
       <div className="duel-focus-screen" aria-hidden="true"/>
-      <span className="duel-showcase-heading">DUELO {duel.turn} · {outcome?"RESULTADO":comparing?"PODER FINAL":"RESOLUCIÓN DE PODER"}</span>
       {outcome&&<div className={"duel-showcase-outcome duel-showcase-outcome-"+outcome}
         role="status" aria-live="polite">{outcomeText}</div>}
       <div className="duel-showcase-pair">
@@ -490,6 +490,7 @@ export function Slot({
   pendingCard,
   focusPlay,
   archive,
+  archiveUpdated = false,
   active,
   capacityValue,
   manifestations,
@@ -509,6 +510,7 @@ export function Slot({
   pendingCard?: EnginePlay | null;
   focusPlay?: EnginePlay | null;
   archive: number;
+  archiveUpdated?: boolean;
   active: boolean;
   capacityValue: number;
   manifestations?: ActiveManifestation[];
@@ -534,7 +536,7 @@ export function Slot({
     ||archiveCards?.find(card=>card.specialArchiveKind==="relic")?.specialArchiveKind;
   return (
     <div
-      className={`board-slot ${side} ${active ? "drop-active" : ""}`}
+      className={`board-slot ${side} ${active ? "drop-active" : ""}${archiveUpdated ? " archive-updated" : ""}`}
       data-position={position}
       data-side={side}
       onClick={side === "player" ? onTap : undefined}
@@ -705,7 +707,7 @@ export default function App() {
     const sequence=boardMotionRef.current;
     if(sequence){
       if(boardRedesign && sequence.roundEnded && sequence.phase==="duel")
-        setMotion({...sequence,phase:"archive"});
+        setMotion({...sequence,phase:"round"});
       else setMotion(null);
     }
     if (finishingMatch.current) {
@@ -722,8 +724,8 @@ export default function App() {
       if(isReducedMotion()){
         duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,550));
       }else{
-        duelTimelineTimers.current.push(window.setTimeout(()=>setDuelBeat("settle"),850));
-        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,1250));
+        duelTimelineTimers.current.push(window.setTimeout(()=>setDuelBeat("settle"),890));
+        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,1430));
       }
     }else{
       previewTimer.current=window.setTimeout(finishDuelPresentation,isReducedMotion()?180:1400);
@@ -734,7 +736,7 @@ export default function App() {
     clearPreviewTimer();
     if(!boardRedesign||isReducedMotion()){finishDuelPresentation();return;}
     setDuelBeat("settle");
-    duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,390));
+    duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,540));
   }
 
   function persistTurn(next:GameState) {
@@ -969,7 +971,7 @@ export default function App() {
     const next=cloneGame(game);
     answerQuiero(next,wants);
     if(boardRedesign && next.round!==game.round){
-      setMotion({id:++nextMotionId.current,phase:"archive",before:game,
+      setMotion({id:++nextMotionId.current,phase:"round",before:game,
         duel:null,roundEnded:true,handIndex:null,origin:null});
     }
     setGame(next);
@@ -1102,9 +1104,11 @@ export default function App() {
   }
 
   const legal=game.phase==="awaiting_player" && !duelPreview && !boardMotion ? legalPositions(game.player) : [];
+  const completedRound=boardRedesign?completedRoundReceipt(boardMotion,game):null;
+  const showingPreviousRound=!!boardMotion && boardMotion.phase!=="archive-reveal" && boardMotion.phase!=="deal";
   // Display the round that is still physically on the table. The rules engine
   // may already have reset the duel score and drawn the next hand.
-  const displayed:DuelPublicSnapshot|null=boardRedesign&&boardMotion&&boardMotion.phase!=="deal"
+  const displayed:DuelPublicSnapshot|null=boardRedesign&&boardMotion&&showingPreviousRound
     ? {
         round:boardMotion.before.round,
         playerLife:boardMotion.phase==="flight" || (duelPreview&&duelStep==="cards")
@@ -1116,20 +1120,23 @@ export default function App() {
         opponentHealed:boardMotion.phase==="flight" || (duelPreview&&duelStep==="cards")
           ?boardMotion.before.opponent.healedLife:game.opponent.healedLife,
         score:{
-          player:boardMotion.before.duelScore.player +
+          player:completedRound?.score.player ?? (boardMotion.before.duelScore.player +
             (boardMotion.phase!=="flight" && !(duelPreview&&duelStep==="cards") &&
-             boardMotion.duel?.outcome==="player"?1:0),
-          opponent:boardMotion.before.duelScore.opponent +
+             boardMotion.duel?.outcome==="player"?1:0)),
+          opponent:completedRound?.score.opponent ?? (boardMotion.before.duelScore.opponent +
             (boardMotion.phase!=="flight" && !(duelPreview&&duelStep==="cards") &&
-             boardMotion.duel?.outcome==="opponent"?1:0)
+             boardMotion.duel?.outcome==="opponent"?1:0))
         }
       }
     : duelPreview?preDuel:null;
   const pendingOpponent=duelPreview || boardMotion ? null : game.pendingOpponentPlay;
-  const focusPlayer=(boardRedesign?boardMotion?.duel?.playerPlay:null) ?? duelPreview?.playerPlay ?? null;
-  const focusOpponent=(boardRedesign?boardMotion?.duel?.opponentPlay:null) ?? duelPreview?.opponentPlay ?? pendingOpponent;
-  const playerBoard=boardRedesign&&boardMotion&&boardMotion.phase!=="deal"?boardMotion.before.player:game.player;
-  const opponentBoard=boardRedesign&&boardMotion&&boardMotion.phase!=="deal"?boardMotion.before.opponent:game.opponent;
+  // Once the actual Archive flight has finished, no old duel card may
+  // reappear as a focus placeholder. Keep the original focus only while that
+  // previous round still physically exists on the board.
+  const focusPlayer=(boardRedesign&&showingPreviousRound?boardMotion?.duel?.playerPlay:null) ?? duelPreview?.playerPlay ?? null;
+  const focusOpponent=(boardRedesign&&showingPreviousRound?boardMotion?.duel?.opponentPlay:null) ?? duelPreview?.opponentPlay ?? pendingOpponent;
+  const playerBoard=boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.player:game.player;
+  const opponentBoard=boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.opponent:game.opponent;
   const playerBoardPlays=boardRedesign?visibleRoundPlays(boardMotion,"player"):null;
   const opponentBoardPlays=boardRedesign?visibleRoundPlays(boardMotion,"opponent"):null;
   const latestEvent=game.events.at(-1)?.text ?? "";
@@ -1143,7 +1150,7 @@ export default function App() {
         : `DUELO ${game.turn} · ${game.initiative==="player"?"VOS ABRÍS":"IA ABRE"}`;
 
   return (
-    <main className={"app-shell arena-v2"+(boardRedesign?" board-redesign-v1":"")}>
+    <main data-board-phase={boardRedesign?(boardMotion?.phase??"idle"):"classic"} className={"app-shell arena-v2"+(boardRedesign?" board-redesign-v1":"")}>
       <div className="ambient ambient-one" />
       <div className="ambient ambient-two" />
 
@@ -1243,6 +1250,22 @@ export default function App() {
               </div>
             )}
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
+          {boardRedesign && boardMotion?.phase==="round" && <RoundTransition
+            sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
+            summary={completedRound}
+            onComplete={()=>{
+              const current=boardMotionRef.current;
+              if(current?.id===boardMotion.id&&current.phase==="round")
+                setMotion({...current,phase:"archive"});
+            }}/>}
+          {boardRedesign && boardMotion?.phase==="archive-reveal" && <ArchiveReceiptTransition
+            sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
+            onComplete={()=>{
+              const current=boardMotionRef.current;
+              if(current?.id===boardMotion.id&&current.phase==="archive-reveal")
+                setMotion({...current,phase:"deal"});
+            }}/>}
+
           {duelPreview && (boardRedesign
             ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries}
                 beat={duelBeat} outcome={duelStep==="result"?duelPreview.outcome:null}
@@ -1269,6 +1292,8 @@ export default function App() {
                 pendingCard={pendingOpponent?.position===position ? pendingOpponent : null}
                 focusPlay={focusOpponent?.position===position ? focusOpponent : null}
                 archive={opponentBoard.archives[position].length}
+                archiveUpdated={boardMotion?.phase==="archive-reveal" &&
+                  archiveCountChange(boardMotion.before,game,"opponent",position)!==0}
                 archiveCards={opponentBoard.archives[position]}
                 manifestations={[]}
                 onManifestInspect={setSpecialInspection}
@@ -1295,6 +1320,8 @@ export default function App() {
                 cards={(playerBoardPlays??game.player.roundPlays).filter(play=>play.position===position)}
                 focusPlay={focusPlayer?.position===position ? focusPlayer : null}
                 archive={playerBoard.archives[position].length}
+                archiveUpdated={boardMotion?.phase==="archive-reveal" &&
+                  archiveCountChange(boardMotion.before,game,"player",position)!==0}
                 archiveCards={playerBoard.archives[position]}
                 manifestations={[]}
                 onManifestInspect={setSpecialInspection}
@@ -1330,8 +1357,9 @@ export default function App() {
         {boardRedesign && boardMotion?.phase==="archive" && <ArchiveFlight
           sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
           onComplete={()=>{
-            if(boardMotionRef.current?.id===boardMotion.id)
-              setMotion({...boardMotion,phase:"deal"});
+            const current=boardMotionRef.current;
+            if(current?.id===boardMotion.id&&current.phase==="archive")
+              setMotion({...current,phase:"archive-reveal"});
           }}/>}
         {boardRedesign && boardMotion?.phase==="deal" && <DealMotion
           sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
@@ -1344,8 +1372,8 @@ export default function App() {
           playerHealed={displayed?.playerHealed??game.player.healedLife}
           opponentHealed={displayed?.opponentHealed??game.opponent.healedLife}
           score={displayed?.score??game.duelScore}
-          deckRemaining={boardRedesign&&boardMotion&&boardMotion.phase!=="deal"?boardMotion.before.player.deck.length:game.player.deck.length}
-          discardCount={boardRedesign&&boardMotion&&boardMotion.phase!=="deal"?boardMotion.before.player.discard.length:game.player.discard.length}
+          deckRemaining={boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.player.deck.length:game.player.deck.length}
+          discardCount={boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.player.discard.length:game.player.discard.length}
         />}
 
         <div className="action-line" role="status">
@@ -1476,7 +1504,9 @@ export default function App() {
           selectedCard={selectedCard}
           latestEvent={latestEvent}
           duelResolving={!!duelPreview||!!boardMotion}
-          transitionLabel={boardMotion?.phase==="flight"?"Jugando carta…":boardMotion?.phase==="archive"?"Archivando cartas…":boardMotion?.phase==="deal"?"Repartiendo nueva mano…":undefined}
+          displayRound={displayed?.round??game.round}
+          displayTurn={showingPreviousRound?(duelPreview?.turn??boardMotion?.duel?.turn??boardMotion?.before.turn??game.turn):game.turn}
+          transitionLabel={boardMotion?.phase==="flight"?"Jugando carta…":boardMotion?.phase==="round"?"Ronda finalizada…":boardMotion?.phase==="archive"?"Archivando cartas…":boardMotion?.phase==="archive-reveal"?"Archivos actualizados…":boardMotion?.phase==="deal"?"Repartiendo nueva mano…":undefined}
           onChooseQuiero={chooseQuiero}
         />}
 

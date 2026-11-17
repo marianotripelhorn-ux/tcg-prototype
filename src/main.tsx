@@ -27,6 +27,7 @@ import "./board-redesign/refinement-v2.css";
 import "./board-redesign/refinement-v3.css";
 import "./board-redesign/duel-choreography.css";
 import "./board-redesign/duel-presentation-v1-1.css";
+import "./board-redesign/round-archive-v1.css";
 import "./animation-lab/lab.css";
 import "./animation-lab/chiral.css";
 import "./animation-lab/spectral-v3.css";

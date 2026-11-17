@@ -10,14 +10,14 @@ export type DuelBeat = "approach" | "player-power" | "opponent-power" | "compare
 
 export const DUEL_BEATS: ReadonlyArray<{ at: number; beat: DuelBeat }> = [
   { at: 0, beat: "approach" },
-  { at: 930, beat: "player-power" },
-  { at: 1240, beat: "opponent-power" },
-  { at: 1730, beat: "compare" },
-  { at: 2070, beat: "impact" },
-  { at: 2420, beat: "result" },
-  { at: 3480, beat: "settle" }
+  { at: 1320, beat: "player-power" },
+  { at: 1890, beat: "opponent-power" },
+  { at: 2500, beat: "compare" },
+  { at: 2960, beat: "impact" },
+  { at: 3380, beat: "result" },
+  { at: 4720, beat: "settle" }
 ];
-export const DUEL_FINISH_MS = 3880;
+export const DUEL_FINISH_MS = 5290;
 
 /** The values appear in sequence; both remain visible for the quiet comparison beat. */
 export function powerIsRevealed(beat: DuelBeat, side: "player" | "opponent"): boolean {
