@@ -36,7 +36,7 @@ describe("grouped motion stays tied to the actual engine result",()=>{
   });
   it("renders the real next round number inside the single moving black surface",()=>{
     const html=renderToStaticMarkup(<NewRoundStinger round={3} sequenceId={5}
-      reducedMotion={false} onCovered={()=>{}} onComplete={()=>{}}/>);
+      reducedMotion={false} covered={false} onCovered={()=>{}} onComplete={()=>{}}/>);
     expect(html).toContain("RONDA 3");
     expect(html).toContain('class="dl-new-round-ink"');
     expect((html.match(/dl-new-round-number/g)||[]).length).toBe(1);
