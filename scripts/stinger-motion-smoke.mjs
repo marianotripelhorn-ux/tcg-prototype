@@ -1,0 +1,261 @@
+/**
+ * Daggerlight: genuine desktop + mobile match, no engine mocking.
+ * Verifies three compositor-driven grouped animations in the actual React app.
+ */
+import assert from "node:assert/strict";
+import { chromium } from "playwright";
+
+const ROOT="http://127.0.0.1:4173/";
+const browser=await chromium.launch({headless:true,args:[
+  "--no-sandbox","--use-gl=angle","--use-angle=swiftshader","--enable-webgl"
+]});
+
+async function startGame(page){
+  let online=false;
+  for(let i=0;i<30;i++){
+    try{
+      const response=await page.goto(ROOT,{waitUntil:"domcontentloaded",timeout:3500});
+      if(response?.ok()){online=true;break;}
+    }catch{}
+    await page.waitForTimeout(240);
+  }
+  assert.ok(online,"React preview server is not responding");
+  await page.locator(".splash-start").waitFor({state:"attached",timeout:18000});
+  await page.locator(".splash-start").evaluate(el=>el.click());
+  await page.locator(".home-action.action-play").waitFor({state:"attached",timeout:15000});
+  for(let i=0;i<4;i++){
+    if(await page.locator(".dl-champion-card").count())break;
+    if(await page.locator(".home-action.action-play").count())
+      await page.locator(".home-action.action-play").evaluate(el=>el.click());
+    try{
+      await page.locator(".dl-champion-card").first().waitFor({state:"attached",timeout:5000});
+      break;
+    }catch(e){if(i===3)throw new Error("Champion menu missing: "+String(e));}
+  }
+  await page.locator(".dl-champion-card").first().evaluate(el=>el.click());
+  await page.locator(".dl-champion-start").waitFor({state:"attached",timeout:12000});
+  await page.locator(".dl-champion-start").evaluate(el=>el.click());
+  await page.locator("main.app-shell.board-redesign-v1").waitFor({state:"attached",timeout:12000});
+  await page.locator(".hand-zone .hand-card").first().waitFor({state:"attached",timeout:12000});
+}
+
+async function instrument(page){
+  await page.evaluate(()=>{
+    const root=document.querySelector("main.app-shell.board-redesign-v1");
+    window.__motionCapture={
+      phases:[],flights:[],ribbons:[],wipe:null,swap:null,errors:[]
+    };
+    let lastPhase=null;
+    let currentWipe=null;
+    function read(){
+      const m=window.__motionCapture;
+      const phase=root?.dataset.boardPhase;
+      if(phase&&phase!==lastPhase){
+        lastPhase=phase;
+        m.phases.push(phase);
+        if(phase==="round-wipe-reveal"){
+          const ink=document.querySelector(".dl-new-round-ink");
+          const hand=document.querySelectorAll(".hand-zone .hand-card");
+          const stage=document.querySelector(".dl-new-round-stage")?.getBoundingClientRect();
+          const field=root?.querySelector(".arena-main")?.getBoundingClientRect();
+          m.swap={
+            sameInk:ink===currentWipe,
+            inkTransform:ink?getComputedStyle(ink).transform:"",
+            handCount:hand.length,
+            covered:!!stage&&!!field&&Math.abs(stage.left-field.left)<2&&Math.abs(stage.right-field.right)<2,
+            newRound:root?.querySelector(".arena-top-center span b")?.textContent?.trim()??"",
+            boardCardCount:root?.querySelectorAll(".board-slot .played-card").length??-1
+          };
+        }
+      }
+
+      const flight=document.querySelector(".board-motion-flight");
+      if(flight&&m.flights.length<4&&!flight.dataset.smokeCaptured){
+        flight.dataset.smokeCaptured="true";
+        const shadow=flight.querySelector(".dl-flight-shadow");
+        const fa=flight.getAnimations()[0];
+        const sa=shadow?.getAnimations()[0];
+        m.flights.push({
+          left:parseFloat(flight.style.left),top:parseFloat(flight.style.top),
+          duration:fa?.effect?.getTiming().duration??0,
+          keyframes:fa?.effect?.getKeyframes()?.map(f=>f.transform)??[],
+          shadowDuration:sa?.effect?.getTiming().duration??0,
+          shadowKeyframes:sa?.effect?.getKeyframes()?.map(f=>f.transform)??[],
+          hasShadow:!!shadow,ringCount:flight.querySelectorAll(".board-gs-flight-ring").length
+        });
+      }
+
+      const ribbon=document.querySelector(".dl-duel-stinger");
+      if(ribbon&&m.ribbons.length<4&&!ribbon.dataset.smokeCaptured){
+        ribbon.dataset.smokeCaptured="true";
+        const style=getComputedStyle(ribbon);
+        const rect=ribbon.getBoundingClientRect();
+        m.ribbons.push({
+          duration:style.animationDuration,
+          motion:style.animationName,
+          shape:style.clipPath,background:style.backgroundColor,color:style.color,
+          text:ribbon.innerText,
+          playerPower:ribbon.dataset.playerPower,opponentPower:ribbon.dataset.opponentPower,
+          outcome:ribbon.dataset.outcome,
+          resultIsChild:!!ribbon.querySelector(".dl-duel-stinger-result"),
+          width:rect.width
+        });
+      }
+
+      const wipe=document.querySelector(".dl-new-round-stage");
+      if(wipe&&!m.wipe){
+        const ink=wipe.querySelector(".dl-new-round-ink");
+        const style=ink?getComputedStyle(ink):null;
+        const pseudo=ink?getComputedStyle(ink,"::after"):null;
+        const rect=wipe.getBoundingClientRect();
+        const field=root?.querySelector(".arena-main")?.getBoundingClientRect();
+        currentWipe=ink;
+        m.wipe={
+          duration:style?.animationDuration,
+          motion:style?.animationName,
+          background:style?.backgroundColor,
+          radius:pseudo?.borderRadius,
+          text:ink?.querySelector(".dl-new-round-number")?.textContent?.trim(),
+          font:ink?getComputedStyle(ink.querySelector(".dl-new-round-number")).fontFamily:"",
+          white:ink?getComputedStyle(ink.querySelector(".dl-new-round-number")).color:"",
+          covers:!!field&&Math.abs(rect.left-field.left)<2&&Math.abs(rect.right-field.right)<2,
+          groupedText:!!ink?.querySelector(".dl-new-round-number"),
+          keyframes:ink?.getAnimations().find(a=>a.animationName==="dl-curved-new-round")?.effect?.getKeyframes().map(f=>f.transform)??[]
+        };
+      }
+    }
+    read();
+    const watch=new MutationObserver(read);
+    watch.observe(root,{subtree:true,childList:true,attributes:true,attributeFilter:["data-board-phase","data-duel-beat"]});
+  });
+}
+
+async function playCard(page){
+  await page.locator('main[data-board-phase="idle"]').waitFor({state:"attached",timeout:14000});
+  const first=page.locator(".hand-zone .hand-card").first();
+  await first.waitFor({state:"visible",timeout:10000});
+  const origin=await first.evaluate(el=>{const r=el.getBoundingClientRect();return{x:r.left,y:r.top,width:r.width,height:r.height};});
+  await first.click();
+  await page.locator(".card-zoom-overlay .zoom-actions .primary-button")
+    .waitFor({state:"attached",timeout:7000});
+  await page.locator(".card-zoom-overlay .zoom-actions .primary-button").evaluate(el=>el.click());
+  const lane=page.locator(".board-slot.player.drop-active").first();
+  await lane.waitFor({state:"attached",timeout:8000});
+  await lane.evaluate(el=>el.click());
+  return origin;
+}
+
+async function settleDuel(page){
+  const duel=page.locator(".duel-showcase-overlay");
+  await duel.waitFor({state:"attached",timeout:15000});
+  // The result is a real resolved play. Speed through earlier unchanged Power
+  // reveals only on subsequent turns, while the first one runs at real speed.
+  if(await duel.count() && await duel.getAttribute("data-duel-beat")==="approach"){
+    await duel.locator(".duel-showcase-skip").evaluate(el=>el.click());
+  }
+  await page.waitForFunction(()=>window.__motionCapture?.ribbons.length>0,
+    undefined,{timeout:14000});
+  await duel.waitFor({state:"detached",timeout:12000});
+}
+
+async function closeQuiero(page){
+  const choice=page.locator(".board-quiero-stage .board-quiero-no");
+  const mobile=page.locator(".hybrid-phone-quiero .secondary-button");
+  if(await choice.count()){
+    const banner=page.locator(".board-quiero-banner");
+    assert.ok(await banner.count(),"Existing faction decision banner was lost");
+    await choice.evaluate(el=>el.click());
+    return true;
+  }
+  if(await mobile.count()){
+    await mobile.evaluate(el=>el.click());
+    return true;
+  }
+  return false;
+}
+
+async function runMatch(label,viewport,isMobile){
+  const page=await browser.newPage({viewport,deviceScaleFactor:1,isMobile,hasTouch:isMobile});
+  const errors=[];
+  page.on("pageerror",e=>errors.push(e.message));
+  try{
+    await startGame(page);
+    await instrument(page);
+    assert.ok(await page.locator(".arena-main").count(),"Original ivory board must remain mounted");
+    assert.ok(await page.locator(".board-slot.player").count()>=3,"All three original lanes must be present");
+    const origin=await playCard(page);
+    const duel=page.locator(".duel-showcase-overlay");
+    await duel.waitFor({state:"attached",timeout:15000});
+    await page.waitForFunction(()=>window.__motionCapture.flights.length>0,undefined,{timeout:7000});
+    // Inspect the natural result and verify the single grouped graphic.
+    await page.waitForFunction(()=>window.__motionCapture.ribbons.length>0,undefined,{timeout:12000});
+    await duel.waitFor({state:"detached",timeout:9000});
+    let data=await page.evaluate(()=>window.__motionCapture);
+    const flight=data.flights[0];
+    assert.ok(flight?.hasShadow,label+": the real card requires a shadow child");
+    assert.equal(flight.duration,270,label+": card hand-to-slot animation must be 270ms");
+    assert.equal(flight.shadowDuration,270,label+": shadow must follow the same 270ms clock");
+    assert.ok(Math.abs(flight.left-origin.x)<10 && Math.abs(flight.top-origin.y)<10,
+      label+": card must originate from its actual hand location");
+    assert.ok(flight.shadowKeyframes.some(k=>String(k).includes("30px")),
+      label+": down-right shadow must stretch during the lift");
+    assert.equal(flight.ringCount,0,label+": do not emit decorative rings or particles");
+    const ribbon=data.ribbons[0];
+    assert.ok(ribbon&&ribbon.duration==="0.64s"&&ribbon.motion.includes("dl-duel-notched-ribbon"),
+      label+": 640ms result animation missing");
+    assert.ok(ribbon.shape.includes("polygon")&&ribbon.background==="rgb(8, 9, 11)",
+      label+": original notched silhouette needs one matte-black surface");
+    assert.equal(ribbon.color,"rgb(255, 255, 255)",label+": white result lettering");
+    assert.ok(ribbon.resultIsChild && ribbon.playerPower!==undefined && ribbon.opponentPower!==undefined,
+      label+": both final Poder values and actual outcome must move together");
+    assert.ok(["player","opponent","draw"].includes(ribbon.outcome),
+      label+": result must be the real engine outcome");
+    assert.equal(await page.locator(".duel-showcase-outcome").count(),0,
+      label+": no separate floating old outcome title");
+
+    // Play the genuine next decisions until the first real round closes.
+    for(let attempt=0;attempt<4;attempt++){
+      data=await page.evaluate(()=>window.__motionCapture);
+      if(data.phases.includes("round"))break;
+      await page.locator('main[data-board-phase="idle"]').waitFor({state:"attached",timeout:14500});
+      if(await closeQuiero(page)){
+        await page.waitForTimeout(400);
+        continue;
+      }
+      await playCard(page);
+      await settleDuel(page);
+    }
+    await page.waitForFunction(()=>window.__motionCapture.phases.includes("round-wipe-reveal"),
+      undefined,{timeout:18000});
+    await page.waitForFunction(()=>window.__motionCapture.phases.includes("idle") &&
+      window.__motionCapture.phases.indexOf("round-wipe-reveal") <
+      window.__motionCapture.phases.lastIndexOf("idle"),undefined,{timeout:10000});
+    data=await page.evaluate(()=>window.__motionCapture);
+    for(const phase of ["flight","duel","round","archive","round-wipe","round-wipe-reveal","idle"])
+      assert.ok(data.phases.includes(phase),label+": missing real match phase "+phase);
+    const wipe=data.wipe,swap=data.swap;
+    assert.ok(wipe?.groupedText&&wipe.covers,label+": whole ivory field and hand must be covered");
+    assert.ok(wipe.duration==="0.8s"&&wipe.motion.includes("dl-curved-new-round"),
+      label+": curved stinger must be 800ms");
+    assert.ok(wipe.radius.includes("50%"),label+": broad curved front is missing");
+    assert.equal(wipe.background,"rgb(9, 10, 11)",label+": background must be matte black");
+    assert.ok(wipe.font.includes("Archivo Black")&&wipe.white==="rgb(255, 255, 255)",
+      label+": new-round number must be white Archivo Black");
+    assert.ok(swap?.sameInk&&swap.covered,
+      label+": single moving graphic must survive the real board-swap commit");
+    assert.ok(swap.handCount>=1&&swap.boardCardCount===0,
+      label+": the actual new hand and cleared lanes must exist beneath the full-cover veil");
+    assert.ok(await page.locator(".hand-zone .hand-card").count()>=1,
+      label+": playable real new hand must be revealed");
+    assert.ok(errors.length===0,label+": JavaScript runtime errors: "+errors.join(" | "));
+
+    console.log("PASS "+label+": real card 270ms, notched duel 640ms, curved new-round 800ms, full-cover real board+hand swap");
+  }finally{await page.close();}
+}
+
+try{
+  await runMatch("desktop",{width:1600,height:900},false);
+  await runMatch("mobile",{width:390,height:844},true);
+}finally{
+  await browser.close();
+}
