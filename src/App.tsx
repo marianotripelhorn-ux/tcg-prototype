@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ArchiveFlight, CardFlight, DealMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
 import type { BoardMotionSequence } from "./board-redesign/motion";
-import { DUEL_BEATS, DUEL_FINISH_MS, duelPowerReasons, powerIsRevealed } from "./board-redesign/duelChoreography";
+import { DUEL_BEATS, DUEL_FINISH_MS, duelPowerReasons, powerIsRevealed, powerSourceCues, postDuelChampionCues } from "./board-redesign/duelChoreography";
 import type { DuelBeat } from "./board-redesign/duelChoreography";
 import { playDuelCue, unlockDuelAudio } from "./board-redesign/duelAudio";
 import { disableManifestations } from "./board-redesign/disableManifestations";
@@ -180,9 +180,7 @@ function DuelPowerCard({played,side,beat,outcome}:{
   const final=played.finalPower??printed;
   const delta=final-printed;
   const resolved=powerIsRevealed(beat,side);
-  const reasons=duelPowerReasons(played);
-  const effect=playEffectFeedback(played);
-  const hasImpact=beat==="impact"||beat==="result";
+  const hasImpact=beat==="impact"||beat==="result"||beat==="settle";
   const role=hasImpact&&outcome!=="draw"?(outcome===side?" is-duel-winner":" is-duel-loser"):"";
   return (
     <div className={"duel-showcase-card duel-choreo-side-"+side+role+
@@ -205,20 +203,34 @@ function DuelPowerCard({played,side,beat,outcome}:{
           {resolved&&delta!==0&&<span className="duel-showcase-delta">{formatPowerDelta(played)}</span>}
         </div>
       </div>
-      {resolved && <div className="duel-choreo-causes" title={(played.notes??[]).join(" · ")}>
-        {reasons.visible.map((note,index)=><span key={index}
-          className={note.startsWith("−")||note.startsWith("-")?"is-penalty":note.startsWith("+")?"is-bonus":"is-neutral"}>
-          {note}</span>)}
-        {reasons.hidden>0&&<span className="is-neutral">+{reasons.hidden} efectos más</span>}
-        {reasons.visible.length===0&&effect==="inactive"&&<span className="is-neutral">HABILIDAD NO ACTIVADA</span>}
-      </div>}
+
     </div>
   );
 }
 
-function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null}:{
+function DuelEffectsPanel({played,side,beat}:{played:EnginePlay;side:"player"|"opponent";beat:DuelBeat}) {
+  const revealed=powerIsRevealed(beat,side);
+  const reasons=duelPowerReasons(played);
+  const effect=playEffectFeedback(played);
+  const lines=revealed?reasons.visible:[];
+  const show=lines.length>0||revealed&&reasons.hidden>0||revealed&&effect==="inactive"&&played.card.effect==="augury_match3";
+  return <aside className={"duel-effect-column duel-effect-column-"+side+(show?" has-effects":"")}
+    aria-label={side==="player"?"Modificadores de tu carta":"Modificadores de la carta rival"}>
+    {show&&<>
+      <span className="duel-effect-column-kicker">{side==="player"?"TU PODER":"PODER RIVAL"}</span>
+      {lines.map((note,index)=><span key={index} className={"duel-effect-note "+
+        (note.startsWith("−")||note.startsWith("-")?"is-penalty":note.startsWith("+")?"is-bonus":"is-neutral")}
+        title={note}>{note}</span>)}
+      {reasons.hidden>0&&<span className="duel-effect-remaining" title={(played.notes??[]).join(" · ")}>
+        {reasons.hidden} efecto{reasons.hidden===1?"":"s"} más</span>}
+    </>}
+  </aside>;
+}
+
+function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,before=null,after=null}:{
   duel:DuelSummary;onAdvance:()=>void;auguryEvents:string[];beat:DuelBeat;
   outcome?:"player"|"opponent"|"draw"|null;
+  before?:GameState|null;after?:GameState|null;
 }) {
   const overlayRef=useRef<HTMLDivElement>(null);
   useLayoutEffect(()=>{
@@ -254,19 +266,77 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null}:{
     });
     return ()=>animated.forEach(animation=>animation.cancel());
   },[duel]);
+
+  // A final purposeful movement takes both original CardFaces back to their
+  // measured slots. If this was the last duel, ArchiveFlight begins afterward.
+  useLayoutEffect(()=>{
+    if(beat!=="settle"||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+    const overlay=overlayRef.current;
+    const root=overlay?.closest(".app-shell.board-redesign-v1");
+    if(!overlay||!root)return;
+    const animations:Animation[]=[];
+    (["player","opponent"] as const).forEach(side=>{
+      const play=side==="player"?duel.playerPlay:duel.opponentPlay;
+      const card=overlay.querySelector<HTMLElement>(".duel-choreo-side-"+side);
+      const source=root.querySelector<HTMLElement>(
+        '.board-slot.'+side+'[data-position="'+play.position+'"] .current-board-card'
+      );
+      const from=card?.getBoundingClientRect(),to=source?.getBoundingClientRect();
+      if(!card||!from||!to||!from.width||!to.width)return;
+      const dx=to.left+to.width/2-(from.left+from.width/2);
+      const dy=to.top+to.height/2-(from.top+from.height/2);
+      animations.push(card.animate([
+        {transform:"translate3d(0,0,0) scale(1)",opacity:1},
+        {transform:'translate3d('+dx+'px,'+dy+'px,0) scale('+(to.width/from.width)+','+(to.height/from.height)+')',opacity:.06}
+      ],{duration:360,easing:"cubic-bezier(.34,.02,.65,1)",fill:"both"}));
+    });
+    return ()=>animations.forEach(a=>a.cancel());
+  },[beat,duel]);
+
+  // The engine already resolved the duel. These temporary highlights are
+  // visual pointers to its actual notes or an observed Champion state change.
+  const sourceTimers=useRef<number[]>([]);
+  const sourceNodes=useRef<Array<{node:HTMLElement;cls:string}>>([]);
+  useEffect(()=>()=> {
+    sourceTimers.current.forEach(timer=>window.clearTimeout(timer));
+    sourceNodes.current.forEach(({node,cls})=>node.classList.remove(cls));
+  },[]);
+  useEffect(()=>{
+    if(beat!=="player-power"&&beat!=="opponent-power"&&beat!=="impact")return;
+    const root=overlayRef.current?.closest(".app-shell.board-redesign-v1");
+    if(!root)return;
+    const cues=beat==="impact"
+      ? postDuelChampionCues(before,after,duel)
+      : powerSourceCues(duel,beat==="player-power"?"player":"opponent",
+          (before??after)?.[beat==="player-power"?"player":"opponent"].champion.id??"");
+    cues.forEach(cue=>{
+      const selector=cue.kind==="champion"?
+        ".hybrid-champion-panel."+cue.side:
+        '.board-slot.'+cue.side+'[data-position="'+cue.position+'"]'+
+          (cue.kind==="archive"?" .archive-count":"");
+      const node=root.querySelector<HTMLElement>(selector);
+      if(!node)return;
+      const cls="duel-source-"+cue.kind;
+      node.classList.add(cls);
+      sourceNodes.current.push({node,cls});
+      sourceTimers.current.push(window.setTimeout(()=>node.classList.remove(cls),720));
+    });
+  },[beat,duel,before,after]);
   const comparing=beat==="compare"||beat==="impact";
   const outcomeText=outcome==="player"?"VICTORIA":outcome==="opponent"?"DERROTA":"EMPATE";
   return (
     <div ref={overlayRef} data-duel-beat={beat}
       className={"duel-showcase-overlay duel-choreo duel-beat-"+beat+(outcome?" is-board-outcome":"")}
       role="dialog" aria-modal="true" aria-label="Resolución de Poder de las cartas">
+      <div className="duel-focus-screen" aria-hidden="true"/>
       <span className="duel-showcase-heading">DUELO {duel.turn} · {outcome?"RESULTADO":comparing?"PODER FINAL":"RESOLUCIÓN DE PODER"}</span>
       {outcome&&<div className={"duel-showcase-outcome duel-showcase-outcome-"+outcome}
         role="status" aria-live="polite">{outcomeText}</div>}
       <div className="duel-showcase-pair">
+        <DuelEffectsPanel played={duel.playerPlay} side="player" beat={beat}/>
         <DuelPowerCard played={duel.playerPlay} side="player" beat={beat} outcome={duel.outcome}/>
-        <span className="duel-showcase-versus" aria-hidden="true">VS</span>
         <DuelPowerCard played={duel.opponentPlay} side="opponent" beat={beat} outcome={duel.outcome}/>
+        <DuelEffectsPanel played={duel.opponentPlay} side="opponent" beat={beat}/>
       </div>
       {comparing&&<div className="duel-choreo-comparison" role="status">
         PODER FINAL · {duel.playerPlay.finalPower??duel.playerPlay.card.power} — {duel.opponentPlay.finalPower??duel.opponentPlay.card.power}
@@ -649,10 +719,22 @@ export default function App() {
     setDuelStep("result");
     if(boardRedesign){
       setDuelBeat("result");
-      duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,isReducedMotion()?430:1280));
+      if(isReducedMotion()){
+        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,550));
+      }else{
+        duelTimelineTimers.current.push(window.setTimeout(()=>setDuelBeat("settle"),850));
+        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,1250));
+      }
     }else{
       previewTimer.current=window.setTimeout(finishDuelPresentation,isReducedMotion()?180:1400);
     }
+  }
+
+  function settleDuelPresentation() {
+    clearPreviewTimer();
+    if(!boardRedesign||isReducedMotion()){finishDuelPresentation();return;}
+    setDuelBeat("settle");
+    duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,390));
   }
 
   function persistTurn(next:GameState) {
@@ -1164,7 +1246,8 @@ export default function App() {
           {duelPreview && (boardRedesign
             ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries}
                 beat={duelBeat} outcome={duelStep==="result"?duelPreview.outcome:null}
-                onAdvance={duelStep==="result"?finishDuelPresentation:showDuelResult}/>
+                before={boardMotion?.before??null} after={game}
+                onAdvance={duelStep==="result"?settleDuelPresentation:showDuelResult}/>
             : duelStep==="cards"
               ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries}
                   beat="result" onAdvance={showDuelResult}/>
