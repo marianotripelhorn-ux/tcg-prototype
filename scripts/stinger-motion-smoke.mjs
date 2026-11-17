@@ -61,6 +61,7 @@ async function instrument(page){
           m.swap={
             sameInk:ink===currentWipe,
             inkTransform:ink?getComputedStyle(ink).transform:"",
+            fullyCovered:!!ink && Math.abs(new DOMMatrix(getComputedStyle(ink).transform).m41)<2,
             handCount:hand.length,
             covered:!!stage&&!!field&&Math.abs(stage.left-field.left)<2&&Math.abs(stage.right-field.right)<2,
             newRound:root?.querySelector(".arena-top-center span b")?.textContent?.trim()??"",
@@ -111,7 +112,7 @@ async function instrument(page){
         const field=root?.querySelector(".arena-main")?.getBoundingClientRect();
         currentWipe=ink;
         m.wipe={
-          duration:style?.animationDuration,
+          coverMs:ink?.getAnimations().find(a=>a.effect?.getTiming().duration===298)?.effect?.getTiming().duration??null,
           motion:style?.animationName,
           background:style?.backgroundColor,
           radius:pseudo?.borderRadius,
@@ -126,7 +127,7 @@ async function instrument(page){
             computed:{position:getComputedStyle(wipe).position,inset:getComputedStyle(wipe).inset},
           },
           groupedText:!!ink?.querySelector(".dl-new-round-number"),
-          keyframes:ink?.getAnimations().find(a=>a.animationName==="dl-curved-new-round")?.effect?.getKeyframes().map(f=>f.transform)??[]
+          keyframes:ink?.getAnimations().find(a=>a.effect?.getTiming().duration===298)?.effect?.getKeyframes().map(f=>f.transform)??[]
         };
       }
     }
@@ -242,14 +243,14 @@ async function runMatch(label,viewport,isMobile){
     const wipe=data.wipe,swap=data.swap;
     console.log("MOTION DIAGNOSTIC "+label+" "+JSON.stringify({wipe,swap}));
     assert.ok(wipe?.groupedText&&wipe.covers,label+": whole ivory field and hand must be covered: "+JSON.stringify(wipe?.geometry??wipe));
-    assert.ok(wipe.duration==="0.8s"&&wipe.motion.includes("dl-curved-new-round"),
-      label+": curved stinger must be 800ms");
+    assert.ok(wipe.coverMs===298&&wipe.keyframes.length===2,
+      label+": curved stinger must be a real 298ms compositor cover with one grouped surface");
     assert.ok(wipe.radius.includes("50%"),label+": broad curved front is missing");
     assert.equal(wipe.background,"rgb(9, 10, 11)",label+": background must be matte black");
     assert.ok(wipe.font.includes("Archivo Black")&&wipe.white==="rgb(255, 255, 255)",
       label+": new-round number must be white Archivo Black");
-    assert.ok(swap?.sameInk&&swap.covered,
-      label+": single moving graphic must survive the real board-swap commit");
+    assert.ok(swap?.sameInk&&swap.covered&&swap.fullyCovered,
+      label+": same graphic must reach FULL cover before the real board/hand swap: "+JSON.stringify(swap));
     assert.ok(swap.handCount>=1&&swap.boardCardCount===0,
       label+": the actual new hand and cleared lanes must exist beneath the full-cover veil");
     assert.ok(await page.locator(".hand-zone .hand-card").count()>=1,
