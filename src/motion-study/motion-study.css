@@ -216,7 +216,7 @@
 .ms-clash-rival { left: 57%; top: 43%; }
 .ms-hand-targets {
   position: absolute;
-  inset: auto 32% 13% 32%;
+  inset: auto 32% max(16%, calc(var(--ms-card-width) * .65)) 32%;
   display: flex;
   justify-content: space-evenly;
 }
@@ -285,6 +285,15 @@
   transition: none;
 }
 .ms-card-back { object-fit: cover; transform: rotateY(180deg); }
+.ms-card-face .live-power-badge {
+  inset: 5px 4px auto auto;
+  border: 1px solid #b69e6b;
+  border-radius: 2px;
+  background: #1c222b;
+  box-shadow: 0 3px 8px #12172085;
+  color: #fff2cc;
+}
+.ms-flying-card[data-card="rival"] .live-power-badge { border-color: #8ca6d6; color: #e5efff; }
 
 .ms-event {
   position: absolute;

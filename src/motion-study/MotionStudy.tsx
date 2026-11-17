@@ -315,7 +315,11 @@ export default function MotionStudy() {
       <div className="ms-wave" aria-hidden="true"/>
       {[...displayedHand, rivalCard].map((definition, index) =>
         <div key={cardIds[index]} className="ms-flying-card" data-card={cardIds[index]}>
-          <div className="ms-card-face"><CardFace card={definition} finalPower={index === 3 && (step > 5 || step === 5 && stateRevealed) ? 8 : undefined}/></div>
+          <div className="ms-card-face">
+            <CardFace card={definition}
+              livePower={(index === 1 || index === 3) && (scene.id === "power" || scene.id === "life")}
+              finalPower={index === 3 && (step > 5 || step === 5 && stateRevealed) ? 8 : undefined}/>
+          </div>
           <img src={back} alt="" className="ms-card-back"/>
         </div>
       )}

@@ -344,6 +344,7 @@ async function runStudy(label,viewport,reducedMotion){
     if(reducedMotion==="no-preference"){
       await next("power");
       await stage.locator(".ms-delta").waitFor({state:"visible"});
+      await page.waitForFunction(()=>document.querySelector('[data-card="rival"] .live-power-badge b')?.textContent==="8");
       await page.screenshot({path:"/tmp/daggerlight-round-shadow-sweep-v3-motion-study-"+label+".png"});
       await next("life");
       await page.waitForFunction(()=>document.querySelector(".ms-score strong")?.textContent==="0–2" &&
