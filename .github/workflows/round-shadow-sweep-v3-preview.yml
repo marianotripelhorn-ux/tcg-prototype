@@ -36,7 +36,7 @@ jobs:
         working-directory: board-source
         run: npm test
 
-      - name: Build playable Round Shadow Sweep v3 preview
+      - name: Build playable Daggerlight grouped-motion preview
         working-directory: board-source
         run: npm run build
 
@@ -44,11 +44,11 @@ jobs:
         working-directory: board-source
         run: npx playwright install --with-deps --only-shell chromium
 
-      - name: Browser-play AI match through smooth full-field darkness, score-bound wavefront and Archives
+      - name: Browser-play real desktop and mobile AI matches through all three grouped stingers
         working-directory: board-source
         run: |
           npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/daggerlight-board-gs-vite.log 2>&1 &
-          node scripts/round-shadow-sweep-v3-smoke.mjs
+          node scripts/stinger-motion-smoke.mjs
 
       - name: Upload playable board screenshot
         if: always()
