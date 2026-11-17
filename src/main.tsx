@@ -31,6 +31,7 @@ import "./board-redesign/round-archive-v1.css";
 import "./board-redesign/round-archive-sweep-v2.css";
 import "./board-redesign/round-shadow-sweep-v3.css";
 import "./board-redesign/quiero-choreography.css";
+import "./board-redesign/stinger-motion.css";
 import "./board-redesign/ivory-materials.css";
 import "./board-redesign/ivory-layout.css";
 import "./board-redesign/ivory-mobile.css";
