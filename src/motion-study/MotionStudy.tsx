@@ -22,9 +22,9 @@ const scenes = [
   { id: "finish", name: "Fin de partida", note: "En la última ronda, Vor Calasta gana la partida.", seconds: 2.35 }
 ] as const;
 
-const hand = [byId.guardia_dextral, byId.caballero_tigre, byId.invocadagas];
-const freshHand = [byId.maestro_armas, byId.corona_eterea, byId.blazewalker];
-const rivalCard = byId.criatura_invocada;
+const hand = [byId("guardia_dextral"), byId("caballero_tigre"), byId("invocadagas")];
+const freshHand = [byId("maestro_armas"), byId("corona_eterea"), byId("blazewalker")];
+const rivalCard = byId("criatura_invocada");
 const back = asset("board/cardback-gold.png");
 const crown = asset("board/ivory-ui/vida-crown.webp");
 const cardIds = ["hand-left", "hand-pick", "hand-right", "rival"] as const;
