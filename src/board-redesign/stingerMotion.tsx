@@ -2,11 +2,29 @@ import { useLayoutEffect, useRef } from "react";
 import type { DuelSummary } from "../engine/types";
 
 /** The engine owns finalPower and outcome. Text and ribbon share one surface. */
-export function DuelResultStinger({duel}:{duel:DuelSummary}) {
+export function DuelResultStinger({duel,onComplete}:{
+  duel:DuelSummary;
+  onComplete?:()=>void;
+}) {
+  const ribbon=useRef<HTMLDivElement>(null);
+  useLayoutEffect(()=>{
+    const node=ribbon.current;
+    const root=node?.closest(".app-shell.board-redesign-v1");
+    const score=root?.querySelector(".hybrid-duel-tally, .hybrid-phone-score");
+    const stage=node?.offsetParent;
+    if(!node||!score||!stage||duel.outcome==="draw")return;
+    const stageRect=stage.getBoundingClientRect();
+    const target=score.getBoundingClientRect();
+    node.style.setProperty("--dl-score-x",`${target.left+target.width/2-stageRect.left-node.offsetLeft}px`);
+    node.style.setProperty("--dl-score-y",`${target.top+target.height/2-stageRect.top-node.offsetTop}px`);
+  },[duel]);
   const playerPower=duel.playerPlay.finalPower??duel.playerPlay.card.power;
   const opponentPower=duel.opponentPlay.finalPower??duel.opponentPlay.card.power;
   const result=duel.outcome==="player"?"VICTORIA":duel.outcome==="opponent"?"DERROTA":"EMPATE";
-  return <div className="dl-duel-stinger" role="status" aria-live="polite"
+  return <div className="dl-duel-stinger" ref={ribbon} role="status" aria-live="polite"
+    onAnimationEnd={event=>{
+      if(event.target===event.currentTarget && event.animationName==="dl-duel-notched-ribbon")onComplete?.();
+    }}
     data-player-power={playerPower} data-opponent-power={opponentPower}
     data-outcome={duel.outcome} aria-label={`Poder final: vos ${playerPower}; rival ${opponentPower}. ${result}`}>
     <div className="dl-duel-stinger-contents">

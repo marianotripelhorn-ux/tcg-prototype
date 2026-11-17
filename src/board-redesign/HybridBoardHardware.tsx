@@ -81,25 +81,21 @@ function LifeCrest({side,life,healed}:{
   side:Side;life:number;healed:number;
 }) {
   const previousLife=useRef(life);
-  const [change,setChange]=useState<{direction:""|"is-damaged"|"is-healed";sequence:number}>({direction:"",sequence:0});
+  const [change,setChange]=useState<""|"is-damaged"|"is-healed">("");
   useEffect(()=>{
     if(previousLife.current===life)return;
     const direction=life<previousLife.current?"is-damaged":"is-healed";
     previousLife.current=life;
-    setChange(current=>({direction,sequence:current.sequence+1}));
-    const timer=window.setTimeout(()=>setChange(current=>({...current,direction:""})),1450);
+    setChange(direction);
+    const timer=window.setTimeout(()=>setChange(""),320);
     return ()=>window.clearTimeout(timer);
   },[life]);
-  return <div className={`hybrid-life-unit ${side}${change.direction?` ${change.direction}`:""}`} aria-label={`${side==="player"?"Tu Campeón":"Campeón rival"}: ${life} de 9 puntos de Vida`}>
+  return <div className={`hybrid-life-unit ${side}${change?` ${change}`:""}`} aria-label={`${side==="player"?"Tu Campeón":"Campeón rival"}: ${life} de 9 puntos de Vida`}>
     <span className="hybrid-life-label">{side==="player"?"TU VIDA":"VIDA RIVAL"}</span>
     <div className="board-gs-crest-anchor">
-      <div className="hybrid-life-crest">
-        <span className="hybrid-life-number" key={life}>{life}</span>
-        {change.direction && <span className="hybrid-life-wave" key={change.sequence} aria-hidden="true"/>}
+      <div className="hybrid-life-crest" key={life}>
+        <span className="hybrid-life-number">{life}</span>
       </div>
-      {change.direction && <span className="board-gs-crest-circles" aria-hidden="true" key={"gold-shadow-"+change.sequence}>
-        <span/><span/>
-      </span>}
     </div>
     {healed>0 && <span className="hybrid-healed-label">+{healed} RECUPERADA</span>}
   </div>;

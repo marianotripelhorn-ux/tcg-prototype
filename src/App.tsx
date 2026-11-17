@@ -343,7 +343,7 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,be
       className={"duel-showcase-overlay duel-choreo duel-beat-"+beat+(outcome?" is-board-outcome":"")}
       role="dialog" aria-modal="true" aria-label="Resolución de Poder de las cartas">
       <div className="duel-focus-screen" aria-hidden="true"/>
-      {outcome&&beat==="result"&&<DuelResultStinger duel={duel}/>}
+      {outcome&&beat==="result"&&<DuelResultStinger duel={duel} onComplete={onAdvance}/>}
       {outcome&&beat==="settle"&&<span className="arena-visually-hidden" role="status">
         {duel.outcome==="player"?"VICTORIA":duel.outcome==="opponent"?"DERROTA":"EMPATE"}
       </span>}
@@ -1172,24 +1172,19 @@ export default function App() {
   const showingPreviousRound=!!boardMotion && boardMotion.phase!=="archive-reveal" && boardMotion.phase!=="deal" && boardMotion.phase!=="round-wipe-reveal";
   // Display the round that is still physically on the table. The rules engine
   // may already have reset the duel score and drawn the next hand.
+  const holdDuelValues=boardMotion?.phase==="flight" ||
+    (!!duelPreview && duelBeat!=="settle" && (duelStep==="cards" || !isReducedMotion()));
+  const duelPayout=boardRedesign && duelBeat==="settle" ? duelPreview?.outcome : undefined;
   const displayed:DuelPublicSnapshot|null=boardRedesign&&boardMotion&&showingPreviousRound
     ? {
         round:boardMotion.before.round,
-        playerLife:boardMotion.phase==="flight" || (duelPreview&&duelStep==="cards")
-          ?boardMotion.before.player.life:game.player.life,
-        opponentLife:boardMotion.phase==="flight" || (duelPreview&&duelStep==="cards")
-          ?boardMotion.before.opponent.life:game.opponent.life,
-        playerHealed:boardMotion.phase==="flight" || (duelPreview&&duelStep==="cards")
-          ?boardMotion.before.player.healedLife:game.player.healedLife,
-        opponentHealed:boardMotion.phase==="flight" || (duelPreview&&duelStep==="cards")
-          ?boardMotion.before.opponent.healedLife:game.opponent.healedLife,
-        score:{
-          player:completedRound?.score.player ?? (boardMotion.before.duelScore.player +
-            (boardMotion.phase!=="flight" && !(duelPreview&&duelStep==="cards") &&
-             boardMotion.duel?.outcome==="player"?1:0)),
-          opponent:completedRound?.score.opponent ?? (boardMotion.before.duelScore.opponent +
-            (boardMotion.phase!=="flight" && !(duelPreview&&duelStep==="cards") &&
-             boardMotion.duel?.outcome==="opponent"?1:0))
+        playerLife:holdDuelValues?boardMotion.before.player.life:game.player.life,
+        opponentLife:holdDuelValues?boardMotion.before.opponent.life:game.opponent.life,
+        playerHealed:holdDuelValues?boardMotion.before.player.healedLife:game.player.healedLife,
+        opponentHealed:holdDuelValues?boardMotion.before.opponent.healedLife:game.opponent.healedLife,
+        score:holdDuelValues ? boardMotion.before.duelScore : completedRound?.score ?? {
+          player:boardMotion.before.duelScore.player+(boardMotion.duel?.outcome==="player"?1:0),
+          opponent:boardMotion.before.duelScore.opponent+(boardMotion.duel?.outcome==="opponent"?1:0)
         }
       }
     : duelPreview?preDuel:null;
@@ -1217,6 +1212,7 @@ export default function App() {
 
   return (
     <main data-board-phase={boardRedesign?(boardMotion?.phase??"idle"):"classic"}
+      data-duel-payout={duelPayout}
       data-quiero-stage={showQuieroChoice?"choice":showRivalQuiero?"rival":"none"}
       className={"app-shell arena-v2"+(boardRedesign?" board-redesign-v1":"")}>
       <div className="ambient ambient-one" />

@@ -43,7 +43,7 @@ async function instrument(page){
   await page.evaluate(()=>{
     const root=document.querySelector("main.app-shell.board-redesign-v1");
     window.__motionCapture={
-      phases:[],flights:[],ribbons:[],wipe:null,swap:null,errors:[]
+      phases:[],flights:[],ribbons:[],duelValues:{},wipe:null,swap:null,errors:[]
     };
     let lastPhase=null;
     let currentWipe=null;
@@ -69,6 +69,20 @@ async function instrument(page){
             boardCardCount:root?.querySelectorAll(".board-slot .played-card").length??-1
           };
         }
+      }
+
+      const beat=root.querySelector(".duel-choreo")?.dataset.duelBeat;
+      if(["approach","result","settle"].includes(beat)&&!m.duelValues[beat]){
+        const score=root.querySelector(".hybrid-duel-tally, .hybrid-phone-score");
+        const digits=score?.getAttribute("aria-label")?.match(/\d+/g)??[];
+        m.duelValues[beat]={
+          score:digits.map(Number),
+          life:["player","opponent"].map(side=>
+            Number(root.querySelector(".hybrid-life-unit."+side+" .hybrid-life-number")?.textContent)
+          ),
+          pulse:score?.querySelector("strong")?.getAnimations().some(a=>a.animationName==="dl-duel-score-receive"),
+          payout:root.dataset.duelPayout
+        };
       }
 
       const flight=document.querySelector(".board-motion-flight");
@@ -103,7 +117,8 @@ async function instrument(page){
           playerPower:ribbon.dataset.playerPower,opponentPower:ribbon.dataset.opponentPower,
           outcome:ribbon.dataset.outcome,
           resultIsChild:!!ribbon.querySelector(".dl-duel-stinger-result"),
-          width:rect.width
+          width:rect.width,
+          scoreDestination:style.getPropertyValue("--dl-score-x")!==""&&style.getPropertyValue("--dl-score-y")!==""
         });
       }
 
@@ -238,6 +253,17 @@ async function runMatch(label,viewport,isMobile){
       label+": both final Poder values and actual outcome must move together");
     assert.ok(["player","opponent","draw"].includes(ribbon.outcome),
       label+": result must be the real engine outcome");
+    const {approach,result,settle}=data.duelValues;
+    assert.ok(approach&&result&&settle,label+": observe the complete duel handoff");
+    assert.deepEqual(result.life,approach.life,label+": Life must hold through the ribbon");
+    assert.deepEqual(result.score,approach.score,label+": score must hold through the ribbon");
+    const win=ribbon.outcome!=="draw";
+    assert.equal(ribbon.scoreDestination,win,label+": a decisive result targets the real score");
+    assert.equal(settle.payout,ribbon.outcome,label+": board payout is driven by the actual result");
+    assert.equal(settle.pulse,win,label+": only a decisive result pulses the score");
+    assert.deepEqual(settle.score,approach.score.map((value,i)=>
+      value+(ribbon.outcome===(i===0?"player":"opponent")?1:0)
+    ),label+": exactly the actual winner receives a point");
     assert.equal(await page.locator(".duel-showcase-outcome").count(),0,
       label+": no separate floating old outcome title");
 
