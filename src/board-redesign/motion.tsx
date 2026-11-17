@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, type ReactNode } from "react";
 import type { CardDefinition, Position } from "../types";
 import type { DuelSummary, EnginePlay, GameState } from "../engine/types";
 
-export type BoardMotionPhase = "flight" | "duel" | "quiero-ai" | "round" | "archive" | "archive-reveal" | "deal";
+export type BoardMotionPhase = "flight" | "duel" | "quiero-ai" | "round" | "archive" | "archive-reveal" | "deal" | "round-wipe" | "round-wipe-reveal";
 export interface RectSnapshot { x:number;y:number;width:number;height:number }
 export interface BoardMotionSequence {
   id:number;
@@ -19,13 +19,13 @@ export interface BoardMotionSequence {
  * enough to move them visibly to the six corresponding Archive counters.
  */
 export function visibleRoundPlays(motion:BoardMotionSequence|null,side:"player"|"opponent"):EnginePlay[]|null {
-  if(!motion || motion.phase==="deal" || motion.phase==="archive-reveal") return null;
+  if(!motion || motion.phase==="deal" || motion.phase==="archive-reveal" || motion.phase==="round-wipe-reveal") return null;
   const previous=motion.before[side].roundPlays;
   if(!motion.duel) return previous;
   return [...previous,side==="player"?motion.duel.playerPlay:motion.duel.opponentPlay];
 }
 export function visibleHand(motion:BoardMotionSequence|null, fallback:CardDefinition[]):CardDefinition[]{
-  if(!motion || motion.phase==="deal")return fallback;
+  if(!motion || motion.phase==="deal" || motion.phase==="round-wipe-reveal")return fallback;
   if(motion.phase==="archive-reveal")return [];
   if(motion.handIndex===null)return motion.before.player.hand;
   return motion.before.player.hand.filter((_,index)=>index!==motion.handIndex);
