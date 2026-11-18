@@ -544,13 +544,21 @@ async function runFinale(){
     assert.ok(await banner.evaluate(el=>getComputedStyle(el).clipPath.includes("50% 75%")));
     const continueButton=banner.getByRole("button",{name:/CONTINUAR/});
     assert.ok(await continueButton.evaluate(el=>document.activeElement===el));
-    await page.screenshot({path:"/tmp/daggerlight-round-shadow-sweep-v3-finale.png"});
-    await page.setViewportSize({width:844,height:390});
-    await continueButton.scrollIntoViewIfNeeded();
-    assert.ok(await continueButton.evaluate(el=>{
-      const rect=el.getBoundingClientRect();
-      return el.contains(document.elementFromPoint(rect.left+rect.width/2,rect.bottom-3));
-    }),"The swallowtail must leave the Continue button clickable in a short viewport");
+    await banner.evaluate(el=>Promise.allSettled(el.getAnimations().map(animation=>animation.finished)));
+    for(const viewport of [{width:390,height:844},{width:1067,height:539},{width:844,height:390}]){
+      await page.setViewportSize(viewport);
+      await continueButton.scrollIntoViewIfNeeded();
+      const layout=await continueButton.evaluate(el=>{
+        const control=el.getBoundingClientRect();
+        const panel=el.closest(".dl-match-finale").getBoundingClientRect();
+        // The shared pennant's central cut starts 75% down the banner.
+        return {width:panel.width,height:panel.height,clearance:panel.top+panel.height*.75-control.bottom,
+          clickable:el.contains(document.elementFromPoint(control.left+control.width/2,control.bottom-3))};
+      });
+      assert.ok(layout.height>layout.width&&layout.clearance>=18&&layout.clickable,
+        "The tall finale must leave the button above the hem: "+JSON.stringify({viewport,layout}));
+      if(viewport.width===1067)await page.screenshot({path:"/tmp/daggerlight-round-shadow-sweep-v3-finale.png"});
+    }
     await continueButton.click();
     await page.getByRole("group",{name:"Opciones después de la partida"}).waitFor({state:"visible"});
     assert.deepEqual(errors,[]);

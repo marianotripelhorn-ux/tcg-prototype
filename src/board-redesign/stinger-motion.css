@@ -292,11 +292,12 @@
   overflow:auto;
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-match-finale {
-  width:min(89vw,440px);
-  min-height:0;
-  margin: auto;
+  width:min(85vw,376px,84dvh);
+  min-height:min(420px,88dvh);
+  margin:auto;
   gap:clamp(10px,1.7dvh,17px);
-  padding:clamp(22px,4dvh,38px) 24px clamp(70px,10.5dvh,99px);
+  /* Leave the lower quarter for the swallowtail, plus space below the control. */
+  padding:clamp(22px,4dvh,38px) 24px clamp(112px,14dvh,136px);
   animation:dl-finale-unfurl 420ms cubic-bezier(.19,.77,.23,1) both;
 }
 .dl-match-finale h2 {
@@ -360,7 +361,7 @@
   100%{opacity:1;transform:translateY(0)}
 }
 @media (max-height:540px) {
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-match-finale {gap:6px;padding-block:14px 80px}
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-match-finale {gap:6px;padding-block:14px 114px}
 }
 @media (prefers-reduced-motion:reduce) {
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-match-finale {animation:none}
