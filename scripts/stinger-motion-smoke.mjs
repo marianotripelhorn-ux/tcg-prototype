@@ -536,10 +536,10 @@ try{
   await runMatch("desktop",{width:1600,height:900},false);
   await runMatch("mobile",{width:390,height:844},true);
   await Promise.all([
-    runFinale(),
     runStudy("desktop",{width:1600,height:900},"no-preference"),
     runStudy("mobile",{width:390,height:844},"reduce")
   ]);
+  await runFinale();
 }finally{
   await browser.close();
 }
