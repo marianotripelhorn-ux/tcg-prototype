@@ -1,8 +1,9 @@
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useRef } from "react";
 import type { GameState, RoundSummary, Side } from "../engine/types";
 import type { Position } from "../types";
 import type { BoardMotionSequence } from "./motion";
 import "./round-receipt-banner.css";
+import { CeremonyBackdrop } from "./stingerMotion";
 
 /**
  * Round captions are drawn from the engine's persisted RoundSummary,
@@ -48,12 +49,12 @@ export function RoundTransition({sequenceId,reducedMotion,onComplete,summary,ban
     summary?.reason==="opponent_no_quiero"?"EL RIVAL DIJO NO QUIERO":null;
   const outcome=summary?.score.player===summary?.score.opponent?"EMPATE":
     (summary?.score.player??0)>(summary?.score.opponent??0)?"GANASTE LA RONDA":"EL RIVAL GANÓ LA RONDA";
-  const art=bannerImage ? { "--dl-ceremony-art": `url("${bannerImage}")` } as CSSProperties : undefined;
   return <div className="board-round-receipt-stage" role="status">
-    <div key={sequenceId} className="board-round-ceremony dl-ceremony-banner" style={art}
+    <div key={sequenceId} className="board-round-ceremony dl-ceremony-banner"
       onAnimationEnd={event=>{
         if(event.target===event.currentTarget && event.animationName==="dl-round-receipt-reveal")finish();
       }}>
+      <CeremonyBackdrop image={bannerImage}/>
       <span className="board-round-kicker">{summary?"RONDA "+summary.round+" FINALIZADA":"RONDA FINALIZADA"}</span>
       {summary&&<strong className="board-round-score" aria-label={`Resultado de ronda: vos ${summary.score.player}, rival ${summary.score.opponent}`}>
         <span>{summary.score.player}</span><i aria-hidden="true">—</i><span>{summary.score.opponent}</span>

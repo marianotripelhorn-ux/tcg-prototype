@@ -175,7 +175,7 @@ async function instrument(page){
           duration:animation?.effect?.getTiming().duration,
           motion:style.animationName,
           shape:style.clipPath,
-          art:getComputedStyle(ribbon,"::before").backgroundImage,
+          art:ribbon.querySelector(".dl-ceremony-art")?.src,
           playerPower:ribbon.dataset.playerPower,
           opponentPower:ribbon.dataset.opponentPower,
           outcome:ribbon.dataset.outcome,
@@ -192,7 +192,7 @@ async function instrument(page){
         m.roundReceipt={
           hold:effect&&settled.length===2?(settled[1].computedOffset-settled[0].computedOffset)*effect.getTiming().duration:0,
           shape:getComputedStyle(receipt).clipPath,
-          art:getComputedStyle(receipt,"::before").backgroundImage,
+          art:receipt.querySelector(".dl-ceremony-art")?.src,
           title:receipt.querySelector(".board-round-kicker")?.textContent?.trim(),
           score:receipt.querySelector(".board-round-score")?.textContent?.trim(),
           outcome:receipt.querySelector(".board-round-outcome")?.textContent?.trim(),
@@ -212,7 +212,7 @@ async function instrument(page){
           oldRound:Number(root.querySelector(".arena-top-center span b")?.textContent),
           oldBoardCount:root.querySelectorAll(".board-slot .played-card").length,
           shape:getComputedStyle(ink).clipPath,
-          art:getComputedStyle(ink,"::before").backgroundImage,
+          art:ink.querySelector(".dl-ceremony-art")?.src,
           text:title?.textContent?.trim(),
           font:title?getComputedStyle(title).fontFamily:""
         };
@@ -351,8 +351,12 @@ async function runMatch(label,viewport,isMobile){
     for(const phase of ["flight","duel","round","archive","round-wipe","round-wipe-reveal","deal","idle"])
       assert.ok(data.phases.includes(phase),label+": missing real match phase "+phase);
     const {roundReceipt,roundBanner,swap}=data;
-    assert.ok([ribbon,roundReceipt,roundBanner].every(banner=>banner?.art.includes("/champions/backgrounds/")),
-      label+": each live ceremony banner needs its faction art layer");
+    for(const banner of [ribbon,roundReceipt,roundBanner]){
+      assert.ok(banner?.art?.includes("/champions/backgrounds/"),label+": banner needs its faction art layer");
+      const art=await page.request.get(banner.art);
+      assert.ok(art.ok()&&art.headers()["content-type"]?.startsWith("image/"),
+        label+": the faction artwork URL must serve an image: "+banner.art);
+    }
     console.log("MOTION DIAGNOSTIC "+label+" "+JSON.stringify({roundReceipt,roundBanner,swap}));
     assert.ok(roundReceipt?.title?.includes("FINALIZADA")&&roundReceipt.score&&roundReceipt.outcome,
       label+": round receipt must group the actual completed-round result");
@@ -521,14 +525,16 @@ async function runFinale(){
     await banner.waitFor({state:"visible",timeout:30000});
     assert.equal(await banner.getAttribute("data-outcome"),fixture.winner);
     assert.equal(await banner.getAttribute("data-champion"),fixture.champion);
-    assert.equal(await banner.locator("img").count(),0);
+    assert.equal(await banner.locator("img:not(.dl-ceremony-art)").count(),0);
     assert.ok(await banner.locator(".dl-finale-champion").textContent());
-    const materials=await banner.evaluate(el=>{
-      const art=getComputedStyle(el,"::before");
+    const materials=await banner.evaluate(async el=>{
+      const art=el.querySelector(".dl-ceremony-art");
+      await art.decode();
+      const rect=art.getBoundingClientRect();
       return {
-        art:art.backgroundImage.includes("/champions/backgrounds/"),
+        art:art.naturalWidth>0&&rect.width>100&&rect.height>100&&art.src.includes("/champions/backgrounds/"),
         cloth:getComputedStyle(el,"::after").backgroundImage.includes("banner-gold.webp"),
-        filter:art.filter
+        filter:getComputedStyle(art.parentElement).filter
       };
     });
     assert.ok(materials.art&&materials.cloth,"Faction artwork and cloth must be separate visible layers");

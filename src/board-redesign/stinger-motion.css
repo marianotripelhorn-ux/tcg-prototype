@@ -37,17 +37,30 @@
   color:#f4ead3;
   text-align:center;
 }
-.dl-ceremony-banner::before {
-  content:"";
+.dl-ceremony-backdrop {
   position:absolute;
   z-index:-1;
   inset:1px;
+  overflow:hidden;
   clip-path:var(--dl-quiero-pennant);
+  background:#271b15;
+  pointer-events:none;
+}
+.dl-ceremony-art {
+  display:block;
+  width:100%;
+  height:100%;
+  max-width:none;
+  object-fit:cover;
+  object-position:50% 39%;
+}
+.dl-ceremony-backdrop::after {
+  content:"";
+  position:absolute;
+  inset:0;
   background:
     repeating-linear-gradient(90deg,#e6c98608 0 1px,transparent 1px 4px),
-    linear-gradient(180deg,#18161170,#161510b3),
-    var(--dl-ceremony-art,none) center 35% / cover,
-    #181611;
+    linear-gradient(180deg,#1816114d,#16151091 72%,#161510b0);
 }
 .dl-ceremony-banner::after {
   content:"";
@@ -293,12 +306,13 @@
   letter-spacing:-.04em;
   text-wrap:balance;
 }
-.dl-match-finale::before {
+.dl-match-finale .dl-ceremony-backdrop::after {
   background:
-    linear-gradient(90deg,#21160f65,transparent 46%,#21160f65),
-    linear-gradient(180deg,#1c160e4f,#160e0a91 62%,#160e0aba),
-    var(--dl-ceremony-art,none) center 28% / cover,
-    #34271b;
+    linear-gradient(90deg,#190e0852,transparent 48%,#190e0852),
+    linear-gradient(180deg,#1c160e39,#160e0a79 65%,#160e0aab);
+}
+.dl-ceremony-banner > :is(h2,strong,.dl-ceremony-kicker,.dl-new-round-number,.dl-duel-stinger-contents,.dl-finale-champion,.dl-finale-life,.board-round-kicker,.board-round-outcome,.board-round-reason) {
+  text-shadow:0 2px 5px #17110e;
 }
 .dl-match-finale::after {
   inset:1px;
@@ -308,7 +322,7 @@
   mix-blend-mode:soft-light;
   opacity:.23;
 }
-.dl-match-finale[data-outcome="opponent"]::before,
+.dl-match-finale[data-outcome="opponent"] .dl-ceremony-backdrop,
 .dl-match-finale[data-outcome="opponent"]::after {
   filter:grayscale(.84);
 }

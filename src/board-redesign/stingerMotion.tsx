@@ -1,9 +1,11 @@
-import { useEffect, useId, useLayoutEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useId, useLayoutEffect, useRef } from "react";
 import type { DuelSummary, GameState } from "../engine/types";
 import { championBackgroundUrl, championShortName } from "../championArtwork";
 
-export function ceremonyArt(image?:string):CSSProperties {
-  return { "--dl-ceremony-art":image?'url("'+image+'")':"none" } as CSSProperties;
+export function CeremonyBackdrop({image}:{image?:string}) {
+  return <span className="dl-ceremony-backdrop" aria-hidden="true">
+    {image&&<img className="dl-ceremony-art" src={image} alt=""/>}
+  </span>;
 }
 
 /** The engine supplies both final Power values and the outcome. */
@@ -32,13 +34,14 @@ export function DuelResultStinger({duel,onComplete,bannerImage}:{
   const playerPower=duel.playerPlay.finalPower??duel.playerPlay.card.power;
   const opponentPower=duel.opponentPlay.finalPower??duel.opponentPlay.card.power;
   const result=duel.outcome==="player"?"VICTORIA":duel.outcome==="opponent"?"DERROTA":"EMPATE";
-  return <div ref={card} className="dl-duel-stinger dl-ceremony-banner" style={ceremonyArt(bannerImage)}
+  return <div ref={card} className="dl-duel-stinger dl-ceremony-banner"
     role="status" aria-live="polite"
     onAnimationEnd={event=>{
       if(event.target===event.currentTarget&&event.animationName==="dl-duel-banner")onComplete?.();
     }}
     data-player-power={playerPower} data-opponent-power={opponentPower}
     data-outcome={duel.outcome} aria-label={"Poder final: vos "+playerPower+"; rival "+opponentPower+". "+result}>
+    <CeremonyBackdrop image={bannerImage}/>
     <span className="dl-ceremony-kicker">DUELO {duel.turn}</span>
     <strong className="dl-duel-stinger-result">{result}</strong>
     <div className="dl-ceremony-rule" aria-hidden="true"/>
@@ -128,7 +131,8 @@ export function NewRoundStinger({
   return <div className={"dl-new-round-stage"+(reducedMotion?" is-reduced":"")} ref={backdrop}
     data-wipe-stage={covered?"reveal":"cover"}
     role="status" aria-live="polite" aria-label={"Comienza ronda "+round}>
-    <div className="dl-new-round-ink dl-ceremony-banner" ref={banner} style={ceremonyArt(bannerImage)}>
+    <div className="dl-new-round-ink dl-ceremony-banner" ref={banner}>
+      <CeremonyBackdrop image={bannerImage}/>
       <span className="dl-new-round-number">RONDA {round}</span>
       <div className="dl-ceremony-rule" aria-hidden="true"/>
     </div>
@@ -150,8 +154,8 @@ export function MatchFinaleBanner({game,kicker,title,onContinue}:{
   const championNames=won?championShortName(won.name):
     [game.player.champion,game.opponent.champion].map(champion=>championShortName(champion.name)).join(" · ");
   return <div className="dl-match-finale dl-ceremony-banner"
-    style={ceremonyArt(championBackgroundUrl((won??game.player.champion).faction))}
     role="dialog" aria-modal="true" aria-labelledby={titleId} data-outcome={game.winner??"draw"} data-champion={won?.id}>
+    <CeremonyBackdrop image={championBackgroundUrl((won??game.player.champion).faction)}/>
     <span className="dl-ceremony-kicker">{kicker}</span>
     <h2 id={titleId}>{title}</h2>
     <p className="dl-finale-champion">{championNames}</p>
