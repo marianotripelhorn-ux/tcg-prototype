@@ -175,6 +175,7 @@ async function instrument(page){
           duration:animation?.effect?.getTiming().duration,
           motion:style.animationName,
           shape:style.clipPath,
+          art:getComputedStyle(ribbon,"::before").backgroundImage,
           playerPower:ribbon.dataset.playerPower,
           opponentPower:ribbon.dataset.opponentPower,
           outcome:ribbon.dataset.outcome,
@@ -191,6 +192,7 @@ async function instrument(page){
         m.roundReceipt={
           hold:effect&&settled.length===2?(settled[1].computedOffset-settled[0].computedOffset)*effect.getTiming().duration:0,
           shape:getComputedStyle(receipt).clipPath,
+          art:getComputedStyle(receipt,"::before").backgroundImage,
           title:receipt.querySelector(".board-round-kicker")?.textContent?.trim(),
           score:receipt.querySelector(".board-round-score")?.textContent?.trim(),
           outcome:receipt.querySelector(".board-round-outcome")?.textContent?.trim(),
@@ -210,6 +212,7 @@ async function instrument(page){
           oldRound:Number(root.querySelector(".arena-top-center span b")?.textContent),
           oldBoardCount:root.querySelectorAll(".board-slot .played-card").length,
           shape:getComputedStyle(ink).clipPath,
+          art:getComputedStyle(ink,"::before").backgroundImage,
           text:title?.textContent?.trim(),
           font:title?getComputedStyle(title).fontFamily:""
         };
@@ -352,6 +355,8 @@ async function runMatch(label,viewport,isMobile){
     for(const phase of ["flight","duel","round","archive","round-wipe","round-wipe-reveal","deal","idle"])
       assert.ok(data.phases.includes(phase),label+": missing real match phase "+phase);
     const {roundReceipt,roundBanner,swap}=data;
+    assert.ok([ribbon,roundReceipt,roundBanner].every(banner=>banner?.art.includes("/champions/backgrounds/")),
+      label+": each live ceremony banner needs its faction art layer");
     console.log("MOTION DIAGNOSTIC "+label+" "+JSON.stringify({roundReceipt,roundBanner,swap}));
     assert.ok(roundReceipt?.title?.includes("FINALIZADA")&&roundReceipt.score&&roundReceipt.outcome,
       label+": round receipt must group the actual completed-round result");
