@@ -34,9 +34,30 @@ async function startGame(page){
   }
   await page.locator(".dl-champion-card").first().evaluate(el=>el.click());
   await page.locator(".dl-champion-start").waitFor({state:"attached",timeout:12000});
+  await page.evaluate(()=>{
+    const entrance=window.__matchEntrance={phases:[],banners:[],hiddenHand:false};
+    const observer=new MutationObserver(()=>{
+      const root=document.querySelector("main.app-shell.board-redesign-v1");
+      const phase=root?.dataset.boardPhase;
+      if(!phase||entrance.phases.at(-1)===phase)return;
+      entrance.phases.push(phase);
+      if(phase==="match-entry"){
+        entrance.banners=Array.from(root.querySelectorAll(".hybrid-champion-panel, .hybrid-phone-champion"),
+          node=>node.getAnimations()[0]?.effect?.getTiming());
+        entrance.hiddenHand=Array.from(root.querySelectorAll(".hand-card")).every(node=>getComputedStyle(node).visibility==="hidden");
+      }
+      if(phase==="idle")observer.disconnect();
+    });
+    observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:["data-board-phase"]});
+  });
   await page.locator(".dl-champion-start").evaluate(el=>el.click());
-  await page.locator("main.app-shell.board-redesign-v1").waitFor({state:"attached",timeout:12000});
-  await page.locator(".hand-zone .hand-card").first().waitFor({state:"attached",timeout:12000});
+  await page.locator('main.app-shell.board-redesign-v1[data-board-phase="idle"]').waitFor({state:"attached",timeout:12000});
+  const entrance=await page.evaluate(()=>window.__matchEntrance);
+  assert.deepEqual(entrance.phases,["match-entry","deal","idle"],"Champion entrance must hand off to the real opening deal");
+  assert.ok(entrance.hiddenHand&&entrance.banners.length===2&&entrance.banners.every(timing=>timing?.duration===420),
+    "Both Champion groups should enter before the hand appears");
+  assert.notEqual(entrance.banners[0].delay,entrance.banners[1].delay,"Champion entrances should be staggered");
+  await page.locator(".hand-zone .hand-card").first().waitFor({state:"visible",timeout:12000});
 }
 
 async function instrument(page){

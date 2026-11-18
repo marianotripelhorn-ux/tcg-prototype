@@ -354,3 +354,17 @@
     display:none;
   }
 }
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="match-entry"] .hand-zone .hand-card {
+  visibility:hidden;
+}
+.dl-match-entry-rule {
+  position:absolute;
+  z-index:8;
+  inset:50% 0 auto;
+  height:1px;
+  pointer-events:none;
+  opacity:0;
+  background:linear-gradient(90deg,transparent,#dac08b 17%,#fff0cc 50%,#dac08b 83%,transparent);
+  box-shadow:0 0 8px #e0c18376;
+}

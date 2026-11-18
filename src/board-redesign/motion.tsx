@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, type ReactNode } from "react";
 import type { CardDefinition, Position } from "../types";
 import type { DuelSummary, EnginePlay, GameState } from "../engine/types";
 
-export type BoardMotionPhase = "flight" | "duel" | "quiero-ai" | "round" | "archive" | "archive-reveal" | "deal" | "round-wipe" | "round-wipe-reveal";
+export type BoardMotionPhase = "match-entry" | "flight" | "duel" | "quiero-ai" | "round" | "archive" | "archive-reveal" | "deal" | "round-wipe" | "round-wipe-reveal";
 export interface RectSnapshot { x:number;y:number;width:number;height:number }
 export interface BoardMotionSequence {
   id:number;
@@ -203,7 +203,53 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete,onArrival}:Ar
   return null;
 }
 
-/** Settle the real engine hand as a group after the wipe clears. */
+/** Reveal the real Champion banners and board before exposing the opening hand. */
+export function MatchEntryMotion({sequenceId,onComplete}:Pick<ArchiveFlightProps,"sequenceId"|"onComplete">){
+  const rule=useRef<HTMLDivElement>(null);
+  const done=useRef(onComplete);
+  done.current=onComplete;
+  useLayoutEffect(()=>{
+    const line=rule.current;
+    const root=line?.closest(".app-shell.board-redesign-v1");
+    if(!line||!root||window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+      done.current();
+      return;
+    }
+    const phone=!!root.querySelector(".hybrid-phone-champion");
+    const distance=phone?20:44;
+    const animations:Animation[]=[];
+    (["player","opponent"] as const).forEach((side,index)=>{
+      const banner=root.querySelector(`.hybrid-champion-panel.${side}, .hybrid-phone-champion.${side}`);
+      if(!banner)return;
+      animations.push(banner.animate([
+        {opacity:0,transform:`translate3d(0,${-distance}px,0)`,offset:0,easing:"cubic-bezier(.18,.76,.24,1)"},
+        {opacity:1,transform:"translate3d(0,3px,0)",offset:.82},
+        {opacity:1,transform:"translate3d(0,0,0)",offset:1}
+      ],{duration:420,delay:65+index*85,fill:"both"}));
+    });
+    root.querySelectorAll(".hybrid-right-rail .board-gs-crest-anchor").forEach((crown,index)=>{
+      animations.push(crown.animate([
+        {opacity:0,transform:"scale(.87)"},
+        {opacity:1,transform:"scale(1.045)",offset:.72},
+        {opacity:1,transform:"scale(1)"}
+      ],{duration:265,delay:275+index*55,easing:"cubic-bezier(.18,.8,.26,1)",fill:"both"}));
+    });
+    animations.push(line.animate([
+      {opacity:0,transform:"scaleX(.03)",offset:0},
+      {opacity:.9,transform:"scaleX(.82)",offset:.59},
+      {opacity:0,transform:"scaleX(1)",offset:1}
+    ],{duration:560,delay:170,easing:"cubic-bezier(.22,.72,.3,1)",fill:"both"}));
+
+    let cancelled=false;
+    void Promise.allSettled(animations.map(animation=>animation.finished)).then(()=>{
+      if(!cancelled)done.current();
+    });
+    return ()=>{cancelled=true;animations.forEach(animation=>animation.cancel());};
+  },[sequenceId]);
+  return <div className="dl-match-entry-rule" ref={rule} aria-hidden="true"/>;
+}
+
+/** Settle the real engine hand after match entry or the round wipe. */
 export function DealMotion({sequenceId,reducedMotion,onComplete,onLand}:ArchiveFlightProps & {
   onLand?:()=>void;
 }){

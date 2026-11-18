@@ -1,6 +1,6 @@
 import { flushSync } from "react-dom";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { ArchiveFlight, CardFlight, DealMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
+import { ArchiveFlight, CardFlight, DealMotion, MatchEntryMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
 import type { BoardMotionSequence } from "./board-redesign/motion";
 import { ArchiveReceiptTransition, RoundTransition, archiveCountChange, completedRoundReceipt } from "./board-redesign/roundChoreography";
 import { DuelResultStinger, NewRoundStinger } from "./board-redesign/stingerMotion";
@@ -852,6 +852,10 @@ export default function App() {
     setOpponentChampion(rivalSelection);
     setAiDifficulty(difficulty);
     const next=disableManifestations(startGame(championId,opponent,Math.random,undefined,difficulty,deck?{player:deck}:undefined,false));
+    if(boardRedesign&&!isReducedMotion()){
+      setMotion({id:++nextMotionId.current,phase:"match-entry",before:next,
+        duel:null,roundEnded:false,handIndex:null,origin:null});
+    }
     setCurrentDeck(deck??null);
     const newMatch=newSavedMatch(next,rivalSelection);
     writeSavedMatch(newMatch);
@@ -1354,6 +1358,13 @@ export default function App() {
           }}/>}
 
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
+          {boardRedesign&&boardMotion?.phase==="match-entry"&&<MatchEntryMotion
+            sequenceId={boardMotion.id}
+            onComplete={()=>{
+              const current=boardMotionRef.current;
+              if(current?.id===boardMotion.id&&current.phase==="match-entry")setMotion({...current,phase:"deal"});
+            }}/>}
+
           {boardRedesign && boardMotion?.phase==="archive-reveal" && <ArchiveReceiptTransition
             sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
             onComplete={()=>{
@@ -1621,7 +1632,7 @@ export default function App() {
           phoneDeck={phoneBoard?{remaining:deckView.deck.length,discarded:deckView.discard.length}:undefined}
           displayRound={displayed?.round??game.round}
           displayTurn={showingPreviousRound?(duelPreview?.turn??boardMotion?.duel?.turn??boardMotion?.before.turn??game.turn):game.turn}
-          transitionLabel={boardMotion?.phase==="flight"?"Jugando carta…":boardMotion?.phase==="quiero-ai"?"El rival eligió Quiero · tercer duelo…":boardMotion?.phase==="round"?"Ronda finalizada…":boardMotion?.phase==="archive"?"Archivando cartas…":boardMotion?.phase==="round-wipe"||boardMotion?.phase==="round-wipe-reveal"?"Nueva ronda…":boardMotion?.phase==="archive-reveal"?"Archivos actualizados…":boardMotion?.phase==="deal"?"Repartiendo nueva mano…":undefined}
+          transitionLabel={boardMotion?.phase==="match-entry"?"Preparando la mesa…":boardMotion?.phase==="flight"?"Jugando carta…":boardMotion?.phase==="quiero-ai"?"El rival eligió Quiero · tercer duelo…":boardMotion?.phase==="round"?"Ronda finalizada…":boardMotion?.phase==="archive"?"Archivando cartas…":boardMotion?.phase==="round-wipe"||boardMotion?.phase==="round-wipe-reveal"?"Nueva ronda…":boardMotion?.phase==="archive-reveal"?"Archivos actualizados…":boardMotion?.phase==="deal"?"Repartiendo nueva mano…":undefined}
           onChooseQuiero={chooseQuiero}
         />}
 
