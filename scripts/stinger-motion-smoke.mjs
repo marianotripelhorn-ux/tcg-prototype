@@ -1,6 +1,6 @@
 /**
  * Daggerlight: genuine desktop + mobile match, no engine mocking.
- * Verifies three compositor-driven grouped animations in the actual React app.
+ * Verifies the centered ceremony banners and game-state handoffs in the React app.
  */
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
@@ -63,11 +63,35 @@ async function startGame(page){
 async function instrument(page){
   await page.evaluate(()=>{
     const root=document.querySelector("main.app-shell.board-redesign-v1");
+    const arena=root.querySelector(".arena-main");
+    const shapeProbe=document.createElement("div");
+    shapeProbe.className="board-quiero-banner";
+    shapeProbe.style.cssText="position:absolute;visibility:hidden;pointer-events:none";
+    root.append(shapeProbe);
+    const quieroShape=getComputedStyle(shapeProbe).clipPath;
+    shapeProbe.remove();
     window.__motionCapture={
-      phases:[],flights:[],ribbons:[],duelValues:{},wipe:null,swap:null,deal:null,archiveCounts:[],errors:[]
+      quieroShape,phases:[],flights:[],ribbons:[],duelValues:{},roundReceipt:null,
+      roundBanner:null,swap:null,deal:null,archiveCounts:[]
     };
     let lastPhase=null;
-    let currentWipe=null;
+    let currentRoundBanner=null;
+
+    function centeredFrames(node,inspect=()=>{}){
+      const sample={frames:0,offset:0};
+      const readFrame=()=>{
+        if(!node.isConnected)return;
+        const box=node.getBoundingClientRect();
+        const field=arena.getBoundingClientRect();
+        sample.frames++;
+        sample.offset=Math.max(sample.offset,Math.abs((box.left+box.right-field.left-field.right)/2));
+        inspect();
+        requestAnimationFrame(readFrame);
+      };
+      requestAnimationFrame(readFrame);
+      return sample;
+    }
+
     function read(){
       const m=window.__motionCapture;
       const phase=root?.dataset.boardPhase;
@@ -75,19 +99,24 @@ async function instrument(page){
         lastPhase=phase;
         m.phases.push(phase);
         if(phase==="round-wipe-reveal"){
-          const ink=document.querySelector(".dl-new-round-ink");
-          const hand=document.querySelectorAll(".hand-zone .hand-card");
-          const stage=document.querySelector(".dl-new-round-stage")?.getBoundingClientRect();
-          const field=root?.querySelector(".arena-main")?.getBoundingClientRect();
+          const stage=root.querySelector(".dl-new-round-stage");
+          const ink=stage?.querySelector(".dl-new-round-ink");
+          const hand=Array.from(root.querySelectorAll(".hand-zone .hand-card"));
+          const cover=stage?.getBoundingClientRect();
+          const field=arena.getBoundingClientRect();
+          const stageStyle=stage&&getComputedStyle(stage);
+          const bannerStyle=ink&&getComputedStyle(ink);
           m.swap={
             time:performance.now(),
-            sameInk:ink===currentWipe,
-            inkTransform:ink?getComputedStyle(ink).transform:"",
-            fullyCovered:!!ink && Math.abs(new DOMMatrix(getComputedStyle(ink).transform).m41)<2,
+            sameBanner:ink===currentRoundBanner,
+            bannerOpaque:Number(bannerStyle?.opacity)>=.99,
+            backdropOpaque:Number(stageStyle?.opacity)>=.99&&stageStyle?.backgroundColor==="rgb(23, 22, 19)",
+            coversBoard:!!cover&&Math.abs(cover.left-field.left)<2&&Math.abs(cover.right-field.right)<2
+              &&Math.abs(cover.top-field.top)<2,
+            coversHand:!!cover&&hand.length>0&&hand.every(card=>card.getBoundingClientRect().bottom<=cover.bottom+2),
             handCount:hand.length,
-            covered:!!stage&&!!field&&Math.abs(stage.left-field.left)<2&&Math.abs(stage.right-field.right)<2,
-            newRound:root?.querySelector(".arena-top-center span b")?.textContent?.trim()??"",
-            boardCardCount:root?.querySelectorAll(".board-slot .played-card").length??-1
+            newRound:Number(root.querySelector(".arena-top-center span b")?.textContent),
+            boardCardCount:root.querySelectorAll(".board-slot .played-card").length
           };
         }
       }
@@ -134,79 +163,59 @@ async function instrument(page){
         });
       }
 
-      const ribbon=document.querySelector(".dl-duel-stinger");
+      const ribbon=root.querySelector(".dl-duel-stinger");
       if(ribbon&&m.ribbons.length<4&&!ribbon.dataset.smokeCaptured){
         ribbon.dataset.smokeCaptured="true";
         const style=getComputedStyle(ribbon);
-        const rect=ribbon.getBoundingClientRect();
-        const frames=ribbon.getAnimations()[0]?.effect?.getKeyframes()??[];
-        const receipt={
-          rest:frames.filter(frame=>frame.computedOffset>.2&&frame.computedOffset<.78)
-            .map(frame=>({offset:frame.computedOffset,transform:frame.transform})),
-          duration:style.animationDuration,
+        const animation=ribbon.getAnimations().find(item=>item.animationName==="dl-duel-banner");
+        const frames=animation?.effect?.getKeyframes()??[];
+        m.ribbons.push({
+          rest:frames.map(frame=>({offset:frame.computedOffset,transform:frame.transform,opacity:frame.opacity})),
+          duration:animation?.effect?.getTiming().duration,
           motion:style.animationName,
-          shape:style.clipPath,background:style.backgroundColor,color:style.color,
-          text:ribbon.innerText,
-          playerPower:ribbon.dataset.playerPower,opponentPower:ribbon.dataset.opponentPower,
+          shape:style.clipPath,
+          playerPower:ribbon.dataset.playerPower,
+          opponentPower:ribbon.dataset.opponentPower,
           outcome:ribbon.dataset.outcome,
           resultIsChild:!!ribbon.querySelector(".dl-duel-stinger-result"),
-          width:rect.width,
-          scoreDestination:style.getPropertyValue("--dl-score-x")!==""&&style.getPropertyValue("--dl-score-y")!==""
-        };
-        m.ribbons.push(receipt);
-        const sampleHold=()=>{
-          if(!ribbon.isConnected)return;
-          const time=ribbon.getAnimations()[0]?.currentTime;
-          if(typeof time!=="number"||time<225){requestAnimationFrame(sampleHold);return;}
-          if(time>=450)return;
-          const rect=ribbon.getBoundingClientRect();
-          const plate=getComputedStyle(root.querySelector(".duel-focus-screen"),"::after");
-          receipt.hold={
-            visibleWidth:Math.min(rect.right,innerWidth)-Math.max(rect.left,0),
-            height:rect.height,
-            angle:plate.clipPath,
-            opacity:Number(plate.opacity)
-          };
-        };
-        requestAnimationFrame(sampleHold);
+          center:centeredFrames(ribbon)
+        });
       }
 
-      const wipe=document.querySelector(".dl-new-round-stage");
-      if(wipe&&!m.wipe){
-        const ink=wipe.querySelector(".dl-new-round-ink");
-        const style=ink?getComputedStyle(ink):null;
-        const pseudo=ink?getComputedStyle(ink,"::after"):null;
-        const rect=wipe.getBoundingClientRect();
-        const field=root?.querySelector(".arena-main")?.getBoundingClientRect();
-        currentWipe=ink;
-        const cover=ink?.getAnimations()[0];
-        m.wipe={
-          coverMs:cover?.effect?.getTiming().duration??null,
-          motion:style?.animationName,
-          background:style?.backgroundColor,
-          radius:pseudo?.borderRadius,
-          text:ink?.querySelector(".dl-new-round-number")?.textContent?.trim(),
-          font:ink?getComputedStyle(ink.querySelector(".dl-new-round-number")).fontFamily:"",
-          white:ink?getComputedStyle(ink.querySelector(".dl-new-round-number")).color:"",
-          covers:!!field&&Math.abs(rect.left-field.left)<2&&Math.abs(rect.right-field.right)<2,
-          geometry:{
-            stage:{left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom,width:rect.width},
-            field:field?{left:field.left,right:field.right,top:field.top,bottom:field.bottom,width:field.width}:null,
-            parent:wipe.parentElement?.className,
-            computed:{position:getComputedStyle(wipe).position,inset:getComputedStyle(wipe).inset},
-          },
-          groupedText:!!ink?.querySelector(".dl-new-round-number"),
-          keyframes:cover?.effect?.getKeyframes().map(f=>f.transform)??[]
+      const receipt=root.querySelector(".board-round-receipt-stage .board-round-ceremony");
+      if(receipt&&!m.roundReceipt){
+        m.roundReceipt={
+          shape:getComputedStyle(receipt).clipPath,
+          title:receipt.querySelector(".board-round-kicker")?.textContent?.trim(),
+          score:receipt.querySelector(".board-round-score")?.textContent?.trim(),
+          outcome:receipt.querySelector(".board-round-outcome")?.textContent?.trim(),
+          center:centeredFrames(receipt)
         };
-        if(ink){
-          const watchExit=new MutationObserver(()=>{
-            const exit=ink.getAnimations()[0];
-            m.wipe.exitMs=exit?.effect?.getTiming().duration??null;
-            m.wipe.exitStart=performance.now();
-            watchExit.disconnect();
-          });
-          watchExit.observe(ink,{attributes:true,attributeFilter:["style"]});
-        }
+      }
+
+      const stage=root.querySelector(".dl-new-round-stage");
+      const ink=stage?.querySelector(".dl-new-round-ink");
+      if(ink&&!m.roundBanner){
+        currentRoundBanner=ink;
+        const title=ink.querySelector(".dl-new-round-number");
+        const cover=ink.getAnimations().find(item=>item.effect?.getTiming().duration===250);
+        const banner=m.roundBanner={
+          entryMs:cover?.effect?.getTiming().duration,
+          entryTransforms:cover?.effect?.getKeyframes().map(frame=>frame.transform)??[],
+          oldRound:Number(root.querySelector(".arena-top-center span b")?.textContent),
+          oldBoardCount:root.querySelectorAll(".board-slot .played-card").length,
+          shape:getComputedStyle(ink).clipPath,
+          text:title?.textContent?.trim(),
+          font:title?getComputedStyle(title).fontFamily:""
+        };
+        banner.center=centeredFrames(ink,()=>{
+          if(banner.exitMs)return;
+          const exit=ink.getAnimations().find(item=>item.effect?.getTiming().duration===240);
+          if(!exit)return;
+          banner.exitMs=exit.effect.getTiming().duration;
+          banner.exitTransforms=exit.effect.getKeyframes().map(frame=>frame.transform);
+          banner.exitStart=performance.now();
+        });
       }
     }
     read();
@@ -289,20 +298,17 @@ async function runMatch(label,viewport,isMobile){
       label+": down-right shadow must stretch during the lift");
     assert.equal(flight.ringCount,0,label+": do not emit decorative rings or particles");
     const ribbon=data.ribbons[0];
-    const frame=ribbon?.hold;
-    assert.ok(frame&&frame.visibleWidth>=viewport.width*.7&&frame.height>=120,
-      label+": result must fill most of the viewport at its readable hold");
-    assert.ok(frame.angle.startsWith("polygon")&&frame.opacity>=.95,
-      label+": full-width diagonal result plate must visibly reach its hold");
-    assert.ok(ribbon&&ribbon.duration==="0.64s"&&ribbon.motion.includes("dl-duel-notched-ribbon"),
-      label+": 640ms result animation missing");
+    assert.ok(data.quieroShape.includes("50% 100%"),label+": Quiero must retain its pointed silhouette");
+    assert.ok(ribbon&&ribbon.duration===1200&&ribbon.motion.includes("dl-duel-banner"),
+      label+": 1200ms centered duel banner animation missing");
+    assert.equal(ribbon.shape,data.quieroShape,label+": duel banner must use the real Quiero silhouette");
+    assert.ok(ribbon.center.frames>=5&&ribbon.center.offset<4,
+      label+": duel banner must stay centered while it is moving and holding: "+JSON.stringify(ribbon.center));
     assert.ok(ribbon.rest.some((frame,i)=>{
       const next=ribbon.rest[i+1];
-      return next&&frame.transform===next.transform&&next.offset-frame.offset>=.35;
+      return next&&frame.transform===next.transform&&Number(frame.opacity??1)>=.95
+        &&Number(next.opacity??1)>=.95&&next.offset-frame.offset>=.35;
     }),label+": grouped result needs a stable reading beat after settling");
-    assert.ok(ribbon.shape.includes("polygon")&&ribbon.background==="rgb(8, 9, 11)",
-      label+": original notched silhouette needs one matte-black surface");
-    assert.equal(ribbon.color,"rgb(255, 255, 255)",label+": white result lettering");
     assert.ok(ribbon.resultIsChild && ribbon.playerPower!==undefined && ribbon.opponentPower!==undefined,
       label+": both final Poder values and actual outcome must move together");
     assert.ok(["player","opponent","draw"].includes(ribbon.outcome),
@@ -312,7 +318,6 @@ async function runMatch(label,viewport,isMobile){
     assert.deepEqual(result.life,approach.life,label+": Life must hold through the ribbon");
     assert.deepEqual(result.score,approach.score,label+": score must hold through the ribbon");
     const win=ribbon.outcome!=="draw";
-    assert.equal(ribbon.scoreDestination,win,label+": a decisive result targets the real score");
     assert.equal(settle.payout,ribbon.outcome,label+": board payout is driven by the actual result");
     assert.equal(settle.pulse,win,label+": only a decisive result pulses the score");
     assert.deepEqual(settle.score,approach.score.map((value,i)=>
@@ -341,21 +346,29 @@ async function runMatch(label,viewport,isMobile){
     data=await page.evaluate(()=>window.__motionCapture);
     for(const phase of ["flight","duel","round","archive","round-wipe","round-wipe-reveal","deal","idle"])
       assert.ok(data.phases.includes(phase),label+": missing real match phase "+phase);
-    const wipe=data.wipe,swap=data.swap;
-    console.log("MOTION DIAGNOSTIC "+label+" "+JSON.stringify({wipe,swap}));
-    assert.ok(wipe?.groupedText&&wipe.covers,label+": whole ivory field and hand must be covered: "+JSON.stringify(wipe?.geometry??wipe));
-    assert.ok(wipe.coverMs===224&&wipe.keyframes.length===2,
-      label+": curved stinger must enter in one 224ms compositor movement");
-    assert.ok(wipe.exitMs===384&&wipe.exitStart-swap?.time>=150,
-      label+": the round number needs a readable hold at full cover before the continuous exit");
-    assert.ok(wipe.radius.includes("50%"),label+": broad curved front is missing");
-    assert.equal(wipe.background,"rgb(9, 10, 11)",label+": background must be matte black");
-    assert.ok(wipe.font.includes("Archivo Black")&&wipe.white==="rgb(255, 255, 255)",
-      label+": new-round number must be white Archivo Black");
-    assert.ok(swap?.sameInk&&swap.covered&&swap.fullyCovered,
-      label+": same graphic must reach FULL cover before the real board/hand swap: "+JSON.stringify(swap));
-    assert.ok(swap.handCount>=1&&swap.boardCardCount===0,
-      label+": the actual new hand and cleared lanes must exist beneath the full-cover veil");
+    const {roundReceipt,roundBanner,swap}=data;
+    console.log("MOTION DIAGNOSTIC "+label+" "+JSON.stringify({roundReceipt,roundBanner,swap}));
+    assert.ok(roundReceipt?.title?.includes("FINALIZADA")&&roundReceipt.score&&roundReceipt.outcome,
+      label+": round receipt must group the actual completed-round result");
+    assert.equal(roundReceipt.shape,data.quieroShape,label+": round receipt must use the Quiero silhouette");
+    assert.ok(roundReceipt.center.frames>=5&&roundReceipt.center.offset<4,
+      label+": round receipt must remain centered");
+    assert.ok(roundBanner&&roundBanner.entryMs===250&&roundBanner.exitMs===240,
+      label+": new-round banner must use the 250ms entrance and 240ms exit");
+    assert.equal(roundBanner.shape,data.quieroShape,label+": new-round banner must use the Quiero silhouette");
+    assert.ok(roundBanner.center.frames>=5&&roundBanner.center.offset<4,
+      label+": new-round banner must stay centered throughout the motion");
+    assert.ok(new Set(roundBanner.entryTransforms).size>=2&&new Set(roundBanner.exitTransforms).size>=2,
+      label+": new-round banner entrance and exit must move");
+    assert.ok(swap&&roundBanner.exitStart-swap.time>=800,
+      label+": the next round number needs a readable hold at full cover");
+    assert.ok(roundBanner.font.includes("Archivo Black")&&roundBanner.text==="RONDA "+swap.newRound,
+      label+": the banner must show the engine's new round number in Archivo Black");
+    assert.ok(swap.sameBanner&&swap.bannerOpaque&&swap.backdropOpaque&&swap.coversBoard&&swap.coversHand,
+      label+": the separate opaque backdrop must cover the board and hand at the swap: "+JSON.stringify(swap));
+    assert.ok(roundBanner.oldBoardCount>0&&swap.newRound===roundBanner.oldRound+1
+      &&swap.handCount>=1&&swap.boardCardCount===0,
+      label+": preserve the old board until the covered swap to real new lanes and hand");
     assert.ok(data.archiveCounts.length>1,label+": Archive counters should tick during actual card arrivals: "+JSON.stringify(data.archiveCounts));
     assert.ok(data.deal?.length>=1&&data.deal.every((card,i)=>
       card.upright&&card.duration>=200&&card.duration<=320&&(i===0||card.delay>data.deal[i-1].delay)
@@ -364,7 +377,7 @@ async function runMatch(label,viewport,isMobile){
       label+": playable real new hand must be revealed");
     assert.ok(errors.length===0,label+": JavaScript runtime errors: "+errors.join(" | "));
 
-    console.log("PASS "+label+": real card 270ms, notched duel 640ms, curved new-round 800ms, full-cover real board+hand swap");
+    console.log("PASS "+label+": real card flight, centered Quiero-style result banners, covered round swap and real deal");
   }finally{await page.close();}
 }
 

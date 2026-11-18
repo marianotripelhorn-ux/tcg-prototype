@@ -1,10 +1,3 @@
-/*
- * Daggerlight — Stinger motion pass.
- * Three grouped motion surfaces, sourced entirely from resolved GameState:
- * 270ms hand-to-lane card/shadow, 640ms duel-result notched ribbon,
- * 800ms new-round matte curved wipe. No emitted particles or extra engine state.
- */
-
 /* The matte shadow belongs to the very same flying real card. */
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-motion-flight{
   will-change:transform;filter:none!important;
@@ -28,123 +21,127 @@
   display:none!important;
 }
 
-/* Single matte notched ribbon, including both numeric values and outcome.
- * The lettering is never independently translated from its graphic. */
+/* The three receipts share the Quiero pennant and a quiet faction fabric. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-ceremony-banner {
+  position:relative;
+  isolation:isolate;
+  display:grid;
+  justify-items:center;
+  align-content:center;
+  gap:clamp(8px,1.4dvh,14px);
+  width:min(88vw,390px);
+  box-sizing:border-box;
+  padding:clamp(20px,3vh,33px) 28px clamp(42px,6dvh,62px);
+  background:#a3895b;
+  clip-path:var(--dl-quiero-pennant);
+  color:#f4ead3;
+  text-align:center;
+}
+.dl-ceremony-banner::before {
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:1px;
+  clip-path:var(--dl-quiero-pennant);
+  background:
+    repeating-linear-gradient(90deg,#e6c98608 0 1px,transparent 1px 4px),
+    linear-gradient(180deg,#181611df,#161510f5),
+    var(--dl-ceremony-art,none) center 35% / cover,
+    #181611;
+}
+.dl-ceremony-banner::after {
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:5px 5px 17%;
+  pointer-events:none;
+  border:1px solid #d8b77850;
+  border-bottom:0;
+}
+.dl-ceremony-kicker {
+  color:#d8bc84;
+  font:700 10px/1.2 Arial,sans-serif;
+  letter-spacing:.16em;
+}
+.dl-ceremony-rule {
+  width:min(100%,215px);
+  height:1px;
+  background:linear-gradient(90deg,transparent,#d6b16b,transparent);
+}
+
+/* The two values and outcome hold still in a single centered banner. */
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger {
   position:absolute!important;
   z-index:120;
-  left:50%;top:49%;
-  width:min(94vw,1160px);
-  min-height:clamp(148px,22dvh,194px);
-  box-sizing:border-box;
-  padding:clamp(16px,2.8vw,29px) clamp(23px,4.4vw,52px);
-  display:grid;place-items:center;
-  background:#08090b;
-  color:#fff;
-  box-shadow:inset 0 3px #eee,inset 0 -3px #eee;
-  clip-path:polygon(0 0,100% 0,100% 33%,96% 50%,100% 67%,100% 100%,0 100%,0 67%,4% 50%,0 33%);
+  left:50%;
+  top:50%;
   translate:-50% -50%;
   pointer-events:none;
-  will-change:transform,opacity;
-  animation:dl-duel-notched-ribbon 640ms both;
+  animation:dl-duel-banner 1200ms both;
 }
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-contents{
-  width:100%;display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(115px,2.1fr) minmax(0,1fr);
-  align-items:center;gap:clamp(10px,2vw,24px);
-  text-align:center;line-height:1;
+.dl-duel-stinger-result,.dl-new-round-number {
+  color:#f6eedc;
+  font:400 clamp(29px,5vw,48px)/1.04 var(--board-display,"Archivo Black",Arial,sans-serif);
+  letter-spacing:-.035em;
 }
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-power{
-  display:flex;flex-direction:column;align-items:center;
-  gap:8px;min-width:0;
+.dl-duel-stinger-contents {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  width:min(100%,235px);
+  gap:12px;
 }
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-power small{
-  color:#fff;
-  font:800 clamp(9px,.9vw,13px)/1.15 Arial,sans-serif;
-  letter-spacing:.14em;
+.dl-duel-stinger-power {display:grid;justify-items:center;gap:4px}
+.dl-duel-stinger-power small {
+  color:#e6d5b4;
+  font:700 clamp(9px,2vw,11px)/1.2 Arial,sans-serif;
+  letter-spacing:.06em;
 }
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-power strong{
-  color:#fff;font:400 clamp(30px,4.7vw,64px)/1 var(--board-display,'Archivo Black',Arial,sans-serif);
+.dl-duel-stinger-power strong {
+  color:#f6eedc;
+  font:400 clamp(27px,5vw,44px)/1 var(--board-display,"Archivo Black",Arial,sans-serif);
   font-variant-numeric:tabular-nums;
 }
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-result{
-  color:#fff;
-  font:400 clamp(28px,4.7vw,70px)/1.05 var(--board-display,'Archivo Black',Arial,sans-serif);
-  letter-spacing:-.045em;
-  overflow-wrap:anywhere;
-  font-style:italic;
+@keyframes dl-duel-banner {
+  0%{transform:translate3d(0,-22px,0);opacity:0;animation-timing-function:cubic-bezier(.18,.76,.24,1)}
+  19%,83%{transform:translate3d(0,0,0);opacity:1}
+  100%{transform:translate3d(0,-14px,0);opacity:0}
 }
-/* Keep the real board visible during Power. The result is a separate,
- * full-width graphic beat instead of more dimming on an already dark board. */
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-focus-screen {
-  background:radial-gradient(ellipse at 48% 46%,#0b0d1059,#07080b9c)!important;
-  overflow:hidden;
-}
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-result .duel-focus-screen::after {
-  content:"";
-  position:absolute;
-  inset:8% -1% 9%;
-  background:
-    linear-gradient(168deg,transparent 20%,#e7e3d3 20% 20.65%,transparent 20.65% 79%,#a5a196 79% 79.65%,transparent 79.65%),
-    linear-gradient(110deg,#08090b 0% 28%,#2a2b2d 28% 69%,#101113 69%);
-  clip-path:polygon(0 16%,100% 0,100% 84%,0 100%);
-  animation:dl-duel-result-shadow 640ms both;
+  background:radial-gradient(ellipse at 48% 46%,#22201962,#171613a6)!important;
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-result .duel-showcase-pair {
-  animation:dl-duel-result-pair 640ms both;
+  opacity:.28;
+  transition:opacity 180ms ease-out;
 }
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-contents::before,
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-contents::after {
-  content:"";
-  position:absolute;inset-inline:8%;height:1px;
-  background:linear-gradient(90deg,transparent,#fff5 38%,#fff5 62%,transparent);
-  pointer-events:none;
-}
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-contents::before {top:9%}
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-contents::after {bottom:9%}
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-duel-stinger:is([data-outcome="player"],[data-outcome="opponent"]) {
-  --dl-score-scale:.16;
-  --dl-score-near-scale:.38;
-  --dl-score-opacity:0;
-}
-@keyframes dl-duel-notched-ribbon{
-  0%,12.5%{
-    transform:translate3d(-115vw,0,0) rotate(-3deg) scaleX(.97);
-    animation-timing-function:cubic-bezier(.15,.8,.21,1);
-  }
-  28%{
-    transform:translate3d(13px,0,0) rotate(.65deg) scaleX(1.018);
-    animation-timing-function:cubic-bezier(.21,.67,.3,1);
-  }
-  34.375%,71.875%{transform:translate3d(0,0,0) rotate(0) scale(1)}
-  76%{
-    transform:translate3d(-6px,0,0) rotate(-.35deg) scale(1);
-    animation-timing-function:cubic-bezier(.45,.08,.72,.72);
-  }
-  93%{
-    transform:translate3d(calc(var(--dl-score-x,115vw)*.79),calc(var(--dl-score-y,0px)*.79),0)
-      rotate(0) scale(var(--dl-score-near-scale,1));
-    opacity:.92;
-    animation-timing-function:ease-in;
-  }
-  100%{
-    transform:translate3d(var(--dl-score-x,115vw),var(--dl-score-y,0px),0)
-      rotate(0) scale(var(--dl-score-scale,1));
-    opacity:var(--dl-score-opacity,1);
-  }
-}
-@keyframes dl-duel-result-shadow {
-  0%{opacity:1;transform:translate3d(-102%,0,0)}
-  34.375%,71.875%{opacity:1;transform:translate3d(0,0,0)}
-  100%{opacity:0;transform:translate3d(102%,0,0)}
-}
-@keyframes dl-duel-result-pair {
-  0%,12.5%,100%{opacity:1}
-  34.375%,76%{opacity:.22}
-}
-
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-settle .duel-focus-screen {
   animation-duration:150ms;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-outcome {
+  display:none!important;
+}
+
+/* Static cover and moving banner are independent surfaces. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-main > .dl-new-round-stage {
+  position:absolute;
+  inset:0;
+  z-index:115;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  background:#171613;
+  pointer-events:auto;
+  isolation:isolate;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink {padding-block:clamp(27px,5dvh,52px) clamp(42px,7dvh,72px)}
+.dl-new-round-number {white-space:nowrap}
+
+@media (prefers-reduced-motion:reduce) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-duel-payout] :is(.hybrid-score-values,.hybrid-phone-score strong),
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-life-unit:is(.is-damaged,.is-healed) .hybrid-life-crest {
+    animation:none!important;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-motion-flight .dl-flight-shadow {display:none!important}
 }
 
 /* One response on the real score and on any crest whose Life changed. */
@@ -168,107 +165,6 @@
   28%{transform:scale(1.075);filter:brightness(1.35)}
   100%{transform:scale(1)}
 }
-/* No separate floating gold/white outcome title competing with the ribbon. */
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-outcome{
-  display:none!important;
-}
-
-/* The real ivory board remains underneath one moving, curved, matte surface.
- * Its round number moves with the same DOM element, never as a separate layer.
- * The width and curved appendages overhang the field, so the old board is
- * completely covered before the rendered GameState switches after the actual
- * compositor cover finishes. */
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-main > .dl-new-round-stage{
-  position:absolute;
-  inset:0 0 34px 0;
-  z-index:115;
-  overflow:hidden;
-  pointer-events:auto;
-  isolation:isolate;
-}
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink{
-  position:absolute;inset:0;
-  z-index:1;
-  display:grid;place-items:center;
-  background:#090a0b;
-  color:#fff;
-  will-change:transform;
-  transform:translate3d(-125%,0,0);
-  animation:none!important; /* WAAPI cover/hold/exit controls each real frame */
-}
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink::before,
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink::after{
-  content:"";position:absolute;
-  top:-14%;height:128%;
-  width:clamp(100px,17vw,265px);
-  background:#090a0b;
-  border-radius:50%;
-  pointer-events:none;
-}
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink::before{
-  right:calc(100% - clamp(55px,8vw,130px));
-}
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink::after{
-  left:calc(100% - clamp(55px,8vw,130px));
-  top:-22%;height:138%;
-}
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-number{
-  position:relative;z-index:3;
-  color:#fff;
-  font:400 clamp(50px,8.2vw,118px)/1 'Archivo Black',Arial,sans-serif;
-  letter-spacing:-.045em;
-  text-shadow:none;
-  text-align:center;
-  white-space:nowrap;
-  font-variant-numeric:tabular-nums;
-}
-/* All previous archive captures happen BEFORE the wipe.
- * During the cover frame the completed next-round board and hand replace the
- * previous round in one state-driven React commit, still fully occluded. */
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="round-wipe"] .battlefield,
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="round-wipe-reveal"] .battlefield{
-  transform:none!important;
-}
-
-@media(max-width:760px){
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-main > .dl-new-round-stage{
-    inset:0 0 34px 0;
-  }
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-number{
-    font-size:clamp(36px,10vw,76px);
-  }
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger{
-    top:51%;width:96vw;min-height:130px;padding:20px 19px;
-  }
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-contents{
-    grid-template-columns:minmax(0,1fr) minmax(90px,1.5fr) minmax(0,1fr);
-    gap:7px;
-  }
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-result{
-    font-size:clamp(17px,5.3vw,32px);
-  }
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger-power strong{
-    font-size:clamp(25px,6vw,41px);
-  }
-}
-@media(prefers-reduced-motion:reduce){
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-result .duel-focus-screen::after,
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-result .duel-showcase-pair,
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-duel-payout] :is(.hybrid-score-values,.hybrid-phone-score strong),
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-life-unit:is(.is-damaged,.is-healed) .hybrid-life-crest{
-    animation:none!important;
-  }
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger,
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink{
-    animation:none!important;
-    transform:none!important;
-    will-change:auto;
-  }
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-motion-flight .dl-flight-shadow{
-    display:none!important;
-  }
-}
-
 /* Local Power cues stay attached to the printed upper-left corner. */
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-face {
   overflow:visible!important;
@@ -367,4 +263,9 @@
   opacity:0;
   background:linear-gradient(90deg,transparent,#dac08b 17%,#fff0cc 50%,#dac08b 83%,transparent);
   box-shadow:0 0 8px #e0c18376;
+}
+
+/* Archive flights already cleared the table when the next-round cover starts. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="round-wipe"] :is(.board-slot .played-card,.hand-zone .hand-card) {
+  visibility:hidden;
 }

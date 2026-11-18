@@ -15,9 +15,9 @@ export const DUEL_BEATS: ReadonlyArray<{ at: number; beat: DuelBeat }> = [
   { at: 2500, beat: "compare" },
   { at: 2960, beat: "impact" },
   { at: 3380, beat: "result" },
-  { at: 4100, beat: "settle" }
+  { at: 4650, beat: "settle" }
 ];
-export const DUEL_FINISH_MS = 4520;
+export const DUEL_FINISH_MS = 5190;
 
 /** The values appear in sequence; both remain visible for the quiet comparison beat. */
 export function powerIsRevealed(beat: DuelBeat, side: "player" | "opponent"): boolean {

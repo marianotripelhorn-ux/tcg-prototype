@@ -1,50 +1,39 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, type CSSProperties } from "react";
 import type { DuelSummary } from "../engine/types";
 
-/** The engine owns finalPower and outcome. Text and ribbon share one surface. */
-export function DuelResultStinger({duel,onComplete}:{
+export function ceremonyArt(image?:string):CSSProperties {
+  return { "--dl-ceremony-art":image?'url("'+image+'")':"none" } as CSSProperties;
+}
+
+/** The engine supplies both final Power values and the outcome. */
+export function DuelResultStinger({duel,onComplete,bannerImage}:{
   duel:DuelSummary;
   onComplete?:()=>void;
+  bannerImage?:string;
 }) {
-  const ribbon=useRef<HTMLDivElement>(null);
-  useLayoutEffect(()=>{
-    const node=ribbon.current;
-    const root=node?.closest(".app-shell.board-redesign-v1");
-    const score=root?.querySelector(".hybrid-duel-tally, .hybrid-phone-score");
-    const stage=node?.offsetParent;
-    if(!node||!score||!stage||duel.outcome==="draw")return;
-    const stageRect=stage.getBoundingClientRect();
-    const target=score.getBoundingClientRect();
-    node.style.setProperty("--dl-score-x",`${target.left+target.width/2-stageRect.left-node.offsetLeft}px`);
-    const fieldTop=root?.querySelector(".arena-main")?.getBoundingClientRect().top??stageRect.top;
-    // On phone the score is above the arena's stacking context. Carry the
-    // ribbon to the visible edge below it before the real digits respond.
-    const targetY=Math.max(target.top+target.height/2,fieldTop+18);
-    node.style.setProperty("--dl-score-y",`${targetY-stageRect.top-node.offsetTop}px`);
-  },[duel]);
   const playerPower=duel.playerPlay.finalPower??duel.playerPlay.card.power;
   const opponentPower=duel.opponentPlay.finalPower??duel.opponentPlay.card.power;
   const result=duel.outcome==="player"?"VICTORIA":duel.outcome==="opponent"?"DERROTA":"EMPATE";
-  return <div className="dl-duel-stinger" ref={ribbon} role="status" aria-live="polite"
+  return <div className="dl-duel-stinger dl-ceremony-banner" style={ceremonyArt(bannerImage)}
+    role="status" aria-live="polite"
     onAnimationEnd={event=>{
-      if(event.target===event.currentTarget && event.animationName==="dl-duel-notched-ribbon")onComplete?.();
+      if(event.target===event.currentTarget&&event.animationName==="dl-duel-banner")onComplete?.();
     }}
     data-player-power={playerPower} data-opponent-power={opponentPower}
-    data-outcome={duel.outcome} aria-label={`Poder final: vos ${playerPower}; rival ${opponentPower}. ${result}`}>
+    data-outcome={duel.outcome} aria-label={"Poder final: vos "+playerPower+"; rival "+opponentPower+". "+result}>
+    <span className="dl-ceremony-kicker">DUELO {duel.turn}</span>
+    <strong className="dl-duel-stinger-result">{result}</strong>
+    <div className="dl-ceremony-rule" aria-hidden="true"/>
     <div className="dl-duel-stinger-contents">
       <span className="dl-duel-stinger-power"><small>TU PODER</small><strong>{playerPower}</strong></span>
-      <strong className="dl-duel-stinger-result">{result}</strong>
       <span className="dl-duel-stinger-power"><small>PODER RIVAL</small><strong>{opponentPower}</strong></span>
     </div>
   </div>;
 }
 
-/** A single matte curved surface and its round number animate as ONE unit.
- * onCovered changes only what is rendered; the already-committed engine state
- * was established before the wipe began. No rule is recalculated here.
- */
+/** Swap the presented state only after the stationary backdrop is opaque. */
 export function NewRoundStinger({
-  round,sequenceId,reducedMotion,covered,onCovered,onComplete
+  round,sequenceId,reducedMotion,covered,onCovered,onComplete,bannerImage
 }:{
   round:number;
   sequenceId:number;
@@ -52,73 +41,78 @@ export function NewRoundStinger({
   covered:boolean;
   onCovered:()=>void;
   onComplete:()=>void;
+  bannerImage?:string;
 }){
-  const ink=useRef<HTMLDivElement>(null);
-  const entry=useRef<Animation|null>(null);
+  const backdrop=useRef<HTMLDivElement>(null);
+  const banner=useRef<HTMLDivElement>(null);
+  const entries=useRef<Animation[]>([]);
   const latest=useRef({onCovered,onComplete});
   latest.current={onCovered,onComplete};
 
-  // Only a real completed compositor animation can cover the old board.
-  // Unlike a fixed timer, this cannot swap the scene prematurely when
-  // the browser drops/defers frames on a slower desktop or phone.
   useLayoutEffect(()=>{
-    const node=ink.current;
-    if(!node)return;
+    const surface=backdrop.current;
+    const node=banner.current;
+    if(!surface||!node)return;
     if(reducedMotion){
       const timer=window.setTimeout(()=>latest.current.onCovered(),0);
       return ()=>window.clearTimeout(timer);
     }
     let cancelled=false;
-    const cover=node.animate([
-      {transform:"translate3d(-125%,0,0)"},
-      {transform:"translate3d(0,0,0)"}
-    ],{duration:224,easing:"cubic-bezier(.20,.74,.26,1)",fill:"forwards"});
-    entry.current=cover;
-    void cover.finished.then(()=>{
-      if(!cancelled)latest.current.onCovered();
-    }).catch(()=>{});
+    const timing={duration:250,easing:"cubic-bezier(.2,.74,.26,1)",fill:"forwards"} as const;
+    const cover=[
+      surface.animate([{opacity:0},{opacity:1}],timing),
+      node.animate([
+        {transform:"translate3d(0,-28px,0)",opacity:0},
+        {transform:"translate3d(0,0,0)",opacity:1}
+      ],timing)
+    ];
+    entries.current=cover;
+    void Promise.allSettled(cover.map(animation=>animation.finished)).then(results=>{
+      if(!cancelled&&results.every(result=>result.status==="fulfilled"))latest.current.onCovered();
+    });
     return ()=>{
-      cancelled=true;cover.cancel();entry.current=null;
+      cancelled=true;
+      cover.forEach(animation=>animation.cancel());
+      entries.current=[];
     };
   },[sequenceId,reducedMotion]);
 
-  // React has now committed the engine's already-resolved next board and
-  // hand underneath the fully covered ink. Keep a short visible hold on
-  // RONDA N; then the very same graphic and text continue off the right.
   useLayoutEffect(()=>{
-    if(!covered)return;
-    const node=ink.current;
-    if(!node)return;
-    if(reducedMotion){
-      const timer=window.setTimeout(()=>latest.current.onComplete(),60);
-      return ()=>window.clearTimeout(timer);
-    }
+    const surface=backdrop.current;
+    const node=banner.current;
+    if(!covered||!surface||!node)return;
     let cancelled=false;
-    let exit:Animation|null=null;
+    const exits:Animation[]=[];
     const timer=window.setTimeout(()=>{
       if(cancelled)return;
-      // Preserve the fully covered geometry before cancelling entry fill.
+      if(reducedMotion){latest.current.onComplete();return;}
+      surface.style.opacity="1";
+      node.style.opacity="1";
       node.style.transform="translate3d(0,0,0)";
-      entry.current?.cancel();
-      entry.current=null;
-      exit=node.animate([
-        {transform:"translate3d(0,0,0)"},
-        {transform:"translate3d(120%,0,0)"}
-      ],{duration:384,easing:"cubic-bezier(.42,.10,.58,.94)",fill:"forwards"});
-      void exit.finished.then(()=>{
+      entries.current.forEach(animation=>animation.cancel());
+      const timing={duration:240,easing:"cubic-bezier(.32,.03,.61,1)",fill:"forwards"} as const;
+      exits.push(surface.animate([{opacity:1},{opacity:0}],timing));
+      exits.push(node.animate([
+        {transform:"translate3d(0,0,0)",opacity:1},
+        {transform:"translate3d(0,-20px,0)",opacity:0}
+      ],timing));
+      void Promise.allSettled(exits.map(animation=>animation.finished)).then(()=>{
         if(!cancelled)latest.current.onComplete();
-      }).catch(()=>{});
-    },184);
+      });
+    },850);
     return ()=>{
-      cancelled=true;window.clearTimeout(timer);exit?.cancel();
+      cancelled=true;
+      window.clearTimeout(timer);
+      exits.forEach(animation=>animation.cancel());
     };
   },[covered,sequenceId,reducedMotion]);
 
-  return <div className={"dl-new-round-stage"+(reducedMotion?" is-reduced":"")}
+  return <div className={"dl-new-round-stage"+(reducedMotion?" is-reduced":"")} ref={backdrop}
     data-wipe-stage={covered?"reveal":"cover"}
-    role="status" aria-live="polite" aria-label={`Comienza ronda ${round}`}>
-    <div className="dl-new-round-ink" ref={ink}>
+    role="status" aria-live="polite" aria-label={"Comienza ronda "+round}>
+    <div className="dl-new-round-ink dl-ceremony-banner" ref={banner} style={ceremonyArt(bannerImage)}>
       <span className="dl-new-round-number">RONDA {round}</span>
+      <div className="dl-ceremony-rule" aria-hidden="true"/>
     </div>
   </div>;
 }

@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import type { GameState, RoundSummary, Side } from "../engine/types";
 import type { Position } from "../types";
 import type { BoardMotionSequence } from "./motion";
+import "./round-receipt-banner.css";
 
 /**
  * Round captions are drawn from the engine's persisted RoundSummary,
@@ -27,24 +28,35 @@ interface TimedProps {
   onComplete: () => void;
 }
 
-export function RoundTransition({sequenceId,reducedMotion,onComplete,summary}:TimedProps & {
+export function RoundTransition({sequenceId,reducedMotion,onComplete,summary,bannerImage}:TimedProps & {
   summary: RoundSummary | null;
+  bannerImage?: string;
 }) {
   const current=useRef(onComplete);
   current.current=onComplete;
+  const completedSequence=useRef<number|null>(null);
+  function finish(){
+    if(completedSequence.current===sequenceId)return;
+    completedSequence.current=sequenceId;
+    current.current();
+  }
   useEffect(()=>{
-    const timer=window.setTimeout(()=>current.current(),reducedMotion?240:1450);
+    const timer=window.setTimeout(finish,reducedMotion?540:1680);
     return ()=>window.clearTimeout(timer);
   },[sequenceId,reducedMotion]);
   const reason=summary?.reason==="player_no_quiero"?"NO QUIERO":
     summary?.reason==="opponent_no_quiero"?"EL RIVAL DIJO NO QUIERO":null;
   const outcome=summary?.score.player===summary?.score.opponent?"EMPATE":
     (summary?.score.player??0)>(summary?.score.opponent??0)?"GANASTE LA RONDA":"EL RIVAL GANÓ LA RONDA";
-  return <div className="board-round-transition" role="status" aria-live="polite">
-    <div className="board-round-ceremony">
+  const art=bannerImage ? { "--dl-ceremony-art": `url("${bannerImage}")` } as CSSProperties : undefined;
+  return <div className="board-round-receipt-stage" role="status">
+    <div key={sequenceId} className="board-round-ceremony dl-ceremony-banner" style={art}
+      onAnimationEnd={event=>{
+        if(event.target===event.currentTarget && event.animationName==="dl-round-receipt-reveal")finish();
+      }}>
       <span className="board-round-kicker">{summary?"RONDA "+summary.round+" FINALIZADA":"RONDA FINALIZADA"}</span>
       {summary&&<strong className="board-round-score" aria-label={`Resultado de ronda: vos ${summary.score.player}, rival ${summary.score.opponent}`}>
-        <span>{summary.score.player}</span><i>—</i><span>{summary.score.opponent}</span>
+        <span>{summary.score.player}</span><i aria-hidden="true">—</i><span>{summary.score.opponent}</span>
       </strong>}
       <span className="board-round-outcome">{summary?outcome:"PREPARANDO ARCHIVOS"}</span>
       {reason&&<span className="board-round-reason">{reason}</span>}

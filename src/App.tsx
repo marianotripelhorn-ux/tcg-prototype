@@ -340,7 +340,8 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,be
       className={"duel-showcase-overlay duel-choreo duel-beat-"+beat+(outcome?" is-board-outcome":"")}
       role="dialog" aria-modal="true" aria-label="Resolución de Poder de las cartas">
       <div className="duel-focus-screen" aria-hidden="true"/>
-      {outcome&&beat==="result"&&<DuelResultStinger duel={duel} onComplete={onAdvance}/>}
+      {outcome&&beat==="result"&&<DuelResultStinger duel={duel} onComplete={onAdvance}
+        bannerImage={after?championBackgroundUrl(after.player.champion.faction):undefined}/>}
       {outcome&&beat==="settle"&&<span className="arena-visually-hidden" role="status">
         {duel.outcome==="player"?"VICTORIA":duel.outcome==="opponent"?"DERROTA":"EMPATE"}
       </span>}
@@ -760,10 +761,10 @@ export default function App() {
     if(boardRedesign){
       setDuelBeat("result");
       if(isReducedMotion()){
-        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,550));
+        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,1050));
       }else{
-        duelTimelineTimers.current.push(window.setTimeout(()=>setDuelBeat("settle"),890));
-        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,1430));
+        duelTimelineTimers.current.push(window.setTimeout(()=>setDuelBeat("settle"),1270));
+        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,1810));
       }
     }else{
       previewTimer.current=window.setTimeout(finishDuelPresentation,isReducedMotion()?180:1400);
@@ -942,7 +943,7 @@ export default function App() {
           setDuelBeat("result");
           setDuelStep("result");
         },90));
-        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,940));
+        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,1140));
       }else{
         playDuelCue("rise",audioEnabledRef.current);
         DUEL_BEATS.slice(1).forEach(({at,beat})=>{
@@ -1351,6 +1352,7 @@ export default function App() {
         {boardRedesign && boardMotion?.phase==="round" && <RoundTransition
           sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
           summary={completedRound}
+          bannerImage={championBackgroundUrl(game.player.champion.faction)}
           onComplete={()=>{
             const current=boardMotionRef.current;
             if(current?.id===boardMotion.id&&current.phase==="round")
@@ -1637,11 +1639,10 @@ export default function App() {
         />}
 
           </div>
-          {/* The stinger spans the entire ivory playfield INCLUDING the hand,
-                      Archives, score and Champion background. It must not be clipped
-                      to the narrower central lane stage. */}
+          {/* The stationary backdrop conceals the board swap behind the centered banner. */}
                   {boardRedesign && (boardMotion?.phase==="round-wipe"||boardMotion?.phase==="round-wipe-reveal") && <NewRoundStinger
                     sequenceId={boardMotion.id} round={game.round} reducedMotion={isReducedMotion()}
+                    bannerImage={championBackgroundUrl(game.player.champion.faction)}
                     covered={boardMotion.phase==="round-wipe-reveal"}
                     onCovered={()=>{
                       const current=boardMotionRef.current;

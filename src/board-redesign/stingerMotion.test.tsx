@@ -25,7 +25,7 @@ const motion=(phase:BoardMotionSequence["phase"]):BoardMotionSequence=>({
 describe("grouped motion stays tied to the actual engine result",()=>{
   it("puts both settled Poder values and outcome in one notched ribbon container",()=>{
     const html=renderToStaticMarkup(<DuelResultStinger duel={duel}/>);
-    expect(html).toContain('class="dl-duel-stinger"');
+    expect(html).toContain('class="dl-duel-stinger dl-ceremony-banner"');
     expect(html).toContain('data-player-power="13"');
     expect(html).toContain('data-opponent-power="9"');
     expect(html).toContain('data-outcome="player"');
@@ -38,7 +38,7 @@ describe("grouped motion stays tied to the actual engine result",()=>{
     const html=renderToStaticMarkup(<NewRoundStinger round={3} sequenceId={5}
       reducedMotion={false} covered={false} onCovered={()=>{}} onComplete={()=>{}}/>);
     expect(html).toContain("RONDA 3");
-    expect(html).toContain('class="dl-new-round-ink"');
+    expect(html).toContain('class="dl-new-round-ink dl-ceremony-banner"');
     expect((html.match(/dl-new-round-number/g)||[]).length).toBe(1);
   });
   it("holds the old hand and played board until the cover callback, then uses the new state",()=>{
