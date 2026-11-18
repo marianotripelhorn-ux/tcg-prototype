@@ -43,7 +43,7 @@ async function instrument(page){
   await page.evaluate(()=>{
     const root=document.querySelector("main.app-shell.board-redesign-v1");
     window.__motionCapture={
-      phases:[],flights:[],ribbons:[],duelValues:{},wipe:null,swap:null,errors:[]
+      phases:[],flights:[],ribbons:[],duelValues:{},wipe:null,swap:null,deal:null,archiveCounts:[],errors:[]
     };
     let lastPhase=null;
     let currentWipe=null;
@@ -71,6 +71,18 @@ async function instrument(page){
         }
       }
 
+      if(phase==="archive"){
+        const values=Array.from(root.querySelectorAll(".board-slot .archive-count"),node=>node.textContent.trim());
+        if(JSON.stringify(values)!==JSON.stringify(m.archiveCounts.at(-1)))m.archiveCounts.push(values);
+      }
+      if(phase==="deal"&&!m.deal){
+        const cards=Array.from(root.querySelectorAll(".hand-zone .hand-card > .game-card"));
+        m.deal=cards.map(card=>{
+          const effect=card.getAnimations().find(a=>a.effect?.getTiming().duration===240)?.effect;
+          return {duration:effect?.getTiming().duration,delay:effect?.getTiming().delay,
+            upright:effect?.getKeyframes().every(frame=>!frame.transform?.includes("rotate"))??false};
+        });
+      }
       const beat=root.querySelector(".duel-choreo")?.dataset.duelBeat;
       if(["approach","result","settle"].includes(beat)&&!m.duelValues[beat]){
         const score=root.querySelector(".hybrid-duel-tally, .hybrid-phone-score");
@@ -178,7 +190,7 @@ async function instrument(page){
     }
     read();
     const watch=new MutationObserver(read);
-    watch.observe(root,{subtree:true,childList:true,attributes:true,attributeFilter:["data-board-phase","data-duel-beat"]});
+    watch.observe(root,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:["data-board-phase","data-duel-beat"]});
   });
 }
 
@@ -306,7 +318,7 @@ async function runMatch(label,viewport,isMobile){
       window.__motionCapture.phases.indexOf("round-wipe-reveal") <
       window.__motionCapture.phases.lastIndexOf("idle"),undefined,{timeout:10000});
     data=await page.evaluate(()=>window.__motionCapture);
-    for(const phase of ["flight","duel","round","archive","round-wipe","round-wipe-reveal","idle"])
+    for(const phase of ["flight","duel","round","archive","round-wipe","round-wipe-reveal","deal","idle"])
       assert.ok(data.phases.includes(phase),label+": missing real match phase "+phase);
     const wipe=data.wipe,swap=data.swap;
     console.log("MOTION DIAGNOSTIC "+label+" "+JSON.stringify({wipe,swap}));
@@ -323,6 +335,10 @@ async function runMatch(label,viewport,isMobile){
       label+": same graphic must reach FULL cover before the real board/hand swap: "+JSON.stringify(swap));
     assert.ok(swap.handCount>=1&&swap.boardCardCount===0,
       label+": the actual new hand and cleared lanes must exist beneath the full-cover veil");
+    assert.ok(data.archiveCounts.length>1,label+": Archive counters should tick during actual card arrivals");
+    assert.ok(data.deal?.length>=1&&data.deal.every((card,i)=>
+      card.upright&&card.duration>=200&&card.duration<=320&&(i===0||card.delay>data.deal[i-1].delay)
+    ),label+": the engine hand needs upright, staggered card flights");
     assert.ok(await page.locator(".hand-zone .hand-card").count()>=1,
       label+": playable real new hand must be revealed");
     assert.ok(errors.length===0,label+": JavaScript runtime errors: "+errors.join(" | "));

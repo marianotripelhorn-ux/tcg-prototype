@@ -206,16 +206,12 @@ function DuelPowerCard({played,side,beat,outcome}:{
       <span className="duel-showcase-side">{side==="player"?"TU CARTA":"RIVAL"}</span>
       <div className="duel-showcase-face">
         <CardFace card={played.card}/>
-        {delta!==0 && <div className="board-gs-power-fx" aria-hidden="true">
-          <span className="board-gs-power-wave"/>
-          <span className="board-gs-power-circle outer"/>
-          <span className="board-gs-power-circle middle"/>
-          <span className="board-gs-power-circle inner"/>
+        {resolved&&delta!==0&&<div className={"dl-live-power-cue"+(delta<0?" is-loss":"")} aria-hidden="true">
+          <i/><i/><span>{formatPowerDelta(played)}</span>
         </div>}
         <div className={"duel-showcase-power"+(delta<0?" is-loss":delta>0?" is-gain":" is-neutral")} aria-live="off">
           <small>PODER</small>
           <strong key={resolved?"final":"printed"}>{resolved?final:printed}</strong>
-          {resolved&&delta!==0&&<span className="duel-showcase-delta">{formatPowerDelta(played)}</span>}
         </div>
       </div>
 
@@ -271,11 +267,11 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,be
       const sx=Math.min(1.5,start.width/end.width);
       const sy=Math.min(1.5,start.height/end.height);
       animated.push(target.animate([
-        {transform:`translate3d(${dx}px,${dy}px,0) scale(${sx},${sy}) rotate(${index===0?-2:2}deg)`,
+        {transform:`translate3d(${dx}px,${dy}px,0) scale(${sx},${sy})`,
           opacity:.95,filter:"drop-shadow(1px 4px 4px #0007)",offset:0},
-        {transform:`translate3d(${dx*.1}px,${dy*.15-13}px,0) scale(1.06) rotate(${index===0?1:-1}deg)`,
+        {transform:`translate3d(${dx*.1}px,${dy*.15-13}px,0) scale(1.06)`,
           opacity:1,filter:"drop-shadow(4px 24px 22px #0008)",offset:.76},
-        {transform:"translate3d(0,0,0) scale(1) rotate(0deg)",
+        {transform:"translate3d(0,0,0) scale(1)",
           opacity:1,filter:"drop-shadow(3px 14px 13px #0009)",offset:1}
       ],{duration:1180,delay:index*120,easing:"cubic-bezier(.2,.75,.26,1)",fill:"both"}));
     });
@@ -659,6 +655,7 @@ export default function App() {
   const [duelPreview,setDuelPreview]=useState<DuelSummary|null>(null);
   const [boardMotion,setBoardMotion]=useState<BoardMotionSequence|null>(null);
   const boardMotionRef=useRef<BoardMotionSequence|null>(null);
+  const [archiveArrivals,setArchiveArrivals]=useState<Record<string,number>>({});
   const nextMotionId=useRef(0);
   const [quieroChoice,setQuieroChoice]=useState<boolean|null>(null);
   const quieroChoiceTimer=useRef<number|null>(null);
@@ -673,6 +670,7 @@ export default function App() {
   }
   useEffect(()=>()=>{if(quieroChoiceTimer.current!==null)window.clearTimeout(quieroChoiceTimer.current);},[]);
   function setMotion(next:BoardMotionSequence|null){
+    if(next?.id!==boardMotionRef.current?.id)setArchiveArrivals({});
     boardMotionRef.current=next;
     setBoardMotion(next);
   }
@@ -1026,20 +1024,22 @@ export default function App() {
     quieroPending.current=false;
   }
 
+  function finishQuieroChoice(wants:boolean) {
+    if(!quieroPending.current)return;
+    if(quieroChoiceTimer.current!==null)window.clearTimeout(quieroChoiceTimer.current);
+    quieroChoiceTimer.current=null;
+    commitQuiero(wants);
+  }
+
   function chooseQuiero(wants:boolean) {
     if(!game || game.phase!=="awaiting_quiero" || boardMotionRef.current || quieroPending.current)return;
     if(!boardRedesign || !shouldOfferQuiero(game)){
       commitQuiero(wants);
       return;
     }
-    // Give the selected answer a short, unboxed response before exposing
-    // the actual resulting turn or the genuine end-of-round choreography.
     quieroPending.current=true;
     setQuieroChoice(wants);
-    quieroChoiceTimer.current=window.setTimeout(()=>{
-      quieroChoiceTimer.current=null;
-      commitQuiero(wants);
-    },isReducedMotion()?160:360);
+    quieroChoiceTimer.current=window.setTimeout(()=>finishQuieroChoice(wants),isReducedMotion()?160:420);
   }
 
   function inspectPlay(played:EnginePlay) {
@@ -1196,6 +1196,12 @@ export default function App() {
   const focusOpponent=(boardRedesign&&showingPreviousRound?boardMotion?.duel?.opponentPlay:null) ?? duelPreview?.opponentPlay ?? pendingOpponent;
   const playerBoard=boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.player:game.player;
   const opponentBoard=boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.opponent:game.opponent;
+  function visibleArchiveCount(side:"player"|"opponent",position:Position) {
+    const count=(side==="player"?playerBoard:opponentBoard).archives[position].length;
+    if(!game||!boardMotion||(boardMotion.phase!=="archive"&&boardMotion.phase!=="round-wipe"))return count;
+    const arrived=archiveArrivals[side+":"+position]??0;
+    return count+Math.min(arrived,Math.max(0,archiveCountChange(boardMotion.before,game,side,position)));
+  }
   const playerBoardPlays=boardRedesign?visibleRoundPlays(boardMotion,"player"):null;
   const opponentBoardPlays=boardRedesign?visibleRoundPlays(boardMotion,"opponent"):null;
   const latestEvent=game.events.at(-1)?.text ?? "";
@@ -1316,8 +1322,8 @@ export default function App() {
             {phoneBoard && <HybridPhoneChampion side="opponent" state={game.opponent} userLabel="RIVAL"
               life={displayed?.opponentLife??game.opponent.life}
               healed={displayed?.opponentHealed??game.opponent.healedLife}/>}
-            {showQuieroChoice&&!phoneBoard&&<QuieroChoiceStage
-              score={game.duelScore} selected={quieroChoice} onChoose={chooseQuiero}
+            {showQuieroChoice&&<QuieroChoiceStage
+              score={game.duelScore} selected={quieroChoice} onChoose={chooseQuiero} onCommitted={finishQuieroChoice}
               bannerImage={championBackgroundUrl(game.player.champion.faction)}/>}
             {showRivalQuiero&&boardMotion&&<RivalQuieroStage
               reducedMotion={isReducedMotion()}
@@ -1380,7 +1386,7 @@ export default function App() {
                 cards={(opponentBoardPlays??game.opponent.roundPlays).filter(play=>play.position===position)}
                 pendingCard={pendingOpponent?.position===position ? pendingOpponent : null}
                 focusPlay={focusOpponent?.position===position ? focusOpponent : null}
-                archive={opponentBoard.archives[position].length}
+                archive={visibleArchiveCount("opponent",position)}
                 archiveUpdated={boardMotion?.phase==="archive-reveal" &&
                   archiveCountChange(boardMotion.before,game,"opponent",position)!==0}
                 archiveCards={opponentBoard.archives[position]}
@@ -1408,7 +1414,7 @@ export default function App() {
                 position={position}
                 cards={(playerBoardPlays??game.player.roundPlays).filter(play=>play.position===position)}
                 focusPlay={focusPlayer?.position===position ? focusPlayer : null}
-                archive={playerBoard.archives[position].length}
+                archive={visibleArchiveCount("player",position)}
                 archiveUpdated={boardMotion?.phase==="archive-reveal" &&
                   archiveCountChange(boardMotion.before,game,"player",position)!==0}
                 archiveCards={playerBoard.archives[position]}
@@ -1446,6 +1452,12 @@ export default function App() {
         </CardFlight>}
         {boardRedesign && boardMotion?.phase==="archive" && <ArchiveFlight
           sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
+          onArrival={(side,position)=>{
+            const current=boardMotionRef.current;
+            if(current?.id!==boardMotion.id||current.phase!=="archive")return;
+            const key=side+":"+position;
+            setArchiveArrivals(previous=>({...previous,[key]:(previous[key]??0)+1}));
+          }}
           onComplete={()=>{
             const current=boardMotionRef.current;
             if(current?.id===boardMotion.id&&current.phase==="archive"){
@@ -1457,6 +1469,7 @@ export default function App() {
           }}/>}
         {boardRedesign && boardMotion?.phase==="deal" && <DealMotion
           sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
+          onLand={()=>playDuelCue("land",audioEnabledRef.current)}
           onComplete={()=>{
             if(boardMotionRef.current?.id===boardMotion.id)setMotion(null);
           }}/>}
@@ -1487,11 +1500,6 @@ export default function App() {
           aria-label="Tu mano"
           style={{backgroundImage:`linear-gradient(0deg,#111713e8,#1d241bd9),url("${championBackgroundUrl(game.player.champion.faction)}")`}}
         >
-          {phoneBoard&&showQuieroChoice && <div className="hybrid-phone-quiero" role="group" aria-label="Decisión de tercer duelo">
-            <p>¿Jugás el tercer duelo?</p>
-            <button type="button" className="secondary-button" disabled={quieroChoice!==null} onClick={()=>chooseQuiero(false)}>NO QUIERO</button>
-            <button type="button" className="primary-button" disabled={quieroChoice!==null} onClick={()=>chooseQuiero(true)}>QUIERO</button>
-          </div>}
           <button type="button" className="arena-hand-toggle" aria-expanded={handExpanded}
             aria-label={handExpanded?"Contraer mano":"Desplegar mano"}
             onClick={()=>{setHandExpanded(!handExpanded);setHoveredHandIndex(null);}}>
@@ -1631,7 +1639,7 @@ export default function App() {
                     onComplete={()=>{
                       const current=boardMotionRef.current;
                       if(current?.id===boardMotion.id&&current.phase==="round-wipe-reveal")
-                        setMotion(null);
+                        setMotion({...current,phase:"deal"});
                     }}/>}
           
         </div>

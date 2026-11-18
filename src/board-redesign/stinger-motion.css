@@ -268,3 +268,89 @@
     display:none!important;
   }
 }
+
+/* Local Power cues stay attached to the printed upper-left corner. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-face {
+  overflow:visible!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-face::after {
+  display:none!important;
+}
+.dl-live-power-cue {
+  --dl-cue-color:#efd399;
+  position:absolute;
+  z-index:22;
+  left:14%;
+  bottom:calc(100% + 2px);
+  translate:-50% 0;
+  width:clamp(21px,3vw,39px);
+  aspect-ratio:1;
+  color:var(--dl-cue-color);
+  pointer-events:none;
+}
+.dl-live-power-cue.is-loss {--dl-cue-color:#e0e2e4}
+.dl-live-power-cue span {
+  position:absolute;
+  inset:50% auto auto 50%;
+  translate:-50% -50%;
+  white-space:nowrap;
+  font:400 clamp(18px,2.4vw,36px)/1 var(--board-display,"Archivo Black",Arial,sans-serif);
+  text-shadow:0 2px 6px #101010;
+  animation:dl-local-power-value .48s cubic-bezier(.2,.76,.24,1) both;
+}
+.dl-live-power-cue i {
+  position:absolute;
+  inset:0;
+  border:1px solid currentColor;
+  border-radius:50%;
+  animation:dl-local-power-ring .52s ease-out both;
+}
+.dl-live-power-cue i:nth-child(2) {animation-delay:65ms}
+.dl-live-power-cue.is-loss i {animation-name:dl-local-power-ring-in}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-impact .is-duel-loser .duel-showcase-face {
+  animation-name:dl-upright-card-impact;
+}
+@keyframes dl-upright-card-impact {
+  0%,100%{transform:translateY(0)}
+  38%{transform:translateY(5px) scale(.985)}
+}
+@keyframes dl-local-power-value {
+  0%{opacity:0;transform:scale(.76)}
+  36%{opacity:1;transform:scale(1.09)}
+  100%{opacity:1;transform:scale(1)}
+}
+@keyframes dl-local-power-ring {
+  0%{opacity:.8;transform:scale(.6)}
+  100%{opacity:0;transform:scale(2.1)}
+}
+@keyframes dl-local-power-ring-in {
+  0%{opacity:.64;transform:scale(1.65)}
+  100%{opacity:0;transform:scale(.58)}
+}
+
+/* The next hand is mounted during full cover, then enters via DealMotion. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="round-wipe-reveal"] .hand-zone .hand-card {
+  visibility:hidden;
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .dl-live-power-cue span {animation:none}
+  .dl-live-power-cue i {display:none}
+}
+
+/* Only a crown whose real Life changed emits this settling outline. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-life-unit:is(.is-damaged,.is-healed) .board-gs-crest-anchor::after {
+  content:"";
+  position:absolute;
+  inset:8%;
+  border:1px solid #e5c88b;
+  border-radius:50%;
+  pointer-events:none;
+  animation:dl-local-power-ring .30s ease-out both;
+}
+@media (prefers-reduced-motion:reduce) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-life-unit:is(.is-damaged,.is-healed) .board-gs-crest-anchor::after {
+    display:none;
+  }
+}

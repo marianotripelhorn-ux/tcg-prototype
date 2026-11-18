@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import type { AnimationEvent } from "react";
 import type { GameState } from "../engine/types";
 
 /**
@@ -20,21 +21,28 @@ export function rivalAcceptedQuiero(before:GameState,after:GameState):boolean {
       event.kind==="decision" && event.text==="IA: Quiero.");
 }
 
+function didPennantRetract(event:AnimationEvent<HTMLDivElement>):boolean {
+  return event.target===event.currentTarget && event.animationName==="dl-quiero-content-retract";
+}
+
 export function QuieroChoiceStage({
-  score,selected,onChoose,bannerImage
+  score,selected,onChoose,onCommitted,bannerImage
 }:{
   score:{player:number;opponent:number};
   selected:boolean|null;
   bannerImage:string;
   onChoose:(wants:boolean)=>void;
+  onCommitted:(wants:boolean)=>void;
 }){
   const locked=selected!==null;
   const firstChoice=useRef<HTMLButtonElement>(null);
-  useEffect(()=>{firstChoice.current?.focus();},[]);
+  useEffect(()=>{firstChoice.current?.focus({preventScroll:true});},[]);
   return <section className={"board-quiero-stage"+(locked?" is-committing":"")}
     role="dialog" aria-modal="true" aria-labelledby="board-quiero-title"
     aria-describedby="board-quiero-explainer">
-    <div className="board-quiero-content">
+    <div className="board-quiero-content" onAnimationEnd={event=>{
+      if(selected!==null && didPennantRetract(event))onCommitted(selected);
+    }}>
       <span className="board-quiero-kicker">DECISIÓN DE RONDA</span>
       <div className="board-quiero-score" aria-label={`Marcador: vos ${score.player}; rival ${score.opponent}`}>
         <span>{score.player}</span><i>—</i><span>{score.opponent}</span>
@@ -54,7 +62,7 @@ export function QuieroChoiceStage({
           <button type="button" className={"board-quiero-no"+(selected===false?" is-picked":"")}
             disabled={locked} onClick={()=>onChoose(false)}>NO QUIERO</button>
         </div>
-        {locked&&<span className="board-quiero-selected" role="status" aria-live="polite">
+        {locked&&<span className="arena-visually-hidden" role="status">
           {selected?"QUIERO":"NO QUIERO"}
         </span>}
       </div>
@@ -69,13 +77,21 @@ export function RivalQuieroStage({onComplete,reducedMotion,bannerImage}:{
   // only acknowledges it before exposing the third-duel controls.
   const current=useRef(onComplete);
   current.current=onComplete;
+  const completed=useRef(false);
+  function complete(){
+    if(completed.current)return;
+    completed.current=true;
+    current.current();
+  }
   useEffect(()=>{
-    const timer=window.setTimeout(()=>current.current(),reducedMotion?260:840);
+    const timer=window.setTimeout(complete,reducedMotion?260:960);
     return ()=>window.clearTimeout(timer);
   },[reducedMotion]);
   return <div className={"board-quiero-stage board-quiero-rival"+(reducedMotion?" is-reduced":"")}
     role="status" aria-live="polite" aria-label="El rival quiere disputar el tercer duelo">
-    <div className="board-quiero-content">
+    <div className="board-quiero-content" onAnimationEnd={event=>{
+      if(didPennantRetract(event))complete();
+    }}>
       <span className="board-quiero-kicker">EL RIVAL DECIDE</span>
       <div className="board-quiero-banner" style={{
         backgroundImage:`linear-gradient(180deg,#080a08a8,#11180dbf),url("${bannerImage}")`
@@ -84,7 +100,7 @@ export function RivalQuieroStage({onComplete,reducedMotion,bannerImage}:{
         <strong className="board-quiero-rival-word">QUIERO</strong>
         <span className="board-quiero-banner-rule" aria-hidden="true"/>
         <span className="board-quiero-description">HABRÁ TERCER DUELO</span>
-        <button className="board-quiero-rival-continue" type="button" onClick={onComplete}
+        <button className="board-quiero-rival-continue" type="button" onClick={complete}
           aria-label="Continuar al tercer duelo">CONTINUAR</button>
       </div>
     </div>

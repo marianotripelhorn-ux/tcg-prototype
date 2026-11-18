@@ -58,7 +58,8 @@
   text-align:center!important;
   color:#fffdf5;
   background:none!important;border:0!important;box-shadow:none!important;
-  animation:dl-quiero-content-enter .45s cubic-bezier(.16,.75,.28,1) both;
+  transform-origin:50% 0;
+  animation:dl-quiero-content-enter .28s cubic-bezier(.16,.75,.28,1) both;
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-kicker {
   font:850 clamp(11px,1.05vw,15px)/1.2 Arial,sans-serif;
@@ -126,21 +127,26 @@
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-choices button:disabled {
   cursor:default;
 }
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-stage.is-committing .board-quiero-title,
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-stage.is-committing .board-quiero-description,
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-stage.is-committing .board-quiero-choices {
-  opacity:0;transform:translate3d(0,6px,0);
-  transition:opacity .18s ease,transform .18s ease;
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-stage.is-committing .board-quiero-content {
+  animation:dl-quiero-content-retract .28s ease-in both;
 }
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-selected {
-  position:absolute;
-  top:calc(50% + clamp(45px,8vw,125px));
-  left:0;right:0;z-index:4;
-  color:#fffdf3;
-  font:400 clamp(24px,4vw,56px)/1 var(--board-display,Arial,sans-serif);
-  letter-spacing:.06em;
-  text-shadow:0 4px 18px #000,0 0 24px #000;
-  animation:dl-quiero-choice-affirm .32s cubic-bezier(.17,.8,.26,1) both;
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-quiero-stage.is-committing::before {
+  animation:dl-quiero-eclipse-out .28s ease-in both;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-stage.is-committing .board-quiero-choices button:not(.is-picked) {
+  opacity:.4;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-choices .is-picked {
+  outline:2px solid #fff4d7;
+  outline-offset:2px;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-rival .board-quiero-content {
+  animation:dl-quiero-content-enter .28s cubic-bezier(.16,.75,.28,1) both,
+    dl-quiero-content-retract .28s ease-in .52s forwards;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-quiero-rival::before {
+  animation:dl-quiero-eclipse-in .28s ease-out both,
+    dl-quiero-eclipse-out .28s ease-in .52s forwards;
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-rival-word {
   color:#fffdf2;
@@ -157,12 +163,17 @@
   from{opacity:0}to{opacity:1}
 }
 @keyframes dl-quiero-content-enter {
-  from{opacity:0;transform:translate3d(0,19px,0) scale(.97)}
-  to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+  0% {opacity:0;transform:translate3d(0,-48px,0) scaleY(.93)}
+  68% {opacity:1;transform:translate3d(0,4px,0) scaleY(1.013)}
+  100% {opacity:1;transform:translate3d(0,0,0) scaleY(1)}
 }
-@keyframes dl-quiero-choice-affirm {
-  from{opacity:0;transform:translate3d(0,9px,0) scale(.95)}
-  to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+@keyframes dl-quiero-content-retract {
+  0%,36% {opacity:1;transform:translate3d(0,0,0) scaleY(1)}
+  100% {opacity:0;transform:translate3d(0,-88px,0) scaleY(.92)}
+}
+@keyframes dl-quiero-eclipse-out {
+  0%,36% {opacity:1}
+  100% {opacity:0}
 }
 @media(max-width:760px){
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-quiero-stage{
@@ -194,8 +205,7 @@
 }
 @media(prefers-reduced-motion:reduce){
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-stage::before,
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-content,
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-selected {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-content {
     animation:none!important;
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-choices button{
@@ -225,7 +235,6 @@
   border:1px solid #c6a367;
   clip-path:var(--dl-quiero-pennant);
   filter:drop-shadow(0 15px 20px #0009);
-  animation:dl-quiero-banner-unfurl .43s cubic-bezier(.19,.7,.27,1) both;
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner::before {
   content:"";position:absolute;inset:4px 5px 17%;
@@ -268,9 +277,6 @@
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner .board-quiero-choices .board-quiero-no {
   color:#ede7d8;background:#151912df;
 }
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner .board-quiero-selected {
-  top:42%;font-size:clamp(24px,3.5vw,45px);
-}
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-rival .board-quiero-banner {
   min-height:clamp(240px,32dvh,315px);
 }
@@ -279,10 +285,6 @@
 }
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-rival .board-quiero-rival-continue {
   margin-top:6px;min-width:65%;
-}
-@keyframes dl-quiero-banner-unfurl {
-  0% {opacity:0;transform:translate3d(0,-11px,0) scaleY(.94)}
-  100% {opacity:1;transform:translate3d(0,0,0) scaleY(1)}
 }
 @media(max-width:760px) {
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner {
@@ -298,10 +300,5 @@
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner .board-quiero-choices button {
     min-height:35px;padding:7px 11px;
-  }
-}
-@media(prefers-reduced-motion:reduce) {
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner {
-    animation:none!important;
   }
 }
