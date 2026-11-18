@@ -92,6 +92,10 @@ async function instrument(page){
         const field=arena.getBoundingClientRect();
         sample.frames++;
         sample.offset=Math.max(sample.offset,Math.abs((box.left+box.right-field.left-field.right)/2));
+        const style=getComputedStyle(node);
+        if(Number(style.opacity)>=.99&&(style.transform==="none"||new DOMMatrix(style.transform).isIdentity)){
+          sample.lift=(field.top+field.bottom-box.top-box.bottom)/2;
+        }
         inspect();
         requestAnimationFrame(readFrame);
       };
@@ -368,6 +372,12 @@ async function runMatch(label,viewport,isMobile){
     for(const phase of ["flight","duel","round","archive","round-wipe","round-wipe-reveal","deal","idle"])
       assert.ok(data.phases.includes(phase),label+": missing real match phase "+phase);
     const {roundReceipt,roundBanner,swap}=data;
+    const expectedLift=viewport.width<=760&&viewport.height>viewport.width
+      ? Math.min(88,Math.max(24,viewport.height*.1)) : 0;
+    for(const item of [ribbon,roundReceipt,roundBanner]){
+      assert.ok(Math.abs(item?.center.lift-expectedLift)<4,
+        label+": result banner needs the correct resting height: "+JSON.stringify(item?.center));
+    }
     if(data.rivalClearance!==undefined)assert.ok(data.rivalClearance>=18,label+": rival Continue needs room above the hem");
     for(const banner of [ribbon,roundReceipt,roundBanner]){
       assert.ok(banner?.clearance>=18,label+": each result banner needs room above the hem: "+JSON.stringify(banner?.clearance));

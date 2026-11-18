@@ -87,7 +87,7 @@
   position:absolute!important;
   z-index:120;
   left:var(--dl-banner-x,50%);
-  top:var(--dl-banner-y,50%);
+  top:calc(var(--dl-banner-y,50%) - var(--dl-portrait-banner-lift,0px));
   translate:-50% -50%;
   pointer-events:none;
   animation:dl-duel-banner 1200ms both;
@@ -365,4 +365,15 @@
 }
 @media (prefers-reduced-motion:reduce) {
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-match-finale {animation:none}
+}
+
+/* Keep result banners above the lower Champion and hand on portrait phones.
+   Offsetting the resting layout also offsets the complete animation. */
+@media (max-width:760px) and (orientation:portrait) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 {
+    --dl-portrait-banner-lift:clamp(24px,10dvh,88px);
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 :is(.board-round-receipt-stage > .board-round-ceremony,.dl-new-round-ink) {
+    translate:0 calc(-1 * var(--dl-portrait-banner-lift));
+  }
 }
