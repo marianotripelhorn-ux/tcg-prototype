@@ -296,7 +296,7 @@
 }
 @media(max-height:610px) {
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner {
-    min-height:245px;padding:12px 20px 35px;gap:6px;
+    min-height:245px;padding:12px 20px 52px;gap:6px;
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner .board-quiero-choices button {
     min-height:35px;padding:7px 11px;

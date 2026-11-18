@@ -529,6 +529,12 @@ async function runFinale(){
     const continueButton=banner.getByRole("button",{name:/CONTINUAR/});
     assert.ok(await continueButton.evaluate(el=>document.activeElement===el));
     await page.screenshot({path:"/tmp/daggerlight-round-shadow-sweep-v3-finale.png"});
+    await page.setViewportSize({width:844,height:390});
+    await continueButton.scrollIntoViewIfNeeded();
+    assert.ok(await continueButton.evaluate(el=>{
+      const rect=el.getBoundingClientRect();
+      return el.contains(document.elementFromPoint(rect.left+rect.width/2,rect.bottom-3));
+    }),"The swallowtail must leave the Continue button clickable in a short viewport");
     await continueButton.click();
     await page.getByRole("group",{name:"Opciones después de la partida"}).waitFor({state:"visible"});
     assert.deepEqual(errors,[]);

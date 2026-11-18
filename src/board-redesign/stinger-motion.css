@@ -340,7 +340,7 @@
   100%{opacity:1;transform:translateY(0)}
 }
 @media (max-height:540px) {
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-match-finale {gap:6px;padding-block:14px 38px}
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-match-finale {gap:6px;padding-block:14px 64px}
 }
 @media (prefers-reduced-motion:reduce) {
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-match-finale {animation:none}
