@@ -388,6 +388,20 @@ async function runStudy(label,viewport,reducedMotion){
       assert.ok(poses.every(opacity=>opacity==="1"),"Reduced motion should show finished poses immediately");
       await page.screenshot({path:"/tmp/daggerlight-round-shadow-sweep-v3-motion-study-"+label+".png"});
     }
+    const powerLayout=await stage.locator('[data-card="rival"]').evaluate(card=>{
+      const center=node=>{
+        const box=node.getBoundingClientRect();
+        return {x:box.left+box.width/2,y:box.top+box.height/2};
+      };
+      const number=center(card.querySelector(".ms-delta"));
+      const ring=center(card.querySelector(".ms-power-gain i"));
+      const rect=card.getBoundingClientRect();
+      return {
+        centered:Math.hypot(number.x-ring.x,number.y-ring.y)<1,
+        upperLeft:number.y<rect.top&&Math.abs((number.x-rect.left)/rect.width-.14)<.015
+      };
+    });
+    assert.ok(powerLayout.centered&&powerLayout.upperLeft,label+": the Power increase and ripple must share the card's upper-left anchor");
     await page.getByRole("button",{name:"Quiero / No quiero",exact:true}).click();
     await next("decision");
     const bannerShape=await stage.locator(".ms-decision").evaluate(node=>getComputedStyle(node).clipPath);

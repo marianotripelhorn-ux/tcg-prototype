@@ -90,11 +90,13 @@ function prepareScene(stage: HTMLElement, scene: Scene, timeline: gsap.core.Time
     fly(id, { ...target, y: target.y - 42, scale: .86 }, start, .48, "power2.out");
     fly(id, target, start + .48, .36, "back.out(1.2)");
   });
-  const ripple = (anchor: string, at: number) => {
-    const rings = select(".ms-ripple i");
-    gsap.set(select(".ms-ripple"), point(anchor));
-    timeline.fromTo(rings, { scale: .48, opacity: .82 },
+  const animateRings = (selector: string, at: number) => {
+    timeline.fromTo(select(selector), { scale: .48, opacity: .82 },
       { scale: 2.25, opacity: 0, duration: .66, stagger: .09, ease: "power2.out", immediateRender: false }, at);
+  };
+  const ripple = (anchor: string, at: number) => {
+    gsap.set(select(".ms-ripple"), point(anchor));
+    animateRings(".ms-ripple i", at);
   };
   const outline = (id: CardId, at: number) => {
     timeline.fromTo(select('[data-card="' + id + '"] .ms-card-outline'), { opacity: 0 },
@@ -138,9 +140,9 @@ function prepareScene(stage: HTMLElement, scene: Scene, timeline: gsap.core.Time
       fly("hand-pick", clashPlayer, .1, .55, "power3.inOut");
       fly("rival", clashRival, .13, .55, "power3.inOut");
       outline("rival", .67);
-      ripple("rival-clash", .67);
-      timeline.fromTo(select(".ms-delta"), { opacity: 0, y: 20, scale: .7 },
-        { opacity: 1, y: 0, scale: 1, duration: .38, ease: "back.out(1.45)" }, .87);
+      animateRings(".ms-power-gain i", .87);
+      timeline.fromTo(select(".ms-delta"), { opacity: 0, scale: .72 },
+        { opacity: 1, scale: 1, duration: .38, ease: "back.out(1.45)" }, .87);
       break;
     case "life":
       gsap.set(card("hand-pick"), clashPlayer);
@@ -320,9 +322,11 @@ export default function MotionStudy() {
               finalPower={index === 3 && (step > 5 || step === 5 && stateRevealed) ? 8 : undefined}/>
           </div>
           <div className="ms-card-outline" aria-hidden="true"/>
+          {scene.id === "power" && index === 3 && <div className="ms-power-gain">
+            <i aria-hidden="true"/><i aria-hidden="true"/><strong className="ms-delta">+2</strong>
+          </div>}
         </div>
       )}
-      {scene.id === "power" && <strong className="ms-delta">+2</strong>}
       <div className="ms-event" aria-hidden="true">
         <strong>{eventTitle}</strong>
         {!!eventDetail && <span>{eventDetail}</span>}
