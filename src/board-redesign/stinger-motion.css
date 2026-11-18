@@ -31,7 +31,7 @@
   gap:clamp(8px,1.4dvh,14px);
   width:min(88vw,390px);
   box-sizing:border-box;
-  padding:clamp(20px,3vh,33px) 28px clamp(61px,8dvh,86px);
+  padding:clamp(20px,3vh,33px) 28px var(--dl-banner-hem-space);
   background:#a3895b;
   clip-path:var(--dl-quiero-pennant);
   color:#f4ead3;
@@ -145,7 +145,7 @@
   pointer-events:auto;
   isolation:isolate;
 }
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink {padding-block:clamp(27px,5dvh,52px) clamp(57px,8.5dvh,89px)}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink {padding-block-start:clamp(27px,5dvh,52px)}
 .dl-new-round-number {white-space:nowrap}
 
 @media (prefers-reduced-motion:reduce) {

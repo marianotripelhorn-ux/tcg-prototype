@@ -78,6 +78,12 @@ async function instrument(page){
     let lastPhase=null;
     let currentRoundBanner=null;
 
+    function hemClearance(panel,content){
+      if(!content)return null;
+      const box=panel.getBoundingClientRect();
+      return box.top+box.height*.75-content.getBoundingClientRect().bottom;
+    }
+
     function centeredFrames(node,inspect=()=>{}){
       const sample={frames:0,offset:0};
       const readFrame=()=>{
@@ -95,6 +101,8 @@ async function instrument(page){
 
     function read(){
       const m=window.__motionCapture;
+      const rivalContinue=root.querySelector(".board-quiero-banner .board-quiero-rival-continue");
+      if(rivalContinue)m.rivalClearance=hemClearance(rivalContinue.closest(".board-quiero-banner"),rivalContinue);
       const phase=root?.dataset.boardPhase;
       if(phase&&phase!==lastPhase){
         lastPhase=phase;
@@ -175,6 +183,7 @@ async function instrument(page){
           duration:animation?.effect?.getTiming().duration,
           motion:style.animationName,
           shape:style.clipPath,
+          clearance:hemClearance(ribbon,ribbon.querySelector(".dl-duel-stinger-contents")),
           art:ribbon.querySelector(".dl-ceremony-art")?.src,
           playerPower:ribbon.dataset.playerPower,
           opponentPower:ribbon.dataset.opponentPower,
@@ -192,6 +201,7 @@ async function instrument(page){
         m.roundReceipt={
           hold:effect&&settled.length===2?(settled[1].computedOffset-settled[0].computedOffset)*effect.getTiming().duration:0,
           shape:getComputedStyle(receipt).clipPath,
+          clearance:hemClearance(receipt,receipt.querySelector(".board-round-reason")??receipt.querySelector(".board-round-outcome")),
           art:receipt.querySelector(".dl-ceremony-art")?.src,
           title:receipt.querySelector(".board-round-kicker")?.textContent?.trim(),
           score:receipt.querySelector(".board-round-score")?.textContent?.trim(),
@@ -212,6 +222,7 @@ async function instrument(page){
           oldRound:Number(root.querySelector(".arena-top-center span b")?.textContent),
           oldBoardCount:root.querySelectorAll(".board-slot .played-card").length,
           shape:getComputedStyle(ink).clipPath,
+          clearance:hemClearance(ink,ink.querySelector(".dl-ceremony-rule")),
           art:ink.querySelector(".dl-ceremony-art")?.src,
           text:title?.textContent?.trim(),
           font:title?getComputedStyle(title).fontFamily:""
@@ -269,6 +280,12 @@ async function closeQuiero(page){
     if(!choice||choice.disabled)return false;
     if(choice.closest(".board-quiero-stage")&&!choice.closest(".board-quiero-banner")){
       throw Error("Existing faction decision banner was lost");
+    }
+    const banner=choice.closest(".board-quiero-banner");
+    if(banner){
+      const panel=banner.getBoundingClientRect();
+      const button=choice.getBoundingClientRect();
+      if(panel.top+panel.height*.75-button.bottom<18)throw Error("The Quiero controls overlap the swallowtail");
     }
     choice.click();
     return true;
@@ -351,7 +368,9 @@ async function runMatch(label,viewport,isMobile){
     for(const phase of ["flight","duel","round","archive","round-wipe","round-wipe-reveal","deal","idle"])
       assert.ok(data.phases.includes(phase),label+": missing real match phase "+phase);
     const {roundReceipt,roundBanner,swap}=data;
+    if(data.rivalClearance!==undefined)assert.ok(data.rivalClearance>=18,label+": rival Continue needs room above the hem");
     for(const banner of [ribbon,roundReceipt,roundBanner]){
+      assert.ok(banner?.clearance>=18,label+": each result banner needs room above the hem: "+JSON.stringify(banner?.clearance));
       assert.ok(banner?.art?.includes("/champions/backgrounds/"),label+": banner needs its faction art layer");
       const art=await page.request.get(banner.art);
       assert.ok(art.ok()&&art.headers()["content-type"]?.startsWith("image/"),
@@ -567,7 +586,7 @@ async function runFinale(){
 }
 
 try{
-  await runMatch("desktop",{width:1600,height:900},false);
+  await runMatch("desktop",{width:1067,height:539},false);
   await runMatch("mobile",{width:390,height:844},true);
   await Promise.all([
     runStudy("desktop",{width:1600,height:900},"no-preference"),

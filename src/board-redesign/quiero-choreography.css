@@ -1,4 +1,7 @@
-:root { --dl-quiero-pennant: polygon(0 0,100% 0,100% 100%,50% 75%,0 100%); }
+:root {
+  --dl-quiero-pennant:polygon(0 0,100% 0,100% 100%,50% 75%,0 100%);
+  --dl-banner-hem-space:clamp(104px,14dvh,124px);
+}
 
 /*
  * DAGGERLIGHT / QUIERO — NO QUIERO: FIELD CHOREOGRAPHY
@@ -33,7 +36,8 @@
   display:grid;place-items:center;
   isolation:isolate;
   color:#fffdf4;
-  overflow:hidden;
+  overflow:auto;
+  align-items:safe center;
   background:transparent!important;
   border:0!important;box-shadow:none!important;
 }
@@ -197,7 +201,7 @@
     gap:7px;padding:10px;
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-score{
-    font-size:clamp(48px,7dvh,82px);
+    font-size:clamp(32px,7dvh,62px);
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-choices button{
     min-height:43px;
@@ -227,7 +231,7 @@
   max-width:min(92vw,100%);
   min-height:clamp(300px,43dvh,388px);
   gap:clamp(8px,1.15dvh,13px);
-  padding:22px 26px 76px;
+  padding:22px 26px max(118px,var(--dl-banner-hem-space));
   box-sizing:border-box;
   color:#f4edda;text-align:center;
   background-color:#171913;
@@ -290,13 +294,13 @@
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner {
     width:min(340px,87vw);
     min-height:clamp(270px,41dvh,335px);
-    padding:18px 20px 70px;
+    padding:18px 20px max(111px,var(--dl-banner-hem-space));
     gap:8px;
   }
 }
 @media(max-height:610px) {
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner {
-    min-height:245px;padding:12px 20px 70px;gap:6px;
+    min-height:245px;padding:12px 20px var(--dl-banner-hem-space);gap:6px;
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner .board-quiero-choices button {
     min-height:35px;padding:7px 11px;

@@ -70,7 +70,7 @@
 @media (max-height: 540px) {
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-receipt-stage > .board-round-ceremony {
     gap: 7px;
-    padding-block: 15px 56px;
+    padding-block-start: 15px;
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-receipt-stage .board-round-score {
     font-size: clamp(38px, 11dvh, 62px) !important;
