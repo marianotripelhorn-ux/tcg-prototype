@@ -41,7 +41,7 @@ export function RoundTransition({sequenceId,reducedMotion,onComplete,summary,ban
     current.current();
   }
   useEffect(()=>{
-    const timer=window.setTimeout(finish,reducedMotion?540:1680);
+    const timer=window.setTimeout(finish,reducedMotion?1000:1680);
     return ()=>window.clearTimeout(timer);
   },[sequenceId,reducedMotion]);
   const reason=summary?.reason==="player_no_quiero"?"NO QUIERO":
