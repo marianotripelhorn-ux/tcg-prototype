@@ -2,7 +2,8 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties
 import { championBackgroundUrl, championImageUrl, championShortName, championSubtitle } from "../championArtwork";
 import { DEFAULT_PLAYER_NAME } from "../playerProfile";
 import { positionLabels, positions } from "../data";
-import type { CardDefinition, Position } from "../types";
+import type { CardDefinition, Faction, Position } from "../types";
+import { FactionCardBack } from "../FactionCardBack";
 import type { EnginePlay, GameState, PlayerState } from "../engine/types";
 
 type Side = "player" | "opponent";
@@ -129,10 +130,10 @@ export function HybridPhoneChampion({side,state,userLabel,life,healed}:{
 }
 
 export function HybridRightRail({
-  playerLife,opponentLife,playerHealed,opponentHealed,score,deckRemaining,discardCount
+  playerLife,opponentLife,playerHealed,opponentHealed,score,deckRemaining,discardCount,deckFaction="red"
 }:{
   playerLife:number;opponentLife:number;playerHealed:number;opponentHealed:number;
-  score:{player:number;opponent:number};deckRemaining:number;discardCount:number;
+  score:{player:number;opponent:number};deckRemaining:number;discardCount:number;deckFaction?:Faction;
 }) {
   const [deckOpen,setDeckOpen]=useState(false);
   return <aside className="hybrid-right-rail" aria-label="Vida, marcador y mazo">
@@ -150,8 +151,7 @@ export function HybridRightRail({
         onClick={()=>setDeckOpen(current=>!current)}>
         <span className="hybrid-deck-layer" aria-hidden="true"/>
         <span className="hybrid-deck-face" aria-hidden="true">
-          <img className="hybrid-deck-art" src={`${import.meta.env.BASE_URL}board/cardback-gold.png`}
-            alt="" decoding="async"/>
+          <FactionCardBack faction={deckFaction} className="hybrid-deck-art"/>
         </span>
       </button>
       <span className="hybrid-deck-count">MAZO · <b>{deckRemaining}</b></span>
@@ -207,7 +207,7 @@ export function HybridCommandRail({
     </div>
     <div className="hybrid-command-status" role="status" aria-live="polite">{status}</div>
     {phoneDeck && <details className="hybrid-phone-deck">
-      <summary>MAZO · <b>{phoneDeck.remaining}</b></summary>
+      <summary><FactionCardBack faction={game.player.champion.faction} className="hybrid-phone-deck-back"/>MAZO · <b>{phoneDeck.remaining}</b></summary>
       <div className="hybrid-deck-info">
         <b>MAZO</b><span>{phoneDeck.remaining} restantes</span><span>{phoneDeck.discarded} descartadas</span>
         <small>Se recicla al inicio de la ronda cuando quedan menos de tres cartas.</small>

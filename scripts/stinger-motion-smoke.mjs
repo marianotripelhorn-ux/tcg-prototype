@@ -23,6 +23,7 @@ async function startGame(page){
   assert.ok(online,"React preview server is not responding");
   await page.locator(".splash-start").waitFor({state:"attached",timeout:18000});
   await page.locator(".splash-start").evaluate(el=>el.click());
+  await page.getByRole("button",{name:"SALTAR TUTORIAL",exact:true}).click();
   await page.locator(".home-action.action-play").waitFor({state:"attached",timeout:15000});
   for(let i=0;i<4;i++){
     if(await page.locator(".dl-champion-card").count())break;
@@ -35,6 +36,8 @@ async function startGame(page){
   }
   await page.locator(".dl-champion-card").first().evaluate(el=>el.click());
   await page.locator(".dl-champion-start").waitFor({state:"attached",timeout:12000});
+  const starter=page.locator(".dl-faction-card-back").first();
+  assert.ok(await starter.locator(".dl-back-art").evaluate(async image=>{await image.decode();return image.naturalWidth>0;}));
   await page.evaluate(()=>{
     const entrance=window.__matchEntrance={phases:[],banners:[],hiddenHand:false};
     const observer=new MutationObserver(()=>{
@@ -247,14 +250,27 @@ async function instrument(page){
   });
 }
 
-async function playCard(page){
-  await page.locator('main[data-board-phase="idle"]').waitFor({state:"attached",timeout:14000});
+async function chooseHandCard(page){
   const first=page.locator(".hand-zone .hand-card").first();
   await first.waitFor({state:"visible",timeout:10000});
   await first.click();
-  await page.locator(".card-zoom-overlay .zoom-actions .primary-button")
-    .waitFor({state:"attached",timeout:7000});
-  await page.locator(".card-zoom-overlay .zoom-actions .primary-button").evaluate(el=>el.click());
+  if(await page.locator(".hybrid-phone-champion").count()){
+    const modal=page.locator(".is-phone-hand-inspection");
+    await modal.waitFor({state:"visible"});
+    assert.equal(await modal.locator(".zoom-actions .primary-button").count(),0);
+    assert.ok(await modal.locator(".zoom-card-frame").evaluate(el=>el.getBoundingClientRect().width>=innerWidth*.6),
+      "Mobile inspection must enlarge the full card");
+    await modal.getByRole("button",{name:"Cerrar carta"}).click();
+    assert.equal(await first.getAttribute("aria-pressed"),"true");
+  }else{
+    await page.locator(".card-zoom-overlay .zoom-actions .primary-button").evaluate(el=>el.click());
+  }
+  return first;
+}
+
+async function playCard(page){
+  await page.locator('main[data-board-phase="idle"]').waitFor({state:"attached",timeout:14000});
+  const first=await chooseHandCard(page);
   const lane=page.locator(".board-slot.player.drop-active").first();
   await lane.waitFor({state:"attached",timeout:8000});
   // The first interaction changes the selected card's transform. Measure the
@@ -509,6 +525,27 @@ async function runStudy(label,viewport,reducedMotion){
   }finally{await page.close();}
 }
 
+async function runWelcome(){
+  const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
+  try{
+    await page.goto(ROOT,{waitUntil:"domcontentloaded"});
+    await page.locator(".splash-start").evaluate(el=>el.click());
+    await page.getByRole("button",{name:"EMPEZAR PARTIDA GUIADA",exact:true}).click();
+    await page.locator(".dl-opening-guide").waitFor({state:"visible"});
+    assert.equal(await page.locator(".dl-champion-card").count(),0,"Guided play skips setup");
+    await playCard(page);
+    await page.locator(".dl-duel-stinger").waitFor({state:"visible"});
+    await page.locator('main[data-board-phase="idle"]').waitFor({state:"attached"});
+    await page.getByRole("button",{name:"Saltar guía",exact:true}).click();
+    assert.equal(await page.locator(".dl-opening-guide").count(),0);
+    await page.reload({waitUntil:"domcontentloaded"});
+    await page.locator(".splash-start").evaluate(el=>el.click());
+    await page.locator(".home-action.action-continue").waitFor({state:"visible"});
+    assert.equal(await page.locator(".dl-welcome").count(),0);
+    console.log("PASS first visit: preserved splash, real guided duel, guide skip and remembered welcome");
+  }finally{await page.close();}
+}
+
 async function terminalFixture(){
   const server=await createServer({server:{middlewareMode:true,hmr:false},appType:"custom"});
   try{
@@ -545,10 +582,7 @@ async function runFinale(){
     await page.goto(ROOT,{waitUntil:"domcontentloaded"});
     await page.locator(".splash-start").evaluate(el=>el.click());
     await page.getByRole("button",{name:/CONTINUAR PARTIDA/}).click();
-    const hand=page.locator(".hand-zone .hand-card").first();
-    await hand.waitFor({state:"visible"});
-    await hand.click();
-    await page.locator(".card-zoom-overlay .zoom-actions .primary-button").evaluate(el=>el.click());
+    await chooseHandCard(page);
     await page.locator('.board-slot.player.drop-active[data-position="'+fixture.position+'"]').evaluate(el=>el.click());
     const banner=page.locator(".dl-match-finale");
     await banner.waitFor({state:"visible",timeout:30000});
@@ -603,6 +637,7 @@ try{
     runStudy("mobile",{width:390,height:844},"reduce")
   ]);
   await runFinale();
+  await runWelcome();
 }finally{
   await browser.close();
 }

@@ -9,7 +9,7 @@ describe("Daggerlight first match",()=>{
   it("starts from the tutorial with Majestad Carmesí and easy AI",()=>{
     expect(champions[TUTORIAL_MATCH.championId].name).toContain("Majestad Carmesi");
     expect(TUTORIAL_MATCH.difficulty).toBe("easy");
-    expect(TUTORIAL_MATCH.opponentId).toBe("random");
+    expect(TUTORIAL_MATCH.opponentId).toBe("sinistral");
   });
   it("asks for a champion before offering opponent and difficulty",()=>{
     const html=renderToStaticMarkup(createElement(ChampionPicker,{

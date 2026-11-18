@@ -603,4 +603,34 @@
     grid-column: 1 / -1;
     margin-bottom: 0;
   }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .is-phone-hand-inspection {
+    align-items: center;
+    padding: max(8px, var(--phone-top)) max(12px, var(--phone-right))
+      max(8px, var(--phone-bottom)) max(12px, var(--phone-left));
+    background: rgba(3, 4, 6, .86);
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .is-phone-hand-inspection .card-zoom-panel {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    width: max-content;
+    max-width: 100%;
+    max-height: none;
+    overflow: visible;
+    gap: 6px;
+    padding: 48px 0 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .is-phone-hand-inspection .zoom-card-frame {
+    grid-area: auto;
+    width: min(
+      calc(100vw - max(12px, var(--phone-left)) - max(12px, var(--phone-right))),
+      460px,
+      calc((100dvh - var(--phone-top) - var(--phone-bottom) - 70px) * .71)
+    );
+  }
 }

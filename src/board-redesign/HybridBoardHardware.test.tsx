@@ -35,7 +35,8 @@ describe("Hybrid board is a view of the authoritative engine state",()=>{
     expect(html).toContain("<span>0</span><i aria-hidden=\"true\">–</i><span>1</span>");
     expect(html).toContain("VOS · RIVAL");
     expect(html).toContain("Mazo:");
-    expect(html).toContain("board/cardback-gold.png");
+    expect(html).toContain('data-faction="red"');
+    expect(html).toContain("champions/backgrounds/red.webp");
   });
 
   it("reads the six Archives directly from the real game state",()=>{

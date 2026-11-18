@@ -10,7 +10,8 @@ import type { DuelBeat } from "./board-redesign/duelChoreography";
 import { playDuelCue, unlockDuelAudio } from "./board-redesign/duelAudio";
 import { disableManifestations } from "./board-redesign/disableManifestations";
 import Tutorial from "./Tutorial";
-import { TUTORIAL_MATCH } from "./onboarding";
+import { TUTORIAL_MATCH, guidedOpeningHint, hasSeenWelcome, rememberWelcome } from "./onboarding";
+import { OpeningGuide, WelcomeMatch } from "./WelcomeMatch";
 import SplashScreen from "./SplashScreen";
 import Multiplayer from "./Multiplayer";
 import PlaytestHub from "./PlaytestHub";
@@ -646,6 +647,8 @@ export default function App() {
   const [auguryOpen,setAuguryOpen]=useState(false);
   const [arcadeRun,setArcadeRun]=useState<ArcadeRun|null>(()=>readArcadeRun());
   const [hasEntered,setHasEntered]=useState(false);
+  const [welcomeSeen,setWelcomeSeen]=useState(hasSeenWelcome);
+  const [guidedOpening,setGuidedOpening]=useState(false);
   const [game,setGame]=useState<GameState|null>(null);
   const [savedMatch,setSavedMatch]=useState<SavedMatch|null>(()=>readSavedMatch());
   const [matchMeta,setMatchMeta]=useState<SavedMatch|null>(null);
@@ -654,6 +657,8 @@ export default function App() {
   const [analyticsConsent,setTelemetryOn]=useState(()=>analyticsOptedIn());
   const [selectedIndex,setSelectedIndex]=useState<number|null>(null);
   const [inspection,setInspection]=useState<Inspection|null>(null);
+  const inspectionTrigger=useRef<HTMLButtonElement|null>(null);
+  const phoneHandInspection=phoneBoard&&inspection?.handIndex!==undefined;
   const [duelPreview,setDuelPreview]=useState<DuelSummary|null>(null);
   const [boardMotion,setBoardMotion]=useState<BoardMotionSequence|null>(null);
   const boardMotionRef=useRef<BoardMotionSequence|null>(null);
@@ -806,6 +811,7 @@ export default function App() {
   }
 
   function continueMatch() {
+    setGuidedOpening(false);
     const saved=readSavedMatch();
     if(!saved){setSavedMatch(null);return;}
     clearPreviewTimer();
@@ -836,7 +842,8 @@ export default function App() {
   }
 
   function startWithChampion(championId:string, rivalSelection:string, difficulty:AIDifficulty=aiDifficulty,
-    deck?:DeckDefinition|null, fromArcade=false) {
+    deck?:DeckDefinition|null, fromArcade=false, guided=false) {
+    setGuidedOpening(guided);
     if(!fromArcade){
       setArcadeRun(null);
       writeArcadeRun(null);
@@ -852,7 +859,7 @@ export default function App() {
     setPlayerChampion(championId);
     setOpponentChampion(rivalSelection);
     setAiDifficulty(difficulty);
-    const next=disableManifestations(startGame(championId,opponent,Math.random,undefined,difficulty,deck?{player:deck}:undefined,false));
+    const next=disableManifestations(startGame(championId,opponent,Math.random,guided?"player":undefined,difficulty,deck?{player:deck}:undefined,false));
     if(boardRedesign&&!isReducedMotion()){
       setMotion({id:++nextMotionId.current,phase:"match-entry",before:next,
         duel:null,roundEnded:false,handIndex:null,origin:null});
@@ -921,6 +928,7 @@ export default function App() {
     setPreDuel(null);
     setFinalStep("ceremony");
     setGame(null);
+    setGuidedOpening(false);
     setDaggersToUse(0);
     setSpecialMode(null);
     setSpecialInspection(null);
@@ -1057,6 +1065,24 @@ export default function App() {
     });
   }
 
+  function inspectHandCard(handIndex:number, trigger:HTMLButtonElement) {
+    const card=hand[handIndex];
+    if(!card)return;
+    if(phoneBoard){
+      setSelectedIndex(handIndex);
+      inspectionTrigger.current=trigger;
+    }
+    setInspection({card,handIndex,powerExact:true});
+  }
+
+  function closeInspection() {
+    setInspection(null);
+    if(phoneHandInspection){
+      inspectionTrigger.current?.focus({preventScroll:true});
+      inspectionTrigger.current=null;
+    }
+  }
+
   function zoneAt(x:number,y:number):Position|null {
     if (!game || game.phase!=="awaiting_player" || duelPreview || boardMotionRef.current) return null;
     const element=document.elementFromPoint(x,y);
@@ -1103,8 +1129,7 @@ export default function App() {
         : rect;
       playCard(current.handIndex,destination,releasedRect);
     } else if (!current.moved) {
-      const card=hand[current.handIndex];
-      if (card) setInspection({card,handIndex:current.handIndex,powerExact:true});
+      inspectHandCard(current.handIndex,event.currentTarget);
     }
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
@@ -1113,7 +1138,21 @@ export default function App() {
     setHoveredPosition(null);
   }
 
+  function dismissWelcome() {
+    setWelcomeSeen(true);
+    rememberWelcome();
+  }
+
+  function startGuidedOpening() {
+    dismissWelcome();
+    startWithChampion(TUTORIAL_MATCH.championId,TUTORIAL_MATCH.opponentId,TUTORIAL_MATCH.difficulty,null,false,true);
+  }
+
   if (!hasEntered) return <SplashScreen onStart={()=>setHasEntered(true)} />;
+
+  if (!game&&!welcomeSeen&&!savedMatch&&!arcadeRun&&history.length===0) {
+    return <WelcomeMatch onPlay={startGuidedOpening} onSkip={dismissWelcome}/>;
+  }
 
   if (!game) {
     return (
@@ -1165,7 +1204,7 @@ export default function App() {
         {tutorialOpen && <Tutorial
           inGame={false}
           onClose={()=>setTutorialOpen(false)}
-          onPlay={()=>{setTutorialOpen(false);startWithChampion(TUTORIAL_MATCH.championId,TUTORIAL_MATCH.opponentId,TUTORIAL_MATCH.difficulty);}}
+          onPlay={()=>{setTutorialOpen(false);startGuidedOpening();}}
         />}
       </>
     );
@@ -1221,6 +1260,11 @@ export default function App() {
         : `DUELO ${game.turn} · ${game.initiative==="player"?"VOS ABRÍS":"IA ABRE"}`;
   const score=displayed?.score??game.duelScore;
   const deckView=boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.player:game.player;
+  const openingHint=guidedOpening ? guidedOpeningHint({
+    round:game.round,turn:game.turn,phase:game.phase,motion:boardMotion?.phase,
+    result:duelStep==="result"?duelPreview?.outcome:undefined,
+    inspecting:!!inspection,cardSelected:selectedIndex!==null
+  }) : null;
 
   return (
     <main data-board-phase={boardRedesign?(boardMotion?.phase??"idle"):"classic"}
@@ -1429,11 +1473,12 @@ export default function App() {
                 onDropRelic={game.manifestationsEnabled!==false?()=>useSpecial("relic",position):undefined}
                 hideFocusDuringFlight={!!boardMotion && boardMotion.phase==="flight"}
                 phoneBoard={phoneBoard}
-                active={specialMode==="relic"
+                active={!phoneHandInspection && (specialMode==="relic"
                    ? game.player.roundPlays.every(p=>p.position!==position)
-                   : (hoveredPosition===position || (!!selectedCard&&!drag)) && legal.includes(position)}
+                   : (hoveredPosition===position || (!!selectedCard&&!drag)) && legal.includes(position))}
                 capacityValue={capacity(game.player,position)}
                 onTap={()=>{
+                   if(phoneHandInspection)return;
                    if(specialMode==="relic"){useSpecial("relic",position);return;}
                    if(selectedIndex!==null && legal.includes(position))playCard(selectedIndex,position);
                  }}
@@ -1489,6 +1534,7 @@ export default function App() {
           playerHealed={displayed?.playerHealed??game.player.healedLife}
           opponentHealed={displayed?.opponentHealed??game.opponent.healedLife}
           score={score}
+          deckFaction={deckView.champion.faction}
           deckRemaining={deckView.deck.length}
           discardCount={deckView.discard.length}
         />}
@@ -1506,6 +1552,7 @@ export default function App() {
           aria-label="Tu mano"
           style={{backgroundImage:`linear-gradient(0deg,#111713e8,#1d241bd9),url("${championBackgroundUrl(game.player.champion.faction)}")`}}
         >
+          {openingHint&&<OpeningGuide message={openingHint} onSkip={()=>setGuidedOpening(false)}/>}
           <button type="button" className="arena-hand-toggle" aria-expanded={handExpanded}
             aria-label={handExpanded?"Contraer mano":"Desplegar mano"}
             onClick={()=>{setHandExpanded(!handExpanded);setHoveredHandIndex(null);}}>
@@ -1545,7 +1592,7 @@ export default function App() {
                 onBlur={()=>setHoveredHandIndex(current=>current===index?null:current)}
 
                 onClick={event=>{
-                  if(event.detail===0)setInspection({card,handIndex:index,powerExact:true});
+                  if(event.detail===0)inspectHandCard(index,event.currentTarget);
                 }}
 
                 onPointerDown={event=>{
@@ -1663,18 +1710,27 @@ export default function App() {
 
         {inspection && (
           <div
-            className="card-zoom-overlay"
+            className={"card-zoom-overlay"+(phoneHandInspection?" is-phone-hand-inspection":"")}
             role="dialog"
             aria-modal="true"
             aria-label={inspection.card.name}
-            onClick={()=>setInspection(null)}
+            aria-describedby={phoneHandInspection?"phone-hand-inspection-details":undefined}
+            onClick={closeInspection}
+            onKeyDown={phoneHandInspection ? event=>{
+              if(event.key==="Tab")event.preventDefault();
+              if(event.key==="Escape"){
+                event.preventDefault();
+                closeInspection();
+              }
+            } : undefined}
           >
             <div className="card-zoom-panel" onClick={event=>event.stopPropagation()}>
               <button
                 className="zoom-close"
                 type="button"
                 aria-label="Cerrar carta"
-                onClick={()=>setInspection(null)}
+                autoFocus={phoneHandInspection}
+                onClick={closeInspection}
               >×</button>
               <div className="zoom-card-frame">
                 <CardFace
@@ -1691,7 +1747,11 @@ export default function App() {
                      inspection.card.trait==="Objeto mágico"?"relic":"symmetry"
                  ]}
                </p>}
-               <div className="zoom-actions">
+              {phoneHandInspection
+                ? <p id="phone-hand-inspection-details" className="arena-visually-hidden">
+                    Poder {inspection.card.power}. {inspection.card.text}
+                  </p>
+                : <div className="zoom-actions">
                 <div>
                   <strong>{inspection.card.name}</strong>
                   <span>
@@ -1712,9 +1772,9 @@ export default function App() {
                       setSelectedIndex(inspection.handIndex!);
                       setInspection(null);
                     }}
-                  >{phoneBoard?"ELEGIR CARTA":"SELECCIONAR"}</button>
+                  >SELECCIONAR</button>
                 )}
-              </div>
+              </div>}
             </div>
           </div>
         )}
