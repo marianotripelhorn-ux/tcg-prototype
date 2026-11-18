@@ -11,10 +11,27 @@ export function DuelResultStinger({duel,onComplete,bannerImage}:{
   onComplete?:()=>void;
   bannerImage?:string;
 }) {
+  const card=useRef<HTMLDivElement>(null);
+  useLayoutEffect(()=>{
+    const banner=card.current;
+    const field=banner?.closest(".arena-main");
+    const parent=banner?.offsetParent;
+    if(!banner||!field||!(parent instanceof HTMLElement))return;
+    const center=()=>{
+      const area=field.getBoundingClientRect();
+      const container=parent.getBoundingClientRect();
+      banner.style.setProperty("--dl-banner-x",(area.left+area.width/2-container.left-parent.clientLeft+parent.scrollLeft)+"px");
+      banner.style.setProperty("--dl-banner-y",(area.top+area.height/2-container.top-parent.clientTop+parent.scrollTop)+"px");
+    };
+    center();
+    const observer=new ResizeObserver(center);
+    observer.observe(field);
+    return ()=>observer.disconnect();
+  },[]);
   const playerPower=duel.playerPlay.finalPower??duel.playerPlay.card.power;
   const opponentPower=duel.opponentPlay.finalPower??duel.opponentPlay.card.power;
   const result=duel.outcome==="player"?"VICTORIA":duel.outcome==="opponent"?"DERROTA":"EMPATE";
-  return <div className="dl-duel-stinger dl-ceremony-banner" style={ceremonyArt(bannerImage)}
+  return <div ref={card} className="dl-duel-stinger dl-ceremony-banner" style={ceremonyArt(bannerImage)}
     role="status" aria-live="polite"
     onAnimationEnd={event=>{
       if(event.target===event.currentTarget&&event.animationName==="dl-duel-banner")onComplete?.();

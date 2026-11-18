@@ -1349,15 +1349,7 @@ export default function App() {
                 <CardFace card={hand[hoveredHandIndex]}/>
               </div>
             )}
-        {boardRedesign && boardMotion?.phase==="round" && <RoundTransition
-          sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
-          summary={completedRound}
-          bannerImage={championBackgroundUrl(game.player.champion.faction)}
-          onComplete={()=>{
-            const current=boardMotionRef.current;
-            if(current?.id===boardMotion.id&&current.phase==="round")
-              setMotion({...current,phase:"archive"});
-          }}/>}
+
 
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
           {boardRedesign&&boardMotion?.phase==="match-entry"&&<MatchEntryMotion
@@ -1639,6 +1631,16 @@ export default function App() {
         />}
 
           </div>
+        {boardRedesign && boardMotion?.phase==="round" && <RoundTransition
+          sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
+          summary={completedRound}
+          bannerImage={championBackgroundUrl(game.player.champion.faction)}
+          onComplete={()=>{
+            const current=boardMotionRef.current;
+            if(current?.id===boardMotion.id&&current.phase==="round")
+              setMotion({...current,phase:"archive"});
+          }}/>}
+
           {/* The stationary backdrop conceals the board swap behind the centered banner. */}
                   {boardRedesign && (boardMotion?.phase==="round-wipe"||boardMotion?.phase==="round-wipe-reveal") && <NewRoundStinger
                     sequenceId={boardMotion.id} round={game.round} reducedMotion={isReducedMotion()}

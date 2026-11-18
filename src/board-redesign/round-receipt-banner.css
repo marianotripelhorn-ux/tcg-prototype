@@ -1,6 +1,6 @@
-:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-receipt-stage {
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-main > .board-round-receipt-stage {
   position: absolute;
-  inset: 0 0 34px -20.5%;
+  inset: 0;
   z-index: 60;
   display: grid;
   place-items: center;
@@ -65,12 +65,6 @@
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep,
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="archive"] .hybrid-duel-tally::before {
   display: none !important;
-}
-
-@media (max-width: 760px) {
-  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-receipt-stage {
-    inset: 0 0 34px;
-  }
 }
 
 @media (max-height: 540px) {

@@ -73,8 +73,8 @@
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger {
   position:absolute!important;
   z-index:120;
-  left:50%;
-  top:50%;
+  left:var(--dl-banner-x,50%);
+  top:var(--dl-banner-y,50%);
   translate:-50% -50%;
   pointer-events:none;
   animation:dl-duel-banner 1200ms both;
