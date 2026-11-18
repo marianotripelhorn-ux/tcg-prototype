@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalS
 import { ArchiveFlight, CardFlight, DealMotion, MatchEntryMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
 import type { BoardMotionSequence } from "./board-redesign/motion";
 import { ArchiveReceiptTransition, RoundTransition, archiveCountChange, completedRoundReceipt } from "./board-redesign/roundChoreography";
-import { DuelResultStinger, NewRoundStinger } from "./board-redesign/stingerMotion";
+import { DuelResultStinger, MatchFinaleBanner, NewRoundStinger } from "./board-redesign/stingerMotion";
 import { QuieroChoiceStage, RivalQuieroStage, rivalAcceptedQuiero, shouldOfferQuiero } from "./board-redesign/quieroChoreography";
 import { DUEL_BEATS, DUEL_FINISH_MS, duelPowerReasons, powerIsRevealed, powerSourceCues, postDuelChampionCues } from "./board-redesign/duelChoreography";
 import type { DuelBeat } from "./board-redesign/duelChoreography";
@@ -1734,8 +1734,15 @@ export default function App() {
         )}
 
         {game.phase==="finished" && !duelPreview && !boardMotion && !finishingMatch.current && (
-          <div className={"decision-overlay match-conclusion-stage"+(finalStep==="ceremony"?" is-ceremony":" is-actions")}>
-            {finalStep==="ceremony" ? (
+          <div className={"decision-overlay match-conclusion-stage"+(finalStep==="ceremony"?" is-ceremony"+(boardRedesign?" is-banner-finale":""):" is-actions")}>
+            {finalStep==="ceremony" ? (boardRedesign ? (
+              <MatchFinaleBanner game={game}
+                kicker={arcadeRun?.status==="complete"?"ARCADE COMPLETADO":arcadeRun
+                  ? "ARCADE · "+(arcadeRun.index+1)+"/"+arcadeRun.opponents.length : "FIN DE PARTIDA"}
+                title={arcadeRun?.status==="complete"?"TODOS DERROTADOS":
+                  game.winner==="player"?"VICTORIA":game.winner==="opponent"?"DERROTA":"EMPATE"}
+                onContinue={()=>{clearFinalTimer();setFinalStep("actions");}}/>
+            ) : (
               <div className={"match-conclusion-ceremony match-final-"+game.winner} role="status" aria-live="polite">
                 <span className="match-conclusion-symbol" aria-hidden="true">{game.winner==="player"?"✦":game.winner==="opponent"?"◇":"◈"}</span>
                 <span className="match-conclusion-kicker">{arcadeRun
@@ -1746,7 +1753,7 @@ export default function App() {
                 <span className="match-conclusion-score">{game.player.life} — {game.opponent.life} VIDA</span>
                 <button type="button" className="match-conclusion-continue" onClick={()=>{clearFinalTimer();setFinalStep("actions");}}>CONTINUAR →</button>
               </div>
-            ) : (
+            )) : (
               <div className="decision-card match-postgame" role="group" aria-label="Opciones después de la partida">
                 <span>{arcadeRun?"MODO ARCADE":"PARTIDA FINALIZADA"}</span>
                 <strong>{arcadeRun?.status==="complete"?"ARCADE COMPLETADO":game.winner==="player"?"GANASTE":game.winner==="opponent"?"GANÓ LA IA":"EMPATE"}</strong>

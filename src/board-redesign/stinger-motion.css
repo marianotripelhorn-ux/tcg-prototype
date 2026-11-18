@@ -269,3 +269,75 @@
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="round-wipe"] :is(.board-slot .played-card,.hand-zone .hand-card) {
   visibility:hidden;
 }
+
+
+/* The match pennant shares the result banners' cloth and gold edge. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .match-conclusion-stage.is-banner-finale {
+  background:radial-gradient(ellipse at center,#201c14aa,#151310f0)!important;
+  backdrop-filter:none!important;
+  animation:none!important;
+  overflow:auto;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-match-finale {
+  width:min(89vw,440px);
+  min-height:0;
+  margin: auto;
+  padding:clamp(18px,3dvh,28px) 24px clamp(42px,7dvh,62px);
+  animation:dl-finale-unfurl 420ms cubic-bezier(.19,.77,.23,1) both;
+}
+.dl-match-finale h2 {
+  margin:0;
+  color:#f6eedc;
+  font:400 clamp(30px,5vw,55px)/1.03 var(--board-display,"Archivo Black",Arial,sans-serif);
+  letter-spacing:-.04em;
+  text-wrap:balance;
+}
+.dl-finale-portraits {
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  width:100%;
+}
+.dl-finale-portraits figure {display:grid;justify-items:center;gap:5px;margin:0;min-width:0}
+.dl-finale-portraits img {
+  display:block;
+  width:clamp(70px,24vw,124px);
+  height:clamp(66px,17dvh,125px);
+  object-fit:cover;
+  object-position:50% 25%;
+  border:1px solid #c6aa727f;
+  background:#242018;
+}
+.dl-finale-portraits figcaption {color:#e7d6b2;font:700 clamp(10px,2.6vw,13px)/1.2 Arial,sans-serif}
+.dl-finale-life {display:flex;justify-content:center;gap:clamp(21px,6vw,42px)}
+.dl-finale-life span {display:grid;gap:3px;justify-items:center}
+.dl-finale-life small {color:#dbc9a3;font:700 9px/1.2 Arial,sans-serif;letter-spacing:.09em}
+.dl-finale-life strong {
+  color:#f6eedc;
+  font:400 clamp(20px,4vw,30px)/1 var(--board-display,"Archivo Black",Arial,sans-serif);
+  font-variant-numeric:tabular-nums;
+}
+.dl-finale-continue {
+  width:min(100%,190px);
+  min-height:38px;
+  margin-top:2px;
+  cursor:pointer;
+  border:1px solid #ddc187;
+  border-radius:0;
+  background:#d9ba7d;
+  color:#1a160f;
+  font:800 12px/1 Arial,sans-serif;
+  letter-spacing:.07em;
+}
+.dl-finale-continue:hover {background:#ead19e}
+.dl-finale-continue:focus-visible {outline:2px solid #fff0c7;outline-offset:3px}
+@keyframes dl-finale-unfurl {
+  0%{opacity:0;transform:translateY(-22px)}
+  100%{opacity:1;transform:translateY(0)}
+}
+@media (max-height:540px) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-match-finale {gap:6px;padding-block:14px 38px}
+}
+@media (prefers-reduced-motion:reduce) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-match-finale {animation:none}
+}

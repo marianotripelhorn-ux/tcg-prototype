@@ -1,5 +1,6 @@
-import { useLayoutEffect, useRef, type CSSProperties } from "react";
-import type { DuelSummary } from "../engine/types";
+import { useEffect, useId, useLayoutEffect, useRef, type CSSProperties } from "react";
+import type { DuelSummary, GameState } from "../engine/types";
+import { championBackgroundUrl, championImageUrl, championShortName } from "../championArtwork";
 
 export function ceremonyArt(image?:string):CSSProperties {
   return { "--dl-ceremony-art":image?'url("'+image+'")':"none" } as CSSProperties;
@@ -131,5 +132,38 @@ export function NewRoundStinger({
       <span className="dl-new-round-number">RONDA {round}</span>
       <div className="dl-ceremony-rule" aria-hidden="true"/>
     </div>
+  </div>;
+}
+
+/** Holds the real outcome until the player chooses to see the post-match actions. */
+export function MatchFinaleBanner({game,kicker,title,onContinue}:{
+  game:GameState;
+  kicker:string;
+  title:string;
+  onContinue:()=>void;
+}){
+  const titleId=useId();
+  const next=useRef<HTMLButtonElement>(null);
+  useEffect(()=>next.current?.focus({preventScroll:true}),[]);
+  const won=game.winner==="player"?game.player.champion:
+    game.winner==="opponent"?game.opponent.champion:null;
+  const portraits=won?[won]:[game.player.champion,game.opponent.champion];
+  return <div className="dl-match-finale dl-ceremony-banner"
+    style={ceremonyArt(championBackgroundUrl((won??game.player.champion).faction))}
+    role="dialog" aria-modal="true" aria-labelledby={titleId} data-outcome={game.winner??"draw"}>
+    <span className="dl-ceremony-kicker">{kicker}</span>
+    <h2 id={titleId}>{title}</h2>
+    <div className="dl-finale-portraits">
+      {portraits.map((champion,index)=><figure key={champion.id+"-"+index}>
+        <img src={championImageUrl(champion.id,true)} alt="" data-champion={champion.id}/>
+        <figcaption>{championShortName(champion.name)}</figcaption>
+      </figure>)}
+    </div>
+    <div className="dl-ceremony-rule" aria-hidden="true"/>
+    <div className="dl-finale-life">
+      <span><small>TU VIDA</small><strong>{game.player.life}</strong></span>
+      <span><small>VIDA RIVAL</small><strong>{game.opponent.life}</strong></span>
+    </div>
+    <button ref={next} type="button" className="dl-finale-continue" onClick={onContinue}>CONTINUAR →</button>
   </div>;
 }

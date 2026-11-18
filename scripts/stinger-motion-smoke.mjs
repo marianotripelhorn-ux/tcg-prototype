@@ -4,6 +4,7 @@
  */
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
+import { createServer } from "vite";
 
 const ROOT="http://127.0.0.1:4173/";
 const browser=await chromium.launch({headless:true,args:[
@@ -474,10 +475,68 @@ async function runStudy(label,viewport,reducedMotion){
   }finally{await page.close();}
 }
 
+async function terminalFixture(){
+  const server=await createServer({server:{middlewareMode:true,hmr:false},appType:"custom"});
+  try{
+    const engine=await server.ssrLoadModule("/src/engine/game.ts");
+    const {legalPositions}=await server.ssrLoadModule("/src/engine/rules.ts");
+    const {SAVE_KEY,newSavedMatch}=await server.ssrLoadModule("/src/persistence.ts");
+    for(let seed=1;seed<=48;seed++){
+      let random=seed;
+      const rng=()=>{random=(Math.imul(random,1664525)+1013904223)>>>0;return random/4294967296;};
+      const game=engine.startGame("dextral","sinistral",rng,"opponent","hard",undefined,false);
+      for(let turn=0;turn<48&&game.phase!=="finished";turn++){
+        if(game.phase==="awaiting_quiero"){engine.answerQuiero(game,true,rng);continue;}
+        const position=legalPositions(game.player)[0];
+        if(game.phase!=="awaiting_player"||!game.player.hand.length||!position)break;
+        const before=game.pendingOpponentPlay?engine.cloneGame(game):null;
+        engine.submitPlayerPlay(game,0,position,rng);
+        if(before&&game.phase==="finished"&&["player","opponent"].includes(game.winner)){
+          return {key:SAVE_KEY,save:newSavedMatch(before,"sinistral"),position,winner:game.winner,
+            champion:game[game.winner].champion.id,life:[game.player.life,game.opponent.life]};
+        }
+      }
+    }
+    throw Error("No real pre-finale match found");
+  }finally{await server.close();}
+}
+
+async function runFinale(){
+  const fixture=await terminalFixture();
+  const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
+  const errors=[];
+  page.on("pageerror",e=>errors.push(e.message));
+  try{
+    await page.addInitScript(({key,save})=>localStorage.setItem(key,JSON.stringify(save)),fixture);
+    await page.goto(ROOT,{waitUntil:"domcontentloaded"});
+    await page.locator(".splash-start").evaluate(el=>el.click());
+    await page.getByRole("button",{name:/CONTINUAR PARTIDA/}).click();
+    const hand=page.locator(".hand-zone .hand-card").first();
+    await hand.waitFor({state:"visible"});
+    await hand.click();
+    await page.locator(".card-zoom-overlay .zoom-actions .primary-button").evaluate(el=>el.click());
+    await page.locator('.board-slot.player.drop-active[data-position="'+fixture.position+'"]').evaluate(el=>el.click());
+    const banner=page.locator(".dl-match-finale");
+    await banner.waitFor({state:"visible",timeout:30000});
+    assert.equal(await banner.getAttribute("data-outcome"),fixture.winner);
+    assert.equal(await banner.locator("img").getAttribute("data-champion"),fixture.champion);
+    assert.deepEqual(await banner.locator(".dl-finale-life strong").allTextContents(),fixture.life.map(String));
+    assert.ok(await banner.evaluate(el=>getComputedStyle(el).clipPath.includes("50% 100%")));
+    const continueButton=banner.getByRole("button",{name:/CONTINUAR/});
+    assert.ok(await continueButton.evaluate(el=>document.activeElement===el));
+    await page.screenshot({path:"/tmp/daggerlight-round-shadow-sweep-v3-finale.png"});
+    await continueButton.click();
+    await page.getByRole("group",{name:"Opciones después de la partida"}).waitFor({state:"visible"});
+    assert.deepEqual(errors,[]);
+    console.log("PASS finale: resumed a real match, finished by playing a card and continued to postgame actions");
+  }finally{await page.close();}
+}
+
 try{
   await runMatch("desktop",{width:1600,height:900},false);
   await runMatch("mobile",{width:390,height:844},true);
   await Promise.all([
+    runFinale(),
     runStudy("desktop",{width:1600,height:900},"no-preference"),
     runStudy("mobile",{width:390,height:844},"reduce")
   ]);
