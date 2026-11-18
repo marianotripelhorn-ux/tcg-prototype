@@ -1,3 +1,4 @@
+import { flushSync } from "react-dom";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ArchiveFlight, CardFlight, DealMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
 import type { BoardMotionSequence } from "./board-redesign/motion";
@@ -1456,7 +1457,7 @@ export default function App() {
             const current=boardMotionRef.current;
             if(current?.id!==boardMotion.id||current.phase!=="archive")return;
             const key=side+":"+position;
-            setArchiveArrivals(previous=>({...previous,[key]:(previous[key]??0)+1}));
+            flushSync(()=>setArchiveArrivals(previous=>({...previous,[key]:(previous[key]??0)+1})));
           }}
           onComplete={()=>{
             const current=boardMotionRef.current;

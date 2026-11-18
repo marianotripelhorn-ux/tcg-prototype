@@ -71,8 +71,8 @@ async function instrument(page){
         }
       }
 
-      if(phase==="archive"){
-        const values=Array.from(root.querySelectorAll(".board-slot .archive-count"),node=>node.textContent.trim());
+      if(phase==="archive"||phase==="round-wipe"){
+        const values=Array.from(root.querySelectorAll(".board-slot .archive-count"),node=>node.getAttribute("aria-label"));
         if(JSON.stringify(values)!==JSON.stringify(m.archiveCounts.at(-1)))m.archiveCounts.push(values);
       }
       if(phase==="deal"&&!m.deal){
@@ -335,10 +335,10 @@ async function runMatch(label,viewport,isMobile){
       label+": same graphic must reach FULL cover before the real board/hand swap: "+JSON.stringify(swap));
     assert.ok(swap.handCount>=1&&swap.boardCardCount===0,
       label+": the actual new hand and cleared lanes must exist beneath the full-cover veil");
-    assert.ok(data.archiveCounts.length>1,label+": Archive counters should tick during actual card arrivals");
+    assert.ok(data.archiveCounts.length>1,label+": Archive counters should tick during actual card arrivals: "+JSON.stringify(data.archiveCounts));
     assert.ok(data.deal?.length>=1&&data.deal.every((card,i)=>
       card.upright&&card.duration>=200&&card.duration<=320&&(i===0||card.delay>data.deal[i-1].delay)
-    ),label+": the engine hand needs upright, staggered card flights");
+    ),label+": the engine hand needs upright, staggered card flights: "+JSON.stringify(data.deal));
     assert.ok(await page.locator(".hand-zone .hand-card").count()>=1,
       label+": playable real new hand must be revealed");
     assert.ok(errors.length===0,label+": JavaScript runtime errors: "+errors.join(" | "));
