@@ -30,7 +30,7 @@ const crown = asset("board/ivory-ui/vida-crown.webp");
 const cardIds = ["hand-left", "hand-pick", "hand-right", "rival"] as const;
 type CardId = typeof cardIds[number];
 type Scene = typeof scenes[number];
-type Pose = { x: number; y: number; scale: number; rotation: number; rotationX: number; rotationY: number; opacity: number };
+type Pose = { x: number; y: number; scale: number; opacity: number };
 
 function Champion({ side, life }: { side: "player" | "rival"; life: number }) {
   const champion = champions[side === "player" ? "dextral" : "sinistral"];
@@ -57,23 +57,22 @@ function prepareScene(stage: HTMLElement, scene: Scene, timeline: gsap.core.Time
     return { x: rect.left + rect.width / 2 - origin.left, y: rect.top + rect.height / 2 - origin.top };
   };
   const pose = (key: string, changes: Partial<Pose> = {}): Pose => ({
-    ...point(key), scale: 1, rotation: 0, rotationX: 0, rotationY: 0, opacity: 1, ...changes
+    ...point(key), scale: 1, opacity: 1, ...changes
   });
-  const handPose = (key: CardId) => pose(key, { scale: .75,
-    rotation: key === "hand-left" ? -9 : key === "hand-right" ? 9 : 0 });
+  const handPose = (key: CardId) => pose(key, { scale: .75 });
   const card = (key: CardId) => select('[data-card="' + key + '"]');
   const label = select(".ms-event");
   const shade = select(".ms-focus");
   const table = select(".ms-table-art");
-  const deckPose = pose("deck", { scale: .5, opacity: 0, rotationY: -178 });
-  const boardPlayer = pose("player-slot", { scale: .77, rotation: 6 });
-  const boardRival = pose("rival-slot", { scale: .77, rotation: -6 });
-  const clashPlayer = pose("player-clash", { scale: 1.05, rotation: -9, rotationY: -13 });
-  const clashRival = pose("rival-clash", { scale: 1.05, rotation: 9, rotationY: 13 });
+  const deckPose = pose("deck", { scale: .5, opacity: 0 });
+  const boardPlayer = pose("player-slot", { scale: .77 });
+  const boardRival = pose("rival-slot", { scale: .77 });
+  const clashPlayer = pose("player-clash", { scale: 1.05 });
+  const clashRival = pose("rival-clash", { scale: 1.05 });
 
-  gsap.set(select(".ms-flying-card"), { xPercent: -50, yPercent: -50, transformPerspective: 850 });
+  gsap.set(select(".ms-flying-card"), { xPercent: -50, yPercent: -50 });
   for (const id of cardIds) gsap.set(card(id), deckPose);
-  gsap.set([...label, ...shade, ...select(".ms-wave"), ...select(".ms-delta"), ...select(".ms-decision")], { opacity: 0 });
+  gsap.set([...label, ...shade, ...select(".ms-delta"), ...select(".ms-decision")], { opacity: 0 });
   for (const id of cardIds.slice(0, 3)) {
     if (scene.id !== "entry" && scene.id !== "deal" && scene.id !== "archive" && scene.id !== "round" && scene.id !== "finish") {
       gsap.set(card(id), handPose(id));
@@ -88,20 +87,18 @@ function prepareScene(stage: HTMLElement, scene: Scene, timeline: gsap.core.Time
   const dealCards = (at: number) => cardIds.slice(0, 3).forEach((id, index) => {
     const start = at + index * .12;
     const target = handPose(id);
-    fly(id, { ...target, y: target.y - 42, scale: .86, rotationY: -24 }, start, .48, "power2.out");
+    fly(id, { ...target, y: target.y - 42, scale: .86 }, start, .48, "power2.out");
     fly(id, target, start + .48, .36, "back.out(1.2)");
   });
-  const transfer = (source: string, destination: string, at: number, tint: "blue" | "gold" = "blue") => {
-    const start = point(source);
-    const finish = point(destination);
-    const dx = finish.x - start.x;
-    const dy = finish.y - start.y;
-    const wave = select(".ms-wave");
-    gsap.set(wave, { x: start.x, y: start.y, width: Math.hypot(dx, dy),
-      rotation: Math.atan2(dy, dx) * 180 / Math.PI, scaleX: 0, opacity: 1,
-      "--ms-wave-color": tint === "blue" ? "#a5c7ff" : "#f1d48d" });
-    timeline.fromTo(wave, { scaleX: 0, opacity: 0 }, { scaleX: 1, opacity: 1, duration: .46, ease: "power3.inOut" }, at);
-    timeline.to(wave, { opacity: 0, duration: .3, ease: "power2.out" }, at + .47);
+  const ripple = (anchor: string, at: number) => {
+    const rings = select(".ms-ripple i");
+    gsap.set(select(".ms-ripple"), point(anchor));
+    timeline.fromTo(rings, { scale: .48, opacity: .82 },
+      { scale: 2.25, opacity: 0, duration: .66, stagger: .09, ease: "power2.out", immediateRender: false }, at);
+  };
+  const outline = (id: CardId, at: number) => {
+    timeline.fromTo(select('[data-card="' + id + '"] .ms-card-outline'), { opacity: 0 },
+      { opacity: 1, duration: .16, yoyo: true, repeat: 1, repeatDelay: .32 }, at);
   };
 
   switch (scene.id) {
@@ -118,20 +115,20 @@ function prepareScene(stage: HTMLElement, scene: Scene, timeline: gsap.core.Time
       break;
     case "inspect":
       timeline.to(shade, { opacity: .72, duration: .4 }, .02);
-      fly("hand-pick", pose("inspect", { scale: 1.65, rotation: -5, rotationY: -10 }), 0, .59, "power4.out");
-      fly("hand-pick", pose("inspect", { scale: 1.6, rotation: -2 }), .6, .45);
+      fly("hand-pick", pose("inspect", { scale: 1.65 }), 0, .59, "power4.out");
+      fly("hand-pick", pose("inspect", { scale: 1.6 }), .6, .45);
       break;
     case "place":
-      gsap.set(card("hand-pick"), pose("inspect", { scale: 1.6, rotation: -2 }));
-      fly("hand-pick", pose("player-slot", { scale: .88, rotation: 13, rotationX: 24 }), .02, .5, "power3.inOut");
+      gsap.set(card("hand-pick"), pose("inspect", { scale: 1.6 }));
+      fly("hand-pick", pose("player-slot", { scale: .88 }), .02, .5, "power3.inOut");
       fly("hand-pick", boardPlayer, .52, .22, "back.out(2)");
       timeline.fromTo(select(".ms-lane[data-lane=diestra]"), { "--ms-slot-light": 0 },
         { "--ms-slot-light": 1, duration: .11, yoyo: true, repeat: 1 }, .48);
       break;
     case "reply":
       gsap.set(card("hand-pick"), boardPlayer);
-      gsap.set(card("rival"), pose("rival-deck", { scale: .5, rotationY: 172 }));
-      fly("rival", pose("rival-slot", { scale: .9, rotation: -13, rotationY: 38 }), .05, .56, "power3.out");
+      gsap.set(card("rival"), pose("rival-deck", { scale: .5 }));
+      fly("rival", pose("rival-slot", { scale: .9 }), .05, .56, "power3.out");
       fly("rival", boardRival, .61, .29, "back.out(1.45)");
       break;
     case "power":
@@ -140,7 +137,8 @@ function prepareScene(stage: HTMLElement, scene: Scene, timeline: gsap.core.Time
       timeline.to(shade, { opacity: .62, duration: .44 }, 0);
       fly("hand-pick", clashPlayer, .1, .55, "power3.inOut");
       fly("rival", clashRival, .13, .55, "power3.inOut");
-      transfer("rival-slot", "rival-clash", .51);
+      outline("rival", .67);
+      ripple("rival-clash", .67);
       timeline.fromTo(select(".ms-delta"), { opacity: 0, y: 20, scale: .7 },
         { opacity: 1, y: 0, scale: 1, duration: .38, ease: "back.out(1.45)" }, .87);
       break;
@@ -148,8 +146,9 @@ function prepareScene(stage: HTMLElement, scene: Scene, timeline: gsap.core.Time
       gsap.set(card("hand-pick"), clashPlayer);
       gsap.set(card("rival"), clashRival);
       gsap.set(shade, { opacity: .57 });
-      fly("hand-pick", { ...clashPlayer, rotation: -16, scale: .93 }, .25, .18, "power2.out");
-      transfer("rival-clash", "player-crown", .24);
+      fly("hand-pick", { ...clashPlayer, scale: .93 }, .25, .18, "power2.out");
+      outline("hand-pick", .26);
+      ripple("player-crown", .67);
       timeline.fromTo(select("[data-life=player]"), { scale: 1 },
         { scale: 1.17, duration: .16, yoyo: true, repeat: 1, ease: "power2.out" }, .68);
       timeline.fromTo(select(".ms-score"), { scale: .94, opacity: .56 },
@@ -163,17 +162,17 @@ function prepareScene(stage: HTMLElement, scene: Scene, timeline: gsap.core.Time
       gsap.set(card("hand-pick"), boardPlayer);
       gsap.set(card("rival"), boardRival);
       timeline.to(shade, { opacity: .68, duration: .42 }, 0);
-      timeline.fromTo(select(".ms-decision"), { opacity: 0, y: 40, rotationX: -26 },
-        { opacity: 1, y: 0, rotationX: 0, duration: .7, ease: "power4.out" }, .16);
+      timeline.fromTo(select(".ms-decision"), { opacity: 0, y: -22, scaleY: .93 },
+        { opacity: 1, y: 0, scaleY: 1, duration: .55, ease: "power4.out" }, .16);
       break;
     case "archive":
       gsap.set(card("hand-pick"), boardPlayer);
       gsap.set(card("rival"), boardRival);
-      fly("rival", { ...boardRival, scale: .89, rotation: -16, y: boardRival.y - 25 }, .12, .32);
-      fly("hand-pick", { ...boardPlayer, scale: .89, rotation: 16, y: boardPlayer.y - 25 }, .24, .32);
-      transfer("player-slot", "player-archive", .51, "gold");
-      fly("rival", pose("rival-archive", { scale: .24, rotationY: 88, opacity: 0 }), .44, .38, "power3.in");
-      fly("hand-pick", pose("player-archive", { scale: .24, rotationY: -88, opacity: 0 }), .56, .38, "power3.in");
+      fly("rival", { ...boardRival, scale: .89, y: boardRival.y - 25 }, .12, .32);
+      fly("hand-pick", { ...boardPlayer, scale: .89, y: boardPlayer.y - 25 }, .24, .32);
+      ripple("player-archive", .91);
+      fly("rival", pose("rival-archive", { scale: .24, opacity: 0 }), .44, .38, "power3.in");
+      fly("hand-pick", pose("player-archive", { scale: .24, opacity: 0 }), .56, .38, "power3.in");
       timeline.fromTo(select(".ms-archive strong"), { opacity: .35, y: 5 },
         { opacity: 1, y: 0, duration: .4, stagger: .12, ease: "power3.out" }, .82);
       announce(.88);
@@ -312,7 +311,7 @@ export default function MotionStudy() {
       </div>
       <div className="ms-deck" data-anchor="deck"><img src={back} alt="Mazo" /></div>
       <div className="ms-focus" aria-hidden="true"/>
-      <div className="ms-wave" aria-hidden="true"/>
+      <div className="ms-ripple" aria-hidden="true"><i/><i/></div>
       {[...displayedHand, rivalCard].map((definition, index) =>
         <div key={cardIds[index]} className="ms-flying-card" data-card={cardIds[index]}>
           <div className="ms-card-face">
@@ -320,7 +319,7 @@ export default function MotionStudy() {
               livePower={(index === 1 || index === 3) && (scene.id === "power" || scene.id === "life")}
               finalPower={index === 3 && (step > 5 || step === 5 && stateRevealed) ? 8 : undefined}/>
           </div>
-          <img src={back} alt="" className="ms-card-back"/>
+          <div className="ms-card-outline" aria-hidden="true"/>
         </div>
       )}
       {scene.id === "power" && <strong className="ms-delta">+2</strong>}
@@ -328,7 +327,10 @@ export default function MotionStudy() {
         <strong>{eventTitle}</strong>
         {!!eventDetail && <span>{eventDetail}</span>}
       </div>
-      {scene.id === "decision" && <div className="ms-decision">
+      {scene.id === "decision" && <div className="ms-decision"
+        style={{ "--ms-fabric": 'url("' + championBackgroundUrl(champions.dextral.faction) + '")' } as CSSProperties}>
+        <span className="ms-decision-overline">TERCER DUELO</span>
+        <span className="ms-decision-rule" aria-hidden="true"/>
         <strong key={String(acceptedDuel)}>{acceptedDuel ? "Continúa el duelo" : "¿Disputar el tercer duelo?"}</strong>
         <div>
           <button type="button" onClick={() => { setMode("still"); setAcceptedDuel(true); }} aria-pressed={acceptedDuel}>Quiero</button>

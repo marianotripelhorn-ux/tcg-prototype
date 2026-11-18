@@ -1,3 +1,5 @@
+:root { --dl-quiero-pennant: polygon(0 0,100% 0,100% 87%,50% 100%,0 87%); }
+
 /*
  * DAGGERLIGHT / QUIERO — NO QUIERO: FIELD CHOREOGRAPHY
  * Approved React Board v3, no pop-up plaques and no duplicate controls.
@@ -221,7 +223,7 @@
   background-color:#171913;
   background-size:cover;background-position:center top;
   border:1px solid #c6a367;
-  clip-path:polygon(0 0,100% 0,100% 87%,50% 100%,0 87%);
+  clip-path:var(--dl-quiero-pennant);
   filter:drop-shadow(0 15px 20px #0009);
   animation:dl-quiero-banner-unfurl .43s cubic-bezier(.19,.7,.27,1) both;
 }

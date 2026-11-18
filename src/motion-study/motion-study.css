@@ -148,7 +148,6 @@
   height: 79%;
   top: 11%;
   padding: 1px;
-  transform-style: preserve-3d;
 }
 .ms-player { left: 2.35%; }
 .ms-rival { right: 2.35%; --ms-faction-color: #b3caff; }
@@ -159,7 +158,7 @@
   isolation: isolate;
   border-block: 1px solid #e4c68a9c;
   background: linear-gradient(0deg, #17191c, #20222600 56%), var(--ms-fabric) 50% / cover;
-  clip-path: polygon(0 0, 87% 0, 100% 8%, 100% 100%, 12% 100%, 0 92%);
+  clip-path: var(--dl-quiero-pennant);
   filter: drop-shadow(0 6px 16px #171a1d6b);
 }
 .ms-portrait::after {
@@ -177,7 +176,7 @@
 }
 .ms-champion-name {
   position: absolute;
-  inset: auto 10% 8%;
+  inset: auto 10% 16%;
   display: grid;
   gap: 4px;
   text-shadow: 0 2px 10px #000;
@@ -228,7 +227,6 @@
   bottom: 5%;
   width: calc(var(--ms-card-width) * .53);
   aspect-ratio: 2/3;
-  transform: rotate(9deg);
   box-shadow: 1px 2px #93826a, 2px 4px #272320, 3px 6px #6c5842, 6px 16px 20px #13131777;
 }
 .ms-deck img { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -240,17 +238,30 @@
   background: radial-gradient(ellipse at 50% 41%, #22202b28, #0d1016cf 72%);
   opacity: 0;
 }
-.ms-wave {
+.ms-ripple {
   position: absolute;
-  z-index: 5;
+  z-index: 7;
   top: 0;
   left: 0;
-  height: 2px;
-  color: var(--ms-wave-color);
-  background: linear-gradient(90deg, transparent, currentColor 35%, #fff7e9);
-  box-shadow: 0 0 6px 1px currentColor, 0 0 22px 4px currentColor;
-  transform-origin: left center;
+  width: clamp(28px, 5vw, 76px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
   pointer-events: none;
+}
+.ms-ripple i {
+  position: absolute;
+  inset: 0;
+  border: 1px solid #edca80;
+  box-shadow: 0 0 10px #bf9b5255;
+  border-radius: 50%;
+  opacity: 0;
+}
+.ms-card-outline {
+  position: absolute;
+  inset: -3px;
+  border: 1px solid #f9d692;
+  border-radius: 5px;
+  box-shadow: 0 0 13px #c49c5263;
   opacity: 0;
 }
 .ms-flying-card {
@@ -265,7 +276,7 @@
   pointer-events: none;
 }
 .ms-flying-card[data-card="hand-pick"], .ms-flying-card[data-card="rival"] { z-index: 5; }
-.ms-card-face, .ms-card-back {
+.ms-card-face {
   position: absolute;
   display: block;
   inset: 0;
@@ -273,7 +284,6 @@
   height: 100%;
   border: 1px solid #e6d3a5;
   border-radius: 4px;
-  backface-visibility: hidden;
   box-shadow: 0 2px 2px #211f20, 1px 11px 18px #1717179e, 0 20px 38px #1313125e;
 }
 .ms-card-face > .game-card {
@@ -284,7 +294,6 @@
   border-radius: 3px !important;
   transition: none;
 }
-.ms-card-back { object-fit: cover; transform: rotateY(180deg); }
 .ms-card-face .live-power-badge {
   inset: 5px 4px auto auto;
   border: 1px solid #b69e6b;
@@ -324,37 +333,52 @@
   z-index: 8;
   top: 24%;
   left: 63%;
-  color: #e8f1ff;
+  color: #f6dda5;
   font: 400 clamp(25px, 4vw, 60px)/1 var(--ms-display);
-  text-shadow: 0 0 .4em #385cc8, 0 .12em .18em #0d143c;
+  text-shadow: 0 0 .38em #9d763f, 0 .12em .18em #201a14;
   opacity: 0;
 }
 .ms-decision {
   position: absolute;
   z-index: 10;
-  inset: 33% auto auto 50%;
+  inset: 19% auto auto 50%;
   translate: -50% 0;
+  transform-origin: top center;
   display: grid;
-  gap: 18px;
-  width: min(49%, 480px);
-  padding: clamp(18px, 3vw, 44px);
+  justify-items: center;
+  gap: 10px;
+  width: min(88%, 310px);
+  padding: clamp(22px, 3.6vw, 40px) 26px 60px;
   text-align: center;
-  background: linear-gradient(145deg, #ede1c5, #c4af88);
-  border: 1px solid #f4e5bd;
-  box-shadow: 0 7px #8e7d5e, 0 24px 44px #1715129e, inset 0 0 36px #796d4150;
-  color: #25221f;
+  background: linear-gradient(180deg,#12110ebe,#12110ee8), var(--ms-fabric) center top / cover;
+  border: 1px solid #d7b881;
+  clip-path: var(--dl-quiero-pennant);
+  color: #f4edda;
   opacity: 0;
 }
-.ms-decision strong { font: 400 clamp(17px, 2.8vw, 33px)/1.1 var(--ms-display); letter-spacing: -.04em; }
-.ms-decision > div { display: flex; justify-content: center; gap: 8px; }
+.ms-decision-overline {
+  color: #ead2a1;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .18em;
+}
+.ms-decision-rule {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg,transparent,#f3d69c,transparent);
+}
+.ms-decision strong { font: 400 clamp(17px, 2.25vw, 29px)/1.1 var(--ms-display); letter-spacing: -.035em; }
+.ms-decision > div { display: grid; gap: 8px; width: min(100%, 175px); margin-top: 4px; }
 .ms-decision button {
+  min-height: 40px;
   padding: 9px 14px;
   color: #f4e7cc;
-  border: 1px solid #5e4d37;
-  background: #2b2823;
+  border: 1px solid #ead09b;
+  background: #1a1916;
   cursor: pointer;
 }
-.ms-decision button[aria-pressed="true"] { color: #2b2823; background: #f8eacd; }
+.ms-decision button:first-child { color: #18140d; background: #d9ba7d; }
+.ms-decision button[aria-pressed="true"] { color: #18140d; background: #f8eacd; }
 
 .ms-controls {
   display: grid;
@@ -400,7 +424,7 @@
   .ms-champion { top: 3.8%; width: 27%; height: 26%; }
   .ms-player { left: 3.3%; }
   .ms-rival { right: 3.3%; }
-  .ms-champion-name { inset: auto 8% 9%; }
+  .ms-champion-name { inset: auto 8% 17%; }
   .ms-champion-name span { font-size: 8px; }
   .ms-champion-name strong { font-size: clamp(12px, 3.7vw, 20px); }
   .ms-life { width: 37px; right: -9%; top: -4%; }
@@ -419,7 +443,7 @@
   .ms-stage[data-scene="life"] .ms-event { top: 40%; }
   .ms-stage[data-scene="finish"] .ms-event { top: 39%; }
   .ms-delta { left: 77%; top: 32%; }
-  .ms-decision { top: 36%; width: 78%; }
+  .ms-decision { top: 30%; width: min(78%, 270px); padding-bottom: 48px; }
   .ms-decision button { padding-inline: 9px; }
   .ms-controls { grid-template-columns: 1fr; margin-top: 15px; gap: 10px; }
   .ms-caption p { font-size: 12px; min-height: 2.8em; }
