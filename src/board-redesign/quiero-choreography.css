@@ -1,4 +1,4 @@
-:root { --dl-quiero-pennant: polygon(0 0,100% 0,100% 100%,50% 82%,0 100%); }
+:root { --dl-quiero-pennant: polygon(0 0,100% 0,100% 100%,50% 75%,0 100%); }
 
 /*
  * DAGGERLIGHT / QUIERO — NO QUIERO: FIELD CHOREOGRAPHY
@@ -227,7 +227,7 @@
   max-width:min(92vw,100%);
   min-height:clamp(300px,43dvh,388px);
   gap:clamp(8px,1.15dvh,13px);
-  padding:22px 26px 53px;
+  padding:22px 26px 76px;
   box-sizing:border-box;
   color:#f4edda;text-align:center;
   background-color:#171913;
@@ -290,13 +290,13 @@
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner {
     width:min(340px,87vw);
     min-height:clamp(270px,41dvh,335px);
-    padding:18px 20px 46px;
+    padding:18px 20px 70px;
     gap:8px;
   }
 }
 @media(max-height:610px) {
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner {
-    min-height:245px;padding:12px 20px 52px;gap:6px;
+    min-height:245px;padding:12px 20px 70px;gap:6px;
   }
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-quiero-banner .board-quiero-choices button {
     min-height:35px;padding:7px 11px;

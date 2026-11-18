@@ -176,7 +176,7 @@
 }
 .ms-champion-name {
   position: absolute;
-  inset: auto 10% 16%;
+  inset: auto 10% 25%;
   display: grid;
   gap: 4px;
   text-shadow: 0 2px 10px #000;
@@ -358,9 +358,9 @@
   justify-items: center;
   gap: 10px;
   width: min(88%, 310px);
-  padding: clamp(22px, 3.6vw, 40px) 26px 60px;
+  padding: clamp(22px, 3.6vw, 40px) 26px 76px;
   text-align: center;
-  background: linear-gradient(180deg,#12110ebe,#12110ee8), var(--ms-fabric) center top / cover;
+  background: linear-gradient(180deg,#12110e80,#12110eb5), var(--ms-fabric) center top / cover;
   border: 1px solid #d7b881;
   clip-path: var(--dl-quiero-pennant);
   color: #f4edda;
@@ -434,7 +434,7 @@
   .ms-champion { top: 3.8%; width: 27%; height: 26%; }
   .ms-player { left: 3.3%; }
   .ms-rival { right: 3.3%; }
-  .ms-champion-name { inset: auto 8% 17%; }
+  .ms-champion-name { inset: auto 8% 25%; }
   .ms-champion-name span { font-size: 8px; }
   .ms-champion-name strong { font-size: clamp(12px, 3.7vw, 20px); }
   .ms-life { width: 37px; right: -9%; top: -4%; }
@@ -452,7 +452,7 @@
   .ms-event strong { font-size: clamp(22px, 8vw, 54px); }
   .ms-stage[data-scene="life"] .ms-event { top: 40%; }
   .ms-stage[data-scene="finish"] .ms-event { top: 39%; }
-  .ms-decision { top: 30%; width: min(78%, 270px); padding-bottom: 48px; }
+  .ms-decision { top: 30%; width: min(78%, 270px); padding-bottom: 60px; }
   .ms-decision button { padding-inline: 9px; }
   .ms-controls { grid-template-columns: 1fr; margin-top: 15px; gap: 10px; }
   .ms-caption p { font-size: 12px; min-height: 2.8em; }
