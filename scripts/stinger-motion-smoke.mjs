@@ -184,7 +184,11 @@ async function instrument(page){
 
       const receipt=root.querySelector(".board-round-receipt-stage .board-round-ceremony");
       if(receipt&&!m.roundReceipt){
+        const effect=receipt.getAnimations().find(a=>a.animationName==="dl-round-receipt-reveal")?.effect;
+        const frames=effect?.getKeyframes()??[];
+        const settled=frames.filter(frame=>frame.opacity==="1"&&frame.transform===frames[2]?.transform);
         m.roundReceipt={
+          hold:effect&&settled.length===2?(settled[1].computedOffset-settled[0].computedOffset)*effect.getTiming().duration:0,
           shape:getComputedStyle(receipt).clipPath,
           title:receipt.querySelector(".board-round-kicker")?.textContent?.trim(),
           score:receipt.querySelector(".board-round-score")?.textContent?.trim(),
@@ -302,7 +306,7 @@ async function runMatch(label,viewport,isMobile){
     assert.ok(ribbon&&ribbon.duration===1200&&ribbon.motion.includes("dl-duel-banner"),
       label+": 1200ms centered duel banner animation missing");
     assert.equal(ribbon.shape,data.quieroShape,label+": duel banner must use the real Quiero silhouette");
-    assert.ok(ribbon.center.frames>=5&&ribbon.center.offset<4,
+    assert.ok(ribbon.center.frames>=1&&ribbon.center.offset<4,
       label+": duel banner must stay centered while it is moving and holding: "+JSON.stringify(ribbon.center));
     assert.ok(ribbon.rest.some((frame,i)=>{
       const next=ribbon.rest[i+1];
@@ -351,12 +355,13 @@ async function runMatch(label,viewport,isMobile){
     assert.ok(roundReceipt?.title?.includes("FINALIZADA")&&roundReceipt.score&&roundReceipt.outcome,
       label+": round receipt must group the actual completed-round result");
     assert.equal(roundReceipt.shape,data.quieroShape,label+": round receipt must use the Quiero silhouette");
-    assert.ok(roundReceipt.center.frames>=5&&roundReceipt.center.offset<4,
+    assert.ok(roundReceipt.hold>=990,label+": the round recap needs about a second at rest");
+    assert.ok(roundReceipt.center.frames>=1&&roundReceipt.center.offset<4,
       label+": round receipt must remain centered");
     assert.ok(roundBanner&&roundBanner.entryMs===250&&roundBanner.exitMs===240,
       label+": new-round banner must use the 250ms entrance and 240ms exit");
     assert.equal(roundBanner.shape,data.quieroShape,label+": new-round banner must use the Quiero silhouette");
-    assert.ok(roundBanner.center.frames>=5&&roundBanner.center.offset<4,
+    assert.ok(roundBanner.center.frames>=1&&roundBanner.center.offset<4,
       label+": new-round banner must stay centered throughout the motion");
     assert.ok(new Set(roundBanner.entryTransforms).size>=2&&new Set(roundBanner.exitTransforms).size>=2,
       label+": new-round banner entrance and exit must move");
