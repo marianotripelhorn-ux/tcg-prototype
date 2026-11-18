@@ -240,10 +240,10 @@ function DuelEffectsPanel({played,side,beat}:{played:EnginePlay;side:"player"|"o
   </aside>;
 }
 
-function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,before=null,after=null}:{
+function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,before=null,after=null,guided=false}:{
   duel:DuelSummary;onAdvance:()=>void;auguryEvents:string[];beat:DuelBeat;
   outcome?:"player"|"opponent"|"draw"|null;
-  before?:GameState|null;after?:GameState|null;
+  before?:GameState|null;after?:GameState|null;guided?:boolean;
 }) {
   const overlayRef=useRef<HTMLDivElement>(null);
   useLayoutEffect(()=>{
@@ -341,7 +341,7 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,be
       className={"duel-showcase-overlay duel-choreo duel-beat-"+beat+(outcome?" is-board-outcome":"")}
       role="dialog" aria-modal="true" aria-label="Resolución de Poder de las cartas">
       <div className="duel-focus-screen" aria-hidden="true"/>
-      {outcome&&beat==="result"&&<DuelResultStinger duel={duel} onComplete={onAdvance}
+      {outcome&&beat==="result"&&<DuelResultStinger duel={duel} onComplete={onAdvance} held={guided}
         bannerImage={after?championBackgroundUrl(after.player.champion.faction):undefined}/>}
       {outcome&&beat==="settle"&&<span className="arena-visually-hidden" role="status">
         {duel.outcome==="player"?"VICTORIA":duel.outcome==="opponent"?"DERROTA":"EMPATE"}
@@ -357,8 +357,10 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,be
       </div>}
       {(beat==="compare"||beat==="impact"||beat==="result")&&auguryEvents.length>0&&
         <div className="duel-showcase-events">{auguryEvents.map((event,index)=><span key={index}>{event}</span>)}</div>}
-      <button type="button" className="duel-showcase-skip" onClick={onAdvance}>
-        {outcome?"CONTINUAR →":"SALTAR A RESULTADO →"}
+      {guided&&beat==="compare"&&<p className="dl-guide-duel-note">Compará el Poder final. Las notas junto a cada carta indican qué lo cambió.</p>}
+      <button type="button" className="duel-showcase-skip" onClick={onAdvance}
+        disabled={guided&&beat!=="compare"&&beat!=="result"}>
+        {outcome?"CONTINUAR →":guided?"VER RESULTADO →":"SALTAR A RESULTADO →"}
       </button>
     </div>
   );
@@ -661,6 +663,8 @@ export default function App() {
   const phoneHandInspection=phoneBoard&&inspection?.handIndex!==undefined;
   const [duelPreview,setDuelPreview]=useState<DuelSummary|null>(null);
   const [boardMotion,setBoardMotion]=useState<BoardMotionSequence|null>(null);
+  const guidedRound=guidedOpening&&(boardMotion?.before.round??game?.round)===1;
+  const guidedHandInspection=guidedRound&&inspection?.handIndex!==undefined;
   const boardMotionRef=useRef<BoardMotionSequence|null>(null);
   const [archiveArrivals,setArchiveArrivals]=useState<Record<string,number>>({});
   const nextMotionId=useRef(0);
@@ -764,6 +768,12 @@ export default function App() {
     clearPreviewTimer();
     setDuelStep("result");
     if(boardRedesign){
+      if(guidedRound){
+        setDuelBeat("result");
+        if(duelPreview&&!isReducedMotion())
+          playDuelCue(duelPreview.outcome==="player"?"victory":duelPreview.outcome==="opponent"?"defeat":"draw",audioEnabledRef.current);
+        return;
+      }
       setDuelBeat("result");
       if(isReducedMotion()){
         duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,1050));
@@ -946,6 +956,10 @@ export default function App() {
     setDuelBeat("approach");
     setDuelPreview(duel);
     if(boardRedesign){
+      if(guidedRound&&isReducedMotion()){
+        setDuelBeat("compare");
+        return;
+      }
       if(isReducedMotion()){
         duelTimelineTimers.current.push(window.setTimeout(()=>{
           setDuelBeat("result");
@@ -955,6 +969,7 @@ export default function App() {
       }else{
         playDuelCue("rise",audioEnabledRef.current);
         DUEL_BEATS.slice(1).forEach(({at,beat})=>{
+          if(guidedRound&&(beat==="impact"||beat==="result"||beat==="settle"))return;
           duelTimelineTimers.current.push(window.setTimeout(()=>{
             setDuelBeat(beat);
             if(beat==="player-power"||beat==="opponent-power"){
@@ -969,7 +984,7 @@ export default function App() {
             }
           },at));
         });
-        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,DUEL_FINISH_MS));
+        if(!guidedRound)duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,DUEL_FINISH_MS));
       }
     }else{
       previewTimer.current=window.setTimeout(showDuelResult,isReducedMotion()?220:2150);
@@ -1069,7 +1084,7 @@ export default function App() {
     const card=hand[handIndex];
     if(!card)return;
     if(phoneBoard){
-      setSelectedIndex(handIndex);
+      if(!guidedRound)setSelectedIndex(handIndex);
       inspectionTrigger.current=trigger;
     }
     setInspection({card,handIndex,powerExact:true});
@@ -1122,7 +1137,9 @@ export default function App() {
     const current=drag;
     if (!current || current.pointerId!==event.pointerId) return;
     const destination=current.moved ? zoneAt(event.clientX,event.clientY) : null;
-    if (destination) {
+    if(destination&&guidedRound&&selectedIndex!==current.handIndex){
+      inspectHandCard(current.handIndex,event.currentTarget);
+    }else if (destination) {
       const rect=handCardRect(current.handIndex);
       const releasedRect=rect&&current.moved
         ? {...rect,x:event.clientX-rect.width/2,y:event.clientY-rect.height/2}
@@ -1140,18 +1157,21 @@ export default function App() {
 
   function dismissWelcome() {
     setWelcomeSeen(true);
+    setPlayerName(writePlayerName(playerName));
     rememberWelcome();
   }
 
   function startGuidedOpening() {
     dismissWelcome();
+    setBoardRedesign(true);
     startWithChampion(TUTORIAL_MATCH.championId,TUTORIAL_MATCH.opponentId,TUTORIAL_MATCH.difficulty,null,false,true);
   }
 
   if (!hasEntered) return <SplashScreen onStart={()=>setHasEntered(true)} />;
 
   if (!game&&!welcomeSeen&&!savedMatch&&!arcadeRun&&history.length===0) {
-    return <WelcomeMatch onPlay={startGuidedOpening} onSkip={dismissWelcome}/>;
+    return <WelcomeMatch playerName={playerName} onNameChange={setPlayerName}
+      onPlay={startGuidedOpening} onSkip={dismissWelcome}/>;
   }
 
   if (!game) {
@@ -1414,7 +1434,7 @@ export default function App() {
           {duelPreview && (boardRedesign
             ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries}
                 beat={duelBeat} outcome={duelStep==="result"?duelPreview.outcome:null}
-                before={boardMotion?.before??null} after={game}
+                before={boardMotion?.before??null} after={game} guided={guidedRound}
                 onAdvance={duelStep==="result"?settleDuelPresentation:showDuelResult}/>
             : duelStep==="cards"
               ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries}
@@ -1681,6 +1701,7 @@ export default function App() {
         {boardRedesign && boardMotion?.phase==="round" && <RoundTransition
           sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
           summary={completedRound}
+          held={guidedRound}
           bannerImage={championBackgroundUrl(game.player.champion.faction)}
           onComplete={()=>{
             const current=boardMotionRef.current;
@@ -1710,14 +1731,20 @@ export default function App() {
 
         {inspection && (
           <div
-            className={"card-zoom-overlay"+(phoneHandInspection?" is-phone-hand-inspection":"")}
+            className={"card-zoom-overlay"+(phoneHandInspection?" is-phone-hand-inspection":"")+(guidedHandInspection?" is-guided-hand-inspection":"")}
             role="dialog"
             aria-modal="true"
             aria-label={inspection.card.name}
             aria-describedby={phoneHandInspection?"phone-hand-inspection-details":undefined}
             onClick={closeInspection}
             onKeyDown={phoneHandInspection ? event=>{
-              if(event.key==="Tab")event.preventDefault();
+              if(event.key==="Tab"){
+                event.preventDefault();
+                if(guidedHandInspection){
+                  const target=(event.target as Element).matches(".zoom-close")?".dl-guide-inspection-next":".zoom-close";
+                  event.currentTarget.querySelector<HTMLElement>(target)?.focus();
+                }
+              }
               if(event.key==="Escape"){
                 event.preventDefault();
                 closeInspection();
@@ -1748,9 +1775,15 @@ export default function App() {
                  ]}
                </p>}
               {phoneHandInspection
-                ? <p id="phone-hand-inspection-details" className="arena-visually-hidden">
+                ? <>
+                  <p id="phone-hand-inspection-details" className="arena-visually-hidden">
                     Poder {inspection.card.power}. {inspection.card.text}
                   </p>
+                  {guidedHandInspection&&<button type="button" className="primary-button dl-guide-inspection-next" onClick={()=>{
+                    setSelectedIndex(inspection.handIndex!);
+                    closeInspection();
+                  }}>CONTINUAR →</button>}
+                </>
                 : <div className="zoom-actions">
                 <div>
                   <strong>{inspection.card.name}</strong>
@@ -1772,7 +1805,7 @@ export default function App() {
                       setSelectedIndex(inspection.handIndex!);
                       setInspection(null);
                     }}
-                  >SELECCIONAR</button>
+                  >{guidedHandInspection?"CONTINUAR →":"SELECCIONAR"}</button>
                 )}
               </div>}
             </div>

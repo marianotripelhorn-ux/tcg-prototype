@@ -1,114 +1,75 @@
 .dl-faction-card-back {
   --dl-back-ink: #371a1a;
-  --dl-back-accent: #a04c3b;
-  --dl-back-metal: #efd5aa;
+  --dl-back-tint: #f8b29b;
   position: relative;
   display: block;
   isolation: isolate;
   overflow: hidden;
-  container-type: inline-size;
   box-sizing: border-box;
   aspect-ratio: 63 / 88;
-  border: 1px solid var(--dl-back-metal);
+  border: 1px solid var(--dl-back-tint);
   border-radius: 5% / 3.5%;
   background: var(--dl-back-ink);
-  box-shadow: inset 0 0 0 1px #16120cc9;
-  color: var(--dl-back-metal);
   pointer-events: none;
 }
 
 .dl-faction-card-back[data-faction="blue"] {
   --dl-back-ink: #17273e;
-  --dl-back-accent: #496b9f;
-  --dl-back-metal: #cee0e9;
+  --dl-back-tint: #bed9fb;
 }
 
 .dl-faction-card-back[data-faction="white"] {
   --dl-back-ink: #4e4841;
-  --dl-back-accent: #a29b8c;
-  --dl-back-metal: #fbefd6;
+  --dl-back-tint: #fff1d8;
 }
 
 .dl-faction-card-back[data-faction="saints"] {
   --dl-back-ink: #31283a;
-  --dl-back-accent: #815871;
-  --dl-back-metal: #efd692;
+  --dl-back-tint: #efd692;
 }
 
 .dl-faction-card-back[data-faction="ivory"] {
   --dl-back-ink: #333b30;
-  --dl-back-accent: #6f7d5c;
-  --dl-back-metal: #f6e4c3;
+  --dl-back-tint: #d9e4c5;
 }
 
-.dl-faction-card-back::before,
-.dl-faction-card-back::after {
-  content: "";
+.dl-back-art {
   position: absolute;
-  pointer-events: none;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  z-index: -2;
 }
 
 .dl-faction-card-back::before {
+  content: "";
+  position: absolute;
   inset: 0;
-  z-index: -2;
-  background:
-    linear-gradient(145deg, #1110168c, transparent 42%, #100e14bf),
-    radial-gradient(ellipse at 50% 38%, transparent 10%, var(--dl-back-ink) 86%);
-}
-
-.dl-faction-card-back::after {
-  inset: 4%;
   z-index: -1;
-  border: 1px solid currentColor;
-  border-radius: 5% / 3.5%;
-  background: url("/board/cardback-gold.png") center / 111% 112%;
-  mix-blend-mode: soft-light;
-  opacity: .55;
+  background: linear-gradient(180deg, #12101818, #12101868);
 }
 
-.dl-back-crest {
+.dl-back-logo {
   position: absolute;
   inset: 50% auto auto 50%;
-  display: grid;
-  place-items: center;
-  width: 47%;
+  width: 60%;
   aspect-ratio: 1;
-  border: 1px solid currentColor;
-  background: radial-gradient(circle, var(--dl-back-accent), var(--dl-back-ink));
-  box-shadow: 0 0 0 2px #140f13a0, inset 0 0 0 2px #100c1380;
-  transform: translate(-50%, -50%) rotate(45deg);
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 1px 2px #141018c9);
 }
 
-.dl-back-crest > span {
-  font: 600 clamp(8px, 29cqi, 56px)/1 Georgia, serif;
-  text-shadow: 0 .08em .15em #110d10;
-  transform: rotate(-45deg);
-}
-
-.dl-back-corner {
+.dl-back-logo::before {
+  content: "";
   position: absolute;
-  font: 600 clamp(6px, 13cqi, 19px)/1 Georgia, serif;
-  text-shadow: 0 1px 3px #100c13;
+  inset: 0;
+  background: var(--dl-back-tint);
+  mask: var(--dl-back-logo) center / contain no-repeat;
 }
-
-.dl-back-corner-top { top: 10%; left: 11%; }
-.dl-back-corner-bottom { bottom: 10%; right: 11%; transform: rotate(180deg); }
 
 .dl-faction-card-back.hybrid-phone-deck-back {
   width: 14px;
   flex: 0 0 14px;
   border-radius: 2px;
-}
-
-.hybrid-phone-deck-back .dl-back-corner { display: none; }
-.hybrid-phone-deck-back .dl-back-crest { box-shadow: none; }
-
-.dl-back-art {
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  max-width:none;
-  object-fit:cover;
-  z-index:-3;
 }

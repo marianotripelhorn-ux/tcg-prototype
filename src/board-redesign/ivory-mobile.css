@@ -634,3 +634,14 @@
     );
   }
 }
+
+@media(max-width:760px) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .is-phone-hand-inspection.is-guided-hand-inspection .zoom-card-frame {
+    width:min(
+      calc(100vw - max(12px, var(--phone-left)) - max(12px, var(--phone-right))),
+      460px,
+      calc((100dvh - var(--phone-top) - var(--phone-bottom) - 124px) * .71)
+    );
+  }
+  .dl-guide-inspection-next {min-height:44px;padding:9px 18px;margin-top:4px}
+}

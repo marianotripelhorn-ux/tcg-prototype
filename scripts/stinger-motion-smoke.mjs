@@ -38,6 +38,8 @@ async function startGame(page){
   await page.locator(".dl-champion-start").waitFor({state:"attached",timeout:12000});
   const starter=page.locator(".dl-faction-card-back").first();
   assert.ok(await starter.locator(".dl-back-art").evaluate(async image=>{await image.decode();return image.naturalWidth>0;}));
+  const logo=await page.request.get(ROOT+"branding/logo-simple.png");
+  assert.ok(logo.ok()&&logo.headers()["content-type"]?.startsWith("image/"),"Faction backs require the supplied logo");
   await page.evaluate(()=>{
     const entrance=window.__matchEntrance={phases:[],banners:[],hiddenHand:false};
     const observer=new MutationObserver(()=>{
@@ -530,19 +532,55 @@ async function runWelcome(){
   try{
     await page.goto(ROOT,{waitUntil:"domcontentloaded"});
     await page.locator(".splash-start").evaluate(el=>el.click());
+    await page.getByRole("img",{name:"INVOCADAGAS",exact:true}).waitFor({state:"visible"});
+    await page.getByLabel("Tu nombre de jugador").fill("Mariano Test");
     await page.getByRole("button",{name:"EMPEZAR PARTIDA GUIADA",exact:true}).click();
     await page.locator(".dl-opening-guide").waitFor({state:"visible"});
     assert.equal(await page.locator(".dl-champion-card").count(),0,"Guided play skips setup");
-    await playCard(page);
-    await page.locator(".dl-duel-stinger").waitFor({state:"visible"});
-    await page.locator('main[data-board-phase="idle"]').waitFor({state:"attached"});
-    await page.getByRole("button",{name:"Saltar guía",exact:true}).click();
-    assert.equal(await page.locator(".dl-opening-guide").count(),0);
+    const idle=page.locator('main[data-board-phase="idle"]');
+    const recap=page.locator(".board-round-receipt-stage.is-guide-receipt");
+    for(let turn=0;turn<3;turn++){
+      await page.locator('main:is([data-board-phase="idle"],[data-board-phase="round"])').waitFor({state:"attached"});
+      if(await recap.count())break;
+      if(await closeQuiero(page))break;
+      await idle.waitFor({state:"attached"});
+      const first=page.locator(".hand-zone .hand-card").first();
+      await first.click();
+      const inspection=page.locator(".is-guided-hand-inspection");
+      await inspection.waitFor({state:"visible"});
+      assert.equal(await first.getAttribute("aria-pressed"),"false","Opening the card is its own step");
+      assert.equal(await page.locator(".board-slot.player.drop-active").count(),0);
+      await inspection.getByRole("button",{name:"CONTINUAR →",exact:true}).click();
+      assert.equal(await first.getAttribute("aria-pressed"),"true");
+      await page.locator(".board-slot.player.drop-active").first().evaluate(el=>el.click());
+      const resultButton=page.getByRole("button",{name:"VER RESULTADO →",exact:true});
+      await page.locator(".duel-beat-compare").waitFor({state:"visible"});
+      if(turn===0){
+        await page.waitForTimeout(1100);
+        assert.ok(await resultButton.isEnabled(),"The guide must wait at final Power");
+        assert.equal(await page.locator(".dl-duel-stinger").count(),0);
+      }
+      await resultButton.click();
+      const result=page.locator(".dl-duel-stinger.dl-guide-held");
+      await result.waitFor({state:"visible"});
+      if(turn===0){
+        await page.waitForTimeout(1400);
+        assert.ok(await result.isVisible(),"The guided outcome must stay until Continue");
+      }
+      await page.locator(".duel-beat-result .duel-showcase-skip").click();
+    }
+    await recap.waitFor({state:"visible"});
+    await page.waitForTimeout(1750);
+    assert.ok(await recap.isVisible(),"The round guide must wait before archiving");
+    await recap.getByRole("button",{name:"CONTINUAR A ARCHIVOS →",exact:true}).click();
+    await idle.waitFor({state:"attached"});
+    assert.equal(await page.locator(".dl-opening-guide").count(),0,"Round two returns to normal play");
     await page.reload({waitUntil:"domcontentloaded"});
     await page.locator(".splash-start").evaluate(el=>el.click());
     await page.locator(".home-action.action-continue").waitFor({state:"visible"});
     assert.equal(await page.locator(".dl-welcome").count(),0);
-    console.log("PASS first visit: preserved splash, real guided duel, guide skip and remembered welcome");
+    assert.ok(await page.evaluate(()=>Object.values(localStorage).includes("Mariano Test")),"Player name should persist");
+    console.log("PASS first visit: name, Invocadagas, paced inspect, Power, result and Archive steps");
   }finally{await page.close();}
 }
 

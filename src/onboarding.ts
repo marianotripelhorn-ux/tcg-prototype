@@ -32,7 +32,7 @@ export function guidedOpeningHint({round,turn,phase,motion,result,inspecting,car
   if(motion==="flight"||motion==="duel")return "Mirá el Poder de cada carta. Su habilidad puede cambiarlo antes del resultado.";
   if(motion==="quiero-ai")return "El rival aceptó jugar el tercer duelo.";
   if(phase==="awaiting_quiero")return "Elegí Quiero para disputar el tercer duelo o No quiero para cerrar la ronda.";
-  if(inspecting)return "Leé la habilidad de la carta. Algunas se activan al jugarla en una posición específica.";
+  if(inspecting)return "Leé la habilidad y presioná Continuar cuando estés listo para elegir una posición.";
   if(cardSelected)return "Elegí una de las posiciones habilitadas para jugar la carta.";
-  return turn===1?"Elegí una carta de tu mano para ampliarla y leer su habilidad.":"Elegí otra carta. Fijate qué posición le conviene.";
+  return turn===1?"Abrí una carta de tu mano para leer su habilidad. La vas a jugar en el paso siguiente.":"Elegí otra carta. Fijate qué posición le conviene.";
 }

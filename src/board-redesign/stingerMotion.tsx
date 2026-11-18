@@ -9,10 +9,11 @@ export function CeremonyBackdrop({image}:{image?:string}) {
 }
 
 /** The engine supplies both final Power values and the outcome. */
-export function DuelResultStinger({duel,onComplete,bannerImage}:{
+export function DuelResultStinger({duel,onComplete,bannerImage,held=false}:{
   duel:DuelSummary;
   onComplete?:()=>void;
   bannerImage?:string;
+  held?:boolean;
 }) {
   const card=useRef<HTMLDivElement>(null);
   useLayoutEffect(()=>{
@@ -34,7 +35,7 @@ export function DuelResultStinger({duel,onComplete,bannerImage}:{
   const playerPower=duel.playerPlay.finalPower??duel.playerPlay.card.power;
   const opponentPower=duel.opponentPlay.finalPower??duel.opponentPlay.card.power;
   const result=duel.outcome==="player"?"VICTORIA":duel.outcome==="opponent"?"DERROTA":"EMPATE";
-  return <div ref={card} className="dl-duel-stinger dl-ceremony-banner"
+  return <div ref={card} className={"dl-duel-stinger dl-ceremony-banner"+(held?" dl-guide-held":"")}
     role="status" aria-live="polite"
     onAnimationEnd={event=>{
       if(event.target===event.currentTarget&&event.animationName==="dl-duel-banner")onComplete?.();
@@ -49,6 +50,9 @@ export function DuelResultStinger({duel,onComplete,bannerImage}:{
       <span className="dl-duel-stinger-power"><small>TU PODER</small><strong>{playerPower}</strong></span>
       <span className="dl-duel-stinger-power"><small>PODER RIVAL</small><strong>{opponentPower}</strong></span>
     </div>
+    {held&&<p className="dl-guide-banner-note">{duel.outcome==="draw"
+      ?"En un empate, nadie pierde Vida."
+      :"Al continuar, se actualizan la Vida y el marcador."}</p>}
   </div>;
 }
 

@@ -29,9 +29,10 @@ interface TimedProps {
   onComplete: () => void;
 }
 
-export function RoundTransition({sequenceId,reducedMotion,onComplete,summary,bannerImage}:TimedProps & {
+export function RoundTransition({sequenceId,reducedMotion,onComplete,summary,bannerImage,held=false}:TimedProps & {
   summary: RoundSummary | null;
   bannerImage?: string;
+  held?: boolean;
 }) {
   const current=useRef(onComplete);
   current.current=onComplete;
@@ -42,15 +43,17 @@ export function RoundTransition({sequenceId,reducedMotion,onComplete,summary,ban
     current.current();
   }
   useEffect(()=>{
+    if(held)return;
     const timer=window.setTimeout(finish,reducedMotion?1000:1680);
     return ()=>window.clearTimeout(timer);
-  },[sequenceId,reducedMotion]);
+  },[sequenceId,reducedMotion,held]);
   const reason=summary?.reason==="player_no_quiero"?"NO QUIERO":
     summary?.reason==="opponent_no_quiero"?"EL RIVAL DIJO NO QUIERO":null;
   const outcome=summary?.score.player===summary?.score.opponent?"EMPATE":
     (summary?.score.player??0)>(summary?.score.opponent??0)?"GANASTE LA RONDA":"EL RIVAL GANÓ LA RONDA";
-  return <div className="board-round-receipt-stage" role="status">
-    <div key={sequenceId} className="board-round-ceremony dl-ceremony-banner"
+  return <div className={"board-round-receipt-stage"+(held?" is-guide-receipt":"")}
+    role={held?"dialog":"status"} aria-label={held?"Fin de la primera ronda":undefined}>
+    <div key={sequenceId} className={"board-round-ceremony dl-ceremony-banner"+(held?" dl-guide-held":"")}
       onAnimationEnd={event=>{
         if(event.target===event.currentTarget && event.animationName==="dl-round-receipt-reveal")finish();
       }}>
@@ -61,6 +64,10 @@ export function RoundTransition({sequenceId,reducedMotion,onComplete,summary,ban
       </strong>}
       <span className="board-round-outcome">{summary?outcome:"PREPARANDO ARCHIVOS"}</span>
       {reason&&<span className="board-round-reason">{reason}</span>}
+      {held&&<>
+        <p className="dl-guide-banner-note">Las cartas jugadas van al Archivo de su posición. Después recibís una mano nueva.</p>
+        <button type="button" className="primary-button dl-guide-round-next" onClick={finish}>CONTINUAR A ARCHIVOS →</button>
+      </>}
     </div>
   </div>;
 }

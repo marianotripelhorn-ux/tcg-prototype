@@ -377,3 +377,48 @@
     translate:0 calc(-1 * var(--dl-portrait-banner-lift));
   }
 }
+
+/* These guided stages hold their final pose until the player's next action. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger.dl-guide-held,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-receipt-stage > .board-round-ceremony.dl-guide-held {
+  padding-block-end:clamp(105px,14dvh,128px);
+  animation:dl-guide-banner-enter 245ms cubic-bezier(.18,.76,.24,1) both;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-receipt-stage.is-guide-receipt {
+  pointer-events:auto;
+  overflow:auto;
+  align-items:safe center;
+}
+.dl-guide-banner-note {
+  margin:0;
+  color:#f2e4c8;
+  text-align:center;
+  font:600 13px/1.4 system-ui,sans-serif;
+  text-shadow:0 2px 4px #120e0a;
+}
+.dl-guide-round-next {
+  min-height:40px;
+  padding:8px 12px;
+  background:#dbc08d;
+  color:#1f1810;
+  cursor:pointer;
+}
+.dl-guide-duel-note {
+  position:absolute;
+  z-index:20;
+  inset:auto 8% clamp(79px,11dvh,112px);
+  margin:0;
+  color:#f6ead1;
+  font:600 12px/1.35 system-ui,sans-serif;
+  text-align:center;
+  text-shadow:0 2px 5px #100e0b;
+}
+@keyframes dl-guide-banner-enter {
+  from{opacity:0;transform:translateY(-18px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@media (prefers-reduced-motion:reduce) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-receipt-stage > .board-round-ceremony.dl-guide-held {
+    animation:none;
+  }
+}
