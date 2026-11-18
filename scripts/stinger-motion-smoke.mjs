@@ -264,19 +264,15 @@ async function settleDuel(page){
 }
 
 async function closeQuiero(page){
-  const choice=page.locator(".board-quiero-stage .board-quiero-no");
-  const mobile=page.locator(".hybrid-phone-quiero .secondary-button");
-  if(await choice.count()){
-    const banner=page.locator(".board-quiero-banner");
-    assert.ok(await banner.count(),"Existing faction decision banner was lost");
-    await choice.evaluate(el=>el.click());
+  return page.evaluate(()=>{
+    const choice=document.querySelector(".board-quiero-stage .board-quiero-no, .hybrid-phone-quiero .secondary-button");
+    if(!choice||choice.disabled)return false;
+    if(choice.closest(".board-quiero-stage")&&!choice.closest(".board-quiero-banner")){
+      throw Error("Existing faction decision banner was lost");
+    }
+    choice.click();
     return true;
-  }
-  if(await mobile.count()){
-    await mobile.evaluate(el=>el.click());
-    return true;
-  }
-  return false;
+  });
 }
 
 async function runMatch(label,viewport,isMobile){
