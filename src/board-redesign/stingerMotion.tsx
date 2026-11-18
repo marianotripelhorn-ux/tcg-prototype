@@ -1,6 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, type CSSProperties } from "react";
 import type { DuelSummary, GameState } from "../engine/types";
-import { championBackgroundUrl, championImageUrl, championShortName } from "../championArtwork";
+import { championBackgroundUrl, championShortName } from "../championArtwork";
 
 export function ceremonyArt(image?:string):CSSProperties {
   return { "--dl-ceremony-art":image?'url("'+image+'")':"none" } as CSSProperties;
@@ -147,18 +147,14 @@ export function MatchFinaleBanner({game,kicker,title,onContinue}:{
   useEffect(()=>next.current?.focus({preventScroll:true}),[]);
   const won=game.winner==="player"?game.player.champion:
     game.winner==="opponent"?game.opponent.champion:null;
-  const portraits=won?[won]:[game.player.champion,game.opponent.champion];
+  const championNames=won?championShortName(won.name):
+    [game.player.champion,game.opponent.champion].map(champion=>championShortName(champion.name)).join(" · ");
   return <div className="dl-match-finale dl-ceremony-banner"
     style={ceremonyArt(championBackgroundUrl((won??game.player.champion).faction))}
-    role="dialog" aria-modal="true" aria-labelledby={titleId} data-outcome={game.winner??"draw"}>
+    role="dialog" aria-modal="true" aria-labelledby={titleId} data-outcome={game.winner??"draw"} data-champion={won?.id}>
     <span className="dl-ceremony-kicker">{kicker}</span>
     <h2 id={titleId}>{title}</h2>
-    <div className="dl-finale-portraits">
-      {portraits.map((champion,index)=><figure key={champion.id+"-"+index}>
-        <img src={championImageUrl(champion.id,true)} alt="" data-champion={champion.id}/>
-        <figcaption>{championShortName(champion.name)}</figcaption>
-      </figure>)}
-    </div>
+    <p className="dl-finale-champion">{championNames}</p>
     <div className="dl-ceremony-rule" aria-hidden="true"/>
     <div className="dl-finale-life">
       <span><small>TU VIDA</small><strong>{game.player.life}</strong></span>

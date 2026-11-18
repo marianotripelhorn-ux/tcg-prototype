@@ -282,7 +282,8 @@
   width:min(89vw,440px);
   min-height:0;
   margin: auto;
-  padding:clamp(18px,3dvh,28px) 24px clamp(42px,7dvh,62px);
+  gap:clamp(10px,1.7dvh,17px);
+  padding:clamp(22px,4dvh,38px) 24px clamp(48px,8dvh,76px);
   animation:dl-finale-unfurl 420ms cubic-bezier(.19,.77,.23,1) both;
 }
 .dl-match-finale h2 {
@@ -292,23 +293,26 @@
   letter-spacing:-.04em;
   text-wrap:balance;
 }
-.dl-finale-portraits {
-  display:flex;
-  justify-content:center;
-  gap:16px;
-  width:100%;
+.dl-match-finale::before {
+  background:
+    linear-gradient(90deg,#170e08a8,#21180f38 45%,#170e089e),
+    linear-gradient(180deg,#4a27156b,#160e0ad9),
+    var(--hd-tall-fabric,none) center / 112% 118% no-repeat,
+    var(--dl-ceremony-art,none) center 28% / cover,
+    #3b2317;
+  background-blend-mode:normal,normal,soft-light,normal,normal;
 }
-.dl-finale-portraits figure {display:grid;justify-items:center;gap:5px;margin:0;min-width:0}
-.dl-finale-portraits img {
-  display:block;
-  width:clamp(70px,24vw,124px);
-  height:clamp(66px,17dvh,125px);
-  object-fit:cover;
-  object-position:50% 25%;
-  border:1px solid #c6aa727f;
-  background:#242018;
+.dl-match-finale::after {
+  border-color:#e5c99073;
+  box-shadow:inset 0 1px #f0ce8640;
 }
-.dl-finale-portraits figcaption {color:#e7d6b2;font:700 clamp(10px,2.6vw,13px)/1.2 Arial,sans-serif}
+.dl-finale-champion {
+  margin:0;
+  color:#efdbb2;
+  font:700 clamp(12px,2.7vw,16px)/1.25 Arial,sans-serif;
+  letter-spacing:.045em;
+  text-wrap:balance;
+}
 .dl-finale-life {display:flex;justify-content:center;gap:clamp(21px,6vw,42px)}
 .dl-finale-life span {display:grid;gap:3px;justify-items:center}
 .dl-finale-life small {color:#dbc9a3;font:700 9px/1.2 Arial,sans-serif;letter-spacing:.09em}

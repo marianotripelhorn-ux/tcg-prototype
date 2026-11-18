@@ -303,7 +303,7 @@ async function runMatch(label,viewport,isMobile){
       label+": down-right shadow must stretch during the lift");
     assert.equal(flight.ringCount,0,label+": do not emit decorative rings or particles");
     const ribbon=data.ribbons[0];
-    assert.ok(data.quieroShape.includes("50% 100%"),label+": Quiero must retain its pointed silhouette");
+    assert.ok(data.quieroShape.includes("100% 100%")&&data.quieroShape.includes("50% 82%"),label+": Quiero must have a two-point swallowtail hem");
     assert.ok(ribbon&&ribbon.duration===1200&&ribbon.motion.includes("dl-duel-banner"),
       label+": 1200ms centered duel banner animation missing");
     assert.equal(ribbon.shape,data.quieroShape,label+": duel banner must use the real Quiero silhouette");
@@ -462,7 +462,7 @@ async function runStudy(label,viewport,reducedMotion){
     await next("decision");
     const bannerShape=await stage.locator(".ms-decision").evaluate(node=>getComputedStyle(node).clipPath);
     assert.equal(bannerShape,await stage.locator(".ms-portrait").first().evaluate(node=>getComputedStyle(node).clipPath));
-    assert.ok(bannerShape.includes("50% 100%"),"The decision and Champion banners should reuse the pointed Quiero shape");
+    assert.ok(bannerShape.includes("100% 100%")&&bannerShape.includes("50% 82%"),"The decision and Champion banners should share the two-point hem");
     await page.getByRole("button",{name:"Quiero",exact:true}).click();
     assert.ok(await page.getByText("Continúa el duelo",{exact:true}).isVisible());
     await page.getByRole("button",{name:"No quiero",exact:true}).click();
@@ -519,9 +519,13 @@ async function runFinale(){
     const banner=page.locator(".dl-match-finale");
     await banner.waitFor({state:"visible",timeout:30000});
     assert.equal(await banner.getAttribute("data-outcome"),fixture.winner);
-    assert.equal(await banner.locator("img").getAttribute("data-champion"),fixture.champion);
+    assert.equal(await banner.getAttribute("data-champion"),fixture.champion);
+    assert.equal(await banner.locator("img").count(),0);
+    assert.ok(await banner.locator(".dl-finale-champion").textContent());
+    assert.ok(await banner.evaluate(el=>getComputedStyle(el,"::before").backgroundImage.includes("banner-gold.webp")),
+      "Finale cloth must reuse the tall Champion fabric");
     assert.deepEqual(await banner.locator(".dl-finale-life strong").allTextContents(),fixture.life.map(String));
-    assert.ok(await banner.evaluate(el=>getComputedStyle(el).clipPath.includes("50% 100%")));
+    assert.ok(await banner.evaluate(el=>getComputedStyle(el).clipPath.includes("50% 82%")));
     const continueButton=banner.getByRole("button",{name:/CONTINUAR/});
     assert.ok(await continueButton.evaluate(el=>document.activeElement===el));
     await page.screenshot({path:"/tmp/daggerlight-round-shadow-sweep-v3-finale.png"});
