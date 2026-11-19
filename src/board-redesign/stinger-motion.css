@@ -185,31 +185,39 @@
 :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-face::after {
   display:none!important;
 }
+.duel-showcase-change {
+  display:flex;
+  align-items:center;
+  width:100%;
+  min-height:20px;
+  padding-inline:5px;
+  box-sizing:border-box;
+}
 .dl-live-power-cue {
   --dl-cue-color:#efd399;
-  position:absolute;
-  z-index:22;
-  left:14%;
-  bottom:calc(100% + 2px);
-  translate:-50% 0;
-  width:clamp(21px,3vw,39px);
-  aspect-ratio:1;
+  position:relative;
+  isolation:isolate;
+  min-width:0;
+  padding-inline:4px;
   color:var(--dl-cue-color);
   pointer-events:none;
 }
 .dl-live-power-cue.is-loss {--dl-cue-color:#e0e2e4}
 .dl-live-power-cue span {
-  position:absolute;
-  inset:50% auto auto 50%;
-  translate:-50% -50%;
+  display:block;
   white-space:nowrap;
-  font:400 clamp(18px,2.4vw,36px)/1 var(--board-display,"Archivo Black",Arial,sans-serif);
+  font:400 clamp(10px,1.4vw,15px)/1.2 var(--board-display,"Archivo Black",Arial,sans-serif);
   text-shadow:0 2px 6px #101010;
   animation:dl-local-power-value .48s cubic-bezier(.2,.76,.24,1) both;
 }
 .dl-live-power-cue i {
   position:absolute;
-  inset:0;
+  z-index:-1;
+  top:50%;
+  left:13px;
+  width:20px;
+  aspect-ratio:1;
+  translate:-50% -50%;
   border:1px solid currentColor;
   border-radius:50%;
   animation:dl-local-power-ring .52s ease-out both;
@@ -403,16 +411,6 @@
   color:#1f1810;
   cursor:pointer;
 }
-.dl-guide-duel-note {
-  position:absolute;
-  z-index:20;
-  inset:auto 8% clamp(79px,11dvh,112px);
-  margin:0;
-  color:#f6ead1;
-  font:600 12px/1.35 system-ui,sans-serif;
-  text-align:center;
-  text-shadow:0 2px 5px #100e0b;
-}
 @keyframes dl-guide-banner-enter {
   from{opacity:0;transform:translateY(-18px)}
   to{opacity:1;transform:translateY(0)}
@@ -420,5 +418,125 @@
 @media (prefers-reduced-motion:reduce) {
   :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-receipt-stage > .board-round-ceremony.dl-guide-held {
     animation:none;
+  }
+}
+
+/* The guided review uses the full play area so the cards and explanation have
+   their own rows even when the battlefield itself is short. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-main > .is-guided-duel {
+  justify-content:safe center;
+  gap:clamp(10px,2dvh,20px);
+  z-index:125!important;
+  padding:12px max(12px,env(safe-area-inset-right)) 12px max(12px,env(safe-area-inset-left));
+  overflow:auto!important;
+  overscroll-behavior:contain;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .is-guided-duel .duel-focus-screen {
+  background:radial-gradient(ellipse at 50% 42%,#171510df,#100e0ce8)!important;
+  -webkit-backdrop-filter:blur(5px) saturate(.7)!important;
+  backdrop-filter:blur(5px) saturate(.7)!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-main:has(> .is-guided-duel:not(.duel-beat-settle)) .duel-is-resolving .current-board-card {
+  visibility:hidden!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-showcase-pair {
+  flex:none;
+  max-height:none!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-showcase-card {
+  width:clamp(78px,min(19vw,24dvh),218px)!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-effect-note {
+  display:block;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-choreo-comparison {
+  position:static;
+  translate:none;
+  white-space:normal;
+  font-size:clamp(14px,2.4vmin,23px);
+}
+.dl-guide-duel-footer {
+  position:relative;
+  z-index:4;
+  display:grid;
+  justify-items:center;
+  gap:8px;
+  width:min(100%,36rem);
+  padding-top:10px;
+  border-top:1px solid #c9ae797a;
+  text-align:center;
+}
+.dl-guide-duel-note {
+  margin:0;
+  color:#f6ead1;
+  font:600 13px/1.4 system-ui,sans-serif;
+  text-wrap:balance;
+}
+.dl-guide-duel-actions {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:center;
+  gap:4px 12px;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-showcase-skip {
+  position:static;
+  z-index:auto;
+  min-height:44px;
+  border:1px solid #dbc08d;
+  background:#dbc08d;
+  color:#211810;
+  font-size:11px;
+}
+.dl-guide-duel-exit {
+  min-height:44px;
+  padding:4px 8px;
+  border:0;
+  background:none;
+  color:#f2d6a3;
+  font:700 12px/1.25 system-ui,sans-serif;
+  text-decoration:underline;
+  cursor:pointer;
+}
+.dl-guide-duel-actions button:focus-visible {
+  outline:2px solid #fff0cd;
+  outline-offset:3px;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .dl-duel-stinger.dl-guide-held {
+  position:relative!important;
+  inset:auto;
+  translate:none;
+  flex:none;
+  pointer-events:auto;
+  padding-block-end:clamp(120px,17dvh,150px);
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-result.is-guided-duel .duel-showcase-pair {
+  position:absolute;
+  visibility:hidden;
+}
+@media (max-width:760px) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-showcase-pair {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-template-areas:"player-card opponent-card" "player-effects opponent-effects";
+    align-items:start!important;
+    max-width:356px;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-showcase-card {
+    width:clamp(78px,min(36vw,23dvh),154px)!important;
+  }
+  .is-guided-duel .duel-choreo-side-player {grid-area:player-card}
+  .is-guided-duel .duel-choreo-side-opponent {grid-area:opponent-card}
+  .is-guided-duel .duel-effect-column-player {grid-area:player-effects}
+  .is-guided-duel .duel-effect-column-opponent {grid-area:opponent-effects}
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-effect-column {
+    justify-self:center;
+    align-self:start;
+    align-items:center;
+    text-align:center;
+    padding:0;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-effect-note {
+    font-size:11px;
+    line-height:1.25;
   }
 }

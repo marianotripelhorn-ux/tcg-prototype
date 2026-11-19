@@ -1,4 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useRef } from "react";
+import type { ReactNode } from "react";
 import type { DuelSummary, GameState } from "../engine/types";
 import { championBackgroundUrl, championShortName } from "../championArtwork";
 
@@ -9,18 +10,19 @@ export function CeremonyBackdrop({image}:{image?:string}) {
 }
 
 /** The engine supplies both final Power values and the outcome. */
-export function DuelResultStinger({duel,onComplete,bannerImage,held=false}:{
+export function DuelResultStinger({duel,onComplete,bannerImage,held=false,children}:{
   duel:DuelSummary;
   onComplete?:()=>void;
   bannerImage?:string;
   held?:boolean;
+  children?:ReactNode;
 }) {
   const card=useRef<HTMLDivElement>(null);
   useLayoutEffect(()=>{
     const banner=card.current;
     const field=banner?.closest(".arena-main");
     const parent=banner?.offsetParent;
-    if(!banner||!field||!(parent instanceof HTMLElement))return;
+    if(held||!banner||!field||!(parent instanceof HTMLElement))return;
     const center=()=>{
       const area=field.getBoundingClientRect();
       const container=parent.getBoundingClientRect();
@@ -31,12 +33,12 @@ export function DuelResultStinger({duel,onComplete,bannerImage,held=false}:{
     const observer=new ResizeObserver(center);
     observer.observe(field);
     return ()=>observer.disconnect();
-  },[]);
+  },[held]);
   const playerPower=duel.playerPlay.finalPower??duel.playerPlay.card.power;
   const opponentPower=duel.opponentPlay.finalPower??duel.opponentPlay.card.power;
   const result=duel.outcome==="player"?"VICTORIA":duel.outcome==="opponent"?"DERROTA":"EMPATE";
   return <div ref={card} className={"dl-duel-stinger dl-ceremony-banner"+(held?" dl-guide-held":"")}
-    role="status" aria-live="polite"
+    role={held?"group":"status"} aria-live={held?undefined:"polite"}
     onAnimationEnd={event=>{
       if(event.target===event.currentTarget&&event.animationName==="dl-duel-banner")onComplete?.();
     }}
@@ -53,6 +55,7 @@ export function DuelResultStinger({duel,onComplete,bannerImage,held=false}:{
     {held&&<p className="dl-guide-banner-note">{duel.outcome==="draw"
       ?"En un empate, nadie pierde Vida."
       :"Al continuar, se actualizan la Vida y el marcador."}</p>}
+    {children}
   </div>;
 }
 

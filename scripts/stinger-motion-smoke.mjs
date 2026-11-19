@@ -527,6 +527,41 @@ async function runStudy(label,viewport,reducedMotion){
   }finally{await page.close();}
 }
 
+async function assertGuidedDuelLayout(page,beat){
+  const overlay=page.locator(".duel-beat-"+beat+".is-guided-duel");
+  const action=overlay.locator(".duel-showcase-skip");
+  await action.scrollIntoViewIfNeeded();
+  const layout=await overlay.evaluate((root,beat)=>{
+    const selectors=beat==="compare"
+      ? [".duel-showcase-side",".duel-showcase-face",".dl-live-power-cue span",".duel-effect-note",
+          ".duel-effect-column-kicker",".duel-effect-remaining",".duel-choreo-comparison",".dl-guide-duel-note"]
+      : [".dl-ceremony-kicker",".dl-duel-stinger-result",".dl-duel-stinger-contents",".dl-guide-banner-note"];
+    selectors.push(".duel-showcase-skip",".dl-guide-duel-exit");
+    const boxes=selectors.flatMap(selector=>[...root.querySelectorAll(selector)].map((node,index)=>({
+      name:selector+"#"+index,rect:node.getBoundingClientRect()
+    }))).filter(({rect})=>rect.width>0&&rect.height>0);
+    const overlaps=boxes.flatMap((a,index)=>boxes.slice(index+1).filter(b=>
+      Math.min(a.rect.right,b.rect.right)-Math.max(a.rect.left,b.rect.left)>2&&
+      Math.min(a.rect.bottom,b.rect.bottom)-Math.max(a.rect.top,b.rect.top)>2
+    ).map(b=>[a.name,b.name]));
+    const button=root.querySelector(".duel-showcase-skip");
+    const rect=button.getBoundingClientRect();
+    const target=document.elementFromPoint(rect.left+rect.width/2,rect.bottom-3);
+    const powers=[...root.querySelectorAll("[data-power-state=final] .duel-showcase-power strong")].map(node=>node.textContent);
+    return {
+      overlaps,powers,hit:button.contains(target),
+      guideRail:document.querySelector(".dl-opening-guide")!==null,
+      hoverPreview:document.querySelector(".arena-card-hover-preview,.arena-card-board-preview")!==null
+    };
+  },beat);
+  const description=JSON.stringify({beat,viewport:page.viewportSize(),...layout});
+  assert.deepEqual(layout.overlaps,[],description);
+  assert.ok(layout.hit,description);
+  assert.equal(layout.guideRail,false,description);
+  assert.equal(layout.hoverPreview,false,description);
+  if(beat==="compare")assert.ok(layout.powers.length===2&&layout.powers.every(value=>/^-?\d+$/.test(value)),description);
+}
+
 async function runWelcome(){
   const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
   try{
@@ -560,12 +595,24 @@ async function runWelcome(){
         assert.ok(await resultButton.isEnabled(),"The guide must wait at final Power");
         assert.equal(await page.locator(".dl-duel-stinger").count(),0);
       }
+      await assertGuidedDuelLayout(page,"compare");
+      if(turn===0){
+        for(const viewport of [{width:1600,height:900},{width:1067,height:539},{width:680,height:375}]){
+          await page.setViewportSize(viewport);
+          await assertGuidedDuelLayout(page,"compare");
+        }
+        await page.setViewportSize({width:390,height:844});
+      }
       await resultButton.click();
       const result=page.locator(".dl-duel-stinger.dl-guide-held");
       await result.waitFor({state:"visible"});
       if(turn===0){
         await page.waitForTimeout(1400);
         assert.ok(await result.isVisible(),"The guided outcome must stay until Continue");
+        for(const viewport of [{width:1067,height:539},{width:680,height:375},{width:390,height:844}]){
+          await page.setViewportSize(viewport);
+          await assertGuidedDuelLayout(page,"result");
+        }
       }
       await page.locator(".duel-beat-result .duel-showcase-skip").click();
     }

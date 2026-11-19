@@ -1,4 +1,4 @@
-import { flushSync } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ArchiveFlight, CardFlight, DealMotion, MatchEntryMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
 import type { BoardMotionSequence } from "./board-redesign/motion";
@@ -206,11 +206,13 @@ function DuelPowerCard({played,side,beat,outcome}:{
       data-duel-side={side} data-power-state={resolved?"final":"printed"}
       aria-label={played.card.name+", Poder "+(resolved?final:printed)}>
       <span className="duel-showcase-side">{side==="player"?"TU CARTA":"RIVAL"}</span>
-      <div className="duel-showcase-face">
-        <CardFace card={played.card}/>
+      <div className="duel-showcase-change">
         {resolved&&delta!==0&&<div className={"dl-live-power-cue"+(delta<0?" is-loss":"")} aria-hidden="true">
           <i/><i/><span>{formatPowerDelta(played)}</span>
         </div>}
+      </div>
+      <div className="duel-showcase-face">
+        <CardFace card={played.card}/>
         <div className={"duel-showcase-power"+(delta<0?" is-loss":delta>0?" is-gain":" is-neutral")} aria-live="off">
           <small>PODER</small>
           <strong key={resolved?"final":"printed"}>{resolved?final:printed}</strong>
@@ -240,11 +242,13 @@ function DuelEffectsPanel({played,side,beat}:{played:EnginePlay;side:"player"|"o
   </aside>;
 }
 
-function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,before=null,after=null,guided=false}:{
+function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,before=null,after=null,guideMount,onSkipGuide}:{
   duel:DuelSummary;onAdvance:()=>void;auguryEvents:string[];beat:DuelBeat;
   outcome?:"player"|"opponent"|"draw"|null;
-  before?:GameState|null;after?:GameState|null;guided?:boolean;
+  before?:GameState|null;after?:GameState|null;
+  guideMount?:HTMLElement|null;onSkipGuide?:()=>void;
 }) {
+  const guided=!!guideMount;
   const overlayRef=useRef<HTMLDivElement>(null);
   useLayoutEffect(()=>{
     const overlay=overlayRef.current;
@@ -336,13 +340,22 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,be
     });
   },[beat,duel,before,after]);
   const comparing=beat==="compare"||beat==="impact";
-  return (
+  const comparison=comparing&&<div className="duel-choreo-comparison" role="status">
+    PODER FINAL · {duel.playerPlay.finalPower??duel.playerPlay.card.power} — {duel.opponentPlay.finalPower??duel.opponentPlay.card.power}
+  </div>;
+  const presentation=(
     <div ref={overlayRef} data-duel-beat={beat}
-      className={"duel-showcase-overlay duel-choreo duel-beat-"+beat+(outcome?" is-board-outcome":"")}
+      className={"duel-showcase-overlay duel-choreo duel-beat-"+beat+(outcome?" is-board-outcome":"")+
+        (guided?" is-guided-duel":"")}
       role="dialog" aria-modal="true" aria-label="Resolución de Poder de las cartas">
       <div className="duel-focus-screen" aria-hidden="true"/>
       {outcome&&beat==="result"&&<DuelResultStinger duel={duel} onComplete={onAdvance} held={guided}
-        bannerImage={after?championBackgroundUrl(after.player.champion.faction):undefined}/>}
+        bannerImage={after?championBackgroundUrl(after.player.champion.faction):undefined}>
+        {guided&&<div className="dl-guide-duel-actions">
+          <button type="button" className="duel-showcase-skip" autoFocus onClick={onAdvance}>CONTINUAR →</button>
+          <button type="button" className="dl-guide-duel-exit" onClick={onSkipGuide}>Saltar guía</button>
+        </div>}
+      </DuelResultStinger>}
       {outcome&&beat==="settle"&&<span className="arena-visually-hidden" role="status">
         {duel.outcome==="player"?"VICTORIA":duel.outcome==="opponent"?"DERROTA":"EMPATE"}
       </span>}
@@ -352,18 +365,24 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,be
         <DuelPowerCard played={duel.opponentPlay} side="opponent" beat={beat} outcome={duel.outcome}/>
         <DuelEffectsPanel played={duel.opponentPlay} side="opponent" beat={beat}/>
       </div>
-      {comparing&&<div className="duel-choreo-comparison" role="status">
-        PODER FINAL · {duel.playerPlay.finalPower??duel.playerPlay.card.power} — {duel.opponentPlay.finalPower??duel.opponentPlay.card.power}
-      </div>}
-      {(beat==="compare"||beat==="impact"||beat==="result")&&auguryEvents.length>0&&
-        <div className="duel-showcase-events">{auguryEvents.map((event,index)=><span key={index}>{event}</span>)}</div>}
-      {guided&&beat==="compare"&&<p className="dl-guide-duel-note">Compará el Poder final. Las notas junto a cada carta indican qué lo cambió.</p>}
-      <button type="button" className="duel-showcase-skip" onClick={onAdvance}
-        disabled={guided&&beat!=="compare"&&beat!=="result"}>
-        {outcome?"CONTINUAR →":guided?"VER RESULTADO →":"SALTAR A RESULTADO →"}
-      </button>
+      {guided ? beat==="compare"&&<div className="dl-guide-duel-footer">
+        {comparison}
+        <p className="dl-guide-duel-note">Compará los números y revisá qué cambió el Poder de cada carta.</p>
+        <div className="dl-guide-duel-actions">
+          <button type="button" className="duel-showcase-skip" autoFocus onClick={onAdvance}>VER RESULTADO →</button>
+          <button type="button" className="dl-guide-duel-exit" onClick={onSkipGuide}>Saltar guía</button>
+        </div>
+      </div> : <>
+        {comparison}
+        {(beat==="compare"||beat==="impact"||beat==="result")&&auguryEvents.length>0&&
+          <div className="duel-showcase-events">{auguryEvents.map((event,index)=><span key={index}>{event}</span>)}</div>}
+        <button type="button" className="duel-showcase-skip" onClick={onAdvance}>
+          {outcome?"CONTINUAR →":"SALTAR A RESULTADO →"}
+        </button>
+      </>}
     </div>
   );
+  return guideMount?createPortal(presentation,guideMount):presentation;
 }
 
 function BattleCard({
@@ -666,6 +685,7 @@ export default function App() {
   const guidedRound=guidedOpening&&(boardMotion?.before.round??game?.round)===1;
   const guidedHandInspection=guidedRound&&inspection?.handIndex!==undefined;
   const boardMotionRef=useRef<BoardMotionSequence|null>(null);
+  const arenaMainRef=useRef<HTMLDivElement>(null);
   const [archiveArrivals,setArchiveArrivals]=useState<Record<string,number>>({});
   const nextMotionId=useRef(0);
   const [quieroChoice,setQuieroChoice]=useState<boolean|null>(null);
@@ -1280,7 +1300,7 @@ export default function App() {
         : `DUELO ${game.turn} · ${game.initiative==="player"?"VOS ABRÍS":"IA ABRE"}`;
   const score=displayed?.score??game.duelScore;
   const deckView=boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.player:game.player;
-  const openingHint=guidedOpening ? guidedOpeningHint({
+  const openingHint=guidedOpening&&!duelPreview&&boardMotion?.phase!=="round" ? guidedOpeningHint({
     round:game.round,turn:game.turn,phase:game.phase,motion:boardMotion?.phase,
     result:duelStep==="result"?duelPreview?.outcome:undefined,
     inspecting:!!inspection,cardSelected:selectedIndex!==null
@@ -1362,7 +1382,7 @@ export default function App() {
           </div>
         </section>
 
-        <div className={"arena-main"+(handExpanded?" hand-expanded":"")}>
+        <div ref={arenaMainRef} className={"arena-main"+(handExpanded?" hand-expanded":"")}>
           {boardRedesign && <HybridEngraving/>}
           {!phoneBoard && <aside className="arena-sidebar" aria-label="Campeones y marcador">
             {boardRedesign ? <HybridSidebar player={game.player} opponent={game.opponent} playerName={playerName}/> : <>
@@ -1403,12 +1423,12 @@ export default function App() {
                 if(current?.id===boardMotion.id&&current.phase==="quiero-ai")setMotion(null);
               }}/>}
 
-            {hoveredBoardCard && !duelPreview && !boardMotion && (
+            {hoveredBoardCard && !inspection && !duelPreview && !boardMotion && (
               <div className="arena-card-board-preview" aria-hidden="true">
                 <CardFace card={hoveredBoardCard}/>
               </div>
             )}
-            {hoveredHandIndex!==null && hand[hoveredHandIndex] && !drag && !handExpanded && !duelPreview && !boardMotion && (
+            {hoveredHandIndex!==null && hand[hoveredHandIndex] && !drag && !inspection && !handExpanded && !duelPreview && !boardMotion && (
               <div className="arena-card-hover-preview" aria-hidden="true">
                 <CardFace card={hand[hoveredHandIndex]}/>
               </div>
@@ -1434,7 +1454,8 @@ export default function App() {
           {duelPreview && (boardRedesign
             ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries}
                 beat={duelBeat} outcome={duelStep==="result"?duelPreview.outcome:null}
-                before={boardMotion?.before??null} after={game} guided={guidedRound}
+                before={boardMotion?.before??null} after={game} guideMount={guidedRound?arenaMainRef.current:null}
+                onSkipGuide={()=>{setGuidedOpening(false);finishDuelPresentation();}}
                 onAdvance={duelStep==="result"?settleDuelPresentation:showDuelResult}/>
             : duelStep==="cards"
               ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries}
