@@ -648,7 +648,7 @@ async function terminalFixture(){
         const before=game.pendingOpponentPlay?engine.cloneGame(game):null;
         engine.submitPlayerPlay(game,0,position,rng);
         if(before&&game.phase==="finished"&&["player","opponent"].includes(game.winner)){
-          return {key:SAVE_KEY,save:newSavedMatch(before,"sinistral"),position,winner:game.winner,
+          return {key:SAVE_KEY,save:newSavedMatch(before,"sinistral","Playtest QA"),position,winner:game.winner,
             champion:game[game.winner].champion.id,life:[game.player.life,game.opponent.life]};
         }
       }
@@ -707,10 +707,63 @@ async function runFinale(){
         "The tall finale must leave the button above the hem: "+JSON.stringify({viewport,layout}));
       if(viewport.width===1067)await page.screenshot({path:"/tmp/daggerlight-round-shadow-sweep-v3-finale.png"});
     }
+    const sent=[];
+    await page.route("https://us.i.posthog.com/capture/",async route=>{
+      const headers={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"content-type","Access-Control-Allow-Methods":"POST,OPTIONS"};
+      if(route.request().method()==="OPTIONS")return route.fulfill({status:204,headers});
+      sent.push(route.request().postDataJSON());
+      await route.fulfill({status:sent.length===1?503:200,headers,json:{status:sent.length===1?0:1}});
+    });
     await continueButton.click();
-    await page.getByRole("group",{name:"Opciones después de la partida"}).waitFor({state:"visible"});
+    const feedback=page.locator(".dl-match-feedback");
+    await feedback.getByRole("heading",{name:"¿Te divertiste en esta partida, Playtest QA?"}).waitFor({state:"visible"});
+    const options=page.getByRole("group",{name:"Opciones después de la partida"});
+    assert.equal(await options.count(),0);
+    assert.equal(await feedback.locator('input[type="radio"]:checked').count(),0);
+    assert.ok(await feedback.getByRole("button",{name:"Omitir",exact:true}).isEnabled());
+    await feedback.getByRole("radio",{name:"No",exact:true}).check();
+    await feedback.getByLabel("Comentario (opcional)").fill("Probé el duelo final.");
+    await feedback.getByRole("button",{name:"Responder un cuestionario"}).click();
+    await feedback.getByLabel("¿Qué te gustó más?").fill("Las decisiones de posición.");
+    await feedback.getByLabel("¿En qué momento te costó entender qué hacer?").fill("En el primer duelo.");
+    await feedback.getByRole("button",{name:/Volver/}).click();
+    assert.equal(await feedback.getByLabel("Comentario (opcional)").inputValue(),"Probé el duelo final.");
+    await feedback.getByRole("button",{name:"Responder un cuestionario"}).click();
+    assert.equal(await feedback.getByLabel("¿Qué te gustó más?").inputValue(),"Las decisiones de posición.");
+    assert.equal(sent.length,0,"Opening or editing a questionnaire must not send anything");
+    const send=feedback.getByRole("button",{name:"Enviar respuestas"});
+    await send.click();
+    await feedback.getByRole("alert").waitFor({state:"visible"});
+    await send.click();
+    await feedback.getByText("Gracias. Tus respuestas se enviaron.").waitFor({state:"visible"});
+    assert.equal(sent.length,2);
+    assert.equal(sent[1].event,"daggerlight_match_feedback");
+    const payload=sent[1].properties;
+    assert.deepEqual({
+      name:payload.player_name,champion:payload.champion_id,rival:payload.rival_champion_id,
+      difficulty:payload.difficulty,winner:payload.winner,life:[payload.player_life,payload.rival_life],
+      id:payload.match_id,fun:payload.had_fun,comment:payload.comment,liked:payload.liked,unclear:payload.unclear
+    },{
+      name:"Playtest QA",champion:"dextral",rival:"sinistral",difficulty:"hard",winner:fixture.winner,
+      life:fixture.life,id:fixture.save.id,fun:false,comment:"Probé el duelo final.",
+      liked:"Las decisiones de posición.",unclear:"En el primer duelo."
+    });
+    assert.match(payload.game_version,/^round-shadow-sweep-v3(?:@[0-9a-f]{40}|-dev)$/);
+    await feedback.getByRole("button",{name:"Continuar",exact:true}).click();
+    await options.waitFor({state:"visible"});
+
+    await page.setViewportSize({width:390,height:844});
+    await page.reload({waitUntil:"domcontentloaded"});
+    await page.locator(".splash-start").evaluate(el=>el.click());
+    await page.getByRole("button",{name:/CONTINUAR PARTIDA/}).click();
+    await chooseHandCard(page);
+    await page.locator('.board-slot.player.drop-active[data-position="'+fixture.position+'"]').evaluate(el=>el.click());
+    await banner.getByRole("button",{name:/CONTINUAR/}).click({timeout:30000});
+    await feedback.getByRole("button",{name:"Omitir",exact:true}).click();
+    await options.waitFor({state:"visible"});
+    assert.equal(sent.length,2,"Skipping must not send a response");
     assert.deepEqual(errors,[]);
-    console.log("PASS finale: resumed a real match, finished by playing a card and continued to postgame actions");
+    console.log("PASS finale and feedback: real match, optional questionnaire, match metadata, retry and skip");
   }finally{await page.close();}
 }
 

@@ -1,0 +1,199 @@
+.dl-match-feedback {
+  width: min(100%, 440px);
+  box-sizing: border-box;
+  margin-block: auto;
+  padding: clamp(16px, 4vw, 30px);
+  border: 1px solid #9c7d50;
+  background: #1a1712;
+  color: #f7ecd7;
+  box-shadow: 0 16px 46px #0c0a08a8;
+  overflow-wrap: anywhere;
+}
+
+.dl-match-feedback[data-feedback-view="questionnaire"] {
+  width: min(100%, 620px);
+}
+
+.dl-match-feedback > h2 {
+  margin: 0 0 13px;
+  font: 400 clamp(22px, 5.4vw, 33px)/1.12 "Archivo Black", Arial, sans-serif;
+  letter-spacing: -.027em;
+}
+
+.dl-match-feedback > h2:focus {
+  outline: none;
+}
+
+.dl-match-feedback form {
+  display: grid;
+  gap: 13px;
+  min-width: 0;
+}
+
+.dl-feedback-fun {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.dl-feedback-fun legend {
+  margin-bottom: 5px;
+  padding: 0;
+  font: 700 14px/1.3 system-ui, sans-serif;
+}
+
+.dl-feedback-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.dl-feedback-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dl-feedback-options > label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 7px 9px;
+  border: 1px solid #786344;
+  background: #242017;
+  color: #f7ecd7;
+  font: 750 15px/1.2 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.dl-feedback-options > label:has(input:checked) {
+  border-color: #eed3a1;
+  background: #5c462b;
+}
+
+.dl-feedback-options input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #dfbd81;
+}
+
+.dl-feedback-options > label:has(input:disabled) {
+  cursor: default;
+}
+
+.dl-feedback-field {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  min-width: 0;
+  font: 680 13px/1.35 system-ui, sans-serif;
+}
+
+.dl-feedback-field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 46px;
+  padding: 7px 9px;
+  border: 1px solid #786344;
+  border-radius: 0;
+  background: #100e0b;
+  color: #fff6e5;
+  font: 400 16px/1.35 system-ui, sans-serif;
+  resize: vertical;
+}
+
+.dl-feedback-questions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dl-feedback-link {
+  justify-self: start;
+  min-height: 36px;
+  border: 0;
+  padding: 4px 0;
+  background: none;
+  color: #f0ce93;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font: 700 13px/1.3 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.dl-feedback-back {
+  margin-bottom: 5px;
+}
+
+.dl-feedback-note,
+.dl-feedback-error {
+  margin: 0;
+  color: #deccae;
+  font: 500 13px/1.4 system-ui, sans-serif;
+}
+
+.dl-match-feedback > .dl-feedback-note {
+  margin: -4px 0 12px;
+}
+
+.dl-feedback-error {
+  color: #ffb9ae;
+}
+
+.dl-feedback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.dl-feedback-actions > button {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid #8f7754;
+  font: 750 13px/1.2 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.dl-feedback-submit {
+  background: #dec08c;
+  color: #21180f;
+}
+
+.dl-feedback-skip {
+  background: #242017;
+  color: #f7ecd7;
+}
+
+.dl-match-feedback :is(button, textarea, input):focus-visible {
+  outline: 2px solid #f1d9aa;
+  outline-offset: 2px;
+}
+
+.dl-match-feedback button:disabled {
+  opacity: .58;
+  cursor: default;
+}
+
+@media (max-width: 480px) {
+  .dl-feedback-questions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+:root[data-theme] .app-shell.arena-v2 .decision-overlay.match-conclusion-stage.is-feedback {
+  overflow:auto;
+  overscroll-behavior:contain;
+  align-items:safe center;
+  padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right))
+    max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+}

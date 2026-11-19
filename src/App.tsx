@@ -15,12 +15,15 @@ import { OpeningGuide, WelcomeMatch } from "./WelcomeMatch";
 import SplashScreen from "./SplashScreen";
 import Multiplayer from "./Multiplayer";
 import PlaytestHub from "./PlaytestHub";
-import { saveAiMatch } from "./playtestStorage";
+import { downloadPlaytest, saveAiMatch } from "./playtestStorage";
+import { MatchFeedback } from "./MatchFeedback";
+import { buildMatchFeedback, feedbackAvailable, submitMatchFeedback } from "./matchFeedback";
+import type { MatchFeedbackAnswers } from "./matchFeedback";
 import ThemeToggle from "./ThemeToggle";
 import AuguryStatus from "./AuguryStatus";
 import { factionArtUrl } from "./factionArtwork";
 import { championImageUrl,championBackgroundUrl,championShortName } from "./championArtwork";
-import { readPlayerName,writePlayerName,DEFAULT_PLAYER_NAME } from "./playerProfile";
+import { cleanPlayerName,readPlayerName,writePlayerName,DEFAULT_PLAYER_NAME } from "./playerProfile";
 import { newArcadeRun,readArcadeRun,writeArcadeRun,arcadeOpponent,markArcadeResult,advanceArcade } from "./arcade";
 import type { ArcadeRun } from "./arcade";
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
@@ -715,7 +718,7 @@ export default function App() {
   });
   const audioEnabledRef=useRef(audioEnabled);
   audioEnabledRef.current=audioEnabled;
-  const [finalStep,setFinalStep]=useState<"ceremony"|"actions">("ceremony");
+  const [finalStep,setFinalStep]=useState<"ceremony"|"feedback"|"actions">("ceremony");
   const [duelAuguries,setDuelAuguries]=useState<string[]>([]);
   const previewTimer=useRef<number|null>(null);
   const finalTimer=useRef<number|null>(null);
@@ -895,7 +898,7 @@ export default function App() {
         duel:null,roundEnded:false,handIndex:null,origin:null});
     }
     setCurrentDeck(deck??null);
-    const newMatch=newSavedMatch(next,rivalSelection);
+    const newMatch=newSavedMatch(next,rivalSelection,cleanPlayerName(playerName).trim()||DEFAULT_PLAYER_NAME);
     writeSavedMatch(newMatch);
     setSavedMatch(newMatch);
     setMatchMeta(newMatch);
@@ -1304,6 +1307,15 @@ export default function App() {
     round:game.round,turn:game.turn,phase:game.phase,motion:boardMotion?.phase,
     inspecting:!!inspection,cardSelected:selectedIndex!==null
   }) : null;
+
+  function feedbackFor(answers:MatchFeedbackAnswers) {
+    if(!matchMeta||!game)throw new Error("La partida no está disponible.");
+    return buildMatchFeedback(matchMeta,game,matchMeta.playerName??playerName,arcadeRun?"arcade":"classic",answers);
+  }
+
+  const postgameStage=finalStep==="ceremony"
+    ? " is-ceremony"+(boardRedesign?" is-banner-finale":"")
+    : finalStep==="feedback"&&matchMeta?" is-feedback":" is-actions";
 
   return (
     <main data-board-phase={boardRedesign?(boardMotion?.phase??"idle"):"classic"}
@@ -1847,14 +1859,14 @@ export default function App() {
         )}
 
         {game.phase==="finished" && !duelPreview && !boardMotion && !finishingMatch.current && (
-          <div className={"decision-overlay match-conclusion-stage"+(finalStep==="ceremony"?" is-ceremony"+(boardRedesign?" is-banner-finale":""):" is-actions")}>
+          <div className={"decision-overlay match-conclusion-stage"+postgameStage}>
             {finalStep==="ceremony" ? (boardRedesign ? (
               <MatchFinaleBanner game={game}
                 kicker={arcadeRun?.status==="complete"?"ARCADE COMPLETADO":arcadeRun
                   ? "ARCADE · "+(arcadeRun.index+1)+"/"+arcadeRun.opponents.length : "FIN DE PARTIDA"}
                 title={arcadeRun?.status==="complete"?"TODOS DERROTADOS":
                   game.winner==="player"?"VICTORIA":game.winner==="opponent"?"DERROTA":"EMPATE"}
-                onContinue={()=>{clearFinalTimer();setFinalStep("actions");}}/>
+                onContinue={()=>{clearFinalTimer();setFinalStep("feedback");}}/>
             ) : (
               <div className={"match-conclusion-ceremony match-final-"+game.winner} role="status" aria-live="polite">
                 <span className="match-conclusion-symbol" aria-hidden="true">{game.winner==="player"?"✦":game.winner==="opponent"?"◇":"◈"}</span>
@@ -1864,9 +1876,18 @@ export default function App() {
                   : "FIN DE PARTIDA"}</span>
                 <strong>{arcadeRun?.status==="complete"?"TODOS DERROTADOS":game.winner==="player"?"VICTORIA":game.winner==="opponent"?"DERROTA":"EMPATE"}</strong>
                 <span className="match-conclusion-score">{game.player.life} — {game.opponent.life} VIDA</span>
-                <button type="button" className="match-conclusion-continue" onClick={()=>{clearFinalTimer();setFinalStep("actions");}}>CONTINUAR →</button>
+                <button type="button" className="match-conclusion-continue" onClick={()=>{clearFinalTimer();setFinalStep("feedback");}}>CONTINUAR →</button>
               </div>
-            )) : (
+            )) : finalStep==="feedback"&&matchMeta ? (
+              <MatchFeedback
+                key={matchMeta.id}
+                playerName={matchMeta.playerName??playerName}
+                available={feedbackAvailable()}
+                onSkip={()=>setFinalStep("actions")}
+                onSubmit={answers=>submitMatchFeedback(feedbackFor(answers))}
+                onDownload={answers=>downloadPlaytest("daggerlight-feedback.json",JSON.stringify(feedbackFor(answers),null,2))}
+              />
+            ) : (
               <div className="decision-card match-postgame" role="group" aria-label="Opciones después de la partida">
                 <span>{arcadeRun?"MODO ARCADE":"PARTIDA FINALIZADA"}</span>
                 <strong>{arcadeRun?.status==="complete"?"ARCADE COMPLETADO":game.winner==="player"?"GANASTE":game.winner==="opponent"?"GANÓ LA IA":"EMPATE"}</strong>
