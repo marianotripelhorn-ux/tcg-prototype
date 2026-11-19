@@ -712,7 +712,7 @@ async function runFinale(){
       const headers={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"content-type","Access-Control-Allow-Methods":"POST,OPTIONS"};
       if(route.request().method()==="OPTIONS")return route.fulfill({status:204,headers});
       sent.push(route.request().postDataJSON());
-      await route.fulfill({status:sent.length===1?503:200,headers,json:{status:sent.length===1?0:1}});
+      await route.fulfill({status:sent.length===1?503:200,headers,json:{status:sent.length===1?"Error":"Ok"}});
     });
     await continueButton.click();
     const feedback=page.locator(".dl-match-feedback");

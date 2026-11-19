@@ -68,7 +68,7 @@ export async function submitMatchFeedback(feedback:ReturnType<typeof buildMatchF
     });
     if(!response.ok)throw new Error("No se pudo enviar el feedback.");
     const acknowledgement=await response.json();
-    if(acknowledgement?.status!==1)throw new Error("No se pudo confirmar el envío.");
+    if(acknowledgement?.status!=="Ok"&&acknowledgement?.status!==1)throw new Error("No se pudo confirmar el envío.");
   }finally{
     window.clearTimeout(timeout);
   }
