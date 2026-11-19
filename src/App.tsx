@@ -1302,7 +1302,6 @@ export default function App() {
   const deckView=boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.player:game.player;
   const openingHint=guidedOpening&&!duelPreview&&boardMotion?.phase!=="round" ? guidedOpeningHint({
     round:game.round,turn:game.turn,phase:game.phase,motion:boardMotion?.phase,
-    result:duelStep==="result"?duelPreview?.outcome:undefined,
     inspecting:!!inspection,cardSelected:selectedIndex!==null
   }) : null;
 
