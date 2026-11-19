@@ -20,6 +20,7 @@ export interface SavedMatch {
   createdAt: string;
   updatedAt: string;
   rivalSelection: string;
+  playerName?: string;
   game: GameState;
 }
 
@@ -94,12 +95,12 @@ export function readSavedMatch():SavedMatch|null {
   }catch{return null;}
 }
 
-export function newSavedMatch(game:GameState,rivalSelection:string):SavedMatch {
+export function newSavedMatch(game:GameState,rivalSelection:string,playerName?:string):SavedMatch {
   const now=new Date().toISOString();
   const id=typeof crypto!=="undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : "match-"+Date.now()+"-"+Math.random().toString(36).slice(2);
-  return {version:SAVE_VERSION,ruleset:RULESET,id,createdAt:now,updatedAt:now,rivalSelection,game};
+  return {version:SAVE_VERSION,ruleset:RULESET,id,createdAt:now,updatedAt:now,rivalSelection,playerName,game};
 }
 
 export function writeSavedMatch(match:SavedMatch):boolean {

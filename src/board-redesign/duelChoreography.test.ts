@@ -18,7 +18,8 @@ describe("duel presentation v1.1 is presentation-only and deterministic", () => 
       "approach", "player-power", "opponent-power", "compare", "impact", "result", "settle"
     ]);
     expect(DUEL_BEATS.every((b, i) => i === 0 || b.at > DUEL_BEATS[i - 1].at)).toBe(true);
-    expect(DUEL_BEATS[6].at - DUEL_BEATS[5].at).toBeGreaterThanOrEqual(900);
+    expect(DUEL_BEATS[6].at - DUEL_BEATS[5].at).toBeGreaterThanOrEqual(1200);
+    expect(DUEL_BEATS[6].at - DUEL_BEATS[5].at).toBeLessThanOrEqual(1300);
     expect(DUEL_FINISH_MS - DUEL_BEATS[6].at).toBeGreaterThanOrEqual(350);
   });
 

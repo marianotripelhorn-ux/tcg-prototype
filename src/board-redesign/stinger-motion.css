@@ -1,0 +1,542 @@
+/* The matte shadow belongs to the very same flying real card. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-motion-flight{
+  will-change:transform;filter:none!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-motion-flight > .game-card{
+  position:relative;z-index:2;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-motion-flight > .dl-flight-shadow{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:rgba(4,6,7,.86);
+  border-radius:2px;
+  filter:blur(3px);
+  transform:translate3d(4px,7px,0);
+  opacity:.4;
+  transform-origin:50% 55%;
+  will-change:transform,opacity;
+}
+/* No old landing rings, circular emitters or stray decorative shards. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-motion-flight .board-gs-flight-veil,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .board-gs-power-fx{
+  display:none!important;
+}
+
+/* The three receipts share the Quiero pennant and a quiet faction fabric. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-ceremony-banner {
+  position:relative;
+  isolation:isolate;
+  display:grid;
+  justify-items:center;
+  align-content:center;
+  gap:clamp(8px,1.4dvh,14px);
+  width:min(88vw,390px);
+  box-sizing:border-box;
+  padding:clamp(20px,3vh,33px) 28px var(--dl-banner-hem-space);
+  background:#a3895b;
+  clip-path:var(--dl-quiero-pennant);
+  color:#f4ead3;
+  text-align:center;
+}
+.dl-ceremony-backdrop {
+  position:absolute;
+  z-index:-1;
+  inset:1px;
+  overflow:hidden;
+  clip-path:var(--dl-quiero-pennant);
+  background:#271b15;
+  pointer-events:none;
+}
+.dl-ceremony-art {
+  display:block;
+  width:100%;
+  height:100%;
+  max-width:none;
+  object-fit:cover;
+  object-position:50% 39%;
+}
+.dl-ceremony-backdrop::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    repeating-linear-gradient(90deg,#e6c98608 0 1px,transparent 1px 4px),
+    linear-gradient(180deg,#1816114d,#16151091 72%,#161510b0);
+}
+.dl-ceremony-banner::after {
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:5px 5px 17%;
+  pointer-events:none;
+  border:1px solid #d8b77850;
+  border-bottom:0;
+}
+.dl-ceremony-kicker {
+  color:#d8bc84;
+  font:700 10px/1.2 Arial,sans-serif;
+  letter-spacing:.16em;
+}
+.dl-ceremony-rule {
+  width:min(100%,215px);
+  height:1px;
+  background:linear-gradient(90deg,transparent,#d6b16b,transparent);
+}
+
+/* The two values and outcome hold still in a single centered banner. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger {
+  position:absolute!important;
+  z-index:120;
+  left:var(--dl-banner-x,50%);
+  top:calc(var(--dl-banner-y,50%) - var(--dl-portrait-banner-lift,0px));
+  translate:-50% -50%;
+  pointer-events:none;
+  animation:dl-duel-banner 1200ms both;
+}
+.dl-duel-stinger-result,.dl-new-round-number {
+  color:#f6eedc;
+  font:400 clamp(29px,5vw,48px)/1.04 var(--board-display,"Archivo Black",Arial,sans-serif);
+  letter-spacing:-.035em;
+}
+.dl-duel-stinger-contents {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  width:min(100%,235px);
+  gap:12px;
+}
+.dl-duel-stinger-power {display:grid;justify-items:center;gap:4px}
+.dl-duel-stinger-power small {
+  color:#e6d5b4;
+  font:700 clamp(9px,2vw,11px)/1.2 Arial,sans-serif;
+  letter-spacing:.06em;
+}
+.dl-duel-stinger-power strong {
+  color:#f6eedc;
+  font:400 clamp(27px,5vw,44px)/1 var(--board-display,"Archivo Black",Arial,sans-serif);
+  font-variant-numeric:tabular-nums;
+}
+@keyframes dl-duel-banner {
+  0%{transform:translate3d(0,-22px,0);opacity:0;animation-timing-function:cubic-bezier(.18,.76,.24,1)}
+  19%,83%{transform:translate3d(0,0,0);opacity:1}
+  100%{transform:translate3d(0,-14px,0);opacity:0}
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-focus-screen {
+  background:radial-gradient(ellipse at 48% 46%,#22201962,#171613a6)!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-result .duel-showcase-pair {
+  opacity:.28;
+  transition:opacity 180ms ease-out;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-settle .duel-focus-screen {
+  animation-duration:150ms;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-outcome {
+  display:none!important;
+}
+
+/* Static cover and moving banner are independent surfaces. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-main > .dl-new-round-stage {
+  position:absolute;
+  inset:0;
+  z-index:115;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  background:#171613;
+  pointer-events:auto;
+  isolation:isolate;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-new-round-ink {padding-block-start:clamp(27px,5dvh,52px)}
+.dl-new-round-number {white-space:nowrap}
+
+@media (prefers-reduced-motion:reduce) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-duel-payout] :is(.hybrid-score-values,.hybrid-phone-score strong),
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-life-unit:is(.is-damaged,.is-healed) .hybrid-life-crest {
+    animation:none!important;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-motion-flight .dl-flight-shadow {display:none!important}
+}
+
+/* One response on the real score and on any crest whose Life changed. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1:is([data-duel-payout="player"],[data-duel-payout="opponent"])
+  :is(.hybrid-score-values,.hybrid-phone-score strong) {
+  animation:dl-duel-score-receive 300ms cubic-bezier(.16,.76,.28,1) both;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-life-unit:is(.is-damaged,.is-healed) .hybrid-life-crest {
+  animation:dl-duel-life-receive 320ms cubic-bezier(.16,.76,.28,1) both;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-life-unit.is-damaged .hybrid-life-number {
+  animation:none;
+}
+@keyframes dl-duel-score-receive {
+  0%{transform:scale(.9)}
+  32%{transform:scale(1.16);text-shadow:0 0 .35em #fffe}
+  100%{transform:scale(1);text-shadow:none}
+}
+@keyframes dl-duel-life-receive {
+  0%{transform:scale(1)}
+  28%{transform:scale(1.075);filter:brightness(1.35)}
+  100%{transform:scale(1)}
+}
+/* Local Power cues stay attached to the printed upper-left corner. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-face {
+  overflow:visible!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .duel-showcase-face::after {
+  display:none!important;
+}
+.duel-showcase-change {
+  display:flex;
+  align-items:center;
+  width:100%;
+  min-height:20px;
+  padding-inline:5px;
+  box-sizing:border-box;
+}
+.dl-live-power-cue {
+  --dl-cue-color:#efd399;
+  position:relative;
+  isolation:isolate;
+  min-width:0;
+  padding-inline:4px;
+  color:var(--dl-cue-color);
+  pointer-events:none;
+}
+.dl-live-power-cue.is-loss {--dl-cue-color:#e0e2e4}
+.dl-live-power-cue span {
+  display:block;
+  white-space:nowrap;
+  font:400 clamp(10px,1.4vw,15px)/1.2 var(--board-display,"Archivo Black",Arial,sans-serif);
+  text-shadow:0 2px 6px #101010;
+  animation:dl-local-power-value .48s cubic-bezier(.2,.76,.24,1) both;
+}
+.dl-live-power-cue i {
+  position:absolute;
+  z-index:-1;
+  top:50%;
+  left:13px;
+  width:20px;
+  aspect-ratio:1;
+  translate:-50% -50%;
+  border:1px solid currentColor;
+  border-radius:50%;
+  animation:dl-local-power-ring .52s ease-out both;
+}
+.dl-live-power-cue i:nth-child(2) {animation-delay:65ms}
+.dl-live-power-cue.is-loss i {animation-name:dl-local-power-ring-in}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-impact .is-duel-loser .duel-showcase-face {
+  animation-name:dl-upright-card-impact;
+}
+@keyframes dl-upright-card-impact {
+  0%,100%{transform:translateY(0)}
+  38%{transform:translateY(5px) scale(.985)}
+}
+@keyframes dl-local-power-value {
+  0%{opacity:0;transform:scale(.76)}
+  36%{opacity:1;transform:scale(1.09)}
+  100%{opacity:1;transform:scale(1)}
+}
+@keyframes dl-local-power-ring {
+  0%{opacity:.8;transform:scale(.6)}
+  100%{opacity:0;transform:scale(2.1)}
+}
+@keyframes dl-local-power-ring-in {
+  0%{opacity:.64;transform:scale(1.65)}
+  100%{opacity:0;transform:scale(.58)}
+}
+
+/* The next hand is mounted during full cover, then enters via DealMotion. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="round-wipe-reveal"] .hand-zone .hand-card {
+  visibility:hidden;
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .dl-live-power-cue span {animation:none}
+  .dl-live-power-cue i {display:none}
+}
+
+/* Only a crown whose real Life changed emits this settling outline. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-life-unit:is(.is-damaged,.is-healed) .board-gs-crest-anchor::after {
+  content:"";
+  position:absolute;
+  inset:8%;
+  border:1px solid #e5c88b;
+  border-radius:50%;
+  pointer-events:none;
+  animation:dl-local-power-ring .30s ease-out both;
+}
+@media (prefers-reduced-motion:reduce) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .hybrid-life-unit:is(.is-damaged,.is-healed) .board-gs-crest-anchor::after {
+    display:none;
+  }
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="match-entry"] .hand-zone .hand-card {
+  visibility:hidden;
+}
+.dl-match-entry-rule {
+  position:absolute;
+  z-index:8;
+  inset:50% 0 auto;
+  height:1px;
+  pointer-events:none;
+  opacity:0;
+  background:linear-gradient(90deg,transparent,#dac08b 17%,#fff0cc 50%,#dac08b 83%,transparent);
+  box-shadow:0 0 8px #e0c18376;
+}
+
+/* Archive flights already cleared the table when the next-round cover starts. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="round-wipe"] :is(.board-slot .played-card,.hand-zone .hand-card) {
+  visibility:hidden;
+}
+
+
+/* The match pennant shares the result banners' cloth and gold edge. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .match-conclusion-stage.is-banner-finale {
+  background:radial-gradient(ellipse at center,#201c14aa,#151310f0)!important;
+  backdrop-filter:none!important;
+  animation:none!important;
+  overflow:auto;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-match-finale {
+  width:min(85vw,376px,84dvh);
+  min-height:min(420px,88dvh);
+  margin:auto;
+  gap:clamp(10px,1.7dvh,17px);
+  /* Leave the lower quarter for the swallowtail, plus space below the control. */
+  padding:clamp(22px,4dvh,38px) 24px clamp(112px,14dvh,136px);
+  animation:dl-finale-unfurl 420ms cubic-bezier(.19,.77,.23,1) both;
+}
+.dl-match-finale h2 {
+  margin:0;
+  color:#f6eedc;
+  font:400 clamp(30px,5vw,55px)/1.03 var(--board-display,"Archivo Black",Arial,sans-serif);
+  letter-spacing:-.04em;
+  text-wrap:balance;
+}
+.dl-match-finale .dl-ceremony-backdrop::after {
+  background:
+    linear-gradient(90deg,#190e0852,transparent 48%,#190e0852),
+    linear-gradient(180deg,#1c160e39,#160e0a79 65%,#160e0aab);
+}
+.dl-ceremony-banner > :is(h2,strong,.dl-ceremony-kicker,.dl-new-round-number,.dl-duel-stinger-contents,.dl-finale-champion,.dl-finale-life,.board-round-kicker,.board-round-outcome,.board-round-reason) {
+  text-shadow:0 2px 5px #17110e;
+}
+.dl-match-finale::after {
+  inset:1px;
+  clip-path:var(--dl-quiero-pennant);
+  border:0;
+  background:var(--hd-tall-fabric,none) center / 112% 118% no-repeat;
+  mix-blend-mode:soft-light;
+  opacity:.23;
+}
+.dl-match-finale[data-outcome="opponent"] .dl-ceremony-backdrop,
+.dl-match-finale[data-outcome="opponent"]::after {
+  filter:grayscale(.84);
+}
+.dl-finale-champion {
+  margin:0;
+  color:#efdbb2;
+  font:700 clamp(12px,2.7vw,16px)/1.25 Arial,sans-serif;
+  letter-spacing:.045em;
+  text-wrap:balance;
+}
+.dl-finale-life {display:flex;justify-content:center;gap:clamp(21px,6vw,42px)}
+.dl-finale-life span {display:grid;gap:3px;justify-items:center}
+.dl-finale-life small {color:#dbc9a3;font:700 9px/1.2 Arial,sans-serif;letter-spacing:.09em}
+.dl-finale-life strong {
+  color:#f6eedc;
+  font:400 clamp(20px,4vw,30px)/1 var(--board-display,"Archivo Black",Arial,sans-serif);
+  font-variant-numeric:tabular-nums;
+}
+.dl-finale-continue {
+  width:min(100%,190px);
+  min-height:38px;
+  margin-top:2px;
+  cursor:pointer;
+  border:1px solid #ddc187;
+  border-radius:0;
+  background:#d9ba7d;
+  color:#1a160f;
+  font:800 12px/1 Arial,sans-serif;
+  letter-spacing:.07em;
+}
+.dl-finale-continue:hover {background:#ead19e}
+.dl-finale-continue:focus-visible {outline:2px solid #fff0c7;outline-offset:3px}
+@keyframes dl-finale-unfurl {
+  0%{opacity:0;transform:translateY(-22px)}
+  100%{opacity:1;transform:translateY(0)}
+}
+@media (max-height:540px) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-match-finale {gap:6px;padding-block:14px 114px}
+}
+@media (prefers-reduced-motion:reduce) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .dl-match-finale {animation:none}
+}
+
+/* Keep result banners above the lower Champion and hand on portrait phones.
+   Offsetting the resting layout also offsets the complete animation. */
+@media (max-width:760px) and (orientation:portrait) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 {
+    --dl-portrait-banner-lift:clamp(24px,10dvh,88px);
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 :is(.board-round-receipt-stage > .board-round-ceremony,.dl-new-round-ink) {
+    translate:0 calc(-1 * var(--dl-portrait-banner-lift));
+  }
+}
+
+/* These guided stages hold their final pose until the player's next action. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo .dl-duel-stinger.dl-guide-held,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-receipt-stage > .board-round-ceremony.dl-guide-held {
+  padding-block-end:clamp(105px,14dvh,128px);
+  animation:dl-guide-banner-enter 245ms cubic-bezier(.18,.76,.24,1) both;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-receipt-stage.is-guide-receipt {
+  pointer-events:auto;
+  overflow:auto;
+  align-items:safe center;
+}
+.dl-guide-banner-note {
+  margin:0;
+  color:#f2e4c8;
+  text-align:center;
+  font:600 13px/1.4 system-ui,sans-serif;
+  text-shadow:0 2px 4px #120e0a;
+}
+.dl-guide-round-next {
+  min-height:40px;
+  padding:8px 12px;
+  background:#dbc08d;
+  color:#1f1810;
+  cursor:pointer;
+}
+@keyframes dl-guide-banner-enter {
+  from{opacity:0;transform:translateY(-18px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@media (prefers-reduced-motion:reduce) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-receipt-stage > .board-round-ceremony.dl-guide-held {
+    animation:none;
+  }
+}
+
+/* The guided review uses the full play area so the cards and explanation have
+   their own rows even when the battlefield itself is short. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-main > .is-guided-duel {
+  justify-content:safe center;
+  gap:clamp(10px,2dvh,20px);
+  z-index:125!important;
+  padding:12px max(12px,env(safe-area-inset-right)) 12px max(12px,env(safe-area-inset-left));
+  overflow:auto!important;
+  overscroll-behavior:contain;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .is-guided-duel .duel-focus-screen {
+  background:radial-gradient(ellipse at 50% 42%,#171510df,#100e0ce8)!important;
+  -webkit-backdrop-filter:blur(5px) saturate(.7)!important;
+  backdrop-filter:blur(5px) saturate(.7)!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-main:has(> .is-guided-duel:not(.duel-beat-settle)) .duel-is-resolving .current-board-card {
+  visibility:hidden!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-showcase-pair {
+  flex:none;
+  max-height:none!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-showcase-card {
+  width:clamp(78px,min(19vw,24dvh),218px)!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-effect-note {
+  display:block;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-choreo-comparison {
+  position:static;
+  translate:none;
+  white-space:normal;
+  font-size:clamp(14px,2.4vmin,23px);
+}
+.dl-guide-duel-footer {
+  position:relative;
+  z-index:4;
+  display:grid;
+  justify-items:center;
+  gap:8px;
+  width:min(100%,36rem);
+  padding-top:10px;
+  border-top:1px solid #c9ae797a;
+  text-align:center;
+}
+.dl-guide-duel-note {
+  margin:0;
+  color:#f6ead1;
+  font:600 13px/1.4 system-ui,sans-serif;
+  text-wrap:balance;
+}
+.dl-guide-duel-actions {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:center;
+  gap:4px 12px;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-showcase-skip {
+  position:static;
+  z-index:auto;
+  min-height:44px;
+  border:1px solid #dbc08d;
+  background:#dbc08d;
+  color:#211810;
+  font-size:11px;
+}
+.dl-guide-duel-exit {
+  min-height:44px;
+  padding:4px 8px;
+  border:0;
+  background:none;
+  color:#f2d6a3;
+  font:700 12px/1.25 system-ui,sans-serif;
+  text-decoration:underline;
+  cursor:pointer;
+}
+.dl-guide-duel-actions button:focus-visible {
+  outline:2px solid #fff0cd;
+  outline-offset:3px;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .dl-duel-stinger.dl-guide-held {
+  position:relative!important;
+  inset:auto;
+  translate:none;
+  flex:none;
+  pointer-events:auto;
+  padding-block-end:clamp(120px,17dvh,150px);
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-beat-result.is-guided-duel .duel-showcase-pair {
+  position:absolute;
+  visibility:hidden;
+}
+@media (max-width:760px) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-showcase-pair {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-template-areas:"player-card opponent-card" "player-effects opponent-effects";
+    align-items:start!important;
+    max-width:356px;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-showcase-card {
+    width:clamp(78px,min(36vw,23dvh),154px)!important;
+  }
+  .is-guided-duel .duel-choreo-side-player {grid-area:player-card}
+  .is-guided-duel .duel-choreo-side-opponent {grid-area:opponent-card}
+  .is-guided-duel .duel-effect-column-player {grid-area:player-effects}
+  .is-guided-duel .duel-effect-column-opponent {grid-area:opponent-effects}
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-effect-column {
+    justify-self:center;
+    align-self:start;
+    align-items:center;
+    text-align:center;
+    padding:0;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .duel-choreo.is-guided-duel .duel-effect-note {
+    font-size:11px;
+    line-height:1.25;
+  }
+}

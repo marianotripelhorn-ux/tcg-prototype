@@ -4,12 +4,15 @@ import ThemeToggle from "./ThemeToggle";
 import { championBackgroundUrl,championImageUrl,championShortName,championSubtitle } from "./championArtwork";
 import { allCards, factionLabels } from "./data";
 import { champions } from "./engine/champions";
+import { cardsForDeck, makeMonoDeckDefinition } from "./engine/decks";
+import { FactionCardBack } from "./FactionCardBack";
 import { DEFAULT_PLAYER_NAME } from "./playerProfile";
 import { SPECIAL_TEXT,specialKindFor } from "./engine/manifestations";
 import type { AIDifficulty } from "./engine/types";
 import type { SavedMatch } from "./persistence";
 import type { CardDefinition, Faction } from "./types";
 import "./front-office.css";
+import "./onboarding-front.css";
 
 type GoHome = () => void;
 type ChampionPickerProps = {
@@ -86,20 +89,14 @@ export function HomeScreen({
   };
 
   const buttons = [
-    {id:"play", index:"01", title:"EMPEZAR PARTIDA", subtitle:"Elegí tu Campeón y enfrentate a la IA.", image:"dagger.webp", fallback:"./factions/red-portrait.webp", action:onPlay},
-    ...(arcadeResume ? [{
-      id:"arcade-continue", index:"↳", title:"CONTINUAR ARCADE", subtitle:arcadeResume,
-      image:"banner.webp",fallback:"./factions/saints-portrait.webp",action:onContinueArcade
-    }] : []),
-    {id:"arcade", index:"02", title:"MODO ARCADE", subtitle:"Un Campeón. Todos los rivales. Una racha.",
-      image:"banner.webp",fallback:"./factions/saints-portrait.webp",action:onArcade},
     ...(saved ? [{
-      id:"continue", index:"↳", title:"CONTINUAR PARTIDA",
+      id:"continue", title:"CONTINUAR PARTIDA",
       subtitle:`${championShortName(saved.game.player.champion.name)} vs. ${championShortName(saved.game.opponent.champion.name)} · Ronda ${saved.game.round}`,
       image:"banner.webp", fallback:"./factions/saints-portrait.webp", action:onContinue
     }] : []),
-    {id:"learn", index:"03", title:"APRENDER A JUGAR", subtitle:"Conocé las reglas en un tutorial interactivo.", image:"egg.webp", fallback:"./factions/white-portrait.webp", action:onTutorial},
-    {id:"library", index:"04", title:"VER CARTAS", subtitle:"Explorá las cartas y sus habilidades.", image:"book.webp", fallback:"./factions/ivory-portrait.webp", action:onGallery}
+    {id:"play", title:saved?"NUEVA PARTIDA":"JUGAR", subtitle:"Elegí tu Campeón y enfrentate a la IA.", image:"dagger.webp", fallback:"./factions/red-portrait.webp", action:onPlay},
+    {id:"learn", title:"APRENDER A JUGAR", subtitle:"Jugá una primera partida guiada.", image:"egg.webp", fallback:"./factions/white-portrait.webp", action:onTutorial},
+    {id:"library", title:"VER CARTAS", subtitle:"Explorá las cartas y sus habilidades.", image:"book.webp", fallback:"./factions/ivory-portrait.webp", action:onGallery}
   ];
 
   return (
@@ -109,10 +106,6 @@ export function HomeScreen({
           <img src="./branding/menu/crown.svg" alt="" aria-hidden="true" className="menu-top-crown" />
           DAGGERLIGHT
         </span>
-        <div className="fo-header-actions">
-          <span className="fo-top-meta">{import.meta.env.VITE_DAGGERLIGHT_LAB==="true" ? "LABORATORIO · MANIFESTACIONES" : "TCG · PROTOTIPO"}</span>
-          <ThemeToggle />
-        </div>
       </header>
       <div className="home-layout">
         <section className="home-hero" aria-label="Daggerlight">
@@ -120,15 +113,7 @@ export function HomeScreen({
             <img className="home-hero-crown" src="./branding/menu/crown.svg" alt="" aria-hidden="true" />
             <h1 className="home-title">DAGGERLIGHT</h1>
             <p className="home-tagline">La mano que elegís determina el poder que ejercés.</p>
-            <label className="home-player-identity">
-              <span className="home-player-label">TU NOMBRE</span>
-              <input aria-label="Tu nombre de jugador" maxLength={20}
-                autoComplete="nickname" spellCheck={false}
-                 value={playerName===DEFAULT_PLAYER_NAME?"":playerName}
-                onChange={event=>onPlayerNameChange(event.target.value)}
-                placeholder="ELEGÍ TU NOMBRE" />
-              <span className="home-player-edit" aria-hidden="true">✎</span>
-            </label>
+
           </div>
           <div className="home-hero-art" aria-hidden="true">
             <span className="hero-art-halo" />
@@ -146,7 +131,6 @@ export function HomeScreen({
               className={"home-action action-" + button.id + (selectedAction === button.id ? " is-selected" : "")}
               onClick={() => activate(button.id,button.action)}
             >
-              <span className="home-action-index">{button.index}</span>
               <span className="home-action-content">
                 <strong>{button.title}</strong>
                 <span className="home-action-description">{button.subtitle}</span>
@@ -159,25 +143,70 @@ export function HomeScreen({
               <span className="home-action-arrow" aria-hidden="true">↗</span>
             </button>
           ))}
+          <div className="home-menu-support">
+            <a className="home-physical-link" href="./reglamento.html" target="_blank" rel="noopener noreferrer">REGLAMENTO</a>
+            <button type="button" className="home-physical-link" onClick={onPlay}>VER CAMPEONES</button>
+          </div>
         </nav>
       </div>
       <footer className="fo-footer menu-footer">
-        <span className="menu-record">{summary.total} PARTIDAS · {summary.wins} VICTORIAS · {summary.losses} DERROTAS · {summary.draws} EMPATES</span>
-        <div className="menu-extras">
-          {import.meta.env.VITE_DAGGERLIGHT_LAB==="true" && <a className="home-physical-link lab-classic-link" href="../gameplay-v1/">VOLVER AL JUEGO CLÁSICO</a>}
-          <button type="button" className="home-physical-link" onClick={onMultiplayer}>MULTIJUGADOR · BETA</button>
-          <button type="button" className="home-physical-link" onClick={onPlaytest}>PLAYTEST</button>
-          <a className="home-physical-link" href="./reglamento.html" target="_blank" rel="noopener noreferrer">REGLAMENTO</a>
-          <button type="button" className="home-physical-link" onClick={onPhysical}>MODO MESA · BETA</button>
-          <button type="button" className="home-physical-link" onClick={onDeckLab}>MAZOS MULTIFACCIÓN · LAB</button>
-        </div>
-        {analyticsReady ? <label className="home-analytics-consent">
-          <input type="checkbox" checked={analyticsConsent} onChange={event=>onChangeAnalytics(event.target.checked)} />
-          Compartir estadísticas anónimas
-        </label> : <span className="menu-local-stats">ESTADÍSTICAS LOCALES</span>}
+        <details className="home-more-options">
+          <summary>Más opciones</summary>
+          <div className="menu-extras">
+            {arcadeResume && <button type="button" className="home-physical-link action-arcade-continue" onClick={onContinueArcade}>CONTINUAR ARCADE · {arcadeResume}</button>}
+            <button type="button" className="home-physical-link action-arcade" onClick={onArcade}>MODO ARCADE</button>
+            <button type="button" className="home-physical-link" onClick={onMultiplayer}>MULTIJUGADOR · BETA</button>
+            <button type="button" className="home-physical-link" onClick={onPlaytest}>PLAYTEST</button>
+            <button type="button" className="home-physical-link" onClick={onPhysical}>MODO MESA · BETA</button>
+            <button type="button" className="home-physical-link" onClick={onDeckLab}>MAZOS MULTIFACCIÓN · LAB</button>
+            {import.meta.env.VITE_DAGGERLIGHT_LAB==="true" && <a className="home-physical-link lab-classic-link" href="../gameplay-v1/">VOLVER AL JUEGO CLÁSICO</a>}
+          </div>
+          <div className="home-more-preferences">
+            <label className="home-player-identity">
+              <span className="home-player-label">TU NOMBRE</span>
+              <input aria-label="Tu nombre de jugador" maxLength={20}
+                autoComplete="nickname" spellCheck={false}
+                 value={playerName===DEFAULT_PLAYER_NAME?"":playerName}
+                onChange={event=>onPlayerNameChange(event.target.value)}
+                placeholder="ELEGÍ TU NOMBRE" />
+              <span className="home-player-edit" aria-hidden="true">✎</span>
+            </label>
+            <ThemeToggle />
+            {analyticsReady ? <label className="home-analytics-consent">
+              <input type="checkbox" checked={analyticsConsent} onChange={event=>onChangeAnalytics(event.target.checked)} />
+              Compartir estadísticas anónimas
+            </label> : <span className="menu-local-stats">ESTADÍSTICAS LOCALES</span>}
+          </div>
+          <span className="menu-record">{summary.total} PARTIDAS · {summary.wins} VICTORIAS · {summary.losses} DERROTAS · {summary.draws} EMPATES</span>
+        </details>
       </footer>
     </main>
   );
+}
+
+function StarterDeckPreview({championId,faction}:{championId:string;faction:Faction}) {
+  const cards=cardsForDeck(makeMonoDeckDefinition(championId));
+  const roster=new Map<CardDefinition,number>();
+  for (const card of cards) roster.set(card,(roster.get(card)??0)+1);
+
+  return <section className="dl-starter-deck" aria-label="Mazo inicial">
+    <div className="dl-starter-deck-summary">
+      <FactionCardBack faction={faction} className="dl-starter-deck-back"/>
+      <div>
+        <h2>MAZO INICIAL</h2>
+        <p className="dl-starter-deck-faction">{factionLabels[faction]}</p>
+        <p>{cards.length} cartas · {roster.size} distintas</p>
+      </div>
+    </div>
+    <details className="dl-starter-deck-list">
+      <summary>Ver las cartas del mazo</summary>
+      <ul>
+        {Array.from(roster,([card,copies])=><li key={card.id}>
+          <span>{copies}×</span><strong>{card.name}</strong><span>{card.power} P</span>
+        </li>)}
+      </ul>
+    </details>
+  </section>;
 }
 
 export function ChampionPicker({onBack,onPlay,onGallery,mode="standard"}:ChampionPickerProps) {
@@ -212,12 +241,11 @@ export function ChampionPicker({onBack,onPlay,onGallery,mode="standard"}:Champio
       </section>
 
       {!chosen && <nav className="dl-faction-switcher" aria-label="Elegí una facción">
-        {factionInfo.map((f,index)=>(
+        {factionInfo.map(f=>(
           <button type="button" key={f.id}
             className={"dl-faction-tab"+(faction===f.id?" active":"")}
             aria-pressed={faction===f.id}
             onClick={()=>chooseFaction(f.id)}>
-            <span className="dl-faction-number">{String(index+1).padStart(2,"0")}</span>
             <span>{factionLabels[f.id]}</span>
           </button>
         ))}
@@ -246,7 +274,7 @@ export function ChampionPicker({onBack,onPlay,onGallery,mode="standard"}:Champio
         </div>}
         {chosen&&(
           <div className="dl-champion-confirm">
-            <div className="dl-champion-card dl-champion-confirm-preview">
+            <div className="dl-champion-card dl-champion-confirm-preview" data-faction={chosen.faction}>
               <span className="dl-champion-art"
                 style={{backgroundImage:`url("${championBackgroundUrl(chosen.faction)}")`}}>
                 <img src={championImageUrl(chosen.id)} alt="" decoding="async"/>
@@ -258,7 +286,6 @@ export function ChampionPicker({onBack,onPlay,onGallery,mode="standard"}:Champio
               </span>
             </div>
             <div className="dl-champion-confirm-panel">
-              <h2>{championShortName(chosen.name).toUpperCase()}</h2>
               <div className="dl-champion-settings">
             {!arcade && <label>
               <span>RIVAL</span>
@@ -282,6 +309,7 @@ export function ChampionPicker({onBack,onPlay,onGallery,mode="standard"}:Champio
               {arcade?"INICIAR ARCADE · 8 RIVALES":"EMPEZAR PARTIDA"} <span aria-hidden="true">↗</span>
             </button>
               </div>
+              <StarterDeckPreview championId={chosen.id} faction={chosen.faction}/>
               <button type="button" className="dl-champion-change" onClick={()=>setSelected(null)}>← CAMBIAR CAMPEÓN</button>
             </div>
           </div>

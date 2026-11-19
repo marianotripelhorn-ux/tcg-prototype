@@ -1,0 +1,75 @@
+.dl-faction-card-back {
+  --dl-back-ink: #371a1a;
+  --dl-back-tint: #f8b29b;
+  position: relative;
+  display: block;
+  isolation: isolate;
+  overflow: hidden;
+  box-sizing: border-box;
+  aspect-ratio: 63 / 88;
+  border: 1px solid var(--dl-back-tint);
+  border-radius: 5% / 3.5%;
+  background: var(--dl-back-ink);
+  pointer-events: none;
+}
+
+.dl-faction-card-back[data-faction="blue"] {
+  --dl-back-ink: #17273e;
+  --dl-back-tint: #bed9fb;
+}
+
+.dl-faction-card-back[data-faction="white"] {
+  --dl-back-ink: #4e4841;
+  --dl-back-tint: #fff1d8;
+}
+
+.dl-faction-card-back[data-faction="saints"] {
+  --dl-back-ink: #31283a;
+  --dl-back-tint: #efd692;
+}
+
+.dl-faction-card-back[data-faction="ivory"] {
+  --dl-back-ink: #333b30;
+  --dl-back-tint: #d9e4c5;
+}
+
+.dl-back-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  z-index: -2;
+}
+
+.dl-faction-card-back::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, #12101818, #12101868);
+}
+
+.dl-back-logo {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 60%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 1px 2px #141018c9);
+}
+
+.dl-back-logo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--dl-back-tint);
+  mask: var(--dl-back-logo) center / contain no-repeat;
+}
+
+.dl-faction-card-back.hybrid-phone-deck-back {
+  width: 14px;
+  flex: 0 0 14px;
+  border-radius: 2px;
+}

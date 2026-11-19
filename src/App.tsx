@@ -1,22 +1,29 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArchiveFlight, CardFlight, DealMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
+import { createPortal, flushSync } from "react-dom";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { ArchiveFlight, CardFlight, DealMotion, MatchEntryMotion, handCardRect, visibleHand, visibleRoundPlays } from "./board-redesign/motion";
 import type { BoardMotionSequence } from "./board-redesign/motion";
-import { ArchiveReceiptTransition, ArchiveSweep, RoundTransition, archiveCountChange, completedRoundReceipt } from "./board-redesign/roundChoreography";
+import { ArchiveReceiptTransition, RoundTransition, archiveCountChange, completedRoundReceipt } from "./board-redesign/roundChoreography";
+import { DuelResultStinger, MatchFinaleBanner, NewRoundStinger } from "./board-redesign/stingerMotion";
+import { QuieroChoiceStage, RivalQuieroStage, rivalAcceptedQuiero, shouldOfferQuiero } from "./board-redesign/quieroChoreography";
 import { DUEL_BEATS, DUEL_FINISH_MS, duelPowerReasons, powerIsRevealed, powerSourceCues, postDuelChampionCues } from "./board-redesign/duelChoreography";
 import type { DuelBeat } from "./board-redesign/duelChoreography";
 import { playDuelCue, unlockDuelAudio } from "./board-redesign/duelAudio";
 import { disableManifestations } from "./board-redesign/disableManifestations";
 import Tutorial from "./Tutorial";
-import { TUTORIAL_MATCH } from "./onboarding";
+import { TUTORIAL_MATCH, guidedOpeningHint, hasSeenWelcome, rememberWelcome } from "./onboarding";
+import { OpeningGuide, WelcomeMatch } from "./WelcomeMatch";
 import SplashScreen from "./SplashScreen";
 import Multiplayer from "./Multiplayer";
 import PlaytestHub from "./PlaytestHub";
-import { saveAiMatch } from "./playtestStorage";
+import { downloadPlaytest, saveAiMatch } from "./playtestStorage";
+import { MatchFeedback } from "./MatchFeedback";
+import { buildMatchFeedback, feedbackAvailable, submitMatchFeedback } from "./matchFeedback";
+import type { MatchFeedbackAnswers } from "./matchFeedback";
 import ThemeToggle from "./ThemeToggle";
 import AuguryStatus from "./AuguryStatus";
 import { factionArtUrl } from "./factionArtwork";
 import { championImageUrl,championBackgroundUrl,championShortName } from "./championArtwork";
-import { readPlayerName,writePlayerName,DEFAULT_PLAYER_NAME } from "./playerProfile";
+import { cleanPlayerName,readPlayerName,writePlayerName,DEFAULT_PLAYER_NAME } from "./playerProfile";
 import { newArcadeRun,readArcadeRun,writeArcadeRun,arcadeOpponent,markArcadeResult,advanceArcade } from "./arcade";
 import type { ArcadeRun } from "./arcade";
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
@@ -35,11 +42,23 @@ import { capacity, legalPositions } from "./engine/rules";
 import type { AIDifficulty, DuelSummary, EnginePlay, GameState, ActiveManifestation, SpecialKind } from "./engine/types";
 import { ManifestCard, ManifestCardDialog } from "./ManifestCard";
 import { formatPowerDelta, playEffectFeedback, playPowerDelta } from "./engine/presentation";
-import { HybridSidebar, HybridRightRail, HybridCommandRail, HybridEngraving } from "./board-redesign/HybridBoardHardware";
+import { HybridSidebar, HybridPhoneChampion, HybridRightRail, HybridCommandRail, HybridEngraving } from "./board-redesign/HybridBoardHardware";
 import { appendMatchHistory, clearSavedMatch, completedMatch, newSavedMatch, readMatchHistory, readSavedMatch, summarizeHistory, writeSavedMatch } from "./persistence";
 import type { SavedMatch } from "./persistence";
 import { analyticsAvailable, analyticsOptedIn, sendCompletedMatch, setAnalyticsConsent } from "./telemetry";
 import type { CardDefinition, Faction, Position } from "./types";
+
+const PHONE_BOARD_QUERY="(max-width: 760px)";
+
+function subscribePhoneBoard(onChange:()=>void) {
+  const viewport=window.matchMedia(PHONE_BOARD_QUERY);
+  viewport.addEventListener("change",onChange);
+  return ()=>viewport.removeEventListener("change",onChange);
+}
+
+function isPhoneBoard() {
+  return window.matchMedia(PHONE_BOARD_QUERY).matches;
+}
 
 type DragState = {
   handIndex: number;
@@ -190,18 +209,16 @@ function DuelPowerCard({played,side,beat,outcome}:{
       data-duel-side={side} data-power-state={resolved?"final":"printed"}
       aria-label={played.card.name+", Poder "+(resolved?final:printed)}>
       <span className="duel-showcase-side">{side==="player"?"TU CARTA":"RIVAL"}</span>
+      <div className="duel-showcase-change">
+        {resolved&&delta!==0&&<div className={"dl-live-power-cue"+(delta<0?" is-loss":"")} aria-hidden="true">
+          <i/><i/><span>{formatPowerDelta(played)}</span>
+        </div>}
+      </div>
       <div className="duel-showcase-face">
         <CardFace card={played.card}/>
-        {delta!==0 && <div className="board-gs-power-fx" aria-hidden="true">
-          <span className="board-gs-power-wave"/>
-          <span className="board-gs-power-circle outer"/>
-          <span className="board-gs-power-circle middle"/>
-          <span className="board-gs-power-circle inner"/>
-        </div>}
         <div className={"duel-showcase-power"+(delta<0?" is-loss":delta>0?" is-gain":" is-neutral")} aria-live="off">
           <small>PODER</small>
           <strong key={resolved?"final":"printed"}>{resolved?final:printed}</strong>
-          {resolved&&delta!==0&&<span className="duel-showcase-delta">{formatPowerDelta(played)}</span>}
         </div>
       </div>
 
@@ -228,11 +245,13 @@ function DuelEffectsPanel({played,side,beat}:{played:EnginePlay;side:"player"|"o
   </aside>;
 }
 
-function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,before=null,after=null}:{
+function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,before=null,after=null,guideMount,onSkipGuide}:{
   duel:DuelSummary;onAdvance:()=>void;auguryEvents:string[];beat:DuelBeat;
   outcome?:"player"|"opponent"|"draw"|null;
   before?:GameState|null;after?:GameState|null;
+  guideMount?:HTMLElement|null;onSkipGuide?:()=>void;
 }) {
+  const guided=!!guideMount;
   const overlayRef=useRef<HTMLDivElement>(null);
   useLayoutEffect(()=>{
     const overlay=overlayRef.current;
@@ -257,11 +276,11 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,be
       const sx=Math.min(1.5,start.width/end.width);
       const sy=Math.min(1.5,start.height/end.height);
       animated.push(target.animate([
-        {transform:`translate3d(${dx}px,${dy}px,0) scale(${sx},${sy}) rotate(${index===0?-2:2}deg)`,
+        {transform:`translate3d(${dx}px,${dy}px,0) scale(${sx},${sy})`,
           opacity:.95,filter:"drop-shadow(1px 4px 4px #0007)",offset:0},
-        {transform:`translate3d(${dx*.1}px,${dy*.15-13}px,0) scale(1.06) rotate(${index===0?1:-1}deg)`,
+        {transform:`translate3d(${dx*.1}px,${dy*.15-13}px,0) scale(1.06)`,
           opacity:1,filter:"drop-shadow(4px 24px 22px #0008)",offset:.76},
-        {transform:"translate3d(0,0,0) scale(1) rotate(0deg)",
+        {transform:"translate3d(0,0,0) scale(1)",
           opacity:1,filter:"drop-shadow(3px 14px 13px #0009)",offset:1}
       ],{duration:1180,delay:index*120,easing:"cubic-bezier(.2,.75,.26,1)",fill:"both"}));
     });
@@ -324,30 +343,49 @@ function DuelCardsPresentation({duel,onAdvance,auguryEvents,beat,outcome=null,be
     });
   },[beat,duel,before,after]);
   const comparing=beat==="compare"||beat==="impact";
-  const outcomeText=outcome==="player"?"VICTORIA":outcome==="opponent"?"DERROTA":"EMPATE";
-  return (
+  const comparison=comparing&&<div className="duel-choreo-comparison" role="status">
+    PODER FINAL · {duel.playerPlay.finalPower??duel.playerPlay.card.power} — {duel.opponentPlay.finalPower??duel.opponentPlay.card.power}
+  </div>;
+  const presentation=(
     <div ref={overlayRef} data-duel-beat={beat}
-      className={"duel-showcase-overlay duel-choreo duel-beat-"+beat+(outcome?" is-board-outcome":"")}
+      className={"duel-showcase-overlay duel-choreo duel-beat-"+beat+(outcome?" is-board-outcome":"")+
+        (guided?" is-guided-duel":"")}
       role="dialog" aria-modal="true" aria-label="Resolución de Poder de las cartas">
       <div className="duel-focus-screen" aria-hidden="true"/>
-      {outcome&&<div className={"duel-showcase-outcome duel-showcase-outcome-"+outcome}
-        role="status" aria-live="polite">{outcomeText}</div>}
+      {outcome&&beat==="result"&&<DuelResultStinger duel={duel} onComplete={onAdvance} held={guided}
+        bannerImage={after?championBackgroundUrl(after.player.champion.faction):undefined}>
+        {guided&&<div className="dl-guide-duel-actions">
+          <button type="button" className="duel-showcase-skip" autoFocus onClick={onAdvance}>CONTINUAR →</button>
+          <button type="button" className="dl-guide-duel-exit" onClick={onSkipGuide}>Saltar guía</button>
+        </div>}
+      </DuelResultStinger>}
+      {outcome&&beat==="settle"&&<span className="arena-visually-hidden" role="status">
+        {duel.outcome==="player"?"VICTORIA":duel.outcome==="opponent"?"DERROTA":"EMPATE"}
+      </span>}
       <div className="duel-showcase-pair">
         <DuelEffectsPanel played={duel.playerPlay} side="player" beat={beat}/>
         <DuelPowerCard played={duel.playerPlay} side="player" beat={beat} outcome={duel.outcome}/>
         <DuelPowerCard played={duel.opponentPlay} side="opponent" beat={beat} outcome={duel.outcome}/>
         <DuelEffectsPanel played={duel.opponentPlay} side="opponent" beat={beat}/>
       </div>
-      {comparing&&<div className="duel-choreo-comparison" role="status">
-        PODER FINAL · {duel.playerPlay.finalPower??duel.playerPlay.card.power} — {duel.opponentPlay.finalPower??duel.opponentPlay.card.power}
-      </div>}
-      {(beat==="compare"||beat==="impact"||beat==="result")&&auguryEvents.length>0&&
-        <div className="duel-showcase-events">{auguryEvents.map((event,index)=><span key={index}>{event}</span>)}</div>}
-      <button type="button" className="duel-showcase-skip" onClick={onAdvance}>
-        {outcome?"CONTINUAR →":"SALTAR A RESULTADO →"}
-      </button>
+      {guided ? beat==="compare"&&<div className="dl-guide-duel-footer">
+        {comparison}
+        <p className="dl-guide-duel-note">Compará los números y revisá qué cambió el Poder de cada carta.</p>
+        <div className="dl-guide-duel-actions">
+          <button type="button" className="duel-showcase-skip" autoFocus onClick={onAdvance}>VER RESULTADO →</button>
+          <button type="button" className="dl-guide-duel-exit" onClick={onSkipGuide}>Saltar guía</button>
+        </div>
+      </div> : <>
+        {comparison}
+        {(beat==="compare"||beat==="impact"||beat==="result")&&auguryEvents.length>0&&
+          <div className="duel-showcase-events">{auguryEvents.map((event,index)=><span key={index}>{event}</span>)}</div>}
+        <button type="button" className="duel-showcase-skip" onClick={onAdvance}>
+          {outcome?"CONTINUAR →":"SALTAR A RESULTADO →"}
+        </button>
+      </>}
     </div>
   );
+  return guideMount?createPortal(presentation,guideMount):presentation;
 }
 
 function BattleCard({
@@ -502,7 +540,8 @@ export function Slot({
   onCopyTarget,
   onCopyArchive,
   onDropRelic,
-  hideFocusDuringFlight = false
+  hideFocusDuringFlight = false,
+  phoneBoard = false
 }: {
   side: "player" | "opponent";
   position: Position;
@@ -523,6 +562,7 @@ export function Slot({
   onCopyArchive?: ()=>void;
   onDropRelic?: ()=>void;
   hideFocusDuringFlight?: boolean;
+  phoneBoard?: boolean;
 }) {
   // A design can be played twice in one position. Only the most recent matching
   // resolved play gets the active-card rendering, never every matching copy.
@@ -548,6 +588,8 @@ export function Slot({
           onDropRelic();
         }} : undefined}
     >
+      {phoneBoard && active && <button type="button" className="hybrid-phone-place"
+        aria-label={`Jugar en ${positionLabels[position]}`}/>}
       {archivedKind
         ? <button type="button" className="archive-count manifest-archive-button"
           aria-label={`Archivo: ${archive} cartas. ${onCopyArchive&&archiveCards?.some(card=>card.specialArchiveKind==="dagger") ? "Copiar Daga Etérea" : "Inspeccionar carta especial"}`}
@@ -620,12 +662,17 @@ export default function App() {
   const [screen,setScreen]=useState<"home"|"champions"|"arcade"|"collection"|"table"|"decklab"|"multiplayer"|"playtest">("home");
   const [playerName,setPlayerName]=useState(()=>readPlayerName());
   const [boardRedesign,setBoardRedesign]=useState(()=>new URLSearchParams(window.location.search).get("board")!=="classic");
+  const narrowBoard=useSyncExternalStore(subscribePhoneBoard,isPhoneBoard,()=>false);
+  const phoneBoard=boardRedesign&&narrowBoard;
+  const [phoneToolsOpen,setPhoneToolsOpen]=useState(false);
   const [handExpanded,setHandExpanded]=useState(false);
   const [hoveredHandIndex,setHoveredHandIndex]=useState<number|null>(null);
   const [hoveredBoardCard,setHoveredBoardCard]=useState<CardDefinition|null>(null);
   const [auguryOpen,setAuguryOpen]=useState(false);
   const [arcadeRun,setArcadeRun]=useState<ArcadeRun|null>(()=>readArcadeRun());
   const [hasEntered,setHasEntered]=useState(false);
+  const [welcomeSeen,setWelcomeSeen]=useState(hasSeenWelcome);
+  const [guidedOpening,setGuidedOpening]=useState(false);
   const [game,setGame]=useState<GameState|null>(null);
   const [savedMatch,setSavedMatch]=useState<SavedMatch|null>(()=>readSavedMatch());
   const [matchMeta,setMatchMeta]=useState<SavedMatch|null>(null);
@@ -634,11 +681,30 @@ export default function App() {
   const [analyticsConsent,setTelemetryOn]=useState(()=>analyticsOptedIn());
   const [selectedIndex,setSelectedIndex]=useState<number|null>(null);
   const [inspection,setInspection]=useState<Inspection|null>(null);
+  const inspectionTrigger=useRef<HTMLButtonElement|null>(null);
+  const phoneHandInspection=phoneBoard&&inspection?.handIndex!==undefined;
   const [duelPreview,setDuelPreview]=useState<DuelSummary|null>(null);
   const [boardMotion,setBoardMotion]=useState<BoardMotionSequence|null>(null);
+  const guidedRound=guidedOpening&&(boardMotion?.before.round??game?.round)===1;
+  const guidedHandInspection=guidedRound&&inspection?.handIndex!==undefined;
   const boardMotionRef=useRef<BoardMotionSequence|null>(null);
+  const arenaMainRef=useRef<HTMLDivElement>(null);
+  const [archiveArrivals,setArchiveArrivals]=useState<Record<string,number>>({});
   const nextMotionId=useRef(0);
+  const [quieroChoice,setQuieroChoice]=useState<boolean|null>(null);
+  const quieroChoiceTimer=useRef<number|null>(null);
+  const quieroPending=useRef(false);
+  const rivalQuieroPending=useRef(false);
+  function clearQuieroDecision(){
+    if(quieroChoiceTimer.current!==null)window.clearTimeout(quieroChoiceTimer.current);
+    quieroChoiceTimer.current=null;
+    quieroPending.current=false;
+    rivalQuieroPending.current=false;
+    setQuieroChoice(null);
+  }
+  useEffect(()=>()=>{if(quieroChoiceTimer.current!==null)window.clearTimeout(quieroChoiceTimer.current);},[]);
   function setMotion(next:BoardMotionSequence|null){
+    if(next?.id!==boardMotionRef.current?.id)setArchiveArrivals({});
     boardMotionRef.current=next;
     setBoardMotion(next);
   }
@@ -652,7 +718,7 @@ export default function App() {
   });
   const audioEnabledRef=useRef(audioEnabled);
   audioEnabledRef.current=audioEnabled;
-  const [finalStep,setFinalStep]=useState<"ceremony"|"actions">("ceremony");
+  const [finalStep,setFinalStep]=useState<"ceremony"|"feedback"|"actions">("ceremony");
   const [duelAuguries,setDuelAuguries]=useState<string[]>([]);
   const previewTimer=useRef<number|null>(null);
   const finalTimer=useRef<number|null>(null);
@@ -706,10 +772,15 @@ export default function App() {
     setPreDuel(null);
     const sequence=boardMotionRef.current;
     if(sequence){
-      if(boardRedesign && sequence.roundEnded && sequence.phase==="duel")
+      if(boardRedesign && sequence.roundEnded && sequence.phase==="duel"){
         setMotion({...sequence,phase:"round"});
-      else setMotion(null);
+      }else if(boardRedesign && rivalQuieroPending.current && sequence.phase==="duel"){
+        // This only happens if the engine actually recorded "IA: Quiero."
+        // after a 2–0 player lead. Keep the board frozen for one brief answer.
+        setMotion({...sequence,phase:"quiero-ai"});
+      }else setMotion(null);
     }
+    rivalQuieroPending.current=false;
     if (finishingMatch.current) {
       finishingMatch.current=false;
       startFinalCeremony();
@@ -720,12 +791,18 @@ export default function App() {
     clearPreviewTimer();
     setDuelStep("result");
     if(boardRedesign){
+      if(guidedRound){
+        setDuelBeat("result");
+        if(duelPreview&&!isReducedMotion())
+          playDuelCue(duelPreview.outcome==="player"?"victory":duelPreview.outcome==="opponent"?"defeat":"draw",audioEnabledRef.current);
+        return;
+      }
       setDuelBeat("result");
       if(isReducedMotion()){
-        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,550));
+        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,1050));
       }else{
-        duelTimelineTimers.current.push(window.setTimeout(()=>setDuelBeat("settle"),890));
-        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,1430));
+        duelTimelineTimers.current.push(window.setTimeout(()=>setDuelBeat("settle"),1270));
+        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,1810));
       }
     }else{
       previewTimer.current=window.setTimeout(finishDuelPresentation,isReducedMotion()?180:1400);
@@ -767,6 +844,7 @@ export default function App() {
   }
 
   function continueMatch() {
+    setGuidedOpening(false);
     const saved=readSavedMatch();
     if(!saved){setSavedMatch(null);return;}
     clearPreviewTimer();
@@ -797,13 +875,15 @@ export default function App() {
   }
 
   function startWithChampion(championId:string, rivalSelection:string, difficulty:AIDifficulty=aiDifficulty,
-    deck?:DeckDefinition|null, fromArcade=false) {
+    deck?:DeckDefinition|null, fromArcade=false, guided=false) {
+    setGuidedOpening(guided);
     if(!fromArcade){
       setArcadeRun(null);
       writeArcadeRun(null);
     }
     clearPreviewTimer();
     clearFinalTimer();
+    clearQuieroDecision();
     finishingMatch.current=false;
     setMotion(null);
     const opponent = rivalSelection==="random"
@@ -812,9 +892,13 @@ export default function App() {
     setPlayerChampion(championId);
     setOpponentChampion(rivalSelection);
     setAiDifficulty(difficulty);
-    const next=disableManifestations(startGame(championId,opponent,Math.random,undefined,difficulty,deck?{player:deck}:undefined,false));
+    const next=disableManifestations(startGame(championId,opponent,Math.random,guided?"player":undefined,difficulty,deck?{player:deck}:undefined,false));
+    if(boardRedesign&&!isReducedMotion()){
+      setMotion({id:++nextMotionId.current,phase:"match-entry",before:next,
+        duel:null,roundEnded:false,handIndex:null,origin:null});
+    }
     setCurrentDeck(deck??null);
-    const newMatch=newSavedMatch(next,rivalSelection);
+    const newMatch=newSavedMatch(next,rivalSelection,cleanPlayerName(playerName).trim()||DEFAULT_PLAYER_NAME);
     writeSavedMatch(newMatch);
     setSavedMatch(newMatch);
     setMatchMeta(newMatch);
@@ -871,11 +955,13 @@ export default function App() {
     setMotion(null);
     clearPreviewTimer();
     clearFinalTimer();
+    clearQuieroDecision();
     finishingMatch.current=false;
     setDuelPreview(null);
     setPreDuel(null);
     setFinalStep("ceremony");
     setGame(null);
+    setGuidedOpening(false);
     setDaggersToUse(0);
     setSpecialMode(null);
     setSpecialInspection(null);
@@ -893,15 +979,20 @@ export default function App() {
     setDuelBeat("approach");
     setDuelPreview(duel);
     if(boardRedesign){
+      if(guidedRound&&isReducedMotion()){
+        setDuelBeat("compare");
+        return;
+      }
       if(isReducedMotion()){
         duelTimelineTimers.current.push(window.setTimeout(()=>{
           setDuelBeat("result");
           setDuelStep("result");
         },90));
-        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,940));
+        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,1140));
       }else{
         playDuelCue("rise",audioEnabledRef.current);
         DUEL_BEATS.slice(1).forEach(({at,beat})=>{
+          if(guidedRound&&(beat==="impact"||beat==="result"||beat==="settle"))return;
           duelTimelineTimers.current.push(window.setTimeout(()=>{
             setDuelBeat(beat);
             if(beat==="player-power"||beat==="opponent-power"){
@@ -916,7 +1007,7 @@ export default function App() {
             }
           },at));
         });
-        duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,DUEL_FINISH_MS));
+        if(!guidedRound)duelTimelineTimers.current.push(window.setTimeout(finishDuelPresentation,DUEL_FINISH_MS));
       }
     }else{
       previewTimer.current=window.setTimeout(showDuelResult,isReducedMotion()?220:2150);
@@ -948,6 +1039,7 @@ export default function App() {
     const origin=boardRedesign?(originOverride??handCardRect(handIndex)):null;
     const next=cloneGame(game);
     submitPlayerPlay(next,handIndex,position,Math.random,Math.min(daggersToUse,availableDaggers));
+    rivalQuieroPending.current=boardRedesign && rivalAcceptedQuiero(game,next);
     if(boardRedesign && next.lastDuel){
       setMotion({id:++nextMotionId.current,phase:"flight",before:game,
         duel:next.lastDuel,roundEnded:next.round!==game.round,handIndex,origin});
@@ -966,8 +1058,10 @@ export default function App() {
     if(!boardRedesign || !next.lastDuel)showResolvedDuel(next.lastDuel,next.phase==="finished");
   }
 
-  function chooseQuiero(wants:boolean) {
-    if (!game || boardMotionRef.current) return;
+  function commitQuiero(wants:boolean) {
+    if(!game || game.phase!=="awaiting_quiero" || boardMotionRef.current)return;
+    // There is no alternative local resolution. The authoritative engine
+    // decides whether the third duel begins or the old round closes.
     const next=cloneGame(game);
     answerQuiero(next,wants);
     if(boardRedesign && next.round!==game.round){
@@ -978,6 +1072,26 @@ export default function App() {
     persistTurn(next);
     if(next.phase==="finished")startFinalCeremony();
     setSelectedIndex(null);
+    setQuieroChoice(null);
+    quieroPending.current=false;
+  }
+
+  function finishQuieroChoice(wants:boolean) {
+    if(!quieroPending.current)return;
+    if(quieroChoiceTimer.current!==null)window.clearTimeout(quieroChoiceTimer.current);
+    quieroChoiceTimer.current=null;
+    commitQuiero(wants);
+  }
+
+  function chooseQuiero(wants:boolean) {
+    if(!game || game.phase!=="awaiting_quiero" || boardMotionRef.current || quieroPending.current)return;
+    if(!boardRedesign || !shouldOfferQuiero(game)){
+      commitQuiero(wants);
+      return;
+    }
+    quieroPending.current=true;
+    setQuieroChoice(wants);
+    quieroChoiceTimer.current=window.setTimeout(()=>finishQuieroChoice(wants),isReducedMotion()?160:420);
   }
 
   function inspectPlay(played:EnginePlay) {
@@ -987,6 +1101,24 @@ export default function App() {
       powerExact:played.powerExact,
       notes:played.notes
     });
+  }
+
+  function inspectHandCard(handIndex:number, trigger:HTMLButtonElement) {
+    const card=hand[handIndex];
+    if(!card)return;
+    if(phoneBoard){
+      if(!guidedRound)setSelectedIndex(handIndex);
+      inspectionTrigger.current=trigger;
+    }
+    setInspection({card,handIndex,powerExact:true});
+  }
+
+  function closeInspection() {
+    setInspection(null);
+    if(phoneHandInspection){
+      inspectionTrigger.current?.focus({preventScroll:true});
+      inspectionTrigger.current=null;
+    }
   }
 
   function zoneAt(x:number,y:number):Position|null {
@@ -1028,15 +1160,16 @@ export default function App() {
     const current=drag;
     if (!current || current.pointerId!==event.pointerId) return;
     const destination=current.moved ? zoneAt(event.clientX,event.clientY) : null;
-    if (destination) {
+    if(destination&&guidedRound&&selectedIndex!==current.handIndex){
+      inspectHandCard(current.handIndex,event.currentTarget);
+    }else if (destination) {
       const rect=handCardRect(current.handIndex);
       const releasedRect=rect&&current.moved
         ? {...rect,x:event.clientX-rect.width/2,y:event.clientY-rect.height/2}
         : rect;
       playCard(current.handIndex,destination,releasedRect);
     } else if (!current.moved) {
-      const card=hand[current.handIndex];
-      if (card) setInspection({card,handIndex:current.handIndex,powerExact:true});
+      inspectHandCard(current.handIndex,event.currentTarget);
     }
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
@@ -1045,7 +1178,24 @@ export default function App() {
     setHoveredPosition(null);
   }
 
+  function dismissWelcome() {
+    setWelcomeSeen(true);
+    setPlayerName(writePlayerName(playerName));
+    rememberWelcome();
+  }
+
+  function startGuidedOpening() {
+    dismissWelcome();
+    setBoardRedesign(true);
+    startWithChampion(TUTORIAL_MATCH.championId,TUTORIAL_MATCH.opponentId,TUTORIAL_MATCH.difficulty,null,false,true);
+  }
+
   if (!hasEntered) return <SplashScreen onStart={()=>setHasEntered(true)} />;
+
+  if (!game&&!welcomeSeen&&!savedMatch&&!arcadeRun&&history.length===0) {
+    return <WelcomeMatch playerName={playerName} onNameChange={setPlayerName}
+      onPlay={startGuidedOpening} onSkip={dismissWelcome}/>;
+  }
 
   if (!game) {
     return (
@@ -1097,35 +1247,32 @@ export default function App() {
         {tutorialOpen && <Tutorial
           inGame={false}
           onClose={()=>setTutorialOpen(false)}
-          onPlay={()=>{setTutorialOpen(false);startWithChampion(TUTORIAL_MATCH.championId,TUTORIAL_MATCH.opponentId,TUTORIAL_MATCH.difficulty);}}
+          onPlay={()=>{setTutorialOpen(false);startGuidedOpening();}}
         />}
       </>
     );
   }
 
   const legal=game.phase==="awaiting_player" && !duelPreview && !boardMotion ? legalPositions(game.player) : [];
+  const showQuieroChoice=boardRedesign && shouldOfferQuiero(game) && !duelPreview && !boardMotion;
+  const showRivalQuiero=boardRedesign && boardMotion?.phase==="quiero-ai";
   const completedRound=boardRedesign?completedRoundReceipt(boardMotion,game):null;
-  const showingPreviousRound=!!boardMotion && boardMotion.phase!=="archive-reveal" && boardMotion.phase!=="deal";
+  const showingPreviousRound=!!boardMotion && boardMotion.phase!=="archive-reveal" && boardMotion.phase!=="deal" && boardMotion.phase!=="round-wipe-reveal";
   // Display the round that is still physically on the table. The rules engine
   // may already have reset the duel score and drawn the next hand.
+  const holdDuelValues=boardMotion?.phase==="flight" ||
+    (!!duelPreview && duelBeat!=="settle" && (duelStep==="cards" || !isReducedMotion()));
+  const duelPayout=boardRedesign && duelBeat==="settle" ? duelPreview?.outcome : undefined;
   const displayed:DuelPublicSnapshot|null=boardRedesign&&boardMotion&&showingPreviousRound
     ? {
         round:boardMotion.before.round,
-        playerLife:boardMotion.phase==="flight" || (duelPreview&&duelStep==="cards")
-          ?boardMotion.before.player.life:game.player.life,
-        opponentLife:boardMotion.phase==="flight" || (duelPreview&&duelStep==="cards")
-          ?boardMotion.before.opponent.life:game.opponent.life,
-        playerHealed:boardMotion.phase==="flight" || (duelPreview&&duelStep==="cards")
-          ?boardMotion.before.player.healedLife:game.player.healedLife,
-        opponentHealed:boardMotion.phase==="flight" || (duelPreview&&duelStep==="cards")
-          ?boardMotion.before.opponent.healedLife:game.opponent.healedLife,
-        score:{
-          player:completedRound?.score.player ?? (boardMotion.before.duelScore.player +
-            (boardMotion.phase!=="flight" && !(duelPreview&&duelStep==="cards") &&
-             boardMotion.duel?.outcome==="player"?1:0)),
-          opponent:completedRound?.score.opponent ?? (boardMotion.before.duelScore.opponent +
-            (boardMotion.phase!=="flight" && !(duelPreview&&duelStep==="cards") &&
-             boardMotion.duel?.outcome==="opponent"?1:0))
+        playerLife:holdDuelValues?boardMotion.before.player.life:game.player.life,
+        opponentLife:holdDuelValues?boardMotion.before.opponent.life:game.opponent.life,
+        playerHealed:holdDuelValues?boardMotion.before.player.healedLife:game.player.healedLife,
+        opponentHealed:holdDuelValues?boardMotion.before.opponent.healedLife:game.opponent.healedLife,
+        score:holdDuelValues ? boardMotion.before.duelScore : completedRound?.score ?? {
+          player:boardMotion.before.duelScore.player+(boardMotion.duel?.outcome==="player"?1:0),
+          opponent:boardMotion.before.duelScore.opponent+(boardMotion.duel?.outcome==="opponent"?1:0)
         }
       }
     : duelPreview?preDuel:null;
@@ -1137,6 +1284,12 @@ export default function App() {
   const focusOpponent=(boardRedesign&&showingPreviousRound?boardMotion?.duel?.opponentPlay:null) ?? duelPreview?.opponentPlay ?? pendingOpponent;
   const playerBoard=boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.player:game.player;
   const opponentBoard=boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.opponent:game.opponent;
+  function visibleArchiveCount(side:"player"|"opponent",position:Position) {
+    const count=(side==="player"?playerBoard:opponentBoard).archives[position].length;
+    if(!game||!boardMotion||(boardMotion.phase!=="archive"&&boardMotion.phase!=="round-wipe"))return count;
+    const arrived=archiveArrivals[side+":"+position]??0;
+    return count+Math.min(arrived,Math.max(0,archiveCountChange(boardMotion.before,game,side,position)));
+  }
   const playerBoardPlays=boardRedesign?visibleRoundPlays(boardMotion,"player"):null;
   const opponentBoardPlays=boardRedesign?visibleRoundPlays(boardMotion,"opponent"):null;
   const latestEvent=game.events.at(-1)?.text ?? "";
@@ -1148,9 +1301,27 @@ export default function App() {
       : game.phase==="finished"
         ? "PARTIDA TERMINADA"
         : `DUELO ${game.turn} · ${game.initiative==="player"?"VOS ABRÍS":"IA ABRE"}`;
+  const score=displayed?.score??game.duelScore;
+  const deckView=boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.player:game.player;
+  const openingHint=guidedOpening&&!duelPreview&&boardMotion?.phase!=="round" ? guidedOpeningHint({
+    round:game.round,turn:game.turn,phase:game.phase,motion:boardMotion?.phase,
+    inspecting:!!inspection,cardSelected:selectedIndex!==null
+  }) : null;
+
+  function feedbackFor(answers:MatchFeedbackAnswers) {
+    if(!matchMeta||!game)throw new Error("La partida no está disponible.");
+    return buildMatchFeedback(matchMeta,game,matchMeta.playerName??playerName,arcadeRun?"arcade":"classic",answers);
+  }
+
+  const postgameStage=finalStep==="ceremony"
+    ? " is-ceremony"+(boardRedesign?" is-banner-finale":"")
+    : finalStep==="feedback"&&matchMeta?" is-feedback":" is-actions";
 
   return (
-    <main data-board-phase={boardRedesign?(boardMotion?.phase??"idle"):"classic"} className={"app-shell arena-v2"+(boardRedesign?" board-redesign-v1":"")}>
+    <main data-board-phase={boardRedesign?(boardMotion?.phase??"idle"):"classic"}
+      data-duel-payout={duelPayout}
+      data-quiero-stage={showQuieroChoice?"choice":showRivalQuiero?"rival":"none"}
+      className={"app-shell arena-v2"+(boardRedesign?" board-redesign-v1":"")}>
       <div className="ambient ambient-one" />
       <div className="ambient ambient-two" />
 
@@ -1166,13 +1337,22 @@ export default function App() {
             </span>
             {arcadeRun && <em>ARCADE · {arcadeRun.index+1}/{arcadeRun.opponents.length}</em>}
           </div>
-          <div className="game-tools">
+          {phoneBoard && <div className="hybrid-phone-score"
+            aria-label={`Duelos de esta ronda: vos ${score.player}, rival ${score.opponent}`}>
+            <strong>{score.player}–{score.opponent}</strong><small>VOS · RIVAL</small>
+          </div>}
+          <div className="hybrid-game-tools">
+          {phoneBoard && <button type="button" className="hybrid-phone-menu"
+            aria-expanded={phoneToolsOpen} aria-controls="arena-game-tools"
+            onClick={()=>setPhoneToolsOpen(open=>!open)}>Menú</button>}
+          <div className="game-tools" id="arena-game-tools" hidden={phoneBoard&&!phoneToolsOpen}>
             <button type="button" className="hybrid-board-toggle"
               disabled={!!boardMotion}
               title={boardRedesign?"Mostrar el tablero React anterior":"Ver el nuevo tablero híbrido"}
               onClick={()=>{
                 const next=!boardRedesign;
                 setBoardRedesign(next);
+                setPhoneToolsOpen(false);
                 setHoveredHandIndex(null);
                 setMotion(null);
                 setHandExpanded(false);
@@ -1205,16 +1385,17 @@ export default function App() {
               </div>
             }
             <button className="arena-icon-button" type="button" aria-label="Abrir tutorial"
-              title="Ayuda" onClick={()=>setTutorialOpen(true)}><ArenaIcon name="help"/></button>
+              title="Ayuda" onClick={()=>{setPhoneToolsOpen(false);setTutorialOpen(true);}}><ArenaIcon name="help"/></button>
             <button className="arena-icon-button" type="button" aria-label="Volver al menú"
-              title="Volver al inicio" onClick={()=>{clearPreviewTimer();goToMenu("home");}}>
+              title="Volver al inicio" onClick={()=>{setPhoneToolsOpen(false);clearPreviewTimer();goToMenu("home");}}>
               <ArenaIcon name="exit"/></button>
+          </div>
           </div>
         </section>
 
-        <div className={"arena-main"+(handExpanded?" hand-expanded":"")}>
+        <div ref={arenaMainRef} className={"arena-main"+(handExpanded?" hand-expanded":"")}>
           {boardRedesign && <HybridEngraving/>}
-          <aside className="arena-sidebar" aria-label="Campeones y marcador">
+          {!phoneBoard && <aside className="arena-sidebar" aria-label="Campeones y marcador">
             {boardRedesign ? <HybridSidebar player={game.player} opponent={game.opponent} playerName={playerName}/> : <>
             <ChampionBar side="opponent" championId={game.opponent.champion.id}
               faction={game.opponent.champion.faction} name={game.opponent.champion.name}
@@ -1236,29 +1417,43 @@ export default function App() {
             <div className="arena-sidebar-hand-art" aria-hidden="true"
               style={{backgroundImage:`linear-gradient(0deg,#171816a8,#17181670),url("${championBackgroundUrl(game.player.champion.faction)}")`}}/>
             </>}
-          </aside>
+          </aside>}
           <div className="arena-stage">
             <span className="arena-visually-hidden" role="status">{turnText}</span>
-            {hoveredBoardCard && !duelPreview && !boardMotion && (
+            {phoneBoard && <HybridPhoneChampion side="opponent" state={game.opponent} userLabel="RIVAL"
+              life={displayed?.opponentLife??game.opponent.life}
+              healed={displayed?.opponentHealed??game.opponent.healedLife}/>}
+            {showQuieroChoice&&<QuieroChoiceStage
+              score={game.duelScore} selected={quieroChoice} onChoose={chooseQuiero} onCommitted={finishQuieroChoice}
+              bannerImage={championBackgroundUrl(game.player.champion.faction)}/>}
+            {showRivalQuiero&&boardMotion&&<RivalQuieroStage
+              reducedMotion={isReducedMotion()}
+              bannerImage={championBackgroundUrl(game.opponent.champion.faction)}
+              onComplete={()=>{
+                const current=boardMotionRef.current;
+                if(current?.id===boardMotion.id&&current.phase==="quiero-ai")setMotion(null);
+              }}/>}
+
+            {hoveredBoardCard && !inspection && !duelPreview && !boardMotion && (
               <div className="arena-card-board-preview" aria-hidden="true">
                 <CardFace card={hoveredBoardCard}/>
               </div>
             )}
-            {hoveredHandIndex!==null && hand[hoveredHandIndex] && !drag && !handExpanded && !duelPreview && !boardMotion && (
+            {hoveredHandIndex!==null && hand[hoveredHandIndex] && !drag && !inspection && !handExpanded && !duelPreview && !boardMotion && (
               <div className="arena-card-hover-preview" aria-hidden="true">
                 <CardFace card={hand[hoveredHandIndex]}/>
               </div>
             )}
-        {boardRedesign && boardMotion?.phase==="round" && <RoundTransition
-          sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
-          summary={completedRound}
-          onComplete={()=>{
-            const current=boardMotionRef.current;
-            if(current?.id===boardMotion.id&&current.phase==="round")
-              setMotion({...current,phase:"archive"});
-          }}/>}
-        {boardRedesign && boardMotion?.phase==="archive" && <ArchiveSweep/>}
+
+
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
+          {boardRedesign&&boardMotion?.phase==="match-entry"&&<MatchEntryMotion
+            sequenceId={boardMotion.id}
+            onComplete={()=>{
+              const current=boardMotionRef.current;
+              if(current?.id===boardMotion.id&&current.phase==="match-entry")setMotion({...current,phase:"deal"});
+            }}/>}
+
           {boardRedesign && boardMotion?.phase==="archive-reveal" && <ArchiveReceiptTransition
             sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
             onComplete={()=>{
@@ -1270,7 +1465,8 @@ export default function App() {
           {duelPreview && (boardRedesign
             ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries}
                 beat={duelBeat} outcome={duelStep==="result"?duelPreview.outcome:null}
-                before={boardMotion?.before??null} after={game}
+                before={boardMotion?.before??null} after={game} guideMount={guidedRound?arenaMainRef.current:null}
+                onSkipGuide={()=>{setGuidedOpening(false);finishDuelPresentation();}}
                 onAdvance={duelStep==="result"?settleDuelPresentation:showDuelResult}/>
             : duelStep==="cards"
               ? <DuelCardsPresentation duel={duelPreview} auguryEvents={duelAuguries}
@@ -1292,7 +1488,7 @@ export default function App() {
                 cards={(opponentBoardPlays??game.opponent.roundPlays).filter(play=>play.position===position)}
                 pendingCard={pendingOpponent?.position===position ? pendingOpponent : null}
                 focusPlay={focusOpponent?.position===position ? focusOpponent : null}
-                archive={opponentBoard.archives[position].length}
+                archive={visibleArchiveCount("opponent",position)}
                 archiveUpdated={boardMotion?.phase==="archive-reveal" &&
                   archiveCountChange(boardMotion.before,game,"opponent",position)!==0}
                 archiveCards={opponentBoard.archives[position]}
@@ -1320,7 +1516,7 @@ export default function App() {
                 position={position}
                 cards={(playerBoardPlays??game.player.roundPlays).filter(play=>play.position===position)}
                 focusPlay={focusPlayer?.position===position ? focusPlayer : null}
-                archive={playerBoard.archives[position].length}
+                archive={visibleArchiveCount("player",position)}
                 archiveUpdated={boardMotion?.phase==="archive-reveal" &&
                   archiveCountChange(boardMotion.before,game,"player",position)!==0}
                 archiveCards={playerBoard.archives[position]}
@@ -1328,11 +1524,13 @@ export default function App() {
                 onManifestInspect={setSpecialInspection}
                 onDropRelic={game.manifestationsEnabled!==false?()=>useSpecial("relic",position):undefined}
                 hideFocusDuringFlight={!!boardMotion && boardMotion.phase==="flight"}
-                active={specialMode==="relic"
+                phoneBoard={phoneBoard}
+                active={!phoneHandInspection && (specialMode==="relic"
                    ? game.player.roundPlays.every(p=>p.position!==position)
-                   : (hoveredPosition===position || (!!selectedCard&&!drag)) && legal.includes(position)}
+                   : (hoveredPosition===position || (!!selectedCard&&!drag)) && legal.includes(position))}
                 capacityValue={capacity(game.player,position)}
                 onTap={()=>{
+                   if(phoneHandInspection)return;
                    if(specialMode==="relic"){useSpecial("relic",position);return;}
                    if(selectedIndex!==null && legal.includes(position))playCard(selectedIndex,position);
                  }}
@@ -1357,24 +1555,40 @@ export default function App() {
         </CardFlight>}
         {boardRedesign && boardMotion?.phase==="archive" && <ArchiveFlight
           sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
+          onArrival={(side,position)=>{
+            const current=boardMotionRef.current;
+            if(current?.id!==boardMotion.id||current.phase!=="archive")return;
+            const key=side+":"+position;
+            flushSync(()=>setArchiveArrivals(previous=>({...previous,[key]:(previous[key]??0)+1})));
+          }}
           onComplete={()=>{
             const current=boardMotionRef.current;
-            if(current?.id===boardMotion.id&&current.phase==="archive")
-              setMotion({...current,phase:"archive-reveal"});
+            if(current?.id===boardMotion.id&&current.phase==="archive"){
+              // After actual cards enter their Archives, the curtain covers the
+              // old board. Only at full cover do we swap to the already
+              // committed new-round GameState and genuine hand.
+              setMotion({...current,phase:game.phase==="finished"?"archive-reveal":"round-wipe"});
+            }
           }}/>}
         {boardRedesign && boardMotion?.phase==="deal" && <DealMotion
           sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
+          onLand={()=>playDuelCue("land",audioEnabledRef.current)}
           onComplete={()=>{
             if(boardMotionRef.current?.id===boardMotion.id)setMotion(null);
           }}/>}
-        {boardRedesign && <HybridRightRail
+        {phoneBoard && <HybridPhoneChampion side="player" state={game.player}
+          userLabel={playerName.trim()&&playerName!=="JUGADOR"?playerName.trim():DEFAULT_PLAYER_NAME}
+          life={displayed?.playerLife??game.player.life}
+          healed={displayed?.playerHealed??game.player.healedLife}/>}
+        {boardRedesign&&!phoneBoard && <HybridRightRail
           playerLife={displayed?.playerLife??game.player.life}
           opponentLife={displayed?.opponentLife??game.opponent.life}
           playerHealed={displayed?.playerHealed??game.player.healedLife}
           opponentHealed={displayed?.opponentHealed??game.opponent.healedLife}
-          score={displayed?.score??game.duelScore}
-          deckRemaining={boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.player.deck.length:game.player.deck.length}
-          discardCount={boardRedesign&&boardMotion&&showingPreviousRound?boardMotion.before.player.discard.length:game.player.discard.length}
+          score={score}
+          deckFaction={deckView.champion.faction}
+          deckRemaining={deckView.deck.length}
+          discardCount={deckView.discard.length}
         />}
 
         <div className="action-line" role="status">
@@ -1390,6 +1604,7 @@ export default function App() {
           aria-label="Tu mano"
           style={{backgroundImage:`linear-gradient(0deg,#111713e8,#1d241bd9),url("${championBackgroundUrl(game.player.champion.faction)}")`}}
         >
+          {openingHint&&<OpeningGuide message={openingHint} onSkip={()=>setGuidedOpening(false)}/>}
           <button type="button" className="arena-hand-toggle" aria-expanded={handExpanded}
             aria-label={handExpanded?"Contraer mano":"Desplegar mano"}
             onClick={()=>{setHandExpanded(!handExpanded);setHoveredHandIndex(null);}}>
@@ -1418,6 +1633,7 @@ export default function App() {
                 key={`${card.id}-${index}`}
                 style={{animationDelay:`${index*115}ms`}}
                 data-motion-hand-index={index}
+                aria-pressed={phoneBoard ? selectedIndex===index : undefined}
                 disabled={game.phase!=="awaiting_player" || !!duelPreview || !!boardMotion}
                 onPointerEnter={()=>setHoveredHandIndex(index)}
 
@@ -1428,7 +1644,7 @@ export default function App() {
                 onBlur={()=>setHoveredHandIndex(current=>current===index?null:current)}
 
                 onClick={event=>{
-                  if(event.detail===0)setInspection({card,handIndex:index,powerExact:true});
+                  if(event.detail===0)inspectHandCard(index,event.currentTarget);
                 }}
 
                 onPointerDown={event=>{
@@ -1505,31 +1721,75 @@ export default function App() {
           selectedCard={selectedCard}
           latestEvent={latestEvent}
           duelResolving={!!duelPreview||!!boardMotion}
+          decisionOnField={showQuieroChoice}
+          phoneDeck={phoneBoard?{remaining:deckView.deck.length,discarded:deckView.discard.length}:undefined}
           displayRound={displayed?.round??game.round}
           displayTurn={showingPreviousRound?(duelPreview?.turn??boardMotion?.duel?.turn??boardMotion?.before.turn??game.turn):game.turn}
-          transitionLabel={boardMotion?.phase==="flight"?"Jugando carta…":boardMotion?.phase==="round"?"Ronda finalizada…":boardMotion?.phase==="archive"?"Archivando cartas…":boardMotion?.phase==="archive-reveal"?"Archivos actualizados…":boardMotion?.phase==="deal"?"Repartiendo nueva mano…":undefined}
+          transitionLabel={boardMotion?.phase==="match-entry"?"Preparando la mesa…":boardMotion?.phase==="flight"?"Jugando carta…":boardMotion?.phase==="quiero-ai"?"El rival eligió Quiero · tercer duelo…":boardMotion?.phase==="round"?"Ronda finalizada…":boardMotion?.phase==="archive"?"Archivando cartas…":boardMotion?.phase==="round-wipe"||boardMotion?.phase==="round-wipe-reveal"?"Nueva ronda…":boardMotion?.phase==="archive-reveal"?"Archivos actualizados…":boardMotion?.phase==="deal"?"Repartiendo nueva mano…":undefined}
           onChooseQuiero={chooseQuiero}
         />}
 
           </div>
+        {boardRedesign && boardMotion?.phase==="round" && <RoundTransition
+          sequenceId={boardMotion.id} reducedMotion={isReducedMotion()}
+          summary={completedRound}
+          held={guidedRound}
+          bannerImage={championBackgroundUrl(game.player.champion.faction)}
+          onComplete={()=>{
+            const current=boardMotionRef.current;
+            if(current?.id===boardMotion.id&&current.phase==="round")
+              setMotion({...current,phase:"archive"});
+          }}/>}
+
+          {/* The stationary backdrop conceals the board swap behind the centered banner. */}
+                  {boardRedesign && (boardMotion?.phase==="round-wipe"||boardMotion?.phase==="round-wipe-reveal") && <NewRoundStinger
+                    sequenceId={boardMotion.id} round={game.round} reducedMotion={isReducedMotion()}
+                    bannerImage={championBackgroundUrl(game.player.champion.faction)}
+                    covered={boardMotion.phase==="round-wipe-reveal"}
+                    onCovered={()=>{
+                      const current=boardMotionRef.current;
+                      if(current?.id===boardMotion.id&&current.phase==="round-wipe")
+                        setMotion({...current,phase:"round-wipe-reveal"});
+                    }}
+                    onComplete={()=>{
+                      const current=boardMotionRef.current;
+                      if(current?.id===boardMotion.id&&current.phase==="round-wipe-reveal")
+                        setMotion({...current,phase:"deal"});
+                    }}/>}
+          
         </div>
 
         {game.manifestationsEnabled!==false && specialInspection && <ManifestCardDialog kind={specialInspection} onClose={()=>setSpecialInspection(null)}/>}
 
         {inspection && (
           <div
-            className="card-zoom-overlay"
+            className={"card-zoom-overlay"+(phoneHandInspection?" is-phone-hand-inspection":"")+(guidedHandInspection?" is-guided-hand-inspection":"")}
             role="dialog"
             aria-modal="true"
             aria-label={inspection.card.name}
-            onClick={()=>setInspection(null)}
+            aria-describedby={phoneHandInspection?"phone-hand-inspection-details":undefined}
+            onClick={closeInspection}
+            onKeyDown={phoneHandInspection ? event=>{
+              if(event.key==="Tab"){
+                event.preventDefault();
+                if(guidedHandInspection){
+                  const target=(event.target as Element).matches(".zoom-close")?".dl-guide-inspection-next":".zoom-close";
+                  event.currentTarget.querySelector<HTMLElement>(target)?.focus();
+                }
+              }
+              if(event.key==="Escape"){
+                event.preventDefault();
+                closeInspection();
+              }
+            } : undefined}
           >
             <div className="card-zoom-panel" onClick={event=>event.stopPropagation()}>
               <button
                 className="zoom-close"
                 type="button"
                 aria-label="Cerrar carta"
-                onClick={()=>setInspection(null)}
+                autoFocus={phoneHandInspection}
+                onClick={closeInspection}
               >×</button>
               <div className="zoom-card-frame">
                 <CardFace
@@ -1546,7 +1806,17 @@ export default function App() {
                      inspection.card.trait==="Objeto mágico"?"relic":"symmetry"
                  ]}
                </p>}
-               <div className="zoom-actions">
+              {phoneHandInspection
+                ? <>
+                  <p id="phone-hand-inspection-details" className="arena-visually-hidden">
+                    Poder {inspection.card.power}. {inspection.card.text}
+                  </p>
+                  {guidedHandInspection&&<button type="button" className="primary-button dl-guide-inspection-next" onClick={()=>{
+                    setSelectedIndex(inspection.handIndex!);
+                    closeInspection();
+                  }}>CONTINUAR →</button>}
+                </>
+                : <div className="zoom-actions">
                 <div>
                   <strong>{inspection.card.name}</strong>
                   <span>
@@ -1557,6 +1827,7 @@ export default function App() {
                         ? ` · Poder final ${inspection.finalPower}`
                         : ""}
                   </span>
+                  {phoneBoard && <p className="hybrid-phone-card-rule">{inspection.card.text}</p>}
                 </div>
                 {game.phase==="awaiting_player" && inspection.handIndex!==undefined && !duelPreview && !boardMotion && (
                   <button
@@ -1566,9 +1837,9 @@ export default function App() {
                       setSelectedIndex(inspection.handIndex!);
                       setInspection(null);
                     }}
-                  >SELECCIONAR</button>
+                  >{guidedHandInspection?"CONTINUAR →":"SELECCIONAR"}</button>
                 )}
-              </div>
+              </div>}
             </div>
           </div>
         )}
@@ -1588,8 +1859,15 @@ export default function App() {
         )}
 
         {game.phase==="finished" && !duelPreview && !boardMotion && !finishingMatch.current && (
-          <div className={"decision-overlay match-conclusion-stage"+(finalStep==="ceremony"?" is-ceremony":" is-actions")}>
-            {finalStep==="ceremony" ? (
+          <div className={"decision-overlay match-conclusion-stage"+postgameStage}>
+            {finalStep==="ceremony" ? (boardRedesign ? (
+              <MatchFinaleBanner game={game}
+                kicker={arcadeRun?.status==="complete"?"ARCADE COMPLETADO":arcadeRun
+                  ? "ARCADE · "+(arcadeRun.index+1)+"/"+arcadeRun.opponents.length : "FIN DE PARTIDA"}
+                title={arcadeRun?.status==="complete"?"TODOS DERROTADOS":
+                  game.winner==="player"?"VICTORIA":game.winner==="opponent"?"DERROTA":"EMPATE"}
+                onContinue={()=>{clearFinalTimer();setFinalStep("feedback");}}/>
+            ) : (
               <div className={"match-conclusion-ceremony match-final-"+game.winner} role="status" aria-live="polite">
                 <span className="match-conclusion-symbol" aria-hidden="true">{game.winner==="player"?"✦":game.winner==="opponent"?"◇":"◈"}</span>
                 <span className="match-conclusion-kicker">{arcadeRun
@@ -1598,8 +1876,17 @@ export default function App() {
                   : "FIN DE PARTIDA"}</span>
                 <strong>{arcadeRun?.status==="complete"?"TODOS DERROTADOS":game.winner==="player"?"VICTORIA":game.winner==="opponent"?"DERROTA":"EMPATE"}</strong>
                 <span className="match-conclusion-score">{game.player.life} — {game.opponent.life} VIDA</span>
-                <button type="button" className="match-conclusion-continue" onClick={()=>{clearFinalTimer();setFinalStep("actions");}}>CONTINUAR →</button>
+                <button type="button" className="match-conclusion-continue" onClick={()=>{clearFinalTimer();setFinalStep("feedback");}}>CONTINUAR →</button>
               </div>
+            )) : finalStep==="feedback"&&matchMeta ? (
+              <MatchFeedback
+                key={matchMeta.id}
+                playerName={matchMeta.playerName??playerName}
+                available={feedbackAvailable()}
+                onSkip={()=>setFinalStep("actions")}
+                onSubmit={answers=>submitMatchFeedback(feedbackFor(answers))}
+                onDownload={answers=>downloadPlaytest("daggerlight-feedback.json",JSON.stringify(feedbackFor(answers),null,2))}
+              />
             ) : (
               <div className="decision-card match-postgame" role="group" aria-label="Opciones después de la partida">
                 <span>{arcadeRun?"MODO ARCADE":"PARTIDA FINALIZADA"}</span>

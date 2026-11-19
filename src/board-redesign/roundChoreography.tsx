@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import type { GameState, RoundSummary, Side } from "../engine/types";
 import type { Position } from "../types";
 import type { BoardMotionSequence } from "./motion";
+import "./round-receipt-banner.css";
+import { CeremonyBackdrop } from "./stingerMotion";
 
 /**
  * Round captions are drawn from the engine's persisted RoundSummary,
@@ -27,27 +29,45 @@ interface TimedProps {
   onComplete: () => void;
 }
 
-export function RoundTransition({sequenceId,reducedMotion,onComplete,summary}:TimedProps & {
+export function RoundTransition({sequenceId,reducedMotion,onComplete,summary,bannerImage,held=false}:TimedProps & {
   summary: RoundSummary | null;
+  bannerImage?: string;
+  held?: boolean;
 }) {
   const current=useRef(onComplete);
   current.current=onComplete;
+  const completedSequence=useRef<number|null>(null);
+  function finish(){
+    if(completedSequence.current===sequenceId)return;
+    completedSequence.current=sequenceId;
+    current.current();
+  }
   useEffect(()=>{
-    const timer=window.setTimeout(()=>current.current(),reducedMotion?240:1450);
+    if(held)return;
+    const timer=window.setTimeout(finish,reducedMotion?1000:1680);
     return ()=>window.clearTimeout(timer);
-  },[sequenceId,reducedMotion]);
+  },[sequenceId,reducedMotion,held]);
   const reason=summary?.reason==="player_no_quiero"?"NO QUIERO":
     summary?.reason==="opponent_no_quiero"?"EL RIVAL DIJO NO QUIERO":null;
   const outcome=summary?.score.player===summary?.score.opponent?"EMPATE":
     (summary?.score.player??0)>(summary?.score.opponent??0)?"GANASTE LA RONDA":"EL RIVAL GANÓ LA RONDA";
-  return <div className="board-round-transition" role="status" aria-live="polite">
-    <div className="board-round-ceremony">
+  return <div className={"board-round-receipt-stage"+(held?" is-guide-receipt":"")}
+    role={held?"dialog":"status"} aria-label={held?"Fin de la primera ronda":undefined}>
+    <div key={sequenceId} className={"board-round-ceremony dl-ceremony-banner"+(held?" dl-guide-held":"")}
+      onAnimationEnd={event=>{
+        if(event.target===event.currentTarget && event.animationName==="dl-round-receipt-reveal")finish();
+      }}>
+      <CeremonyBackdrop image={bannerImage}/>
       <span className="board-round-kicker">{summary?"RONDA "+summary.round+" FINALIZADA":"RONDA FINALIZADA"}</span>
       {summary&&<strong className="board-round-score" aria-label={`Resultado de ronda: vos ${summary.score.player}, rival ${summary.score.opponent}`}>
-        <span>{summary.score.player}</span><i>—</i><span>{summary.score.opponent}</span>
+        <span>{summary.score.player}</span><i aria-hidden="true">—</i><span>{summary.score.opponent}</span>
       </strong>}
       <span className="board-round-outcome">{summary?outcome:"PREPARANDO ARCHIVOS"}</span>
       {reason&&<span className="board-round-reason">{reason}</span>}
+      {held&&<>
+        <p className="dl-guide-banner-note">Las cartas jugadas van al Archivo de su posición. Después recibís una mano nueva.</p>
+        <button type="button" className="primary-button dl-guide-round-next" onClick={finish}>CONTINUAR A ARCHIVOS →</button>
+      </>}
     </div>
   </div>;
 }
@@ -58,16 +78,17 @@ export function RoundTransition({sequenceId,reducedMotion,onComplete,summary}:Ti
  * This never implies that Archive cards are deposited in the score panel.
  */
 export function ArchiveSweep() {
-  return <div className="board-archive-sweep" aria-hidden="true">
-    <span className="board-archive-sweep-edge"/>
-  </div>;
+  // One moving surface, including its own luminous edge. A single 650ms
+  // transform carries both together; separate animations drift and stutter.
+  // Engine-owned Archive cards still travel to their actual positions.
+  return <div className="board-archive-sweep" aria-hidden="true"/>;
 }
 
 export function ArchiveReceiptTransition({sequenceId,reducedMotion,onComplete}:TimedProps) {
   const current=useRef(onComplete);
   current.current=onComplete;
   useEffect(()=>{
-    const timer=window.setTimeout(()=>current.current(),reducedMotion?230:840);
+    const timer=window.setTimeout(()=>current.current(),reducedMotion?230:350);
     return ()=>window.clearTimeout(timer);
   },[sequenceId,reducedMotion]);
   return <div className="board-archive-receipt" role="status" aria-live="polite">

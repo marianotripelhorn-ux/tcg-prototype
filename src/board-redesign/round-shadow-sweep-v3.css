@@ -1,0 +1,171 @@
+/*
+ * DAGGERLIGHT — Shadow Sweep v3
+ *
+ * A continuous theatrical transition: full ivory stage darkens, the round
+ * result occupies the real field (no card/panel), then the darkness retreats
+ * left-to-right into the existing score while genuine cards enter Archives.
+ *
+ * Only GPU-friendly opacity and transform animate on the moving surfaces.
+ * Never morph clip-path polygons or run backdrop-filter on the moving curtain.
+ */
+
+/* One uninterrupted field, right through the Life crests and score.
+ * Previous v2 intentionally stopped at 73% and exposed bright ivory. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition{
+  inset:0 0 34px -20.5%!important;
+  padding:0 clamp(0px,19vw,330px) 0 0!important;
+  width:auto!important;height:auto!important;
+  border:0!important;background:none!important;box-shadow:none!important;
+  overflow:visible!important;isolation:isolate;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition::before{
+  content:"";
+  position:absolute;inset:0;z-index:-1;
+  background:
+    radial-gradient(ellipse 78% 85% at 40% 44%,rgba(11,16,19,.89) 0%,rgba(3,7,11,.95) 61%,rgba(2,4,7,.97) 100%),
+    linear-gradient(110deg,#11171a,#05080c)!important;
+  /* Deep enough that ivory does not show through as grey. It stays still,
+     so expensive real-time backdrop recomposition is unnecessary. */
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+  animation:dl-v3-round-veil .66s cubic-bezier(.17,.7,.2,1) both!important;
+  will-change:opacity;
+}
+/* A thin field-wide line briefly opens the round; never a floating rectangle. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition::after{
+  content:"";
+  position:absolute;inset:auto 0 49% 0;height:2px;z-index:0;
+  background:linear-gradient(90deg,transparent 8%,#e5e8e65c 37%,#fff8e8af 49%,#e5e8e65c 61%,transparent 91%);
+  opacity:0;pointer-events:none;
+  transform-origin:50% 50%;
+  animation:dl-v3-round-line 1.22s ease-out both;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition .board-round-ceremony{
+  position:relative;z-index:2;
+  animation:dl-v3-round-type .8s cubic-bezier(.16,.85,.2,1) both!important;
+  max-width:min(66vw,680px)!important;
+  gap:clamp(10px,1.4dvh,19px)!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-kicker{
+  font-size:clamp(15px,1.5vw,21px)!important;
+  color:#fff!important;
+  text-shadow:0 2px 18px #000!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-score{
+  font-size:clamp(78px,8.5vw,130px)!important;
+  color:#fffdf5!important;
+  text-shadow:0 3px 14px #000,0 0 29px #b9d1dc47!important;
+  font-variant-numeric:tabular-nums;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-outcome{
+  color:#fff!important;font-size:clamp(14px,1.48vw,21px)!important;
+  text-shadow:0 2px 17px #000!important;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-reason{
+  color:#f0f3f3!important;
+}
+/* The hovering gold Archive receipt remains visually hidden from v2. */
+
+/* The ivory ground also extends behind the left banners.
+ * Keep the real Champion art above the dark surface while the ground dims. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="round"] .arena-sidebar{
+  z-index:75!important;
+}
+
+/* One uninterrupted full-bleed curtain to the ivory stage's far-right edge.
+ * Move the WHOLE surface right, exposing the board left-to-right in one
+ * compositor-only transform tween. No scaling, per-segment easing, filtering
+ * or expensive clipping. A static glint is attached to the revealing edge. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep{
+  position:absolute!important;
+  inset:0 0 34px -20.5%!important;
+  width:auto!important;height:auto!important;
+  z-index:16!important;
+  pointer-events:none!important;
+  background:
+    linear-gradient(90deg,rgba(4,7,10,.96),rgba(5,9,12,.965) 70%,rgba(3,6,9,.98))!important;
+  clip-path:none!important;
+  -webkit-clip-path:none!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+  will-change:transform;
+  contain:paint;
+  animation:dl-v3-curtain-sweep 650ms cubic-bezier(.32,.02,.68,1) both!important;
+}
+/* The luminous trailing edge is part of the SAME moving layer.
+ * It can never drift out of sync with the shadow itself. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep::before{
+  content:"";position:absolute;top:0;bottom:0;left:0;width:clamp(34px,4vw,68px);
+  pointer-events:none;
+  background:linear-gradient(90deg,
+    rgba(247,246,229,.55) 0%,rgba(218,225,215,.22) 8%,
+    rgba(188,204,209,.07) 47%,transparent 100%);
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="archive"] .hybrid-duel-tally{
+  animation:none!important;
+  isolation:isolate;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="archive"] .hybrid-duel-tally::before{
+  content:"";position:absolute;inset:0;
+  z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at 55% 50%,rgba(242,241,212,.49),rgba(215,208,178,.16) 53%,transparent 80%);
+  opacity:0;
+  animation:dl-v3-score-receive 1000ms ease-out both;
+}
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="archive"] .hybrid-score-values,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="archive"] .hybrid-tally-sides{
+  position:relative;z-index:1;
+}
+
+@keyframes dl-v3-round-veil {
+  0%{opacity:0}100%{opacity:1}
+}
+@keyframes dl-v3-round-type {
+  0%{opacity:0;transform:translate3d(0,25px,0) scale(.92)}
+  65%{opacity:1}
+  100%{opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+@keyframes dl-v3-round-line {
+  0%{opacity:0;transform:scaleX(.34)}
+  38%{opacity:.85;transform:scaleX(.95)}
+  68%{opacity:.35;transform:scaleX(1)}
+  100%{opacity:0;transform:scaleX(1)}
+}
+@keyframes dl-v3-curtain-sweep {
+  from{transform:translate3d(0,0,0)}
+  to{transform:translate3d(103%,0,0)}
+}
+@keyframes dl-v3-score-receive {
+  0%,62%{opacity:0}
+  78%{opacity:.6}
+  88%{opacity:1}
+  100%{opacity:0}
+}
+@media(max-width:760px){
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition{
+    inset:0 0 34px 0!important;
+    padding:0 8px!important;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-score{
+    font-size:clamp(52px,11vw,83px)!important;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep{
+    inset:0 0 34px 0!important;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep{
+    animation:dl-v3-curtain-sweep 650ms cubic-bezier(.32,.02,.68,1) both!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition::before,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition::after,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-round-transition .board-round-ceremony,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep,
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="archive"] .hybrid-duel-tally::before{
+    animation:none!important;
+    will-change:auto;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep{
+    transform:none!important;opacity:.78!important;clip-path:none!important;
+  }
+}

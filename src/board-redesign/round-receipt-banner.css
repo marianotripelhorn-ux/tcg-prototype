@@ -1,0 +1,84 @@
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-main > .board-round-receipt-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-receipt-stage > .board-round-ceremony {
+  max-width: calc(100vw - 24px);
+  gap: clamp(9px, 1.8dvh, 17px);
+  transform-origin: center top;
+  animation: dl-round-receipt-reveal 1540ms both;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-receipt-stage .board-round-kicker {
+  color: #d8bc84 !important;
+  font-size: clamp(11px, 1.05vw, 15px) !important;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-receipt-stage .board-round-score {
+  gap: clamp(14px, 2.1vw, 26px);
+  color: #f6eedc !important;
+  font-size: clamp(50px, 6vw, 82px) !important;
+  text-shadow: 0 3px 10px #100b07 !important;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-receipt-stage .board-round-outcome {
+  color: #f6eedc !important;
+  font-size: clamp(12px, 1.15vw, 16px) !important;
+  text-wrap: balance;
+}
+
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-receipt-stage .board-round-reason {
+  color: #e6d5b4 !important;
+  font-size: clamp(10px, .95vw, 13px) !important;
+  text-wrap: balance;
+}
+
+@keyframes dl-round-receipt-reveal {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -52px, 0) scaleY(.94);
+    animation-timing-function: cubic-bezier(.18,.78,.27,1);
+  }
+  14% {
+    opacity: 1;
+    transform: translate3d(0, 4px, 0) scaleY(1.015);
+    animation-timing-function: ease-out;
+  }
+  20%, 85% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scaleY(1);
+    animation-timing-function: cubic-bezier(.55,.03,.73,.4);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -62px, 0) scaleY(.91);
+  }
+}
+
+/* The Archive flights retain their own targets and timings. The curtain's
+   former receive pulse no longer belongs on the score. */
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1 .arena-stage > .board-archive-sweep,
+:root[data-theme] .app-shell.arena-v2.board-redesign-v1[data-board-phase="archive"] .hybrid-duel-tally::before {
+  display: none !important;
+}
+
+@media (max-height: 540px) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-receipt-stage > .board-round-ceremony {
+    gap: 7px;
+    padding-block-start: 15px;
+  }
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-receipt-stage .board-round-score {
+    font-size: clamp(38px, 11dvh, 62px) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme] .app-shell.arena-v2.board-redesign-v1 .board-round-receipt-stage > .board-round-ceremony {
+    animation: none;
+  }
+}
