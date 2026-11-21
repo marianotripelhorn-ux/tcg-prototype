@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import vm from "node:vm";
 
-const html = fs.readFileSync("index.html", "utf8");
+const html = fs.readFileSync("classic.html", "utf8");
 const match = html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/);
 if (!match) throw new Error("Could not extract game script.");
 
