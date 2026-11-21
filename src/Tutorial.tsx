@@ -14,7 +14,7 @@ const screens = [
   { kicker: "04 · LA RONDA", title: "Pensá en el orden de tus tres cartas", body: "Al comenzar cada ronda recibís 3 cartas. Quien gana un duelo abre el siguiente; en empate conserva la iniciativa quien abrió. Las habilidades pueden preparar tu próxima carta." },
   { kicker: "05 · QUIERO / NO QUIERO", title: "Cuando vas 0–2, decidís el riesgo", body: "Si perdés los dos primeros duelos, podés jugar el tercero para intentar ganar 1 punto o decir «No quiero» y cerrar la ronda. No hay puntos extra por ganar la ronda." },
   { kicker: "06 · EL ARCHIVO", title: "Las cartas jugadas dejan huella", body: "Al final de cada ronda, las cartas que jugaste se guardan en el Archivo de su posición. Solo importa cuántas hay en cada Archivo; algunos efectos se hacen más fuertes con esos números." },
-  { kicker: "07 · MANIFESTACIONES", title: "Cartas especiales para preparar el siguiente duelo", body: "Algunas cartas generan una especial sin gastar una jugada. La Daga se guarda para dar +1 Poder; el Escudo queda en el campo; la Reliquia suma Archivo mientras la posición está vacía; y Simetría copia una especial rival visible." },
+  { kicker: "07 · PODER FINAL", title: "Entendé por qué una carta gana o pierde", body: "El Poder impreso puede cambiar durante el duelo. La posición, las habilidades, el Archivo y los efectos preparados alteran la comparación. Revisá qué se activó antes de elegir tu siguiente jugada." },
   { kicker: "08 · TU PRIMERA PARTIDA", title: "Ya conocés lo necesario para empezar", body: "Mirá las tres cartas de tu mano, inspeccioná sus habilidades y decidí el orden y las posiciones. Podés volver a esta guía cuando quieras." }
 ];
 
@@ -98,7 +98,7 @@ export default function Tutorial({ onClose, onPlay, inGame }: TutorialProps) {
               <div className="tutorial-score">0 <span>—</span> 2</div>
               <span className="tutorial-eyebrow">PERDISTE LOS DOS PRIMEROS DUELOS</span>
               <div className="tutorial-decision-actions"><button type="button" className="tutorial-secondary" onClick={() => setQuiero("no")}>NO QUIERO</button><button type="button" className="tutorial-primary" onClick={() => setQuiero("quiero")}>QUIERO</button></div>
-              {quiero && <div className="tutorial-feedback correct" role="status">{quiero === "quiero" ? "Se juega el tercer duelo. Si ganás, le quitás 1 Vida al rival." : "Se termina la ronda. Conservás tu tercera carta oculta y no se juega."}</div>}
+              {quiero && <div className="tutorial-feedback correct" role="status">{quiero === "quiero" ? "Se juega el tercer duelo. Si ganás, le quitás 1 Vida al rival." : "Se termina la ronda. La tercera carta no se revela y se descarta boca abajo."}</div>}
             </div>
           )}
           {step === 5 && (
@@ -111,10 +111,10 @@ export default function Tutorial({ onClose, onPlay, inGame }: TutorialProps) {
           )}
           {step === 6 && (
             <div className="tutorial-manifestations">
-              <div><strong>DAGA ETÉREA</strong><span>+1 Poder. Se usa con tu carta y después se archiva.</span></div>
-              <div><strong>ESCUDO ETÉREO</strong><span>−2 a la próxima carta rival que use su posición.</span></div>
-              <div><strong>RELIQUIA</strong><span>+2 al Archivo por duelo mientras la posición esté vacía. Dura esa ronda.</span></div>
-              <div><strong>SIMETRÍA PERFECTA</strong><span>Copia una especial rival visible. Máximo una en mano.</span></div>
+              <div><strong>PODER IMPRESO</strong><span>Es el número fijo que aparece en tu carta.</span></div>
+              <div><strong>AFINIDAD</strong><span>Una habilidad puede activarse solo en una posición determinada.</span></div>
+              <div><strong>PREPARACIÓN</strong><span>Algunas cartas dan un bono a tu próxima jugada.</span></div>
+              <div><strong>ARCHIVO</strong><span>Hay cartas cuyo Poder depende de los contadores de rondas anteriores.</span></div>
             </div>
           )}
           {step === 7 && (
