@@ -204,14 +204,14 @@ export function ArchiveFlight({sequenceId,reducedMotion,onComplete,onArrival}:Ar
 }
 
 /** Reveal the real Champion banners and board before exposing the opening hand. */
-export function MatchEntryMotion({sequenceId,onComplete}:Pick<ArchiveFlightProps,"sequenceId"|"onComplete">){
+export function MatchEntryMotion({sequenceId,onComplete,reducedMotion}:Pick<ArchiveFlightProps,"sequenceId"|"onComplete"|"reducedMotion">){
   const rule=useRef<HTMLDivElement>(null);
   const done=useRef(onComplete);
   done.current=onComplete;
   useLayoutEffect(()=>{
     const line=rule.current;
     const root=line?.closest(".app-shell.board-redesign-v1");
-    if(!line||!root||window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+    if(!line||!root||reducedMotion){
       done.current();
       return;
     }
@@ -245,7 +245,7 @@ export function MatchEntryMotion({sequenceId,onComplete}:Pick<ArchiveFlightProps
       if(!cancelled)done.current();
     });
     return ()=>{cancelled=true;animations.forEach(animation=>animation.cancel());};
-  },[sequenceId]);
+  },[sequenceId,reducedMotion]);
   return <div className="dl-match-entry-rule" ref={rule} aria-hidden="true"/>;
 }
 
