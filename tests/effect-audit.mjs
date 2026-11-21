@@ -1,6 +1,6 @@
 import fs from "node:fs";
 
-const html = fs.readFileSync("index.html", "utf8");
+const html = fs.readFileSync("classic.html", "utf8");
 
 function section(startMarker, endMarker) {
   const start = html.indexOf(startMarker);
