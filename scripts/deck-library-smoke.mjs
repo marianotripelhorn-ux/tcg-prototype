@@ -23,6 +23,13 @@ try {
   await page.locator(".splash-start").waitFor({state:"attached"});
   await page.locator(".splash-start").evaluate(el=>el.click());
   const skip=page.getByRole("button",{name:"SALTAR TUTORIAL",exact:true});
+  // The splash has a timed transition before the welcome screen is mounted.
+  await page.waitForFunction(() => {
+    const home = document.querySelector(".home-action.action-decks");
+    const welcome = [...document.querySelectorAll("button")]
+      .some(button => button.textContent?.includes("SALTAR TUTORIAL"));
+    return Boolean(home || welcome);
+  }, {timeout:15000});
   if(await skip.count()) await skip.evaluate(el=>el.click());
   await page.locator(".home-action.action-decks").waitFor({state:"attached",timeout:15000});
   await page.locator(".home-action.action-decks").evaluate(el=>el.click());
