@@ -1,0 +1,25 @@
+.dl-settings-backdrop{position:fixed;inset:0;z-index:99990;display:flex;align-items:center;justify-content:center;background:rgba(4,7,13,.8);padding:16px;backdrop-filter:blur(8px)}
+.dl-settings-modal{box-sizing:border-box;width:min(530px,100%);max-height:calc(100dvh - 32px);overflow-y:auto;color:#f4eee0;background:linear-gradient(140deg,#242b2d,#11191b 58%,#101417);border:1px solid #9c855b;border-radius:12px;box-shadow:0 24px 80px #000b;font-family:inherit}
+.dl-settings-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:25px 26px 18px;border-bottom:1px solid #ffffff22}
+.dl-settings-eyebrow{font-size:10px;letter-spacing:.21em;color:#c6b68e}
+.dl-settings-header h2{font-size:clamp(23px,5vw,31px);letter-spacing:.08em;margin:5px 0 0;color:#f8f0da}
+.dl-settings-close{background:transparent;color:#f0e6ce;font-size:32px;line-height:1;min-width:42px;min-height:42px;cursor:pointer;border:1px solid #ffffff38;border-radius:5px}
+.dl-settings-content{padding:9px 26px 17px}
+.dl-settings-setting{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:20px 0;border-bottom:1px solid #ffffff1e}
+.dl-settings-setting strong{font-size:12px;letter-spacing:.1em;color:#f1e9d9}
+.dl-settings-setting p{font-size:12px;line-height:1.5;color:#c8c4b8;margin:7px 0 0}
+.dl-settings-setting select{background:#20292b;color:#f4eee0;border:1px solid #927d54;border-radius:4px;min-height:42px;padding:8px;font-size:12px}
+.dl-settings-switch{display:flex;align-items:center;gap:8px;color:#f1e5c7;font-size:10px;letter-spacing:.06em;white-space:nowrap}
+.dl-settings-switch input{width:20px;height:20px;accent-color:#c2a469}
+.dl-settings-volume{display:block}.dl-settings-volume-line{display:flex;align-items:center;gap:16px;margin-top:12px}
+.dl-settings-volume-line input{flex:1;width:100%;accent-color:#c7ac73;min-height:28px}
+.dl-settings-volume-line output{min-width:40px;text-align:right;color:#e4d6ba;font-size:12px}
+.dl-settings-note{font-size:11px;line-height:1.6;color:#c0b9a6;margin:19px 0 0}
+.dl-settings-footer{padding:0 26px 24px;display:flex;justify-content:flex-end}
+.dl-settings-footer button{font:inherit;min-height:44px;border:1px solid #b19a69;background:linear-gradient(180deg,#d7c08d,#ac905d);color:#1b1c1a;border-radius:4px;padding:10px 19px;font-weight:750;cursor:pointer}
+.dl-settings-modal :focus-visible{outline:3px solid #efcd89;outline-offset:3px}
+:root[data-daggerlight-motion="reduced"] .app-shell.board-redesign-v1 .board-archive-sweep,
+:root[data-daggerlight-motion="reduced"] .app-shell.board-redesign-v1 .board-round-transition::before,
+:root[data-daggerlight-motion="reduced"] .app-shell.board-redesign-v1 .board-round-transition::after{animation:none!important;transition:none!important}
+@media(max-width:550px){.dl-settings-backdrop{padding:8px}.dl-settings-modal{max-height:calc(100dvh - 16px)}.dl-settings-header{padding:18px 17px 13px}.dl-settings-content{padding:5px 17px 12px}.dl-settings-footer{padding:0 17px 18px}.dl-settings-setting{flex-wrap:wrap;gap:11px}.dl-settings-setting>div{min-width:54%}}
+@media(prefers-reduced-motion:reduce){.dl-settings-backdrop{backdrop-filter:none}}
