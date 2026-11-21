@@ -140,7 +140,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
     setCardSearch("");
     setDeleteId(null);
     setMessage("");
-    window.scrollTo({top:0,behavior:"instant"});
+    window.scrollTo({top:0,behavior:"auto"});
   }
 
   function saveEditor() {
@@ -194,6 +194,18 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
     }
   }
 
+  function selectDeck(id:string) {
+    setSelected(id);
+    setDeleteId(null);
+    setMessage("");
+    if (typeof window.matchMedia === "function" &&
+        window.matchMedia("(max-width: 970px)").matches) {
+      window.requestAnimationFrame(()=>document.getElementById("dl-lib-inspector")?.scrollIntoView({
+        behavior:"smooth", block:"start"
+      }));
+    }
+  }
+
   const visibleSaved = decks.filter(d=>(filter==="all"||validateDeck(d).factions.includes(filter)) &&
     (d.name+" "+champions[d.championId].name).toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   const visibleStarters = starterDecks.filter(d=>(filter==="all"||champions[d.championId].faction===filter) &&
@@ -235,7 +247,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
         <span className="dl-lib-wordmark">DAGGERLIGHT <span>/ FORJA DE MAZOS</span></span>
         <ThemeToggle compact/>
       </header>
-      <section className="dl-build-intro theme-" + champ.faction>
+      <section className={"dl-build-intro theme-" + champ.faction}>
         <div className="dl-build-hero-copy">
           <span className="dl-lib-eyebrow">EL TALLER DE LA QUIRALIDAD · CONSTRUCCIÓN EXPERIMENTAL</span>
           <h1>{editor.id?"Perfeccioná tu estrategia.":"Forjá tu propia estrategia."}</h1>
@@ -371,7 +383,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
         {sortedSaved.length ? <div className="dl-lib-grid">
           {sortedSaved.map(deck=><DeckTile key={deck.id} deck={deck}
             starter={false} favorite={deck.favorite} active={selected==="saved:"+deck.id}
-            onSelect={()=>{setSelected("saved:"+deck.id);setDeleteId(null);setMessage("");}}
+            onSelect={()=>selectDeck("saved:"+deck.id)}
             onFavorite={()=>favoriteDeck(deck.id)}/>)}
         </div> : <div className="dl-lib-empty-state">
           <span className="dl-lib-empty-glyph" aria-hidden="true">✧</span>
@@ -384,12 +396,12 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
         <div className="dl-lib-grid">
           {visibleStarters.map(deck=><DeckTile key={deck.id} deck={deck}
             starter favorite={false} active={selected==="starter:"+deck.championId}
-            onSelect={()=>{setSelected("starter:"+deck.championId);setDeleteId(null);setMessage("");}}/>)}
+            onSelect={()=>selectDeck("starter:"+deck.championId)}/>)}
         </div>
         {!visibleStarters.length && <p className="dl-lib-empty">No hay mazos iniciales con ese filtro.</p>}
       </section>
 
-      <aside className={"dl-lib-inspector theme-"+currentChampion.faction}>
+      <aside id="dl-lib-inspector" className={"dl-lib-inspector theme-"+currentChampion.faction}>
         <span className="dl-lib-eyebrow">MAZO SELECCIONADO</span>
         <div className="dl-lib-inspector-art">
           <div className="dl-lib-inspector-back" style={{backgroundImage:"url("+championBackgroundUrl(currentChampion.faction)+")"}}/>
