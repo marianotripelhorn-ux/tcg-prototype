@@ -4,7 +4,7 @@ on:
     branches: ["feature/daggerlight-1.0"]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: daggerlight-1-0-validate
   cancel-in-progress: true
@@ -22,3 +22,39 @@ jobs:
         run: npm test
       - name: Build production candidate
         run: npm run build
+
+      - name: Checkout published site on main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: site
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Stage only the isolated 1.0 beta folder
+        run: |
+          rm -rf site/daggerlight-1-0-beta
+          mkdir -p site/daggerlight-1-0-beta
+          cp -R dist/. site/daggerlight-1-0-beta/
+      - name: Publish isolated beta without modifying the public game
+        working-directory: site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --mixed origin/main
+            git add -A daggerlight-1-0-beta
+            if git diff --cached --name-only | grep -Ev '^daggerlight-1-0-beta/'; then
+              echo "Blocked: staged changes outside the beta folder."
+              exit 1
+            fi
+            if git diff --cached --quiet; then
+              echo "Beta files already published."
+              exit 0
+            fi
+            git commit -m "Update isolated Daggerlight 1.0 beta"
+            if git push origin HEAD:main; then
+              echo "Published beta folder without changing the live entry point."
+              exit 0
+            fi
+          done
+          exit 1
