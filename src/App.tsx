@@ -7,7 +7,10 @@ import { DuelResultStinger, MatchFinaleBanner, NewRoundStinger } from "./board-r
 import { QuieroChoiceStage, RivalQuieroStage, rivalAcceptedQuiero, shouldOfferQuiero } from "./board-redesign/quieroChoreography";
 import { DUEL_BEATS, DUEL_FINISH_MS, duelPowerReasons, powerIsRevealed, powerSourceCues, postDuelChampionCues } from "./board-redesign/duelChoreography";
 import type { DuelBeat } from "./board-redesign/duelChoreography";
-import { playDuelCue, unlockDuelAudio } from "./board-redesign/duelAudio";
+import { playDuelCue, unlockDuelAudio, setDuelVolume } from "./board-redesign/duelAudio";
+import SettingsPanel from "./SettingsPanel";
+import { readPreferences, writePreferences, shouldReduceMotion } from "./preferences";
+import type { GamePreferences } from "./preferences";
 import { disableManifestations } from "./board-redesign/disableManifestations";
 import Tutorial from "./Tutorial";
 import { TUTORIAL_MATCH, guidedOpeningHint, hasSeenWelcome, rememberWelcome } from "./onboarding";
@@ -660,6 +663,18 @@ export default function App() {
   const [opponentChampion,setOpponentChampion]=useState("random");
   const [aiDifficulty,setAiDifficulty]=useState<AIDifficulty>("normal");
   const [screen,setScreen]=useState<"home"|"champions"|"arcade"|"collection"|"table"|"decklab"|"multiplayer"|"playtest">("home");
+  const [settingsOpen,setSettingsOpen]=useState(false);
+  const [preferences,setPreferences]=useState<GamePreferences>(readPreferences);
+  const audioEnabled=preferences.audioEnabled;
+  function changePreferences(next:GamePreferences) {
+    setPreferences(next);
+    writePreferences(next);
+    setDuelVolume(next.volume / 100);
+  }
+  useEffect(()=>{
+    setDuelVolume(preferences.volume / 100);
+    document.documentElement.dataset.daggerlightMotion=preferences.motion;
+  },[preferences.volume,preferences.motion]);
   const [playerName,setPlayerName]=useState(()=>readPlayerName());
   const [boardRedesign,setBoardRedesign]=useState(()=>new URLSearchParams(window.location.search).get("board")!=="classic");
   const narrowBoard=useSyncExternalStore(subscribePhoneBoard,isPhoneBoard,()=>false);
@@ -712,10 +727,6 @@ export default function App() {
   const [duelStep,setDuelStep]=useState<"cards"|"result">("cards");
   const [duelBeat,setDuelBeat]=useState<DuelBeat>("approach");
   const duelTimelineTimers=useRef<number[]>([]);
-  const [audioEnabled,setAudioEnabled]=useState(()=>{
-    try{return window.localStorage.getItem("daggerlight-duel-sfx")!=="off";}
-    catch{return true;}
-  });
   const audioEnabledRef=useRef(audioEnabled);
   audioEnabledRef.current=audioEnabled;
   const [finalStep,setFinalStep]=useState<"ceremony"|"feedback"|"actions">("ceremony");
@@ -757,7 +768,7 @@ export default function App() {
   }
 
   function isReducedMotion() {
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    return shouldReduceMotion(preferences.motion);
   }
 
   function startFinalCeremony() {
@@ -1218,6 +1229,7 @@ export default function App() {
           onDeckLab={()=>setScreen("decklab")}
           onMultiplayer={()=>setScreen("multiplayer")}
           onPlaytest={()=>setScreen("playtest")}
+          onSettings={()=>setSettingsOpen(true)}
           onContinue={continueMatch}
           saved={arcadeRun?.status==="active"?null:savedMatch}
           summary={summarizeHistory(history)}
@@ -1249,6 +1261,7 @@ export default function App() {
           onClose={()=>setTutorialOpen(false)}
           onPlay={()=>{setTutorialOpen(false);startGuidedOpening();}}
         />}
+        {settingsOpen && <SettingsPanel preferences={preferences} onChange={changePreferences} onClose={()=>setSettingsOpen(false)}/>}
       </>
     );
   }
@@ -1369,9 +1382,8 @@ export default function App() {
               title={audioEnabled?"Silenciar sonidos de duelo":"Activar sonidos de duelo"}
               onClick={()=>{
                 const next=!audioEnabled;
-                setAudioEnabled(next);
+                changePreferences({...preferences,audioEnabled:next});
                 audioEnabledRef.current=next;
-                try{window.localStorage.setItem("daggerlight-duel-sfx",next?"on":"off");}catch{}
                 if(next)unlockDuelAudio();
               }}>{audioEnabled?"SONIDO ON":"SONIDO OFF"}</button>}
             {(game.player.champion.faction==="ivory"||game.opponent.champion.faction==="ivory") &&
@@ -1384,6 +1396,8 @@ export default function App() {
                 </div>}
               </div>
             }
+            <button className="hybrid-board-toggle" type="button" title="Configurar sonido, animaciones y aspecto"
+              onClick={()=>{setPhoneToolsOpen(false);setSettingsOpen(true);}}>OPCIONES</button>
             <button className="arena-icon-button" type="button" aria-label="Abrir tutorial"
               title="Ayuda" onClick={()=>{setPhoneToolsOpen(false);setTutorialOpen(true);}}><ArenaIcon name="help"/></button>
             <button className="arena-icon-button" type="button" aria-label="Volver al menú"
@@ -1448,6 +1462,7 @@ export default function App() {
 
         <section className={"battlefield"+(duelPreview?" duel-is-resolving":"")} aria-label="Tablero">
           {boardRedesign&&boardMotion?.phase==="match-entry"&&<MatchEntryMotion
+            reducedMotion={isReducedMotion()}
             sequenceId={boardMotion.id}
             onComplete={()=>{
               const current=boardMotionRef.current;
@@ -1920,6 +1935,7 @@ export default function App() {
       </div>
 
       {tutorialOpen && <Tutorial inGame onClose={()=>setTutorialOpen(false)} onPlay={()=>setTutorialOpen(false)} />}
+      {settingsOpen && <SettingsPanel preferences={preferences} onChange={changePreferences} onClose={()=>setSettingsOpen(false)}/>}
       {drag && (() => {
         const card=hand[drag.handIndex];
         if (!card || !drag.moved) return null;
