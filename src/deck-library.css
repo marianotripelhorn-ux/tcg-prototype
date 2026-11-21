@@ -164,3 +164,15 @@
 @media(max-width:650px){.fo-shell.dl-lib{padding:12px 13px 35px}.dl-lib-top{grid-template-columns:auto 1fr auto}.dl-lib-wordmark{text-align:center;font-size:12px}.dl-lib-wordmark span{display:none}.dl-lib-banner{min-height:295px;margin:18px auto 22px}.dl-lib-banner-copy{width:80%;padding:23px 19px}.dl-lib-banner-copy h1{font-size:clamp(37px,10.8vw,59px)}.dl-lib-banner-copy p{font-size:12px;max-width:75%;margin-bottom:17px}.dl-lib-banner-visual{width:62%;right:-21%}.dl-lib-banner-index{font-size:8px;right:11px}.dl-lib-primary{font-size:10px;padding:11px 14px;gap:9px;min-height:47px}.dl-lib-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.dl-deck-tile-copy{min-height:104px;padding:10px}.dl-deck-tile-copy>strong{font-size:17px}.dl-deck-tile-count{font-size:16px}.dl-lib-collection-heading{align-items:center}.dl-lib-collection-heading h2{font-size:29px}.dl-lib-deck-count{font-size:8px}.dl-lib-filter{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding-bottom:4px}.dl-lib-filter button{white-space:nowrap;font-size:9px}.dl-lib-inspector{display:block}.dl-lib-inspector-art{height:210px;min-height:0}.dl-lib-inspector-content{padding:11px 18px 19px}.dl-build-intro{min-height:205px;padding:23px 17px}.dl-build-hero-copy{width:76%}.dl-build-hero-copy h1{font-size:34px}.dl-build-hero-copy p{font-size:11px}.dl-build-hero-portrait{right:-12%;width:61%;height:110%}.dl-build-rules{font-size:8px;gap:7px}.dl-build-choices{grid-template-columns:1fr}.dl-build-controls,.dl-build-collection{padding:14px}.dl-build-section-head{align-items:stretch;flex-direction:column}.dl-build-section-head input{max-width:none}.dl-build-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.dl-build-card-copy strong{font-size:16px}.dl-build-summary{padding:14px}.dl-build-summary-cards{grid-template-columns:1fr 1fr}}
 @media(max-width:385px){.dl-lib-banner-copy{width:90%}.dl-lib-banner-copy p{max-width:72%}.dl-lib-wordmark{font-size:11px}.dl-build-summary-cards{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.dl-deck-tile,.dl-deck-tile-art>img,.dl-lib-primary,.dl-build-card{transition:none}.dl-deck-tile:hover,.dl-build-card:hover{transform:none}}
+
+
+/* Compact-banner legibility: keep the full title on two lines on phones. */
+@media(max-width:650px){
+  .dl-lib-banner{min-height:315px}
+  .dl-lib-banner-copy{width:100%;max-width:100%;padding:22px 17px}
+  .dl-lib-banner-copy:before{content:"";position:absolute;inset:0 20% 0 0;z-index:-1;background:linear-gradient(90deg,#202322ee 0%,#202322d5 65%,transparent 100%);pointer-events:none}
+  .dl-lib-banner-copy h1{max-width:240px;font-size:clamp(31px,8.8vw,37px);line-height:.97;letter-spacing:-.035em}
+  .dl-lib-banner-copy p{max-width:198px;font-size:11px;line-height:1.45}
+  .dl-lib-banner-visual{width:58%;right:-14%;opacity:.85}
+  .dl-lib-banner-art-rule{background:linear-gradient(90deg,#242625 0%,transparent 37%)}
+}
