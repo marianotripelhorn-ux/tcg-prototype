@@ -32,7 +32,7 @@ import type { ArcadeRun } from "./arcade";
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import { HomeScreen, ChampionPicker, CardCollection } from "./FrontOffice";
 import PhysicalTable from "./PhysicalTable";
-import DeckLab from "./DeckLab";
+import DeckLibrary from "./DeckLibrary";
 import type { DeckDefinition } from "./engine/decks";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { positionLabels, positions } from "./data";
@@ -1255,7 +1255,7 @@ export default function App() {
         {screen==="table" && <PhysicalTable onBack={()=>setScreen("home")}/> }
         {screen==="multiplayer" && <Multiplayer onBack={()=>setScreen("home")} playerName={playerName}/>} 
         {screen==="playtest" && <PlaytestHub onBack={()=>setScreen("home")}/>}
-        {screen==="decklab" && <DeckLab onBack={()=>setScreen("home")} onPlay={(deck,rival,difficulty)=>startWithChampion(deck.championId,rival,difficulty,deck)}/> }
+        {screen==="decklab" && <DeckLibrary onBack={()=>setScreen("home")} onPlay={(deck,rival,difficulty)=>startWithChampion(deck.championId,rival,difficulty,deck)}/> }
         {tutorialOpen && <Tutorial
           inGame={false}
           onClose={()=>setTutorialOpen(false)}
