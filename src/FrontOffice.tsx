@@ -96,7 +96,7 @@ export function HomeScreen({
     }] : []),
     {id:"play", title:saved?"NUEVA PARTIDA":"JUGAR", subtitle:"Elegí tu Campeón y enfrentate a la IA.", image:"dagger.webp", fallback:"./factions/red-portrait.webp", action:onPlay},
     {id:"learn", title:"APRENDER A JUGAR", subtitle:"Jugá una primera partida guiada.", image:"egg.webp", fallback:"./factions/white-portrait.webp", action:onTutorial},
-    {id:"library", title:"VER CARTAS", subtitle:"Explorá las cartas y sus habilidades.", image:"book.webp", fallback:"./factions/ivory-portrait.webp", action:onGallery}
+    {id:"decks", title:"MIS MAZOS", subtitle:"Creá tus estrategias y elegí con cuál jugar.", image:"book.webp", fallback:"./factions/ivory-portrait.webp", action:onDeckLab}
   ];
 
   return (
@@ -146,6 +146,7 @@ export function HomeScreen({
           <div className="home-menu-support">
             <a className="home-physical-link" href="./reglamento.html" target="_blank" rel="noopener noreferrer">REGLAMENTO</a>
             <button type="button" className="home-physical-link" onClick={onPlay}>VER CAMPEONES</button>
+            <button type="button" className="home-physical-link" onClick={onGallery}>VER CARTAS</button>
           </div>
         </nav>
       </div>
@@ -159,7 +160,7 @@ export function HomeScreen({
             <button type="button" className="home-physical-link" onClick={onPlaytest}>PLAYTEST</button>
             <button type="button" className="home-physical-link" onClick={onSettings}>CONFIGURACIÓN</button>
             <button type="button" className="home-physical-link" onClick={onPhysical}>MODO MESA · BETA</button>
-            <button type="button" className="home-physical-link" onClick={onDeckLab}>MAZOS MULTIFACCIÓN · LAB</button>
+            <button type="button" className="home-physical-link" onClick={onDeckLab}>BIBLIOTECA DE MAZOS</button>
             {import.meta.env.VITE_DAGGERLIGHT_LAB==="true" && <a className="home-physical-link lab-classic-link" href="../gameplay-v1/">VOLVER AL JUEGO CLÁSICO</a>}
           </div>
           <div className="home-more-preferences">
