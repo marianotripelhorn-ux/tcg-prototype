@@ -214,6 +214,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
   const rules=proposedMultifactionRules;
 
   if (editor) {
+    const activeEditor = editor;
     const champ=champions[editor.championId];
     const chosen=editor.selectedIds;
     const recipe:DeckDefinition={
@@ -226,20 +227,20 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
       .toLocaleLowerCase().includes(cardSearch.toLocaleLowerCase()));
     const canSave=Boolean(cleanDeckName(editor.name)) && validation.valid;
     function changeChampion(id:string) {
-      setEditor({...editor,championId:id,secondary:null,
+      setEditor({...activeEditor,championId:id,secondary:null,
         selectedIds:[...new Set(makeMonoDeckDefinition(id).cardIds)]});
       setCardSearch("");
     }
     function changeSecondary(value:string) {
       const secondary=(value||null) as Faction|null;
-      setEditor({...editor,secondary,selectedIds:chosen.filter(id=>{
+      setEditor({...activeEditor,secondary,selectedIds:chosen.filter(id=>{
         const card=allCards.find(c=>c.id===id);
         return card?.faction===champ.faction||card?.faction===secondary;
       })});
     }
     function toggle(id:string) {
-      if (chosen.includes(id)) setEditor({...editor,selectedIds:chosen.filter(x=>x!==id)});
-      else if (chosen.length<rules.distinctCards) setEditor({...editor,selectedIds:[...chosen,id]});
+      if (chosen.includes(id)) setEditor({...activeEditor,selectedIds:chosen.filter(x=>x!==id)});
+      else if (chosen.length<rules.distinctCards) setEditor({...activeEditor,selectedIds:[...chosen,id]});
     }
     return <main className="fo-shell dl-lib dl-lib-editor">
       <header className="dl-lib-top">
@@ -265,7 +266,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
               <span>NOMBRE DEL MAZO</span>
               <input maxLength={DECK_NAME_MAX} value={editor.name}
                 placeholder="Dale un nombre a tu estrategia…"
-                onChange={e=>setEditor({...editor,name:e.target.value})}/>
+                onChange={e=>setEditor({...activeEditor,name:e.target.value})}/>
             </label>
             <div className="dl-build-choices">
               <label>CHAMPION
