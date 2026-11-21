@@ -1,0 +1,46 @@
+name: Daggerlight deck-library browser QA
+
+on:
+  push:
+    branches: ["feature/daggerlight-1.0"]
+    paths:
+      - "scripts/deck-library-smoke.mjs"
+      - "src/DeckLibrary.tsx"
+      - "src/deck-library.css"
+      - "src/deckLibraryStorage.ts"
+      - "src/FrontOffice.tsx"
+      - "src/App.tsx"
+      - ".github/workflows/daggerlight-deck-library-qa.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daggerlight-deck-library-qa
+  cancel-in-progress: true
+
+jobs:
+  browser-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Install headless Chromium
+        run: npx playwright install --with-deps --only-shell chromium
+      - name: Start Daggerlight
+        run: |
+          npm run dev -- --host 127.0.0.1 --port 4173 > /tmp/daggerlight-deck-vite.log 2>&1 &
+      - name: Test the library in desktop and mobile Chromium
+        run: node scripts/deck-library-smoke.mjs
+      - name: Attach library screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daggerlight-deck-library-browser-previews
+          path: /tmp/daggerlight-deck-*.png
+          if-no-files-found: ignore
