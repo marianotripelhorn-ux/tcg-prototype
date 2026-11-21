@@ -4,6 +4,10 @@
  */
 export type DuelCue = "land" | "rise" | "gain" | "loss" | "impact" | "victory" | "defeat" | "draw";
 let audio: AudioContext | null = null;
+let masterVolume = 1;
+export function setDuelVolume(value: number): void {
+  masterVolume = Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 1;
+}
 
 export function unlockDuelAudio(): void {
   if (typeof window === "undefined" || !window.AudioContext) return;
@@ -23,7 +27,7 @@ function note(ctx: AudioContext, time: number, from: number, to: number,
   oscillator.frequency.setValueAtTime(from, time);
   oscillator.frequency.exponentialRampToValueAtTime(Math.max(30, to), time + duration);
   amp.gain.setValueAtTime(0.0001, time);
-  amp.gain.exponentialRampToValueAtTime(level, time + 0.012);
+  amp.gain.exponentialRampToValueAtTime(Math.max(0.0001,level*masterVolume), time + 0.012);
   amp.gain.exponentialRampToValueAtTime(0.0001, time + duration);
   oscillator.connect(amp).connect(ctx.destination);
   oscillator.start(time);
@@ -46,7 +50,7 @@ function material(ctx: AudioContext, time: number, duration: number,
   source.buffer = buffer;
   filter.type = "lowpass";
   filter.frequency.value = cutoff;
-  amp.gain.setValueAtTime(Math.max(0.0001, level), time);
+  amp.gain.setValueAtTime(Math.max(0.0001, level*masterVolume), time);
   amp.gain.exponentialRampToValueAtTime(0.0001, time + duration);
   source.connect(filter).connect(amp).connect(ctx.destination);
   source.start(time);
@@ -54,7 +58,7 @@ function material(ctx: AudioContext, time: number, duration: number,
 }
 
 export function playDuelCue(cue: DuelCue, enabled: boolean): void {
-  if (!enabled || !audio || audio.state !== "running") return;
+  if (!enabled || masterVolume <= 0 || !audio || audio.state !== "running") return;
   const ctx = audio;
   const t = ctx.currentTime + 0.008;
   try {
