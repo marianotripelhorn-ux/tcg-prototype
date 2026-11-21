@@ -58,12 +58,12 @@ function Sprite({card, crop=false}: {card: CardDefinition; crop?: boolean}) {
 }
 
 export function HomeScreen({
-  onPlay,onTutorial,onGallery,onPhysical,onDeckLab,onMultiplayer,onPlaytest,onArcade,onContinueArcade,arcadeResume,
+  onPlay,onTutorial,onGallery,onPhysical,onDeckLab,onMultiplayer,onPlaytest,onSettings,onArcade,onContinueArcade,arcadeResume,
   playerName,onPlayerNameChange,onContinue,saved,summary,
   analyticsReady,analyticsConsent,onChangeAnalytics
 }: {
   onPlay:()=>void;onTutorial:()=>void;onGallery:()=>void;onPhysical:()=>void;onDeckLab:()=>void;
-  onMultiplayer:()=>void;onPlaytest:()=>void;onArcade:()=>void;
+  onMultiplayer:()=>void;onPlaytest:()=>void;onSettings:()=>void;onArcade:()=>void;
   onContinueArcade:()=>void;arcadeResume:string|null;
   playerName:string;onPlayerNameChange:(next:string)=>void;
   onContinue:()=>void;saved:SavedMatch|null;
@@ -157,6 +157,7 @@ export function HomeScreen({
             <button type="button" className="home-physical-link action-arcade" onClick={onArcade}>MODO ARCADE</button>
             <button type="button" className="home-physical-link" onClick={onMultiplayer}>MULTIJUGADOR · BETA</button>
             <button type="button" className="home-physical-link" onClick={onPlaytest}>PLAYTEST</button>
+            <button type="button" className="home-physical-link" onClick={onSettings}>CONFIGURACIÓN</button>
             <button type="button" className="home-physical-link" onClick={onPhysical}>MODO MESA · BETA</button>
             <button type="button" className="home-physical-link" onClick={onDeckLab}>MAZOS MULTIFACCIÓN · LAB</button>
             {import.meta.env.VITE_DAGGERLIGHT_LAB==="true" && <a className="home-physical-link lab-classic-link" href="../gameplay-v1/">VOLVER AL JUEGO CLÁSICO</a>}
