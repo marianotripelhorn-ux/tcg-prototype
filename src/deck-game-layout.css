@@ -523,3 +523,11 @@
 @media(prefers-reduced-motion:reduce){
   .dl-deck-add-tile{transition:none}.dl-deck-add-tile:hover{transform:none}
 }
+
+/* Final contrast fix for main arena: override the shared parchment backdrop. */
+:root .fo-shell.dl-lib.dl-lib-selection,
+:root .fo-shell.dl-lib.dl-lib-editor{
+  background:radial-gradient(ellipse at 54% -12%,rgba(139,101,55,.16),transparent 52%),linear-gradient(145deg,#161e22,#090f13 75%) !important;
+  background-size:cover !important;
+  color:#f3e9d7;
+}
