@@ -46,6 +46,9 @@ try {
   await page.locator(".dl-build-card.theme-blue:not(.is-picked)").first().click();
   assert.equal(await page.locator(".dl-build-card.is-picked").count(),12);
   assert.ok(await page.locator(".dl-build-save").isEnabled(),"Valid two-faction deck should be saveable");
+  const editorDesktopDims=await page.evaluate(()=>({content:document.documentElement.scrollHeight,visible:innerHeight}));
+  assert.ok(editorDesktopDims.content<=editorDesktopDims.visible+10,
+    "Desktop builder should fit inside the window: "+JSON.stringify(editorDesktopDims));
   await page.screenshot({path:"/tmp/daggerlight-deck-editor.png",fullPage:true});
   await page.locator(".dl-build-save").evaluate(el=>el.click());
   await page.locator(".dl-lib-inspector-content h2").getByText("Guardia del Alba").waitFor({timeout:10000});
@@ -97,6 +100,22 @@ try {
   }));
   assert.ok(mobileDims.content<=mobileDims.visible+10,
     "Mobile loadout should fit the screen: "+JSON.stringify(mobileDims));
+  await page.locator(".dl-lib-manage-trigger").click();
+  await page.locator(".dl-lib-inspector-actions").getByRole("button",{name:"EDITAR"}).click();
+  await page.locator(".dl-build-name input").waitFor({timeout:10000});
+  const mobileEditorDims=await page.evaluate(()=>({
+    content:document.documentElement.scrollHeight,visible:innerHeight,
+    width:document.documentElement.scrollWidth,viewport:innerWidth
+  }));
+  assert.ok(mobileEditorDims.content<=mobileEditorDims.visible+10 &&
+    mobileEditorDims.width<=mobileEditorDims.viewport+8,
+    "Mobile builder must use compact tabs, not page scroll: "+JSON.stringify(mobileEditorDims));
+  await page.screenshot({path:"/tmp/daggerlight-builder-mobile-cards.png",fullPage:true});
+  await page.getByRole("tab",{name:/MI MAZO/}).click();
+  assert.ok(await page.locator(".dl-build-summary").isVisible(),
+    "The selected deck must remain reachable through the mobile tab");
+  await page.screenshot({path:"/tmp/daggerlight-builder-mobile-deck.png",fullPage:true});
+  await page.locator(".dl-lib-editor .fo-back").evaluate(el=>el.click());
   await page.locator(".dl-lib-play").evaluate(el=>el.click());
   await page.locator(".app-shell.board-redesign-v1").waitFor({timeout:12000});
   assert.deepEqual(errors,[],"Deck library should not throw browser errors");
