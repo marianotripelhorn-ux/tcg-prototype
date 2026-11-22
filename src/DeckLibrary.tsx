@@ -415,6 +415,11 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
                 starter={false} favorite={deck.favorite} active={selected==="saved:"+deck.id}
                 onSelect={()=>selectDeck("saved:"+deck.id)}
                 onFavorite={()=>favoriteDeck(deck.id)}/>)}
+              <button type="button" className="dl-deck-add-tile" onClick={()=>openEditor()}>
+                <span className="dl-deck-add-symbol" aria-hidden="true">＋</span>
+                <strong>FORJAR OTRO MAZO</strong>
+                <small>Sumá una nueva estrategia a tu arsenal</small>
+              </button>
             </div> : <div className="dl-lib-empty-state">
               <span className="dl-lib-empty-glyph" aria-hidden="true">✧</span>
               <strong>{decks.length?"No encontramos mazos con esos filtros.":"Tu próximo mazo te espera."}</strong>
