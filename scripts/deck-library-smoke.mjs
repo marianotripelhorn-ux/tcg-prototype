@@ -73,8 +73,17 @@ try {
   await page.locator(".home-action.action-decks").waitFor({state:"attached"});
   await page.locator(".home-action.action-decks").evaluate(el=>el.click());
   await page.locator(".dl-lib-inspector-content h2").getByText("La Última Vigilia").waitFor();
-  assert.equal(await page.locator(".dl-deck-tile").count(),11,"Saved decks must survive reload");
+  assert.equal(await page.locator(".dl-deck-tile").count(),2,"Saved deck tab contains both saved decks after reload");
+  await page.getByRole("tab",{name:/MAZOS INICIALES/}).click();
+  assert.equal(await page.locator(".dl-deck-tile").count(),9,"Starter decks remain available in the separate tab");
+  await page.getByRole("tab",{name:/MIS MAZOS/}).click();
+  assert.equal(await page.locator(".dl-deck-tile").count(),2,"Saved decks remain available");
 
+  const desktopDims=await page.evaluate(()=>({
+    content:document.documentElement.scrollHeight,visible:innerHeight
+  }));
+  assert.ok(desktopDims.content<=desktopDims.visible+10,
+    "Desktop loadout should fit the screen instead of scrolling: "+JSON.stringify(desktopDims));
   await page.setViewportSize({width:390,height:844});
   await page.waitForTimeout(200);
   await page.screenshot({path:"/tmp/daggerlight-deck-mobile.png",fullPage:true});
@@ -83,6 +92,11 @@ try {
   }));
   assert.ok(widths.document<=widths.viewport+8,
     "Mobile library must not force horizontal scrolling: "+JSON.stringify(widths));
+  const mobileDims=await page.evaluate(()=>({
+    content:document.documentElement.scrollHeight,visible:innerHeight
+  }));
+  assert.ok(mobileDims.content<=mobileDims.visible+10,
+    "Mobile loadout should fit the screen: "+JSON.stringify(mobileDims));
   await page.locator(".dl-lib-play").evaluate(el=>el.click());
   await page.locator(".app-shell.board-redesign-v1").waitFor({timeout:12000});
   assert.deepEqual(errors,[],"Deck library should not throw browser errors");
