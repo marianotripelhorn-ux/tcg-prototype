@@ -23,6 +23,20 @@ jobs:
         run: npm test
       - name: Build production candidate
         run: npm run build
+      - name: Install Chromium for layout and interaction QA
+        run: npx playwright install --with-deps --only-shell chromium
+      - name: Start preview for browser QA
+        run: |
+          npm run dev -- --host 127.0.0.1 --port 4173 > /tmp/daggerlight-loadout-vite.log 2>&1 &
+      - name: Check real desktop and mobile deck workflows before publishing
+        run: node scripts/deck-library-smoke.mjs
+      - name: Preserve visual review screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daggerlight-1-0-preview-screens
+          path: /tmp/daggerlight-deck-*.png
+          if-no-files-found: ignore
 
       - name: Checkout published site on main
         uses: actions/checkout@v4
