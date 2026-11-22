@@ -111,6 +111,8 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
   const [difficulty,setDifficulty] = useState<AIDifficulty>("normal");
   const [deleteId,setDeleteId] = useState<string|null>(null);
   const [message,setMessage] = useState("");
+  const [deckView,setDeckView] = useState<"saved"|"starter">(() => readDeckLibrary().length ? "saved" : "starter");
+  const [buildTab,setBuildTab] = useState<"cards"|"deck">("cards");
 
   const current = selected.startsWith("saved:")
     ? decks.find(d => d.id === selected.slice(6)) ?? starterDecks[0]
@@ -138,6 +140,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
       selectedIds:[...new Set(base.cardIds)]
     });
     setCardSearch("");
+    setBuildTab("cards");
     setDeleteId(null);
     setMessage("");
     window.scrollTo({top:0,behavior:"auto"});
@@ -164,6 +167,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
     const next=base?decks.map(d=>d.id===base.id?value:d):[value,...decks];
     if (persist(next,base?"Cambios guardados en tu biblioteca.":"Nuevo mazo guardado.")) {
       setSelected("saved:"+value.id);
+      setDeckView("saved");
       setEditor(null);
       setFilter("all");
       setSearch("");
@@ -183,13 +187,17 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
     const entry=makeLibraryDeck({...deck,name:cleanDeckName(deck.name+" · Copia")});
     if(persist([entry,...decks],"Mazo duplicado. Podés editarlo y cambiarle el nombre.")) {
       setSelected("saved:"+entry.id);
+      setDeckView("saved");
     }
   }
 
   function removeDeck(id:string) {
     const next=decks.filter(x=>x.id!==id);
     if (persist(next,"Mazo eliminado de la biblioteca.")) {
-      if (selected==="saved:"+id) setSelected(next.length?"saved:"+next[0].id:initialSelection);
+      if (selected==="saved:"+id) {
+        setSelected(next.length?"saved:"+next[0].id:initialSelection);
+        if(!next.length)setDeckView("starter");
+      }
       setDeleteId(null);
     }
   }
@@ -198,12 +206,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
     setSelected(id);
     setDeleteId(null);
     setMessage("");
-    if (typeof window.matchMedia === "function" &&
-        window.matchMedia("(max-width: 970px)").matches) {
-      window.requestAnimationFrame(()=>document.getElementById("dl-lib-inspector")?.scrollIntoView({
-        behavior:"smooth", block:"start"
-      }));
-    }
+    // The selection inspector stays visible; never jump the whole screen on mobile.
   }
 
   const visibleSaved = decks.filter(d=>(filter==="all"||validateDeck(d).factions.includes(filter)) &&
@@ -250,16 +253,18 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
       </header>
       <section className={"dl-build-intro theme-" + champ.faction}>
         <div className="dl-build-hero-copy">
-          <span className="dl-lib-eyebrow">EL TALLER DE LA QUIRALIDAD · CONSTRUCCIÓN EXPERIMENTAL</span>
-          <h1>{editor.id?"Perfeccioná tu estrategia.":"Forjá tu propia estrategia."}</h1>
-          <p>Elegí un Champion, uní hasta dos facciones y construí un mazo con identidad propia.</p>
-          <span className="dl-build-rules">
-            {rules.deckSize} CARTAS <i/> {rules.distinctCards} DISTINTAS <i/> {rules.maxCopies} COPIAS POR CARTA
-          </span>
+          <span className="dl-lib-eyebrow">FORJA DE MAZOS · REGLAS DEL LABORATORIO MULTIFACCIÓN</span>
+          <h1>{editor.id?"EDITAR MAZO":"CREAR MAZO"}<span className="dl-build-rules">24 CARTAS <i/> 12 DISTINTAS <i/> 2 COPIAS</span></h1>
         </div>
         <img className="dl-build-hero-portrait" src={championImageUrl(editor.championId)} alt="" />
       </section>
-      <div className="dl-build-layout">
+      <div className="dl-build-mobile-tabs" role="tablist" aria-label="Panel del constructor">
+        <button type="button" role="tab" aria-selected={buildTab==="cards"}
+          className={buildTab==="cards"?"is-active":""} onClick={()=>setBuildTab("cards")}>COLECCIÓN</button>
+        <button type="button" role="tab" aria-selected={buildTab==="deck"}
+          className={buildTab==="deck"?"is-active":""} onClick={()=>setBuildTab("deck")}>MI MAZO <span>{chosen.length}/12</span></button>
+      </div>
+      <div className={"dl-build-layout dl-build-view-"+buildTab}>
         <div className="dl-build-main">
           <section className="dl-build-controls">
             <label className="dl-build-name">
@@ -290,9 +295,11 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
               <input type="search" aria-label="Buscar cartas" placeholder="Buscar cartas..."
                 value={cardSearch} onChange={e=>setCardSearch(e.target.value)}/>
             </div>
-            <p className="dl-build-hint">Cada selección añade exactamente dos copias.
-              Para cambiar una carta con el mazo completo, quitá primero otra.
-              Se requiere al menos una carta de la facción del Champion.</p>
+            <div className="dl-build-quick-actions">
+              <span>12 cartas distintas · Dos copias automáticas · Máximo 2 facciones.</span>
+              <button type="button" disabled={!chosen.length}
+                onClick={()=>setEditor({...activeEditor,selectedIds:[]})}>VACIAR MAZO</button>
+            </div>
             <div className="dl-build-card-grid">
               {visiblePool.map(card=><DeckCardPicker key={card.id} card={card}
                 selected={chosen.includes(card.id)} canAdd={chosen.length<rules.distinctCards}
@@ -330,10 +337,18 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
             onClick={()=>{setEditor(null);setMessage("");}}>CANCELAR</button>
         </aside>
       </div>
+      <div className="dl-build-mobile-dock">
+        <button type="button" onClick={()=>setBuildTab(buildTab==="cards"?"deck":"cards")}
+          aria-label={buildTab==="cards"?"Ver cartas seleccionadas":"Volver a la colección"}>
+          {buildTab==="cards"?"VER MI MAZO":"VER CARTAS"} · {chosen.length}/12
+        </button>
+        <button type="button" className="dl-lib-primary" disabled={!canSave}
+          onClick={saveEditor}>GUARDAR MAZO ↗</button>
+      </div>
     </main>;
   }
 
-  return <main className="fo-shell dl-lib">
+  return <main className="fo-shell dl-lib dl-lib-selection">
     <header className="dl-lib-top">
       <button className="fo-back" onClick={onBack}>← MENÚ PRINCIPAL</button>
       <span className="dl-lib-wordmark">DAGGERLIGHT <span>/ BIBLIOTECA</span></span>
@@ -342,34 +357,35 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
 
     <section className="dl-lib-banner">
       <div className="dl-lib-banner-copy">
-        <span className="dl-lib-eyebrow">EL CÓDICE DE LA QUIRALIDAD</span>
-        <h1>Tu arsenal.<br/><em>Tu legado.</em></h1>
-        <p>Cada mazo es una decisión. Guardá tus estrategias, explorá alianzas y elegí cómo enfrentar tu próximo duelo.</p>
-        <button className="dl-lib-primary" onClick={()=>openEditor()}>
-          <span className="dl-lib-button-plus">＋</span> CREAR UN MAZO <span>↗</span>
-        </button>
+        <span className="dl-lib-eyebrow">DAGGERLIGHT · TU ARSENAL</span>
+        <h1>ELEGÍ TU MAZO <em>✦</em></h1>
+        <p>{decks.length} personalizados · 9 iniciales · Una estrategia para cada duelo.</p>
       </div>
       <div className="dl-lib-banner-visual" aria-hidden="true">
-        <div className="dl-lib-banner-rune"/>
         <img src={championImageUrl(current.championId)} alt=""/>
-        <span className="dl-lib-banner-art-rule"/>
       </div>
-      <span className="dl-lib-banner-index">I — EL ARSENAL</span>
+      <button className="dl-lib-primary dl-lib-banner-new" onClick={()=>openEditor()}>
+        <span className="dl-lib-button-plus">＋</span> CREAR MAZO <span>↗</span>
+      </button>
     </section>
 
     <div className="dl-lib-layout">
-      <section className="dl-lib-collection">
-        <div className="dl-lib-collection-heading">
-          <div>
-            <span className="dl-lib-eyebrow">TU COLECCIÓN ESTRATÉGICA</span>
-            <h2>Biblioteca de mazos</h2>
-          </div>
-          <span className="dl-lib-deck-count">{decks.length} / {DECK_LIBRARY_LIMIT} GUARDADOS</span>
+      <section className="dl-lib-collection" aria-label="Seleccionar mazo">
+        <div className="dl-lib-deck-tabs" role="tablist" aria-label="Tipo de mazo">
+          <button type="button" role="tab" aria-selected={deckView==="saved"}
+            className={deckView==="saved"?"is-selected":""} onClick={()=>setDeckView("saved")}>
+            MIS MAZOS <span>{decks.length}</span>
+          </button>
+          <button type="button" role="tab" aria-selected={deckView==="starter"}
+            className={deckView==="starter"?"is-selected":""} onClick={()=>setDeckView("starter")}>
+            MAZOS INICIALES <span>9</span>
+          </button>
+          <span className="dl-lib-deck-count">{decks.length}/{DECK_LIBRARY_LIMIT} GUARDADOS</span>
         </div>
         <div className="dl-lib-toolbar">
           <label className="dl-lib-search">
             <span className="dl-lib-sr-only">Buscar mazos</span>
-            <input type="search" placeholder="Buscar mazos o Champions..." value={search}
+            <input type="search" placeholder="Buscar por mazo o Champion..." value={search}
               onChange={e=>setSearch(e.target.value)}/>
           </label>
           <div className="dl-lib-filter" role="group" aria-label="Filtrar mazos por facción">
@@ -380,26 +396,25 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
               onClick={()=>setFilter(f)}>{factionLabels[f]}</button>)}
           </div>
         </div>
-        <div className="dl-lib-section-label"><h3>MIS MAZOS</h3><span>{visibleSaved.length}</span></div>
-        {sortedSaved.length ? <div className="dl-lib-grid">
-          {sortedSaved.map(deck=><DeckTile key={deck.id} deck={deck}
-            starter={false} favorite={deck.favorite} active={selected==="saved:"+deck.id}
-            onSelect={()=>selectDeck("saved:"+deck.id)}
-            onFavorite={()=>favoriteDeck(deck.id)}/>)}
-        </div> : <div className="dl-lib-empty-state">
-          <span className="dl-lib-empty-glyph" aria-hidden="true">✧</span>
-          <strong>{decks.length?"No encontramos mazos con esos filtros.":"Tu primera estrategia te espera."}</strong>
-          <p>{decks.length?"Probá otro Champion, nombre o facción.":"Creá un mazo con nombre propio, o empezá con uno de los mazos iniciales."}</p>
-          {!decks.length && <button type="button" onClick={()=>openEditor()}>FORJAR PRIMER MAZO ↗</button>}
-        </div>}
-        <div className="dl-lib-section-label dl-lib-starter-heading"><h3>MAZOS INICIALES</h3><span>{visibleStarters.length}</span></div>
-        <p className="dl-lib-section-sub">Los nueve mazos originales, listos para jugar o usar como punto de partida.</p>
-        <div className="dl-lib-grid">
-          {visibleStarters.map(deck=><DeckTile key={deck.id} deck={deck}
-            starter favorite={false} active={selected==="starter:"+deck.championId}
-            onSelect={()=>selectDeck("starter:"+deck.championId)}/>)}
+        <div className="dl-lib-deck-scroll" role="tabpanel" aria-label={deckView==="saved"?"Mazos guardados":"Mazos iniciales"}>
+          {deckView==="saved" ?
+            sortedSaved.length ? <div className="dl-lib-grid">
+              {sortedSaved.map(deck=><DeckTile key={deck.id} deck={deck}
+                starter={false} favorite={deck.favorite} active={selected==="saved:"+deck.id}
+                onSelect={()=>selectDeck("saved:"+deck.id)}
+                onFavorite={()=>favoriteDeck(deck.id)}/>)}
+            </div> : <div className="dl-lib-empty-state">
+              <span className="dl-lib-empty-glyph" aria-hidden="true">✧</span>
+              <strong>{decks.length?"No encontramos mazos con esos filtros.":"Tu próximo mazo te espera."}</strong>
+              <p>{decks.length?"Probá otro nombre o facción.":"Creá un mazo propio o usá uno de los nueve iniciales como punto de partida."}</p>
+              {!decks.length && <button type="button" onClick={()=>openEditor()}>CREAR MI PRIMER MAZO ↗</button>}
+            </div>
+          : visibleStarters.length ? <div className="dl-lib-grid">
+              {visibleStarters.map(deck=><DeckTile key={deck.id} deck={deck}
+                starter favorite={false} active={selected==="starter:"+deck.championId}
+                onSelect={()=>selectDeck("starter:"+deck.championId)}/>)}
+            </div> : <p className="dl-lib-empty">No hay mazos iniciales con ese filtro.</p>}
         </div>
-        {!visibleStarters.length && <p className="dl-lib-empty">No hay mazos iniciales con ese filtro.</p>}
       </section>
 
       <aside id="dl-lib-inspector" className={"dl-lib-inspector theme-"+currentChampion.faction}>
