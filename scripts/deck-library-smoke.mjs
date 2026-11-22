@@ -50,6 +50,26 @@ try {
   assert.ok(editorDesktopDims.content<=editorDesktopDims.visible+10,
     "Desktop builder should fit inside the window: "+JSON.stringify(editorDesktopDims));
   await page.screenshot({path:"/tmp/daggerlight-deck-editor.png",fullPage:true});
+  const editorDesktop = await page.evaluate(()=>({
+    scroll:document.documentElement.scrollHeight,viewport:innerHeight
+  }));
+  assert.ok(editorDesktop.scroll<=editorDesktop.viewport+10,
+    "Desktop deck builder must fit the viewport: "+JSON.stringify(editorDesktop));
+  await page.setViewportSize({width:390,height:844});
+  await page.waitForTimeout(150);
+  await page.screenshot({path:"/tmp/daggerlight-deck-editor-mobile.png",fullPage:true});
+  const editorMobile=await page.evaluate(()=>({
+    scroll:document.documentElement.scrollHeight,viewport:innerHeight,
+    width:document.documentElement.scrollWidth,screenWidth:innerWidth
+  }));
+  assert.ok(editorMobile.scroll<=editorMobile.viewport+10,
+    "Mobile builder should scroll internally, not the whole page: "+JSON.stringify(editorMobile));
+  assert.ok(editorMobile.width<=editorMobile.screenWidth+8,
+    "Mobile builder should not overflow horizontally: "+JSON.stringify(editorMobile));
+  await page.getByRole("tab",{name:/MI MAZO/}).click();
+  await page.locator(".dl-build-view-deck .dl-build-summary").waitFor({state:"visible"});
+  await page.getByRole("tab",{name:"COLECCIÓN"}).click();
+  await page.setViewportSize({width:1366,height:900});
   await page.locator(".dl-build-save").evaluate(el=>el.click());
   await page.locator(".dl-lib-inspector-content h2").getByText("Guardia del Alba").waitFor({timeout:10000});
   const first=await page.evaluate(()=>JSON.parse(localStorage.getItem("daggerlight-deck-library-v1")||"[]"));
