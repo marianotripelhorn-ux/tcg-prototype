@@ -72,8 +72,8 @@ function DeckTile({deck, active, starter, favorite, onSelect, onFavorite}:{
   </article>;
 }
 
-function DeckCardPicker({card,selected,canAdd,onToggle}:{
-  card:CardDefinition;selected:boolean;canAdd:boolean;onToggle:()=>void
+function DeckCardPicker({card,selected,canAdd,onToggle,onPreview}:{
+  card:CardDefinition;selected:boolean;canAdd:boolean;onToggle:()=>void;onPreview:()=>void
 }) {
   const loaded = useCardArtReady(card);
   const art:CSSProperties | undefined = loaded && card.art ? {
@@ -83,6 +83,7 @@ function DeckCardPicker({card,selected,canAdd,onToggle}:{
   }:undefined;
   return <button type="button" className={"dl-build-card theme-"+card.faction+(selected?" is-picked":"")}
     aria-pressed={selected} disabled={!selected&&!canAdd} onClick={onToggle}
+    onMouseEnter={onPreview} onFocus={onPreview}
     title={card.text}>
     <span className="dl-build-card-art" style={art}>
       {!art && <span className="dl-build-card-art-fallback">✧</span>}
@@ -113,6 +114,8 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
   const [message,setMessage] = useState("");
   const [deckView,setDeckView] = useState<"saved"|"starter">(() => readDeckLibrary().length ? "saved" : "starter");
   const [buildTab,setBuildTab] = useState<"cards"|"deck">("cards");
+  const [manageOpen,setManageOpen] = useState(false);
+  const [previewCard,setPreviewCard] = useState<CardDefinition|null>(null);
 
   const current = selected.startsWith("saved:")
     ? decks.find(d => d.id === selected.slice(6)) ?? starterDecks[0]
@@ -141,6 +144,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
     });
     setCardSearch("");
     setBuildTab("cards");
+    setPreviewCard(null);
     setDeleteId(null);
     setMessage("");
     window.scrollTo({top:0,behavior:"auto"});
@@ -203,6 +207,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
   }
 
   function selectDeck(id:string) {
+    setManageOpen(false);
     setSelected(id);
     setDeleteId(null);
     setMessage("");
@@ -242,6 +247,8 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
       })});
     }
     function toggle(id:string) {
+      const card=allCards.find(c=>c.id===id);
+      if(card)setPreviewCard(card);
       if (chosen.includes(id)) setEditor({...activeEditor,selectedIds:chosen.filter(x=>x!==id)});
       else if (chosen.length<rules.distinctCards) setEditor({...activeEditor,selectedIds:[...chosen,id]});
     }
@@ -303,7 +310,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
             <div className="dl-build-card-grid">
               {visiblePool.map(card=><DeckCardPicker key={card.id} card={card}
                 selected={chosen.includes(card.id)} canAdd={chosen.length<rules.distinctCards}
-                onToggle={()=>toggle(card.id)}/>)}
+                onToggle={()=>toggle(card.id)} onPreview={()=>setPreviewCard(card)}/>)}
             </div>
             {!visiblePool.length && <p className="dl-lib-empty">No hay cartas con ese nombre.</p>}
           </section>
@@ -315,6 +322,10 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
             <span className="dl-build-meter"><span style={{width:((chosen.length/rules.distinctCards)*100)+"%"}}/></span>
             <p>{chosen.length*rules.maxCopies} / {rules.deckSize} cartas</p>
           </div>
+          {previewCard && <div className={"dl-build-inspect theme-"+previewCard.faction} aria-live="polite">
+            <strong>{previewCard.name} <span>{previewCard.power} PODER</span></strong>
+            <p>{previewCard.text}</p>
+          </div>}
           <div className="dl-build-summary-cards">
             {chosen.length ? chosen.map((id,index)=>{
               const c=allCards.find(card=>card.id===id);
@@ -453,17 +464,6 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
               </select>
             </label>
           </div>
-          <button className="dl-lib-primary dl-lib-play" type="button"
-            onClick={()=>onPlay(current,rival===current.championId?"random":rival,difficulty)}>
-            JUGAR CON ESTE MAZO <span>↗</span>
-          </button>
-          <div className="dl-lib-inspector-actions">
-            <button type="button" onClick={()=>openEditor(current,savedCurrent)}>
-              {savedCurrent?"EDITAR":"CREAR A PARTIR DE ESTE"}
-            </button>
-            {savedCurrent && <button type="button" onClick={()=>duplicateDeck(current)}>DUPLICAR</button>}
-            {savedCurrent && <button type="button" onClick={()=>setDeleteId(current.id)}>ELIMINAR</button>}
-          </div>
           {deleteId===current.id && savedCurrent && <div className="dl-lib-delete" role="alert">
             <strong>¿Eliminar «{current.name}»?</strong>
             <p>Esta acción no se puede deshacer.</p>
@@ -472,6 +472,21 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
           </div>}
           {message && <p className="dl-lib-feedback" role="status">{message}</p>}
           <p className="dl-lib-storage-note">Reglas multifacción del laboratorio · Guardado local en este navegador.</p>
+        </div>
+        <div className="dl-lib-inspector-footer">
+          <button className="dl-lib-primary dl-lib-play" type="button"
+            onClick={()=>onPlay(current,rival===current.championId?"random":rival,difficulty)}>
+            JUGAR CON ESTE MAZO <span>↗</span>
+          </button>
+          <div className={"dl-lib-inspector-actions"+(manageOpen?" is-open":"")}>
+            <button type="button" onClick={()=>openEditor(current,savedCurrent)}>
+              {savedCurrent?"EDITAR":"CREAR A PARTIR DE ESTE"}
+            </button>
+            {savedCurrent && <button type="button" onClick={()=>duplicateDeck(current)}>DUPLICAR</button>}
+            {savedCurrent && <button type="button" onClick={()=>setDeleteId(current.id)}>ELIMINAR</button>}
+          </div>
+          <button type="button" className="dl-lib-manage-trigger" aria-label="Gestionar mazo"
+            aria-expanded={manageOpen} onClick={()=>setManageOpen(value=>!value)}>•••</button>
         </div>
       </aside>
     </div>
