@@ -473,3 +473,53 @@
   .dl-lib-selection .dl-deck-tile,.dl-lib-editor .dl-build-card{transition:none}
   .dl-lib-selection .dl-deck-tile:hover,.dl-lib-editor .dl-build-card:hover{transform:none}
 }
+
+
+/* Final polish: readable command bar, intentional empty space and a persistent forge slot. */
+.dl-lib-selection .dl-lib-top,.dl-lib-editor .dl-lib-top{
+  background:linear-gradient(90deg,#222a2c,#141c20);
+  border:1px solid #b89b6a80;border-radius:5px;
+  padding:4px 11px;
+  box-shadow:inset 0 1px #f2ddb520,0 5px 13px #0002;
+}
+.dl-lib-selection .dl-lib-deck-scroll{
+  position:relative;isolation:isolate;
+  background:radial-gradient(circle at 72% 57%,#b9955810,transparent 42%);
+}
+.dl-lib-selection .dl-lib-deck-scroll::before{
+  content:"✦";
+  position:absolute;z-index:-1;right:8%;top:23%;
+  display:grid;place-items:center;
+  width:min(34vw,370px);aspect-ratio:1;
+  border:1px solid #bca07317;border-radius:50%;
+  box-shadow:0 0 0 25px #c5aa6810,0 0 0 53px #c5aa6809;
+  color:#c3a26f10;font:normal clamp(110px,17vw,230px) Georgia,serif;
+  pointer-events:none;
+}
+.dl-deck-add-tile{
+  position:relative;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:8px;min-height:190px;
+  border:1px dashed #af96717d;border-radius:5px;
+  background:linear-gradient(145deg,#77644017,#090f1266);
+  color:#dbbd8c;box-shadow:inset 0 0 35px #0003;
+  text-align:center;padding:16px;transition:border-color .18s,background .18s,transform .18s
+}
+.dl-deck-add-tile:hover{border-color:#f0ce92;background:#a8844630;transform:translateY(-3px)}
+.dl-deck-add-symbol{
+  display:grid;place-items:center;width:60px;height:60px;
+  border:1px solid #bda47e73;border-radius:50%;
+  font-size:36px;font-weight:300;line-height:1;
+  box-shadow:inset 0 0 0 6px #bda47e10,0 0 30px #c9a66c15;
+}
+.dl-deck-add-tile strong{font-size:10px;letter-spacing:.13em}
+.dl-deck-add-tile small{max-width:145px;color:#b4a999;font-size:10px;line-height:1.4}
+@media(max-width:720px){
+  .dl-lib-selection .dl-lib-top,.dl-lib-editor .dl-lib-top{padding:3px 7px}
+  .dl-deck-add-tile{min-height:165px;padding:9px;gap:6px}
+  .dl-deck-add-symbol{height:47px;width:47px;font-size:29px}
+  .dl-deck-add-tile strong{font-size:9px}
+  .dl-deck-add-tile small{font-size:8px}
+}
+@media(prefers-reduced-motion:reduce){
+  .dl-deck-add-tile{transition:none}.dl-deck-add-tile:hover{transform:none}
+}
