@@ -505,3 +505,10 @@
   border:0;
   border-radius:0;
 }
+
+/* The earlier mobile copy panel contained a dark pseudo-gradient over the cream title.
+   Remove the overlay altogether; the cream banner must remain a solid block. */
+.dl-lib-selection .dl-lib-banner-copy::before{
+  content:none !important;
+  display:none !important;
+}
