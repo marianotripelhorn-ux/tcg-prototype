@@ -44,6 +44,36 @@ try {
     tiles.map(tile=>Math.round(tile.getBoundingClientRect().height)));
   assert.ok(Math.max(...tileHeights)-Math.min(...tileHeights)<=1,
     "All starter cards must have exactly the same height: "+JSON.stringify(tileHeights));
+  assert.equal(await page.locator(".dl-deck-tile .dl-deck-object").count(),9,
+    "All nine starter choices should be rendered as deck objects");
+  assert.equal(await page.locator(".dl-deck-tile .dl-deck-object-front .dl-faction-card-back").count(),9,
+    "Every starter deck must use the game's real faction card-back component");
+  assert.equal(await page.locator(".dl-deck-tile .dl-deck-object-rear .dl-faction-card-back").count(),9,
+    "Each deck needs a second stacked card back");
+  assert.equal(await page.locator(".dl-deck-tile .dl-deck-object-champion").count(),9,
+    "Every deck retains its overlapping Campeón portrait");
+  const artComposition=await page.locator(".dl-deck-tile").first().evaluate(tile=>{
+    const stage=tile.querySelector(".dl-deck-object");
+    const back=tile.querySelector(".dl-deck-object-front");
+    const portrait=tile.querySelector(".dl-deck-object-champion");
+    const background=tile.querySelector(".dl-deck-object-environment");
+    if(!stage||!back||!portrait||!background)return null;
+    const b=back.getBoundingClientRect(),p=portrait.getBoundingClientRect();
+    return {
+      scene:getComputedStyle(background).backgroundImage,
+      overlap:b.right>p.left && p.right>b.left,
+      backgroundVisible:getComputedStyle(background).display!=="none",
+      cardBackVisible:getComputedStyle(back).display!=="none",
+      portraitVisible:getComputedStyle(portrait).display!=="none"
+    };
+  });
+  assert.ok(artComposition?.scene.includes("/champions/backgrounds/"),
+    "Deck objects must restore the existing faction background");
+  assert.ok(artComposition?.overlap && artComposition.backgroundVisible &&
+    artComposition.cardBackVisible && artComposition.portraitVisible,
+    "Portrait and card-back stack should visibly overlap: "+JSON.stringify(artComposition));
+  assert.equal(await page.locator(".dl-lib-inspector-art .dl-faction-card-back").count(),2,
+    "Selected deck preview must also be a physical deck stack");
   const initialVisible=await page.locator(".dl-lib").innerText();
   assert.ok(!/\bChampion\b/i.test(initialVisible),"No English Champion label in Spanish UI");
   assert.ok(!/[✦✧★☆]/.test(initialVisible),"No star or sparkle symbols");
