@@ -488,3 +488,20 @@
   .dl-lib-selection .dl-deck-tile,
   .dl-lib-selection .dl-deck-tile-art>img {transition:none}
 }
+
+/* Long Campeón names use the same fixed tile size without truncating subtitles into the layout. */
+.dl-lib-selection .dl-deck-tile-copy>strong{
+  -webkit-line-clamp:3;
+}
+.dl-lib-editor .dl-lib-text-action{
+  border:0;
+  color:var(--dl-cream);
+  text-decoration:underline;
+  text-decoration-color:#f4eadb70;
+}
+.dl-lib-selection .dl-lib-delete button,
+.dl-lib-selection .dl-lib-feedback,
+.dl-lib-editor .dl-lib-feedback {
+  border:0;
+  border-radius:0;
+}
