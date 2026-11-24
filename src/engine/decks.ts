@@ -43,7 +43,7 @@ const cardLookup=new Map(allCards.flatMap(card=>[[card.id,card],[card.studioId,c
 export function validateDeck(deck:DeckDefinition,rules:DeckRules=proposedMultifactionRules):DeckValidation {
   const errors:string[]=[];
   const champion=champions[deck.championId];
-  if(!champion)errors.push("Champion desconocido.");
+  if(!champion)errors.push("Campeón desconocido.");
   if(deck.cardIds.length!==rules.deckSize)errors.push(`El mazo debe tener ${rules.deckSize} cartas.`);
 
   const copies=new Map<string,number>();
@@ -68,7 +68,7 @@ export function validateDeck(deck:DeckDefinition,rules:DeckRules=proposedMultifa
 
 export function makeMonoDeckDefinition(championId:string):DeckDefinition {
   const champion=champions[championId];
-  if(!champion)throw new Error("Champion desconocido: "+championId);
+  if(!champion)throw new Error("Campeón desconocido: "+championId);
   return {
     id:"mono-"+championId,
     name:"Mazo inicial · "+champion.name,
