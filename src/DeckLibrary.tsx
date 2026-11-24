@@ -35,9 +35,9 @@ type Props = {
   onPlay: (deck: DeckDefinition, opponentId: string, difficulty: AIDifficulty) => void;
 };
 
-function labelFor(deck: DeckDefinition): string {
-  const info = validateDeck(deck);
-  return info.factions.map(f => factionLabels[f]).join(" / ");
+function starterLabel(championId: string): string {
+  const champion = champions[championId];
+  return factionLabels[champion.faction] + " — " + championShortName(champion.name);
 }
 
 function DeckTile({deck, active, starter, favorite, onSelect, onFavorite}:{
@@ -45,31 +45,29 @@ function DeckTile({deck, active, starter, favorite, onSelect, onFavorite}:{
   onSelect:()=>void; onFavorite?:()=>void;
 }) {
   const champ = champions[deck.championId];
-  const factionsInDeck = validateDeck(deck).factions;
+  const displayName = starter ? starterLabel(deck.championId) : deck.name;
   return <article className={"dl-deck-tile-wrap theme-" + champ.faction + (active?" is-active":"")}>
     <button type="button" className="dl-deck-tile" onClick={onSelect}
-      aria-pressed={active} aria-label={deck.name + ". " + championShortName(champ.name)}>
+      aria-pressed={active} aria-label={displayName}>
       <span className="dl-deck-tile-art">
         <span className="dl-deck-tile-backdrop" style={{backgroundImage:"url(" + championBackgroundUrl(champ.faction) + ")"}}/>
         <img src={championImageUrl(champ.id)} alt="" loading="lazy"/>
         <span className="dl-deck-tile-frame" aria-hidden="true"/>
-        <span className="dl-deck-tile-index">{starter?"MAZO INICIAL":"PERSONALIZADO"}</span>
-        <span className="dl-deck-tile-count">24 <small>CARTAS</small></span>
       </span>
       <span className="dl-deck-tile-copy">
-        <strong>{deck.name}</strong>
-        <small>{championShortName(champ.name)}</small>
-        <span className="dl-deck-tile-factions">{factionsInDeck.map(f=>
-          <span key={f} className={"dl-deck-faction-dot theme-" + f} title={factionLabels[f]}/>)}
-          {labelFor(deck)}
-        </span>
+        <strong>{displayName}</strong>
+        {!starter && <small>{championShortName(champ.name)}</small>}
       </span>
     </button>
     {!starter && onFavorite && <button type="button"
       className={"dl-deck-favorite" + (favorite?" is-favorite":"")}
       aria-label={favorite?"Quitar de favoritos":"Marcar como favorito"}
       aria-pressed={favorite} title={favorite?"Quitar de favoritos":"Marcar como favorito"}
-      onClick={onFavorite}>{favorite?"★":"☆"}</button>}
+      onClick={onFavorite}><svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true"
+        fill={favorite?"currentColor":"none"} stroke="currentColor" strokeWidth="1.8"
+        strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 4.5h12v16l-6-4.5-6 4.5z"/>
+        </svg></button>}
   </article>;
 }
 
@@ -87,7 +85,7 @@ function DeckCardPicker({card,selected,canAdd,onToggle,onPreview}:{
     onMouseEnter={onPreview} onFocus={onPreview}
     title={card.text}>
     <span className="dl-build-card-art" style={art}>
-      {!art && <span className="dl-build-card-art-fallback">✧</span>}
+      {!art && <span className="dl-build-card-art-fallback" aria-hidden="true"/>}
       <span className="dl-build-card-counter">{selected?"2/2":"+"}</span>
     </span>
     <span className="dl-build-card-copy">
@@ -137,11 +135,11 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
   function openEditor(deck?:DeckDefinition, existing?:LibraryDeck) {
     const base=deck??makeMonoDeckDefinition(championIds[0]);
     const primary=champions[base.championId].faction;
-    const secondary=validateDeck(base).factions.find(f=>f!==primary)??null;
+    const secondary=deck ? validateDeck(base).factions.find(f=>f!==primary)??null : null;
     setEditor({
       id:existing?.id,name:existing?.name??"",
       championId:base.championId,secondary,
-      selectedIds:[...new Set(base.cardIds)]
+      selectedIds:deck ? [...new Set(base.cardIds)] : []
     });
     setCardSearch("");
     setBuildTab("cards");
@@ -236,8 +234,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
       .toLocaleLowerCase().includes(cardSearch.toLocaleLowerCase()));
     const canSave=Boolean(cleanDeckName(editor.name)) && validation.valid;
     function changeChampion(id:string) {
-      setEditor({...activeEditor,championId:id,secondary:null,
-        selectedIds:[...new Set(makeMonoDeckDefinition(id).cardIds)]});
+      setEditor({...activeEditor,championId:id,secondary:null,selectedIds:[]});
       setCardSearch("");
     }
     function changeSecondary(value:string) {
@@ -261,10 +258,8 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
       </header>
       <section className={"dl-build-intro theme-" + champ.faction}>
         <div className="dl-build-hero-copy">
-          <span className="dl-lib-eyebrow">FORJA DE MAZOS · REGLAS DEL LABORATORIO MULTIFACCIÓN</span>
-          <h1>{editor.id?"EDITAR MAZO":"CREAR MAZO"}<span className="dl-build-rules">24 CARTAS <i/> 12 DISTINTAS <i/> 2 COPIAS</span></h1>
+          <h1>{editor.id?"EDITAR MAZO":"CREAR MAZO"}</h1>
         </div>
-        <img className="dl-build-hero-portrait" src={championImageUrl(editor.championId)} alt="" />
       </section>
       <div className="dl-build-mobile-tabs" role="tablist" aria-label="Panel del constructor">
         <button type="button" role="tab" aria-selected={buildTab==="cards"}
@@ -278,11 +273,10 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
             <label className="dl-build-name">
               <span>NOMBRE DEL MAZO</span>
               <input maxLength={DECK_NAME_MAX} value={editor.name}
-                placeholder="Dale un nombre a tu estrategia…"
                 onChange={e=>setEditor({...activeEditor,name:e.target.value})}/>
             </label>
             <div className="dl-build-choices">
-              <label>CHAMPION
+              <label>CAMPEÓN
                 <select value={editor.championId} onChange={e=>changeChampion(e.target.value)}>
                   {championIds.map(id=><option key={id} value={id}>{championShortName(champions[id].name)}</option>)}
                 </select>
@@ -298,13 +292,11 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
           </section>
           <section className="dl-build-collection">
             <div className="dl-build-section-head">
-              <div><span className="dl-lib-eyebrow">CARTAS DISPONIBLES</span>
-                <h2>Elegí tus doce.</h2></div>
+              <div><h2>CARTAS DISPONIBLES</h2></div>
               <input type="search" aria-label="Buscar cartas" placeholder="Buscar cartas..."
                 value={cardSearch} onChange={e=>setCardSearch(e.target.value)}/>
             </div>
             <div className="dl-build-quick-actions">
-              <span>12 cartas distintas · Dos copias automáticas · Máximo 2 facciones.</span>
               <button type="button" disabled={!chosen.length}
                 onClick={()=>setEditor({...activeEditor,selectedIds:[]})}>VACIAR MAZO</button>
             </div>
@@ -336,7 +328,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
                 <span>{String(index+1).padStart(2,"0")}</span>
                 <strong>{c.name}</strong><small>× 2</small><b>×</b>
               </button>:null;
-            }):<p>Empezá eligiendo cartas de la colección.</p>}
+            }):<p>Mazo vacío</p>}
           </div>
           <div className="dl-build-validation" role="status">
             <strong>{canSave?"MAZO VÁLIDO":"CONSTRUCCIÓN EN CURSO"}</strong>
@@ -369,12 +361,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
 
     <section className="dl-lib-banner">
       <div className="dl-lib-banner-copy">
-        <span className="dl-lib-eyebrow">DAGGERLIGHT · TU ARSENAL</span>
-        <h1>ELEGÍ TU MAZO <em>✦</em></h1>
-        <p>{decks.length} personalizados · 9 iniciales · Una estrategia para cada duelo.</p>
-      </div>
-      <div className="dl-lib-banner-visual" aria-hidden="true">
-        <img src={championImageUrl(current.championId)} alt=""/>
+        <h1>ELEGÍ TU MAZO</h1>
       </div>
       <button className="dl-lib-primary dl-lib-banner-new" onClick={()=>openEditor()}>
         <span className="dl-lib-button-plus">＋</span> CREAR MAZO <span>↗</span>
@@ -397,7 +384,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
         <div className="dl-lib-toolbar">
           <label className="dl-lib-search">
             <span className="dl-lib-sr-only">Buscar mazos</span>
-            <input type="search" placeholder="Buscar por mazo o Champion..." value={search}
+            <input type="search" placeholder="Buscar mazo o Campeón..." value={search}
               onChange={e=>setSearch(e.target.value)}/>
           </label>
           <div className="dl-lib-filter" role="group" aria-label="Filtrar mazos por facción">
@@ -418,12 +405,9 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
               <button type="button" className="dl-deck-add-tile" onClick={()=>openEditor()}>
                 <span className="dl-deck-add-symbol" aria-hidden="true">＋</span>
                 <strong>FORJAR OTRO MAZO</strong>
-                <small>Sumá una nueva estrategia a tu arsenal</small>
               </button>
             </div> : <div className="dl-lib-empty-state">
-              <span className="dl-lib-empty-glyph" aria-hidden="true">✧</span>
-              <strong>{decks.length?"No encontramos mazos con esos filtros.":"Tu próximo mazo te espera."}</strong>
-              <p>{decks.length?"Probá otro nombre o facción.":"Creá un mazo propio o usá uno de los nueve iniciales como punto de partida."}</p>
+              <strong>{decks.length?"No hay resultados.":"No tenés mazos guardados."}</strong>
               {!decks.length && <button type="button" onClick={()=>openEditor()}>CREAR MI PRIMER MAZO ↗</button>}
             </div>
           : visibleStarters.length ? <div className="dl-lib-grid">
@@ -442,19 +426,9 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
           <span className="dl-lib-inspector-card-back"><FactionCardBack faction={currentChampion.faction}/></span>
         </div>
         <div className="dl-lib-inspector-content">
-          <span className="dl-lib-deck-kind">{savedCurrent?"TU CREACIÓN":"MAZO INICIAL"}</span>
-          <h2>{current.name}</h2>
-          <p>{championShortName(currentChampion.name)}</p>
-          <div className="dl-lib-inspector-factions">
-            {validateDeck(current).factions.map(f=><span className={"dl-lib-inspector-faction theme-"+f} key={f}>{factionLabels[f]}</span>)}
-          </div>
-          <div className="dl-lib-inspector-stats">
-            <span><strong>24</strong><small>CARTAS</small></span>
-            <span><strong>12</strong><small>DIFERENTES</small></span>
-            <span><strong>{validateDeck(current).factions.length}</strong><small>FACCIONES</small></span>
-          </div>
+          <h2>{savedCurrent ? current.name : starterLabel(current.championId)}</h2>
+          {savedCurrent && <p>{championShortName(currentChampion.name)}</p>}
           <div className="dl-lib-match-settings">
-            <span className="dl-lib-eyebrow">PREPARAR ENFRENTAMIENTO</span>
             <label>RIVAL
               <select value={rival} onChange={e=>setRival(e.target.value)}>
                 <option value="random">Aleatorio</option>
@@ -477,7 +451,6 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
               <button type="button" onClick={()=>removeDeck(current.id)}>ELIMINAR MAZO</button></div>
           </div>}
           {message && <p className="dl-lib-feedback" role="status">{message}</p>}
-          <p className="dl-lib-storage-note">Reglas multifacción del laboratorio · Guardado local en este navegador.</p>
         </div>
         <div className="dl-lib-inspector-footer">
           <button className="dl-lib-primary dl-lib-play" type="button"
