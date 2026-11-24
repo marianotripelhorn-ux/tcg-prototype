@@ -15,6 +15,7 @@ import type { LibraryDeck } from "./deckLibraryStorage";
 import ThemeToggle from "./ThemeToggle";
 import "./deck-library.css";
 import "./deck-game-layout.css";
+import "./deck-identity.css";
 
 const factions: Faction[] = ["red","blue","white","saints","ivory"];
 const championIds = Object.keys(champions);
