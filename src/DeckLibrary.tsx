@@ -332,7 +332,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
           </div>
           <div className="dl-build-validation" role="status">
             <strong>{canSave?"MAZO VÁLIDO":"CONSTRUCCIÓN EN CURSO"}</strong>
-            <p>{canSave?"Listo para guardar y jugar.":!cleanDeckName(editor.name)?"Poné un nombre para guardar tu mazo.":validation.errors.join(" · ")}</p>
+            <p>{canSave?"Listo para guardar.":!cleanDeckName(editor.name)?"Ingresá un nombre.":chosen.length<rules.distinctCards?"Completá el mazo para guardar.":validation.errors.join(" · ")}</p>
           </div>
           {message && <p className="dl-lib-feedback" role="status">{message}</p>}
           <button className="dl-lib-primary dl-build-save" type="button" disabled={!canSave}
@@ -402,13 +402,8 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
                 starter={false} favorite={deck.favorite} active={selected==="saved:"+deck.id}
                 onSelect={()=>selectDeck("saved:"+deck.id)}
                 onFavorite={()=>favoriteDeck(deck.id)}/>)}
-              <button type="button" className="dl-deck-add-tile" onClick={()=>openEditor()}>
-                <span className="dl-deck-add-symbol" aria-hidden="true">＋</span>
-                <strong>FORJAR OTRO MAZO</strong>
-              </button>
             </div> : <div className="dl-lib-empty-state">
               <strong>{decks.length?"No hay resultados.":"No tenés mazos guardados."}</strong>
-              {!decks.length && <button type="button" onClick={()=>openEditor()}>CREAR MI PRIMER MAZO ↗</button>}
             </div>
           : visibleStarters.length ? <div className="dl-lib-grid">
               {visibleStarters.map(deck=><DeckTile key={deck.id} deck={deck}
