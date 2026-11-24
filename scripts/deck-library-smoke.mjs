@@ -55,10 +55,10 @@ try {
   assert.equal(await page.locator(".dl-build-card.is-picked").count(),0,
     "Crear mazo must open an entirely empty deck");
   assert.ok(!(await page.locator(".dl-build-save").isEnabled()),"Empty deck cannot be saved");
-  await page.getByLabel("CAMPEÓN",{exact:true}).selectOption("athos");
+  await page.getByLabel("CAMPEÓN").selectOption("athos");
   assert.equal(await page.locator(".dl-build-card.is-picked").count(),0,
     "Changing Campeón must not silently populate the deck");
-  await page.getByLabel("CAMPEÓN",{exact:true}).selectOption("dextral");
+  await page.getByLabel("CAMPEÓN").selectOption("dextral");
   await page.locator(".dl-build-name input").fill("Guardia del Alba");
   await page.getByLabel("SEGUNDA FACCIÓN").selectOption("blue");
   for(let i=0;i<6;i++){
