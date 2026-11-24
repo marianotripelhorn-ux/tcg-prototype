@@ -48,7 +48,8 @@ try {
   assert.ok(!/\bChampion\b/i.test(initialVisible),"No English Champion label in Spanish UI");
   assert.ok(!/[✦✧★☆]/.test(initialVisible),"No star or sparkle symbols");
   assert.equal(await page.locator(".dl-lib-banner-visual img").count(),0,
-    "No floating Champion portrait in banner");
+    "No floating Campeón portrait in banner");
+  await page.screenshot({path:"/tmp/daggerlight-deck-starters-desktop.png",fullPage:true});
 
   await page.locator(".dl-lib-banner .dl-lib-primary").evaluate(el=>el.click());
   await page.locator(".dl-build-name input").waitFor({timeout:10000});
@@ -134,6 +135,14 @@ try {
     "Desktop loadout should fit the screen instead of scrolling: "+JSON.stringify(desktopDims));
   await page.setViewportSize({width:390,height:844});
   await page.waitForTimeout(200);
+  const mobileBanner=await page.locator(".dl-lib-banner").evaluate(el=>({
+    backdrop:getComputedStyle(el).backgroundColor,
+    oldOverlay:getComputedStyle(el.querySelector(".dl-lib-banner-copy"),"::before").content
+  }));
+  assert.equal(mobileBanner.backdrop,"rgb(244, 234, 219)",
+    "Mobile title bar should be solid cream, not a green or dark gradient");
+  assert.equal(mobileBanner.oldOverlay,"none",
+    "No old mobile gradient overlay over the cream header");
   await page.screenshot({path:"/tmp/daggerlight-deck-mobile.png",fullPage:true});
   const widths=await page.evaluate(()=>({
     document:document.documentElement.scrollWidth,viewport:window.innerWidth
