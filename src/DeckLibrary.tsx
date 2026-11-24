@@ -5,9 +5,8 @@ import { makeMonoDeckDefinition, proposedMultifactionRules, validateDeck } from 
 import type { DeckDefinition } from "./engine/decks";
 import type { AIDifficulty } from "./engine/types";
 import type { CardDefinition, Faction } from "./types";
-import { championBackgroundUrl, championImageUrl, championShortName } from "./championArtwork";
+import { championImageUrl, championShortName } from "./championArtwork";
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
-import { FactionCardBack } from "./FactionCardBack";
 import {
   DECK_LIBRARY_LIMIT, DECK_NAME_MAX, cleanDeckName, makeLibraryDeck,
   readDeckLibrary, writeDeckLibrary
@@ -50,7 +49,6 @@ function DeckTile({deck, active, starter, favorite, onSelect, onFavorite}:{
     <button type="button" className="dl-deck-tile" onClick={onSelect}
       aria-pressed={active} aria-label={displayName}>
       <span className="dl-deck-tile-art">
-        <span className="dl-deck-tile-backdrop" style={{backgroundImage:"url(" + championBackgroundUrl(champ.faction) + ")"}}/>
         <img src={championImageUrl(champ.id)} alt="" loading="lazy"/>
         <span className="dl-deck-tile-frame" aria-hidden="true"/>
       </span>
@@ -416,9 +414,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
       <aside id="dl-lib-inspector" className={"dl-lib-inspector theme-"+currentChampion.faction}>
         <span className="dl-lib-eyebrow">MAZO SELECCIONADO</span>
         <div className="dl-lib-inspector-art">
-          <div className="dl-lib-inspector-back" style={{backgroundImage:"url("+championBackgroundUrl(currentChampion.faction)+")"}}/>
           <img className="dl-lib-inspector-champion" src={championImageUrl(current.championId)} alt=""/>
-          <span className="dl-lib-inspector-card-back"><FactionCardBack faction={currentChampion.faction}/></span>
         </div>
         <div className="dl-lib-inspector-content">
           <h2>{savedCurrent ? current.name : starterLabel(current.championId)}</h2>
