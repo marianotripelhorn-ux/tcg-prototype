@@ -28,8 +28,8 @@ type GalleryProps = {
 };
 
 const factionInfo: {id: Faction; tagline: string; description: string; symbol: string; hint: string}[] = [
-  {id:"red",tagline:"La fuerza del orden",description:"Encadená jugadas y prepará un gran remate en Diestra.",symbol:"✦",hint:"Ataque · Secuencias"},
-  {id:"blue",tagline:"El arte de responder",description:"Cambiá el Poder rival, interrumpí habilidades y adaptate.",symbol:"✧",hint:"Control · Reacción"},
+  {id:"red",tagline:"La fuerza del orden",description:"Encadená jugadas y prepará un gran remate en Diestra.",symbol:"",hint:"Ataque · Secuencias"},
+  {id:"blue",tagline:"El arte de responder",description:"Cambiá el Poder rival, interrumpí habilidades y adaptate.",symbol:"",hint:"Control · Reacción"},
   {id:"white",tagline:"La memoria perdura",description:"Construí tus Archivos para ser más fuerte en rondas posteriores.",symbol:"◇",hint:"Archivo · Crecimiento"},
   {id:"saints",tagline:"La belleza de la simetría",description:"Buscá patrones, empates y combinaciones de posiciones.",symbol:"◈",hint:"Patrones · Equilibrio"},
   {id:"ivory",tagline:"El poder de la coincidencia",description:"Jugá en la misma posición que el rival para activar Augurio +3 en ese duelo.",symbol:"☾",hint:"Augurio · Posiciones"}
