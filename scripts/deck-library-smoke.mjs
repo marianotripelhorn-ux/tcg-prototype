@@ -35,16 +35,41 @@ try {
   await page.locator(".home-action.action-decks").evaluate(el=>el.click());
   await page.locator(".dl-lib-banner").waitFor({timeout:15000});
   assert.equal(await page.locator(".dl-deck-tile").count(),9,"Nine starter decks should be available");
+  const starterLabels=await page.locator(".dl-deck-tile-copy strong").allTextContents();
+  assert.ok(starterLabels.includes("Empíreos — Desartes"),"Starter label uses faction and short name only");
+  assert.ok(starterLabels.includes("Santos — Tellet"),"Santos starter naming follows the same hierarchy");
+  assert.ok(starterLabels.every(name=>!name.includes("Mazo inicial")&&!name.includes(",")),
+    "Starter tiles must not repeat Mazo inicial or full Champion subtitles");
+  const tileHeights=await page.locator(".dl-deck-tile").evaluateAll(tiles=>
+    tiles.map(tile=>Math.round(tile.getBoundingClientRect().height)));
+  assert.ok(Math.max(...tileHeights)-Math.min(...tileHeights)<=1,
+    "All starter cards must have exactly the same height: "+JSON.stringify(tileHeights));
+  const initialVisible=await page.locator(".dl-lib").innerText();
+  assert.ok(!/\bChampion\b/i.test(initialVisible),"No English Champion label in Spanish UI");
+  assert.ok(!/[✦✧★☆]/.test(initialVisible),"No star or sparkle symbols");
+  assert.equal(await page.locator(".dl-lib-banner-visual img").count(),0,
+    "No floating Champion portrait in banner");
 
   await page.locator(".dl-lib-banner .dl-lib-primary").evaluate(el=>el.click());
   await page.locator(".dl-build-name input").waitFor({timeout:10000});
+  assert.equal(await page.locator(".dl-build-card.is-picked").count(),0,
+    "Crear mazo must open an entirely empty deck");
+  assert.ok(!(await page.locator(".dl-build-save").isEnabled()),"Empty deck cannot be saved");
+  await page.getByLabel("CAMPEÓN",{exact:true}).selectOption("athos");
+  assert.equal(await page.locator(".dl-build-card.is-picked").count(),0,
+    "Changing Campeón must not silently populate the deck");
+  await page.getByLabel("CAMPEÓN",{exact:true}).selectOption("dextral");
   await page.locator(".dl-build-name input").fill("Guardia del Alba");
   await page.getByLabel("SEGUNDA FACCIÓN").selectOption("blue");
-  assert.equal(await page.locator(".dl-build-card.is-picked").count(),12,"New builder should start with starter recipe");
-  await page.locator(".dl-build-card.theme-red.is-picked").first().click();
-  assert.equal(await page.locator(".dl-build-card.is-picked").count(),11);
-  await page.locator(".dl-build-card.theme-blue:not(.is-picked)").first().click();
+  for(let i=0;i<6;i++){
+    await page.locator(".dl-build-card.theme-red:not(.is-picked)").first().click();
+  }
+  for(let i=0;i<6;i++){
+    await page.locator(".dl-build-card.theme-blue:not(.is-picked)").first().click();
+  }
   assert.equal(await page.locator(".dl-build-card.is-picked").count(),12);
+  assert.ok(!(await page.locator(".dl-lib").innerText()).includes("CHAMPION"),
+    "The editor must use CAMPEÓN, never CHAMPION");
   assert.ok(await page.locator(".dl-build-save").isEnabled(),"Valid two-faction deck should be saveable");
   const editorDesktopDims=await page.evaluate(()=>({content:document.documentElement.scrollHeight,visible:innerHeight}));
   assert.ok(editorDesktopDims.content<=editorDesktopDims.visible+10,
