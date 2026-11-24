@@ -486,16 +486,7 @@
   position:relative;isolation:isolate;
   background:radial-gradient(circle at 72% 57%,#b9955810,transparent 42%);
 }
-.dl-lib-selection .dl-lib-deck-scroll::before{
-  content:"✦";
-  position:absolute;z-index:-1;right:8%;top:23%;
-  display:grid;place-items:center;
-  width:min(34vw,370px);aspect-ratio:1;
-  border:1px solid #bca07317;border-radius:50%;
-  box-shadow:0 0 0 25px #c5aa6810,0 0 0 53px #c5aa6809;
-  color:#c3a26f10;font:normal clamp(110px,17vw,230px) Georgia,serif;
-  pointer-events:none;
-}
+
 .dl-deck-add-tile{
   position:relative;display:flex;align-items:center;justify-content:center;
   flex-direction:column;gap:8px;min-height:190px;
