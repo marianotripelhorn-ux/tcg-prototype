@@ -5,7 +5,8 @@ import { makeMonoDeckDefinition, proposedMultifactionRules, validateDeck } from 
 import type { DeckDefinition } from "./engine/decks";
 import type { AIDifficulty } from "./engine/types";
 import type { CardDefinition, Faction } from "./types";
-import { championImageUrl, championShortName } from "./championArtwork";
+import { championBackgroundUrl, championImageUrl, championShortName } from "./championArtwork";
+import { FactionCardBack } from "./FactionCardBack";
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import {
   DECK_LIBRARY_LIMIT, DECK_NAME_MAX, cleanDeckName, makeLibraryDeck,
@@ -16,6 +17,7 @@ import ThemeToggle from "./ThemeToggle";
 import "./deck-library.css";
 import "./deck-game-layout.css";
 import "./deck-identity.css";
+import "./deck-stack-layout.css";
 
 const factions: Faction[] = ["red","blue","white","saints","ivory"];
 const championIds = Object.keys(champions);
@@ -40,6 +42,32 @@ function starterLabel(championId: string): string {
   return factionLabels[champion.faction] + " — " + championShortName(champion.name);
 }
 
+/**
+ * The same deck object is used for compact tiles and the selected-loadout view.
+ * Card backs and faction environments are the game's existing assets.
+ * Champion art deliberately overlaps the stack instead of filling the tile.
+ */
+function DeckObjectArt({deck, large=false}: {deck: DeckDefinition; large?: boolean}) {
+  const champion=champions[deck.championId];
+  const secondary=validateDeck(deck).factions.find(f=>f!==champion.faction);
+  return <span className={"dl-deck-object" + (large?" is-large":"")} aria-hidden="true">
+    <span className="dl-deck-object-environment"
+      style={{backgroundImage:"url("+championBackgroundUrl(champion.faction)+")"}}/>
+    <span className="dl-deck-object-stack">
+      <span className="dl-deck-object-pages"/>
+      <span className="dl-deck-object-rear">
+        <FactionCardBack faction={secondary??champion.faction}/>
+      </span>
+      <span className="dl-deck-object-front">
+        <FactionCardBack faction={champion.faction}/>
+      </span>
+    </span>
+    <img className="dl-deck-object-champion"
+      src={championImageUrl(champion.id)} alt="" loading={large?"eager":"lazy"}/>
+    <span className="dl-deck-object-ground"/>
+  </span>;
+}
+
 function DeckTile({deck, active, starter, favorite, onSelect, onFavorite}:{
   deck: DeckDefinition; active: boolean; starter: boolean; favorite: boolean;
   onSelect:()=>void; onFavorite?:()=>void;
@@ -49,10 +77,7 @@ function DeckTile({deck, active, starter, favorite, onSelect, onFavorite}:{
   return <article className={"dl-deck-tile-wrap theme-" + champ.faction + (active?" is-active":"")}>
     <button type="button" className="dl-deck-tile" onClick={onSelect}
       aria-pressed={active} aria-label={displayName}>
-      <span className="dl-deck-tile-art">
-        <img src={championImageUrl(champ.id)} alt="" loading="lazy"/>
-        <span className="dl-deck-tile-frame" aria-hidden="true"/>
-      </span>
+      <span className="dl-deck-tile-art"><DeckObjectArt deck={deck}/></span>
       <span className="dl-deck-tile-copy">
         <strong>{displayName}</strong>
         {!starter && <small>{championShortName(champ.name)}</small>}
@@ -414,9 +439,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
 
       <aside id="dl-lib-inspector" className={"dl-lib-inspector theme-"+currentChampion.faction}>
         <span className="dl-lib-eyebrow">MAZO SELECCIONADO</span>
-        <div className="dl-lib-inspector-art">
-          <img className="dl-lib-inspector-champion" src={championImageUrl(current.championId)} alt=""/>
-        </div>
+        <div className="dl-lib-inspector-art"><DeckObjectArt deck={current} large/></div>
         <div className="dl-lib-inspector-content">
           <h2>{savedCurrent ? current.name : starterLabel(current.championId)}</h2>
           {savedCurrent && <p>{championShortName(currentChampion.name)}</p>}
