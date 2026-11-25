@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import ThemeToggle from "./ThemeToggle";
+import PlayerAvatar from "./PlayerAvatar";
 import { championBackgroundUrl,championImageUrl,championShortName,championSubtitle } from "./championArtwork";
 import { allCards, factionLabels } from "./data";
 import { champions } from "./engine/champions";
@@ -59,13 +60,13 @@ function Sprite({card, crop=false}: {card: CardDefinition; crop?: boolean}) {
 
 export function HomeScreen({
   onPlay,onTutorial,onGallery,onPhysical,onDeckLab,onMultiplayer,onPlaytest,onSettings,onArcade,onContinueArcade,arcadeResume,
-  playerName,onProfile,onChampions,onContinue,saved,
+  playerName,playerAvatar,onProfile,onChampions,onContinue,saved,
   analyticsReady,analyticsConsent,onChangeAnalytics
 }: {
   onPlay:()=>void;onTutorial:()=>void;onGallery:()=>void;onPhysical:()=>void;onDeckLab:()=>void;
   onMultiplayer:()=>void;onPlaytest:()=>void;onSettings:()=>void;onArcade:()=>void;
   onContinueArcade:()=>void;arcadeResume:string|null;
-  playerName:string;onProfile:()=>void;onChampions:()=>void;
+  playerName:string;playerAvatar:string;onProfile:()=>void;onChampions:()=>void;
   onContinue:()=>void;saved:SavedMatch|null;
   analyticsReady:boolean;analyticsConsent:boolean;onChangeAnalytics:(value:boolean)=>void;
 }) {
@@ -93,18 +94,25 @@ export function HomeScreen({
       subtitle:`${championShortName(saved.game.player.champion.name)} vs. ${championShortName(saved.game.opponent.champion.name)} · Ronda ${saved.game.round}`,
       image:"banner.webp", fallback:"./factions/saints-portrait.webp", action:onContinue
     }] : []),
-    {id:"play", title:saved?"NUEVA PARTIDA":"JUGAR", subtitle:"Elegí un mazo y enfrentate a la IA.", image:"dagger.webp", fallback:"./factions/red-portrait.webp", action:onPlay},
-    {id:"learn", title:"APRENDER A JUGAR", subtitle:"Jugá una primera partida guiada.", image:"egg.webp", fallback:"./factions/white-portrait.webp", action:onTutorial},
-    {id:"decks", title:"MIS MAZOS", subtitle:"Creá, editá y organizá tus mazos.", image:"book.webp", fallback:"./factions/ivory-portrait.webp", action:onDeckLab}
+    {id:"play", title:saved?"NUEVA PARTIDA":"JUGAR", subtitle:"Partida contra la IA", image:"dagger.webp", fallback:"./factions/red-portrait.webp", action:onPlay},
+    ...(arcadeResume ? [{id:"arcade-continue",title:"CONTINUAR ARCADE",subtitle:arcadeResume,image:"banner.webp",fallback:"./factions/saints-portrait.webp",action:onContinueArcade}] : []),
+    {id:"arcade", title:"ARCADE", subtitle:"Ocho rivales · Una racha",image:"banner.webp",fallback:"./factions/saints-portrait.webp",action:onArcade},
+    {id:"learn", title:"APRENDER A JUGAR", subtitle:"Partida guiada", image:"egg.webp", fallback:"./factions/white-portrait.webp", action:onTutorial},
+    {id:"decks", title:"MIS MAZOS", subtitle:"Crear y editar", image:"book.webp", fallback:"./factions/ivory-portrait.webp", action:onDeckLab},
+    {id:"collection",title:"COLECCIÓN",subtitle:"Cartas y habilidades",image:"book.webp",fallback:"./factions/white-portrait.webp",action:onGallery}
   ];
 
   return (
-    <main className="fo-shell home-screen">
+    <main className="fo-shell home-screen solo-home">
       <header className="fo-topbar">
         <span className="fo-wordmark">
           <img src="./branding/menu/crown.svg" alt="" aria-hidden="true" className="menu-top-crown" />
           DAGGERLIGHT
         </span>
+        <button type="button" className="dl-home-profile action-profile" onClick={onProfile} aria-label="Mi perfil">
+          <PlayerAvatar id={playerAvatar}/>
+          <span className="dl-home-profile-name"><strong>{playerName&&playerName!==DEFAULT_PLAYER_NAME?playerName:"MI PERFIL"}</strong><small>{playerName&&playerName!==DEFAULT_PLAYER_NAME?"MI PERFIL":"PERSONALIZAR"}</small></span>
+        </button>
       </header>
       <div className="home-layout">
         <section className="home-hero" aria-label="Daggerlight">
@@ -144,9 +152,8 @@ export function HomeScreen({
           ))}
           <div className="home-menu-support">
             <a className="home-physical-link" href="./reglamento.html" target="_blank" rel="noopener noreferrer">REGLAMENTO</a>
-            <button type="button" className="home-physical-link action-profile" onClick={onProfile}>MI PERFIL{playerName!==DEFAULT_PLAYER_NAME&&playerName?" · "+playerName:""}</button>
             <button type="button" className="home-physical-link" onClick={onChampions}>VER CAMPEONES</button>
-            <button type="button" className="home-physical-link" onClick={onGallery}>VER CARTAS</button>
+            <button type="button" className="home-physical-link" onClick={onSettings}>CONFIGURACIÓN</button>
           </div>
         </nav>
       </div>
@@ -154,13 +161,9 @@ export function HomeScreen({
         <details className="home-more-options">
           <summary>Más opciones</summary>
           <div className="menu-extras">
-            {arcadeResume && <button type="button" className="home-physical-link action-arcade-continue" onClick={onContinueArcade}>CONTINUAR ARCADE · {arcadeResume}</button>}
-            <button type="button" className="home-physical-link action-arcade" onClick={onArcade}>MODO ARCADE</button>
             <button type="button" className="home-physical-link" onClick={onMultiplayer}>MULTIJUGADOR · BETA</button>
             <button type="button" className="home-physical-link" onClick={onPlaytest}>PLAYTEST</button>
-            <button type="button" className="home-physical-link" onClick={onSettings}>CONFIGURACIÓN</button>
             <button type="button" className="home-physical-link" onClick={onPhysical}>MODO MESA · BETA</button>
-            <button type="button" className="home-physical-link" onClick={onDeckLab}>BIBLIOTECA DE MAZOS</button>
             {import.meta.env.VITE_DAGGERLIGHT_LAB==="true" && <a className="home-physical-link lab-classic-link" href="../gameplay-v1/">VOLVER AL JUEGO CLÁSICO</a>}
           </div>
           <div className="home-more-preferences">
