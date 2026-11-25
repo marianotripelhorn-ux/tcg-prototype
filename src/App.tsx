@@ -34,6 +34,7 @@ import { HomeScreen, ChampionPicker, CardCollection } from "./FrontOffice";
 import PhysicalTable from "./PhysicalTable";
 import DeckLibrary from "./DeckLibrary";
 import PlayerProfile from "./PlayerProfile";
+import { readAvatar,writeAvatar } from "./playerAvatar";
 import { starterDeckLabel } from "./profileStatistics";
 import { makeMonoDeckDefinition } from "./engine/decks";
 import type { DeckDefinition } from "./engine/decks";
@@ -679,6 +680,7 @@ export default function App() {
     document.documentElement.dataset.daggerlightMotion=preferences.motion;
   },[preferences.volume,preferences.motion]);
   const [playerName,setPlayerName]=useState(()=>readPlayerName());
+  const [playerAvatar,setPlayerAvatar]=useState(readAvatar);
   const [boardRedesign,setBoardRedesign]=useState(()=>new URLSearchParams(window.location.search).get("board")!=="classic");
   const narrowBoard=useSyncExternalStore(subscribePhoneBoard,isPhoneBoard,()=>false);
   const phoneBoard=boardRedesign&&narrowBoard;
@@ -1229,7 +1231,7 @@ export default function App() {
           arcadeResume={arcadeRun?.status==="active"
             ? `ETAPA ${arcadeRun.index+1}/${arcadeRun.opponents.length} · ${championShortName(champions[arcadeOpponent(arcadeRun)!].name)}`
             : null}
-          playerName={playerName}
+          playerName={playerName} playerAvatar={playerAvatar}
           onTutorial={()=>setTutorialOpen(true)}
           onGallery={()=>setScreen("collection")}
           onPhysical={()=>setScreen("table")}
@@ -1262,7 +1264,7 @@ export default function App() {
         {screen==="table" && <PhysicalTable onBack={()=>setScreen("home")}/> }
         {screen==="multiplayer" && <Multiplayer onBack={()=>setScreen("home")} playerName={playerName}/>} 
         {screen==="playtest" && <PlaytestHub onBack={()=>setScreen("home")}/>}
-        {screen==="profile" && <PlayerProfile playerName={playerName} history={history}
+        {screen==="profile" && <PlayerProfile playerName={playerName} playerAvatar={playerAvatar} onAvatarChange={id=>setPlayerAvatar(writeAvatar(id))} history={history}
           onNameChange={next=>setPlayerName(writePlayerName(next)||DEFAULT_PLAYER_NAME)}
           onBack={()=>setScreen("home")} onPlay={()=>setScreen("decklab")}/> }
         {screen==="decklab" && <DeckLibrary history={history} onBack={()=>setScreen("home")} onPlay={(deck,rival,difficulty)=>startWithChampion(deck.championId,rival,difficulty,deck)}/> }
