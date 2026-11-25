@@ -11,7 +11,7 @@
 .dl-profile-top .fo-back{justify-self:start;color:var(--profile-cream);background:transparent;border:0}
 .dl-profile-heading{display:flex;align-items:center;justify-content:space-between;background:var(--profile-cream);color:var(--profile-ink);padding:12px 20px;min-height:58px;gap:12px}
 .dl-profile-heading h1{font:900 clamp(21px,2.7vw,34px)/1.1 Inter,system-ui,sans-serif;letter-spacing:.035em;margin:0;color:var(--profile-ink)}
-.dl-profile-heading button,.dl-profile-name button{border:0;background:#191919;color:#f4eadb;font:800 11px inherit;letter-spacing:.06em;min-height:36px;padding:9px 17px;cursor:pointer}
+.dl-profile-heading button,.dl-profile-name button{border:0;background:#191919;color:#f4eadb;font-family:inherit;font-size:11px;font-weight:800;letter-spacing:.06em;min-height:36px;padding:9px 17px;cursor:pointer}
 .dl-profile-heading button:hover,.dl-profile-name button:hover:not(:disabled){background:#d3b787;color:#191919}
 .dl-profile-layout{display:grid;grid-template-columns:minmax(210px,260px) minmax(0,1fr);gap:12px;min-height:0;flex:1}
 .dl-profile-identity,.dl-profile-main{background:var(--profile-black);min-height:0;min-width:0}
