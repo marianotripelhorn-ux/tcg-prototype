@@ -1,0 +1,99 @@
+/* Player profile: flat game-menu blocks, consistent with the deck library. */
+:root .fo-shell.dl-profile{
+  --profile-ink:#191919;--profile-black:#090909;--profile-cream:#f4eadb;--profile-gold:#d3b787;
+  background:#191919!important;background-image:none!important;color:var(--profile-cream);
+  display:flex;flex-direction:column;box-sizing:border-box;height:100dvh;min-height:0;
+  overflow:hidden;padding:10px clamp(12px,2vw,28px) 13px;gap:10px;font-family:inherit;
+}
+.dl-profile-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;min-height:45px;border-bottom:1px solid #f4eadb30;gap:10px}
+.dl-profile-wordmark{font-weight:900;letter-spacing:.14em;font-size:15px}
+.dl-profile-top>:last-child{justify-self:end}
+.dl-profile-top .fo-back{justify-self:start;color:var(--profile-cream);background:transparent;border:0}
+.dl-profile-heading{display:flex;align-items:center;justify-content:space-between;background:var(--profile-cream);color:var(--profile-ink);padding:12px 20px;min-height:58px;gap:12px}
+.dl-profile-heading h1{font:900 clamp(21px,2.7vw,34px)/1.1 Inter,system-ui,sans-serif;letter-spacing:.035em;margin:0;color:var(--profile-ink)}
+.dl-profile-heading button,.dl-profile-name button{border:0;background:#191919;color:#f4eadb;font:800 11px inherit;letter-spacing:.06em;min-height:36px;padding:9px 17px;cursor:pointer}
+.dl-profile-heading button:hover,.dl-profile-name button:hover:not(:disabled){background:#d3b787;color:#191919}
+.dl-profile-layout{display:grid;grid-template-columns:minmax(210px,260px) minmax(0,1fr);gap:12px;min-height:0;flex:1}
+.dl-profile-identity,.dl-profile-main{background:var(--profile-black);min-height:0;min-width:0}
+.dl-profile-identity{padding:15px;display:flex;flex-direction:column;gap:15px;overflow:auto}
+.dl-profile-avatar{height:clamp(100px,25vh,240px);position:relative;background:#252525;overflow:hidden;flex-shrink:0}
+.dl-profile-avatar img{width:100%;height:100%;object-fit:contain;object-position:center bottom;padding-top:9px;box-sizing:border-box}
+.dl-profile-avatar .dl-profile-emblem{position:absolute;inset:22%;width:56%;height:56%;object-fit:contain;filter:grayscale(1) brightness(0) invert(.9);opacity:.8}
+.dl-profile-name{display:grid;gap:7px}
+.dl-profile-name label,.dl-profile-featured small{font-size:10px;letter-spacing:.09em;font-weight:800;color:var(--profile-gold)}
+.dl-profile-name input{min-width:0;box-sizing:border-box;width:100%;border:0;border-radius:0;background:#292929;color:#f4eadb;font:inherit;font-size:18px;padding:10px 11px}
+.dl-profile-name button{background:var(--profile-cream);color:var(--profile-ink)}
+.dl-profile-name button:disabled{opacity:.42;cursor:default}
+.dl-profile-featured{display:grid;gap:4px;padding-top:13px;border-top:1px solid #f4eadb22}
+.dl-profile-featured strong{font-size:18px;font-weight:850;color:var(--profile-cream)}
+.dl-profile-note{font-size:11px;color:#b6aa98;line-height:1.5;margin:0}
+.dl-profile-main{display:flex;flex-direction:column;padding:12px;gap:12px;overflow:hidden}
+.dl-profile-score{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;flex-shrink:0}
+.dl-profile-score>div{background:#252525;padding:15px 7px;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
+.dl-profile-score>div:nth-child(2){background:#f4eadb;color:#191919}
+.dl-profile-score strong{font-size:clamp(24px,3.3vw,44px);font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+.dl-profile-score span{font-size:9px;font-weight:850;letter-spacing:.055em;line-height:1.25}
+.dl-profile-tabs{display:flex;gap:5px;border-bottom:1px solid #f4eadb22;flex-shrink:0}
+.dl-profile-tabs button{background:#252525;border:0;color:#f4eadb;min-height:39px;min-width:110px;padding:8px 15px;font-size:11px;font-weight:900;letter-spacing:.06em;cursor:pointer}
+.dl-profile-tabs button[aria-selected="true"]{background:#f4eadb;color:#191919;box-shadow:inset 0 -3px 0 #b9975d}
+.dl-profile-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#85765f #191919}
+.dl-profile-empty{background:#191919;padding:30px 15px;font-size:13px;color:#c9c1b4}
+.dl-profile-history{display:grid;gap:5px}
+.dl-profile-match{display:grid;grid-template-columns:87px minmax(0,1fr) 98px 70px;gap:10px;align-items:center;padding:9px 11px;min-height:60px;background:#191919}
+.dl-profile-result{font-size:10px;font-weight:900;letter-spacing:.06em;padding:9px 4px;text-align:center;background:#363636;color:#f4eadb}
+.dl-profile-result.result-win{background:#f4eadb;color:#191919}
+.dl-profile-result.result-draw{color:#d3b787}
+.dl-profile-match-deck,.dl-profile-match-score{display:grid;gap:4px;min-width:0}
+.dl-profile-match-deck strong{font-size:13px;font-weight:800;overflow-wrap:anywhere}
+.dl-profile-match-score strong{font-size:15px}
+.dl-profile-match small,.dl-profile-match time{font-size:10px;color:#b9b0a3;line-height:1.35}
+.dl-profile-table{display:grid;gap:4px}
+.dl-profile-table-head,.dl-profile-table-row{display:grid;grid-template-columns:minmax(0,1fr) repeat(4,42px) 60px;gap:6px;align-items:center;text-align:center;padding:8px 10px}
+.dl-profile-table-head{position:sticky;top:0;z-index:1;background:#252525;font-size:10px;letter-spacing:.06em;color:#d3b787;font-weight:900}
+.dl-profile-table-head>span:first-child{text-align:left}
+.dl-profile-table-row{background:#191919;font-size:13px;font-variant-numeric:tabular-nums;min-height:54px}
+.dl-profile-row-name{display:flex;align-items:center;gap:9px;text-align:left;min-width:0}
+.dl-profile-row-name .dl-faction-card-back{width:27px;height:37px;flex-shrink:0}
+.dl-profile-row-name strong{font-size:12px;line-height:1.25;overflow-wrap:anywhere}
+.dl-profile-row-name small{display:block;font-size:10px;color:#b6aa98;margin-top:3px}
+.dl-profile-portrait{width:32px;height:40px;overflow:hidden;background:#303030;flex-shrink:0}
+.dl-profile-portrait img{width:100%;height:100%;object-fit:contain}
+.dl-profile-scroll>.dl-profile-note{margin:12px 3px}
+.dl-profile-footnote{font-size:10px;color:#b6aa98;margin:0;line-height:1.35}
+.dl-profile :is(button,input):focus-visible{outline:2px solid #d3b787;outline-offset:2px}
+@media(max-width:720px){
+  :root .fo-shell.dl-profile{padding:8px 9px;gap:7px}
+  .dl-profile-top{min-height:35px;gap:5px}
+  .dl-profile-top .fo-back{font-size:9px;padding:4px}
+  .dl-profile-wordmark{font-size:11px;letter-spacing:.04em}
+  .dl-profile-heading{padding:8px 11px;min-height:43px}
+  .dl-profile-layout{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);gap:7px}
+  .dl-profile-identity{display:grid;grid-template-columns:70px minmax(0,1fr);gap:7px;padding:9px;overflow:visible}
+  .dl-profile-avatar{height:74px;grid-row:1/3}
+  .dl-profile-name{grid-template-columns:minmax(0,1fr) auto;gap:4px}
+  .dl-profile-name label{grid-column:1/-1;font-size:8px}
+  .dl-profile-name input{padding:6px 8px;font-size:14px}
+  .dl-profile-name button{font-size:9px;min-height:30px;padding:6px 8px}
+  .dl-profile-featured{grid-column:2;padding:0;border:0;gap:1px}
+  .dl-profile-featured small{font-size:8px}
+  .dl-profile-featured strong{font-size:12px}
+  .dl-profile-identity>.dl-profile-note{grid-column:1/-1;font-size:9px}
+  .dl-profile-main{padding:7px;gap:7px}
+  .dl-profile-score{gap:4px}
+  .dl-profile-score>div{padding:10px 2px}
+  .dl-profile-score strong{font-size:22px}
+  .dl-profile-score span{font-size:7px;letter-spacing:0}
+  .dl-profile-tabs button{flex:1;min-width:0;min-height:34px;font-size:9px;padding:5px 3px}
+  .dl-profile-match{grid-template-columns:62px minmax(0,1fr) 55px;gap:6px;padding:8px 5px;min-height:63px}
+  .dl-profile-match time{grid-column:2/-1;font-size:9px}
+  .dl-profile-result{font-size:8px}
+  .dl-profile-match-deck strong{font-size:11px}
+  .dl-profile-match-score strong{font-size:13px}
+  .dl-profile-match small{font-size:9px}
+  .dl-profile-table-head,.dl-profile-table-row{grid-template-columns:minmax(0,1fr) repeat(4,23px) 37px;gap:3px;padding:7px 5px}
+  .dl-profile-table-row{font-size:11px}
+  .dl-profile-row-name{gap:5px}
+  .dl-profile-row-name strong{font-size:10px}
+  .dl-profile-row-name small{font-size:9px}
+  .dl-profile-footnote{font-size:8px}
+}
