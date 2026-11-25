@@ -1265,7 +1265,7 @@ export default function App() {
         {screen==="profile" && <PlayerProfile playerName={playerName} history={history}
           onNameChange={next=>setPlayerName(writePlayerName(next)||DEFAULT_PLAYER_NAME)}
           onBack={()=>setScreen("home")} onPlay={()=>setScreen("decklab")}/> }
-        {screen==="decklab" && <DeckLibrary onBack={()=>setScreen("home")} onPlay={(deck,rival,difficulty)=>startWithChampion(deck.championId,rival,difficulty,deck)}/> }
+        {screen==="decklab" && <DeckLibrary history={history} onBack={()=>setScreen("home")} onPlay={(deck,rival,difficulty)=>startWithChampion(deck.championId,rival,difficulty,deck)}/> }
         {tutorialOpen && <Tutorial
           inGame={false}
           onClose={()=>setTutorialOpen(false)}
