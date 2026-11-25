@@ -32,7 +32,7 @@ try {
   }, {timeout:15000});
   if(await skip.count()) await skip.evaluate(el=>el.click());
   await page.locator(".home-action.action-decks").waitFor({state:"attached",timeout:15000});
-  await page.locator(".home-action.action-decks").evaluate(el=>el.click());
+  await page.locator(".home-action.action-play").evaluate(el=>el.click());
   await page.locator(".dl-lib-banner").waitFor({timeout:15000});
   assert.equal(await page.locator(".dl-deck-tile").count(),9,"Nine starter decks should be available");
   const starterLabels=await page.locator(".dl-deck-tile-copy strong").allTextContents();
@@ -146,11 +146,43 @@ try {
   await page.locator(".dl-deck-tile-wrap.is-active .dl-deck-favorite").click();
   assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem("daggerlight-deck-library-v1")||"[]").filter(d=>d.favorite).length),1);
 
+  // Seed explicit fixtures for the profile UI; real production histories are never fabricated.
+  await page.evaluate(()=>{
+    const saved=JSON.parse(localStorage.getItem("daggerlight-deck-library-v1")||"[]");
+    const favorite=saved.find(deck=>deck.favorite);
+    const base={version:1,ruleset:"manifestaciones-v0.1-2026-11",startedAt:"2026-11-01T10:00:00Z",finishedAt:"2026-11-01T10:05:00Z",
+      championId:"dextral",opponentId:"athos",difficulty:"normal",rounds:4,completedDuels:12,finalLife:3,opponentLife:0,auguryHits:0,auguryHeals:0,noQuiero:0,
+      factions:["red","blue"],mixedDeck:true};
+    localStorage.setItem("daggerlight-match-history-v1",JSON.stringify([
+      {...base,id:"fixture-legacy",result:"loss"},
+      {...base,id:"fixture-deck",result:"win",deckId:favorite.id,deckName:"Former name",mode:"solo"},
+      {...base,id:"fixture-tutorial",result:"win",mode:"tutorial"}
+    ]));
+  });
   await page.reload({waitUntil:"domcontentloaded"});
   await page.locator(".splash-start").waitFor({state:"attached"});
   await page.locator(".splash-start").evaluate(el=>el.click());
   await page.locator(".home-action.action-decks").waitFor({state:"attached"});
-  await page.locator(".home-action.action-decks").evaluate(el=>el.click());
+  await page.locator(".action-profile").click();
+  await page.locator(".dl-profile").waitFor();
+  assert.equal(await page.locator(".dl-profile-match").count(),2,"Guided match is excluded from profile");
+  assert.ok((await page.locator(".dl-profile-score").innerText()).includes("50%"));
+  await page.locator("#dl-player-name").fill("Vigilia");
+  await page.getByRole("button",{name:"GUARDAR",exact:true}).click();
+  assert.equal(await page.evaluate(()=>localStorage.getItem("daggerlight-lab-player-name-v1")),"Vigilia");
+  await page.getByRole("tab",{name:"MAZOS",exact:true}).click();
+  assert.ok((await page.locator(".dl-profile-table").innerText()).includes("La Última Vigilia"));
+  assert.ok((await page.locator(".dl-profile-scroll").innerText()).includes("sin identificador de mazo"));
+  await page.screenshot({path:"/tmp/daggerlight-deck-profile-desktop.png",fullPage:true});
+  await page.getByRole("tab",{name:"CAMPEONES",exact:true}).click();
+  assert.equal(await page.locator(".dl-profile-table-row").count(),9);
+  await page.setViewportSize({width:390,height:844});
+  const profileFit=await page.evaluate(()=>({h:document.documentElement.scrollHeight,w:document.documentElement.scrollWidth,vh:innerHeight,vw:innerWidth}));
+  assert.ok(profileFit.h<=profileFit.vh+10 && profileFit.w<=profileFit.vw+8,"Profile fits mobile: "+JSON.stringify(profileFit));
+  await page.screenshot({path:"/tmp/daggerlight-deck-profile-mobile.png",fullPage:true});
+  await page.setViewportSize({width:1366,height:900});
+  await page.locator(".dl-profile .fo-back").click();
+  await page.locator(".home-action.action-play").evaluate(el=>el.click());
   await page.locator(".dl-lib-inspector-content h2").getByText("La Última Vigilia").waitFor();
   assert.equal(await page.locator(".dl-deck-tile").count(),2,"Saved deck tab contains both saved decks after reload");
   await page.getByRole("tab",{name:/MAZOS INICIALES/}).click();
@@ -202,6 +234,8 @@ try {
   await page.locator(".dl-lib-editor .fo-back").evaluate(el=>el.click());
   await page.locator(".dl-lib-play").evaluate(el=>el.click());
   await page.locator(".app-shell.board-redesign-v1").waitFor({timeout:12000});
+  const matchIdentity=await page.evaluate(()=>JSON.parse(localStorage.getItem("daggerlight-match-save-v1")||"null")?.deckIdentity);
+  assert.equal(matchIdentity?.name,"La Última Vigilia","The exact selected custom deck is stored with the new match");
   assert.deepEqual(errors,[],"Deck library should not throw browser errors");
   console.log("PASS: library, two-faction rules, save/duplicate/edit/favorite, reload, mobile and match");
 } finally { await browser.close(); }
