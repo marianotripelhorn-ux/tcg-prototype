@@ -38,6 +38,7 @@ type Editor = {
 type Props = {
   onBack: () => void;
   history?: MatchRecord[];
+  mode?: "solo"|"arcade";
   onPlay: (deck: DeckDefinition, opponentId: string, difficulty: AIDifficulty) => void;
 };
 
@@ -120,7 +121,7 @@ function DeckCardPicker({card,selected,canAdd,onToggle,onPreview}:{
   </button>;
 }
 
-export default function DeckLibrary({onBack,onPlay,history=[]}:Props) {
+export default function DeckLibrary({onBack,onPlay,history=[],mode="solo"}:Props) {
   const [decks,setDecks] = useState<LibraryDeck[]>(readDeckLibrary);
   const [selected,setSelected] = useState<DeckSelection>(() => {
     const current = readDeckLibrary();
@@ -386,7 +387,7 @@ export default function DeckLibrary({onBack,onPlay,history=[]}:Props) {
 
     <section className="dl-lib-banner">
       <div className="dl-lib-banner-copy">
-        <h1>ELEGÍ TU MAZO</h1>
+        <h1>{mode==="arcade"?"ARCADE · ELEGÍ TU MAZO":"ELEGÍ TU MAZO"}</h1>
       </div>
       <button className="dl-lib-primary dl-lib-banner-new" onClick={()=>openEditor()}>
         <span className="dl-lib-button-plus">＋</span> CREAR MAZO <span>↗</span>
@@ -448,13 +449,13 @@ export default function DeckLibrary({onBack,onPlay,history=[]}:Props) {
             <span>{record.total} P</span><span>{record.wins} V</span><span>{record.winRate}%</span>
           </div>}
           <div className="dl-lib-match-settings">
-            <label>RIVAL
+            {mode!=="arcade"&&<label>RIVAL
               <select value={rival===current.championId?"random":rival} onChange={e=>setRival(e.target.value)}>
                 <option value="random">Aleatorio</option>
                 {championIds.filter(id=>id!==current.championId).map(id=>
                   <option key={id} value={id}>{championShortName(champions[id].name)}</option>)}
               </select>
-            </label>
+            </label>}
             <label>DIFICULTAD
               <select value={difficulty} onChange={e=>setDifficulty(e.target.value as AIDifficulty)}>
                 <option value="easy">Aprendiz · Fácil</option>
@@ -475,7 +476,7 @@ export default function DeckLibrary({onBack,onPlay,history=[]}:Props) {
           <button className="dl-lib-primary dl-lib-play" type="button"
             disabled={(deckView==="saved"&&!savedCurrent)||(deckView==="starter"&&!!savedCurrent)}
             onClick={()=>onPlay(current,rival===current.championId?"random":rival,difficulty)}>
-            JUGAR CON ESTE MAZO <span>↗</span>
+            {mode==="arcade"?"INICIAR ARCADE":"JUGAR CON ESTE MAZO"} <span>↗</span>
           </button>
           <div className={"dl-lib-inspector-actions"+(manageOpen?" is-open":"")}>
             <button type="button" onClick={()=>openEditor(current,savedCurrent)}>
