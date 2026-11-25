@@ -943,11 +943,11 @@ export default function App() {
     setSpecialError("");
   }
 
-  function startArcade(championId:string,difficulty:AIDifficulty){
-    const run=newArcadeRun(championId,difficulty);
+  function startArcade(championId:string,difficulty:AIDifficulty,deck?:DeckDefinition){
+    const run=newArcadeRun(championId,difficulty,Math.random,deck);
     writeArcadeRun(run);
     setArcadeRun(run);
-    startWithChampion(championId,run.opponents[0],difficulty,null,true);
+    startWithChampion(championId,run.opponents[0],difficulty,run.deck,true);
   }
   function continueArcade(){
     if(!arcadeRun||arcadeRun.status!=="active")return;
@@ -963,17 +963,17 @@ export default function App() {
     if(next){
       writeArcadeRun(next);
       setArcadeRun(next);
-      startWithChampion(next.championId,next.opponents[next.index],next.difficulty,null,true);
+      startWithChampion(next.championId,next.opponents[next.index],next.difficulty,next.deck,true);
     }else if(opponent && !arcadeRun.victories.includes(opponent)){
-      startWithChampion(arcadeRun.championId,opponent,arcadeRun.difficulty,null,true);
+      startWithChampion(arcadeRun.championId,opponent,arcadeRun.difficulty,arcadeRun.deck,true);
     }
   }
   function beginMatch() {
-    if(arcadeRun){startArcade(arcadeRun.championId,arcadeRun.difficulty);return;}
+    if(arcadeRun){startArcade(arcadeRun.championId,arcadeRun.difficulty,arcadeRun.deck);return;}
     startWithChampion(playerChampion,opponentChampion,aiDifficulty,currentDeck);
   }
 
-  function goToMenu(destination:"home"|"champions"|"arcade"|"collection"|"table"|"decklab") {
+  function goToMenu(destination:"home"|"champions"|"arcade"|"collection"|"table"|"decklab"|"profile") {
     setMotion(null);
     clearPreviewTimer();
     clearFinalTimer();
@@ -1251,12 +1251,9 @@ export default function App() {
           onPlay={()=>setScreen("decklab")}
           onGallery={()=>setScreen("collection")}
         />}
-        {screen==="arcade" && <ChampionPicker
-          mode="arcade"
+        {screen==="arcade" && <DeckLibrary mode="arcade" history={history}
           onBack={()=>setScreen("home")}
-          onPlay={(championId,_rival,difficulty)=>startArcade(championId,difficulty)}
-          onGallery={()=>setScreen("collection")}
-        />}
+          onPlay={(deck,_rival,difficulty)=>startArcade(deck.championId,difficulty,deck)}/>}
         {screen==="collection" && <CardCollection
           onBack={()=>setScreen("home")}
           onPlay={()=>setScreen("decklab")}
@@ -1935,6 +1932,8 @@ export default function App() {
                 </> : <>
                   <p>{game.player.life}–{game.opponent.life} de Vida · {game.round} ronda{game.round===1?"":"s"}.</p>
                   <div className="match-postgame-actions">
+                    <button className="secondary-button" type="button" onClick={()=>goToMenu("home")}>MENÚ</button>
+                    <button className="secondary-button" type="button" onClick={()=>goToMenu("profile")}>MI PERFIL</button>
                     <button className="secondary-button" type="button" onClick={()=>goToMenu("decklab")}>CAMBIAR MAZO</button>
                     <button className="primary-button" type="button" onClick={beginMatch}>REVANCHA</button>
                   </div>
