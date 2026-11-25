@@ -3,7 +3,7 @@
 .dl-avatar-fallback{position:absolute;inset:20%;width:60%;height:60%;object-fit:contain;filter:invert(1);opacity:.7}
 .dl-avatar-art{position:absolute;left:0;top:-9%;width:100%;height:150%;background-size:300% 200%;background-repeat:no-repeat}
 .home-screen.solo-home .fo-topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex:0 0 auto}
-.solo-home .dl-home-profile{display:flex;align-items:center;gap:9px;background:#191919;color:#f4eadb;border:0;padding:4px 13px 4px 4px;cursor:pointer;max-width:50%;text-align:left;min-height:48px}
+.home-screen.solo-home .dl-home-profile{display:flex;align-items:center;gap:9px;background:#191919;color:#f4eadb;border:0;padding:4px 13px 4px 4px;cursor:pointer;max-width:50%;text-align:left;min-height:48px}
 .dl-home-profile .dl-player-avatar{width:40px}
 .dl-home-profile span.dl-home-profile-name{display:grid;gap:3px;min-width:0}
 .dl-home-profile strong{font-size:12px;font-weight:850;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -11,32 +11,32 @@
 .dl-home-profile:hover{background:#302b24}
 :root .fo-shell.home-screen.solo-home{box-sizing:border-box;background:#f4eadb!important;background-image:none!important;color:#191919;min-height:100dvh;gap:8px}
 :root[data-theme=dark] .fo-shell.home-screen.solo-home{background:#191919!important;color:#f4eadb}
-.solo-home .home-layout{grid-template-columns:minmax(0,1fr) minmax(320px,1fr);gap:clamp(18px,3vw,46px);padding:6px 0;min-height:0}
-.solo-home .home-hero .home-title{font-size:clamp(34px,5vw,75px);margin:0}
-.solo-home .home-hero-copy{width:100%;text-align:left}
-.solo-home .home-hero-art{height:clamp(180px,49vh,470px);margin-top:0}
-.solo-home .home-hero-art img{object-position:center bottom}
-.solo-home .home-hero-crown,.solo-home .home-tagline{display:none}
-.solo-home .home-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-:root .solo-home .home-action{border:0;border-radius:0;background:#191919;box-shadow:none;min-height:clamp(85px,12vh,120px);padding:14px 13px}
-:root[data-theme=dark] .solo-home .home-action{background:#090909;border:0}
-:root .solo-home .home-action.action-play,:root .solo-home .home-action.action-continue,:root .solo-home .home-action.action-arcade-continue{grid-column:1/-1;min-height:clamp(76px,11vh,108px)}
-:root .solo-home .home-action.action-play{background:#191919;box-shadow:inset 4px 0 #b9975d}
-:root[data-theme=dark] .solo-home .home-action.action-play{background:#f4eadb;color:#191919}
-:root[data-theme=dark] .solo-home .home-action.action-play strong{color:#191919}
-:root[data-theme=dark] .solo-home .home-action.action-play .home-action-description{color:#4e4436}
-.solo-home .home-action strong{font-size:clamp(14px,1.6vw,23px);letter-spacing:0}
-.solo-home .home-action .home-action-description{font-size:11px}
-.solo-home .home-action-content{max-width:72%;gap:4px}
-.solo-home .home-action-art{opacity:.8;transform:none;width:37%;height:100%;right:3px;bottom:0}
-.solo-home .home-action-arrow{font-size:17px;right:10px;top:auto;bottom:7px;transform:none;opacity:1}
-.solo-home .home-action:hover{transform:translateY(-2px)}
-.solo-home .home-menu-support{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:5px}
-.solo-home .home-menu-support .home-physical-link{border:0;border-radius:0;min-height:32px;padding:7px 9px;background:#191919;color:#f4eadb;font-size:10px}
-.solo-home .fo-footer.menu-footer{border:0;margin:0;padding-top:3px}
-.solo-home .menu-extras{gap:7px}
-.solo-home .home-more-options{max-width:100%}
-.solo-home .home-more-options summary{cursor:pointer}
+.home-screen.solo-home .home-layout{grid-template-columns:minmax(0,1fr) minmax(320px,1fr);gap:clamp(18px,3vw,46px);padding:6px 0;min-height:0}
+.home-screen.solo-home .home-hero .home-title{font-size:clamp(34px,5vw,75px);margin:0}
+.home-screen.solo-home .home-hero-copy{width:100%;text-align:left}
+.home-screen.solo-home .home-hero-art{height:clamp(180px,49vh,470px);margin-top:0}
+.home-screen.solo-home .home-hero-art img{object-position:center bottom}
+.home-screen.solo-home .home-hero-crown,.home-screen.solo-home .home-tagline{display:none}
+.home-screen.solo-home .home-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+:root .home-screen.solo-home .home-action{border:0;border-radius:0;background:#191919;box-shadow:none;min-height:clamp(85px,12vh,120px);padding:14px 13px}
+:root[data-theme=dark] .home-screen.solo-home .home-action{background:#090909;border:0}
+:root .home-screen.solo-home .home-action.action-play,:root .home-screen.solo-home .home-action.action-continue,:root .home-screen.solo-home .home-action.action-arcade-continue{grid-column:1/-1;min-height:clamp(76px,11vh,108px)}
+:root .home-screen.solo-home .home-action.action-play{background:#191919;box-shadow:inset 4px 0 #b9975d}
+:root[data-theme=dark] .home-screen.solo-home .home-action.action-play{background:#f4eadb;color:#191919}
+:root[data-theme=dark] .home-screen.solo-home .home-action.action-play strong{color:#191919}
+:root[data-theme=dark] .home-screen.solo-home .home-action.action-play .home-action-description{color:#4e4436}
+.home-screen.solo-home .home-action strong{font-size:clamp(14px,1.6vw,23px);letter-spacing:0}
+.home-screen.solo-home .home-action .home-action-description{font-size:11px}
+.home-screen.solo-home .home-action-content{max-width:72%;gap:4px}
+.home-screen.solo-home .home-action-art{opacity:.8;transform:none;width:37%;height:100%;right:3px;bottom:0}
+.home-screen.solo-home .home-action-arrow{font-size:17px;right:10px;top:auto;bottom:7px;transform:none;opacity:1}
+.home-screen.solo-home .home-action:hover{transform:translateY(-2px)}
+.home-screen.solo-home .home-menu-support{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:5px}
+.home-screen.solo-home .home-menu-support .home-physical-link{border:0;border-radius:0;min-height:32px;padding:7px 9px;background:#191919;color:#f4eadb;font-size:10px}
+.home-screen.solo-home .fo-footer.menu-footer{border:0;margin:0;padding-top:3px}
+.home-screen.solo-home .menu-extras{gap:7px}
+.home-screen.solo-home .home-more-options{max-width:100%}
+.home-screen.solo-home .home-more-options summary{cursor:pointer}
 .dl-profile .dl-profile-avatar>.dl-player-avatar{height:100%;width:100%;aspect-ratio:auto}
 .dl-profile .dl-profile-avatar .dl-avatar-art{width:100%;height:150%;top:-10%}
 .dl-profile .dl-profile-avatar .dl-avatar-fallback{width:60%;height:60%;padding:0}
@@ -47,18 +47,18 @@
 .dl-avatar-picker-section{display:grid;gap:6px}
 @media(max-width:710px){
   :root .fo-shell.home-screen.solo-home{padding:9px 12px;gap:6px;overflow:auto}
-  .solo-home .home-layout{display:flex;flex-direction:column;gap:8px;align-items:stretch;padding:4px 0;margin:0 auto;flex:1}
-  .solo-home .home-hero{display:grid;grid-template-columns:1fr 44%;min-height:95px;gap:0;align-items:center}
-  .solo-home .home-hero .home-title{font-size:clamp(22px,6vw,36px);letter-spacing:-.045em}
-  .solo-home .home-hero-art{height:clamp(95px,16vh,145px);margin:0}
-  .solo-home .home-actions{gap:6px}
-  :root .solo-home .home-action{min-height:72px;padding:9px}
-  :root .solo-home .home-action.action-play,:root .solo-home .home-action.action-continue,:root .solo-home .home-action.action-arcade-continue{min-height:65px}
-  .solo-home .home-action strong{font-size:14px}
-  .solo-home .home-action .home-action-description{font-size:9px}
-  .solo-home .home-action-art{width:32%;height:93%}
-  .solo-home .home-action-arrow{display:none}
-  .solo-home .dl-home-profile{min-height:40px;padding:3px 8px 3px 3px}
+  .home-screen.solo-home .home-layout{display:flex;flex-direction:column;gap:8px;align-items:stretch;padding:4px 0;margin:0 auto;flex:1}
+  .home-screen.solo-home .home-hero{display:grid;grid-template-columns:1fr 44%;min-height:95px;gap:0;align-items:center}
+  .home-screen.solo-home .home-hero .home-title{font-size:clamp(22px,6vw,36px);letter-spacing:-.045em}
+  .home-screen.solo-home .home-hero-art{height:clamp(95px,16vh,145px);margin:0}
+  .home-screen.solo-home .home-actions{gap:6px}
+  :root .home-screen.solo-home .home-action{min-height:72px;padding:9px}
+  :root .home-screen.solo-home .home-action.action-play,:root .home-screen.solo-home .home-action.action-continue,:root .home-screen.solo-home .home-action.action-arcade-continue{min-height:65px}
+  .home-screen.solo-home .home-action strong{font-size:14px}
+  .home-screen.solo-home .home-action .home-action-description{font-size:9px}
+  .home-screen.solo-home .home-action-art{width:32%;height:93%}
+  .home-screen.solo-home .home-action-arrow{display:none}
+  .home-screen.solo-home .dl-home-profile{min-height:40px;padding:3px 8px 3px 3px}
   .dl-home-profile .dl-player-avatar{width:33px}
   .dl-home-profile strong{font-size:10px}
   .dl-home-profile small{font-size:8px}
@@ -66,4 +66,16 @@
   .dl-profile .dl-avatar-picker{grid-template-columns:repeat(10,minmax(0,1fr));gap:3px}
   .dl-profile .dl-avatar-picker button{padding:2px}
 }
-@media(prefers-reduced-motion:reduce){.solo-home .home-action,.solo-home .home-hero-art img{animation:none;transition:none}}
+@media(prefers-reduced-motion:reduce){.home-screen.solo-home .home-action,.home-screen.solo-home .home-hero-art img{animation:none;transition:none}}
+
+/* Earlier theme layers set text with !important; preserve contrast in both palettes. */
+:root .home-screen.solo-home .home-action strong{color:#f4eadb!important}
+:root .home-screen.solo-home .home-action .home-action-description{color:#d3b787!important}
+:root[data-theme=dark] .home-screen.solo-home .home-action.action-play strong{color:#191919!important}
+:root[data-theme=dark] .home-screen.solo-home .home-action.action-play .home-action-description{color:#514538!important}
+:root .home-screen.solo-home .home-action:is(:hover,:focus-visible,.is-selected,:active){border:0!important;background:#292929!important}
+:root[data-theme=dark] .home-screen.solo-home .home-action.action-play:is(:hover,:focus-visible,.is-selected,:active){background:#e2d4b9!important}
+.home-screen.solo-home .home-action-reveal-ring{display:none!important}
+.home-screen.solo-home .home-action-art{clip-path:none;opacity:.8;transform:none}
+.dl-profile .dl-profile-avatar{height:clamp(90px,19vh,180px)}
+@media(max-width:720px){.dl-profile .dl-profile-avatar{height:74px}}
