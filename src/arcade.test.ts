@@ -2,6 +2,8 @@ import {describe,it,expect} from "vitest";
 import {champions} from "./engine/champions";
 import {newArcadeRun,markArcadeResult,advanceArcade,arcadeOpponent} from "./arcade";
 import {cleanPlayerName} from "./playerProfile";
+import {makeMonoDeckDefinition} from "./engine/decks";
+import {avatarCards,validAvatar,DEFAULT_AVATAR} from "./playerAvatar";
 
 describe("Arcade gauntlet",()=>{
   it("includes every other playable champion exactly once",()=>{
@@ -32,6 +34,22 @@ describe("Arcade gauntlet",()=>{
     run=markArcadeResult(run,arcadeOpponent(run)!,false);
     expect(run.status).toBe("lost");
     expect(advanceArcade(run)).toBeNull();
+  });
+  it("locks the selected recipe for an entire run",()=>{
+    const chosen={...makeMonoDeckDefinition("dextral"),id:"custom-arcade",name:"Vigilia"};
+    const original=chosen.cardIds.slice();
+    let run=newArcadeRun("dextral","normal",()=>.4,chosen);
+    chosen.cardIds.length=0;
+    run=markArcadeResult(run,arcadeOpponent(run)!,true);
+    run=advanceArcade(run)!;
+    expect(run.deck?.id).toBe("custom-arcade");
+    expect(run.deck?.cardIds).toEqual(original);
+  });
+  it("offers two real illustrated cards per faction as avatars",()=>{
+    expect(avatarCards).toHaveLength(10);
+    expect(new Set(avatarCards.map(c=>c.faction)).size).toBe(5);
+    expect(validAvatar(DEFAULT_AVATAR)).toBe(true);
+    expect(validAvatar("unknown-avatar")).toBe(false);
   });
   it("cleans persistent names, preserving accents",()=>{
     expect(cleanPlayerName("  Juán 🔥  O'Neil  ").trim()).toBe("Juán O'Neil");
