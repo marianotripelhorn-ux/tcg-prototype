@@ -2,6 +2,10 @@ import { champions } from "./engine/champions";
 import { byId } from "./data";
 import type { AIDifficulty, GameState } from "./engine/types";
 
+export type MatchMode = "solo" | "arcade" | "tutorial";
+export interface MatchDeckIdentity { id:string; name:string; }
+
+
 // Same GitHub Pages origin, but lab and classic must not overwrite each
 // other's saved match or victory history.
 const LAB_STORAGE = typeof window !== "undefined" &&
@@ -21,6 +25,8 @@ export interface SavedMatch {
   updatedAt: string;
   rivalSelection: string;
   playerName?: string;
+  deckIdentity?: MatchDeckIdentity;
+  mode?: MatchMode;
   game: GameState;
 }
 
@@ -43,6 +49,9 @@ export interface MatchRecord {
   noQuiero: number;
   factions: string[];
   mixedDeck: boolean;
+  deckId?: string;
+  deckName?: string;
+  mode?: MatchMode;
 }
 
 function storage():Storage|null {
@@ -95,12 +104,12 @@ export function readSavedMatch():SavedMatch|null {
   }catch{return null;}
 }
 
-export function newSavedMatch(game:GameState,rivalSelection:string,playerName?:string):SavedMatch {
+export function newSavedMatch(game:GameState,rivalSelection:string,playerName?:string,deckIdentity?:MatchDeckIdentity,mode?:MatchMode):SavedMatch {
   const now=new Date().toISOString();
   const id=typeof crypto!=="undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : "match-"+Date.now()+"-"+Math.random().toString(36).slice(2);
-  return {version:SAVE_VERSION,ruleset:RULESET,id,createdAt:now,updatedAt:now,rivalSelection,playerName,game};
+  return {version:SAVE_VERSION,ruleset:RULESET,id,createdAt:now,updatedAt:now,rivalSelection,playerName,deckIdentity:deckIdentity?{id:deckIdentity.id,name:deckIdentity.name}:undefined,mode,game};
 }
 
 export function writeSavedMatch(match:SavedMatch):boolean {
@@ -165,7 +174,10 @@ export function completedMatch(match:SavedMatch):MatchRecord|null {
     auguryHits:game.player.auguryHitsTotal,auguryHeals:game.player.auguryHeals,
     noQuiero,
     factions,
-    mixedDeck:factions.length>1
+    mixedDeck:factions.length>1,
+    ...(match.deckIdentity && typeof match.deckIdentity.id==="string" && match.deckIdentity.id &&
+      typeof match.deckIdentity.name==="string" ? {deckId:match.deckIdentity.id,deckName:match.deckIdentity.name}:{}),
+    ...(match.mode?{mode:match.mode}:{})
   };
 }
 
