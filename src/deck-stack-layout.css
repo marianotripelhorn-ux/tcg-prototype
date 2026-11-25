@@ -281,3 +281,7 @@
     transform:scale(1.075);
   }
 }
+
+/* Compact performance strip, only shown after a recorded match. */
+.dl-deck-record{display:flex;gap:5px;margin:7px 0 3px;font-size:10px;font-weight:800;color:#d3b787}
+.dl-deck-record>span{padding:4px 7px;background:#252525}
