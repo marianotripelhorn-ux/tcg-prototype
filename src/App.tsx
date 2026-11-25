@@ -33,6 +33,9 @@ import { cardSpriteBackground, useCardArtReady } from "./cardArtwork";
 import { HomeScreen, ChampionPicker, CardCollection } from "./FrontOffice";
 import PhysicalTable from "./PhysicalTable";
 import DeckLibrary from "./DeckLibrary";
+import PlayerProfile from "./PlayerProfile";
+import { starterDeckLabel } from "./profileStatistics";
+import { makeMonoDeckDefinition } from "./engine/decks";
 import type { DeckDefinition } from "./engine/decks";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { positionLabels, positions } from "./data";
@@ -46,7 +49,7 @@ import type { AIDifficulty, DuelSummary, EnginePlay, GameState, ActiveManifestat
 import { ManifestCard, ManifestCardDialog } from "./ManifestCard";
 import { formatPowerDelta, playEffectFeedback, playPowerDelta } from "./engine/presentation";
 import { HybridSidebar, HybridPhoneChampion, HybridRightRail, HybridCommandRail, HybridEngraving } from "./board-redesign/HybridBoardHardware";
-import { appendMatchHistory, clearSavedMatch, completedMatch, newSavedMatch, readMatchHistory, readSavedMatch, summarizeHistory, writeSavedMatch } from "./persistence";
+import { appendMatchHistory, clearSavedMatch, completedMatch, newSavedMatch, readMatchHistory, readSavedMatch, writeSavedMatch } from "./persistence";
 import type { SavedMatch } from "./persistence";
 import { analyticsAvailable, analyticsOptedIn, sendCompletedMatch, setAnalyticsConsent } from "./telemetry";
 import type { CardDefinition, Faction, Position } from "./types";
@@ -662,7 +665,7 @@ export default function App() {
   const [playerChampion,setPlayerChampion]=useState("dextral");
   const [opponentChampion,setOpponentChampion]=useState("random");
   const [aiDifficulty,setAiDifficulty]=useState<AIDifficulty>("normal");
-  const [screen,setScreen]=useState<"home"|"champions"|"arcade"|"collection"|"table"|"decklab"|"multiplayer"|"playtest">("home");
+  const [screen,setScreen]=useState<"home"|"champions"|"arcade"|"collection"|"table"|"decklab"|"multiplayer"|"playtest"|"profile">("home");
   const [settingsOpen,setSettingsOpen]=useState(false);
   const [preferences,setPreferences]=useState<GamePreferences>(readPreferences);
   const audioEnabled=preferences.audioEnabled;
@@ -867,8 +870,8 @@ export default function App() {
     setAiDifficulty(saved.game.aiDifficulty??"normal");
     setMatchMeta(saved);
     setCurrentDeck(saved.game.player.deckRecipe?{
-      id:"restored-"+saved.game.player.champion.id,
-      name:"Mazo multifacción recuperado",
+      id:saved.deckIdentity?.id??("restored-"+saved.game.player.champion.id),
+      name:saved.deckIdentity?.name??"Mazo recuperado",
       championId:saved.game.player.champion.id,
       cardIds:[...saved.game.player.deckRecipe]
     }:null);
@@ -909,7 +912,13 @@ export default function App() {
         duel:null,roundEnded:false,handIndex:null,origin:null});
     }
     setCurrentDeck(deck??null);
-    const newMatch=newSavedMatch(next,rivalSelection,cleanPlayerName(playerName).trim()||DEFAULT_PLAYER_NAME);
+    const chosenDeck=deck??makeMonoDeckDefinition(championId);
+    const identity=chosenDeck.id.startsWith("restored-")?undefined:{
+      id:chosenDeck.id,
+      name:chosenDeck.id==="mono-"+championId?starterDeckLabel(championId):chosenDeck.name
+    };
+    const newMatch=newSavedMatch(next,rivalSelection,cleanPlayerName(playerName).trim()||DEFAULT_PLAYER_NAME,
+      identity,guided?"tutorial":fromArcade?"arcade":"solo");
     writeSavedMatch(newMatch);
     setSavedMatch(newMatch);
     setMatchMeta(newMatch);
@@ -1212,17 +1221,15 @@ export default function App() {
     return (
       <>
         {screen==="home" && <HomeScreen
-          onPlay={()=>setScreen("champions")}
+          onPlay={()=>setScreen("decklab")}
           onArcade={()=>setScreen("arcade")}
+          onProfile={()=>setScreen("profile")}
+          onChampions={()=>setScreen("champions")}
           onContinueArcade={continueArcade}
           arcadeResume={arcadeRun?.status==="active"
             ? `ETAPA ${arcadeRun.index+1}/${arcadeRun.opponents.length} · ${championShortName(champions[arcadeOpponent(arcadeRun)!].name)}`
             : null}
           playerName={playerName}
-          onPlayerNameChange={next=>{
-            const value=writePlayerName(next);
-            setPlayerName(value);
-          }}
           onTutorial={()=>setTutorialOpen(true)}
           onGallery={()=>setScreen("collection")}
           onPhysical={()=>setScreen("table")}
@@ -1232,14 +1239,14 @@ export default function App() {
           onSettings={()=>setSettingsOpen(true)}
           onContinue={continueMatch}
           saved={arcadeRun?.status==="active"?null:savedMatch}
-          summary={summarizeHistory(history)}
           analyticsReady={analyticsAvailable()}
           analyticsConsent={analyticsConsent}
           onChangeAnalytics={value=>{setAnalyticsConsent(value);setTelemetryOn(value);}}
         />}
         {screen==="champions" && <ChampionPicker
+          mode="browse"
           onBack={()=>setScreen("home")}
-          onPlay={startWithChampion}
+          onPlay={()=>setScreen("decklab")}
           onGallery={()=>setScreen("collection")}
         />}
         {screen==="arcade" && <ChampionPicker
@@ -1250,11 +1257,14 @@ export default function App() {
         />}
         {screen==="collection" && <CardCollection
           onBack={()=>setScreen("home")}
-          onPlay={()=>setScreen("champions")}
+          onPlay={()=>setScreen("decklab")}
         />}
         {screen==="table" && <PhysicalTable onBack={()=>setScreen("home")}/> }
         {screen==="multiplayer" && <Multiplayer onBack={()=>setScreen("home")} playerName={playerName}/>} 
         {screen==="playtest" && <PlaytestHub onBack={()=>setScreen("home")}/>}
+        {screen==="profile" && <PlayerProfile playerName={playerName} history={history}
+          onNameChange={next=>setPlayerName(writePlayerName(next)||DEFAULT_PLAYER_NAME)}
+          onBack={()=>setScreen("home")} onPlay={()=>setScreen("decklab")}/> }
         {screen==="decklab" && <DeckLibrary onBack={()=>setScreen("home")} onPlay={(deck,rival,difficulty)=>startWithChampion(deck.championId,rival,difficulty,deck)}/> }
         {tutorialOpen && <Tutorial
           inGame={false}
@@ -1923,7 +1933,7 @@ export default function App() {
                 </> : <>
                   <p>{game.player.life}–{game.opponent.life} de Vida · {game.round} ronda{game.round===1?"":"s"}.</p>
                   <div className="match-postgame-actions">
-                    <button className="secondary-button" type="button" onClick={()=>goToMenu("champions")}>CAMBIAR CAMPEÓN</button>
+                    <button className="secondary-button" type="button" onClick={()=>goToMenu("decklab")}>CAMBIAR MAZO</button>
                     <button className="primary-button" type="button" onClick={beginMatch}>REVANCHA</button>
                   </div>
                 </>}
