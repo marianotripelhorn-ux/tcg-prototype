@@ -8,6 +8,8 @@ import { cleanPlayerName, DEFAULT_PLAYER_NAME } from "./playerProfile";
 import { profileStatistics, deckDisplayName } from "./profileStatistics";
 import type { MatchRecord } from "./persistence";
 import ThemeToggle from "./ThemeToggle";
+import PlayerAvatar from "./PlayerAvatar";
+import { avatarCards } from "./playerAvatar";
 import "./player-profile.css";
 
 const resultLabels={win:"VICTORIA",loss:"DERROTA",draw:"EMPATE"} as const;
@@ -20,8 +22,8 @@ function dateLabel(value:string) {
 }
 function championName(id:string){return champions[id]?championShortName(champions[id].name):"—";}
 
-export default function PlayerProfile({playerName,history,onNameChange,onBack,onPlay}:{
-  playerName:string;history:MatchRecord[];onNameChange:(next:string)=>void;onBack:()=>void;onPlay:()=>void;
+export default function PlayerProfile({playerName,playerAvatar,onAvatarChange,history,onNameChange,onBack,onPlay}:{
+  playerName:string;playerAvatar:string;onAvatarChange:(id:string)=>void;history:MatchRecord[];onNameChange:(next:string)=>void;onBack:()=>void;onPlay:()=>void;
 }) {
   const [tab,setTab]=useState<Tab>("history");
   const [name,setName]=useState(playerName===DEFAULT_PLAYER_NAME?"":playerName);
@@ -29,7 +31,6 @@ export default function PlayerProfile({playerName,history,onNameChange,onBack,on
   const stats=useMemo(()=>profileStatistics(history,decks),[history,decks]);
   const {summary}=stats;
   const mostPlayed=stats.championRows.find(row=>row.total>0);
-  const featured=mostPlayed?champions[mostPlayed.id]:null;
   const clean=cleanPlayerName(name).trim();
   const stored=playerName===DEFAULT_PLAYER_NAME?"":playerName;
   return <main className="fo-shell dl-profile">
@@ -42,13 +43,19 @@ export default function PlayerProfile({playerName,history,onNameChange,onBack,on
     <div className="dl-profile-layout">
       <aside className="dl-profile-identity">
         <div className="dl-profile-avatar">
-          {featured?<img src={championImageUrl(featured.id)} alt={championName(featured.id)}/>:<img className="dl-profile-emblem" src={import.meta.env.BASE_URL+"branding/logo-simple.png"} alt=""/>}
+          <PlayerAvatar id={playerAvatar}/>
         </div>
         <form className="dl-profile-name" onSubmit={e=>{e.preventDefault();onNameChange(clean);setName(clean);}}>
           <label htmlFor="dl-player-name">NOMBRE DE JUGADOR</label>
           <input id="dl-player-name" value={name} maxLength={20} onChange={e=>setName(e.target.value)} autoComplete="nickname"/>
           <button type="submit" disabled={clean===stored}>GUARDAR</button>
         </form>
+        <section className="dl-avatar-picker-section" aria-label="Elegir avatar">
+          <span className="dl-avatar-picker-label">AVATAR</span>
+          <div className="dl-avatar-picker">
+            {avatarCards.map(card=><button type="button" key={card.id} title={card.name} aria-label={card.name} aria-pressed={playerAvatar===card.id} onClick={()=>onAvatarChange(card.id)}><PlayerAvatar id={card.id}/></button>)}
+          </div>
+        </section>
         {mostPlayed&&<div className="dl-profile-featured"><small>CAMPEÓN MÁS UTILIZADO</small><strong>{mostPlayed.name}</strong></div>}
         <p className="dl-profile-note">Datos locales de este navegador.</p>
       </aside>
