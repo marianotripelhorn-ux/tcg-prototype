@@ -19,7 +19,7 @@ type ChampionPickerProps = {
   onBack: GoHome;
   onPlay: (championId: string, opponentId: string, difficulty: AIDifficulty) => void;
   onGallery: () => void;
-  mode?:"standard"|"arcade";
+  mode?:"standard"|"arcade"|"browse";
 };
 
 type GalleryProps = {
@@ -59,15 +59,14 @@ function Sprite({card, crop=false}: {card: CardDefinition; crop?: boolean}) {
 
 export function HomeScreen({
   onPlay,onTutorial,onGallery,onPhysical,onDeckLab,onMultiplayer,onPlaytest,onSettings,onArcade,onContinueArcade,arcadeResume,
-  playerName,onPlayerNameChange,onContinue,saved,summary,
+  playerName,onProfile,onChampions,onContinue,saved,
   analyticsReady,analyticsConsent,onChangeAnalytics
 }: {
   onPlay:()=>void;onTutorial:()=>void;onGallery:()=>void;onPhysical:()=>void;onDeckLab:()=>void;
   onMultiplayer:()=>void;onPlaytest:()=>void;onSettings:()=>void;onArcade:()=>void;
   onContinueArcade:()=>void;arcadeResume:string|null;
-  playerName:string;onPlayerNameChange:(next:string)=>void;
+  playerName:string;onProfile:()=>void;onChampions:()=>void;
   onContinue:()=>void;saved:SavedMatch|null;
-  summary:{total:number;wins:number;losses:number;draws:number;winRate:number};
   analyticsReady:boolean;analyticsConsent:boolean;onChangeAnalytics:(value:boolean)=>void;
 }) {
   const [selectedAction,setSelectedAction] = useState<string|null>(null);
@@ -94,9 +93,9 @@ export function HomeScreen({
       subtitle:`${championShortName(saved.game.player.champion.name)} vs. ${championShortName(saved.game.opponent.champion.name)} · Ronda ${saved.game.round}`,
       image:"banner.webp", fallback:"./factions/saints-portrait.webp", action:onContinue
     }] : []),
-    {id:"play", title:saved?"NUEVA PARTIDA":"JUGAR", subtitle:"Elegí tu Campeón y enfrentate a la IA.", image:"dagger.webp", fallback:"./factions/red-portrait.webp", action:onPlay},
+    {id:"play", title:saved?"NUEVA PARTIDA":"JUGAR", subtitle:"Elegí un mazo y enfrentate a la IA.", image:"dagger.webp", fallback:"./factions/red-portrait.webp", action:onPlay},
     {id:"learn", title:"APRENDER A JUGAR", subtitle:"Jugá una primera partida guiada.", image:"egg.webp", fallback:"./factions/white-portrait.webp", action:onTutorial},
-    {id:"decks", title:"MIS MAZOS", subtitle:"Creá tus estrategias y elegí con cuál jugar.", image:"book.webp", fallback:"./factions/ivory-portrait.webp", action:onDeckLab}
+    {id:"decks", title:"MIS MAZOS", subtitle:"Creá, editá y organizá tus mazos.", image:"book.webp", fallback:"./factions/ivory-portrait.webp", action:onDeckLab}
   ];
 
   return (
@@ -145,7 +144,8 @@ export function HomeScreen({
           ))}
           <div className="home-menu-support">
             <a className="home-physical-link" href="./reglamento.html" target="_blank" rel="noopener noreferrer">REGLAMENTO</a>
-            <button type="button" className="home-physical-link" onClick={onPlay}>VER CAMPEONES</button>
+            <button type="button" className="home-physical-link action-profile" onClick={onProfile}>MI PERFIL{playerName!==DEFAULT_PLAYER_NAME&&playerName?" · "+playerName:""}</button>
+            <button type="button" className="home-physical-link" onClick={onChampions}>VER CAMPEONES</button>
             <button type="button" className="home-physical-link" onClick={onGallery}>VER CARTAS</button>
           </div>
         </nav>
@@ -164,22 +164,12 @@ export function HomeScreen({
             {import.meta.env.VITE_DAGGERLIGHT_LAB==="true" && <a className="home-physical-link lab-classic-link" href="../gameplay-v1/">VOLVER AL JUEGO CLÁSICO</a>}
           </div>
           <div className="home-more-preferences">
-            <label className="home-player-identity">
-              <span className="home-player-label">TU NOMBRE</span>
-              <input aria-label="Tu nombre de jugador" maxLength={20}
-                autoComplete="nickname" spellCheck={false}
-                 value={playerName===DEFAULT_PLAYER_NAME?"":playerName}
-                onChange={event=>onPlayerNameChange(event.target.value)}
-                placeholder="ELEGÍ TU NOMBRE" />
-              <span className="home-player-edit" aria-hidden="true">✎</span>
-            </label>
             <ThemeToggle />
             {analyticsReady ? <label className="home-analytics-consent">
               <input type="checkbox" checked={analyticsConsent} onChange={event=>onChangeAnalytics(event.target.checked)} />
               Compartir estadísticas anónimas
             </label> : <span className="menu-local-stats">ESTADÍSTICAS LOCALES</span>}
           </div>
-          <span className="menu-record">{summary.total} PARTIDAS · {summary.wins} VICTORIAS · {summary.losses} DERROTAS · {summary.draws} EMPATES</span>
         </details>
       </footer>
     </main>
@@ -213,6 +203,7 @@ function StarterDeckPreview({championId,faction}:{championId:string;faction:Fact
 
 export function ChampionPicker({onBack,onPlay,onGallery,mode="standard"}:ChampionPickerProps) {
   const arcade=mode==="arcade";
+  const browse=mode==="browse";
   const [faction,setFaction]=useState<Faction>("red");
   const [selected,setSelected]=useState<string|null>(null);
   const [opponent,setOpponent]=useState("random");
@@ -238,7 +229,7 @@ export function ChampionPicker({onBack,onPlay,onGallery,mode="standard"}:Champio
       </header>
 
       <section className="dl-picker-header">
-        <h1>{chosen?(arcade?"PREPARÁ TU ARCADE":"PREPARÁ TU PARTIDA"):(arcade?"ARCADE · ELEGÍ TU CAMPEÓN":"ELEGÍ TU CAMPEÓN")}</h1>
+        <h1>{browse?"CAMPEONES":chosen?(arcade?"PREPARÁ TU ARCADE":"PREPARÁ TU PARTIDA"):(arcade?"ARCADE · ELEGÍ TU CAMPEÓN":"ELEGÍ TU CAMPEÓN")}</h1>
         {arcade && <p className="arcade-picker-intro">UN CAMPEÓN · OCHO RIVALES · SEGUÍ HASTA PERDER</p>}
       </section>
 
@@ -289,7 +280,7 @@ export function ChampionPicker({onBack,onPlay,onGallery,mode="standard"}:Champio
             </div>
             <div className="dl-champion-confirm-panel">
               <div className="dl-champion-settings">
-            {!arcade && <label>
+            {!arcade && !browse && <label>
               <span>RIVAL</span>
               <select value={opponent} onChange={e=>setOpponent(e.target.value)}>
                 <option value="random">ALEATORIO</option>
@@ -298,21 +289,21 @@ export function ChampionPicker({onBack,onPlay,onGallery,mode="standard"}:Champio
                 )}
               </select>
             </label>}
-            <label>
+            {!browse && <label>
               <span>DIFICULTAD</span>
               <select value={difficulty} onChange={e=>setDifficulty(e.target.value as AIDifficulty)}>
                 <option value="easy">FÁCIL</option>
                 <option value="normal">NORMAL</option>
                 <option value="hard">DIFÍCIL</option>
               </select>
-            </label>
+            </label>}
             <button type="button" className="dl-champion-start"
               onClick={()=>onPlay(chosen.id,opponent,difficulty)}>
-              {arcade?"INICIAR ARCADE · 8 RIVALES":"EMPEZAR PARTIDA"} <span aria-hidden="true">↗</span>
+              {browse?"ELEGIR MAZO":arcade?"INICIAR ARCADE · 8 RIVALES":"EMPEZAR PARTIDA"} <span aria-hidden="true">↗</span>
             </button>
               </div>
               <StarterDeckPreview championId={chosen.id} faction={chosen.faction}/>
-              <button type="button" className="dl-champion-change" onClick={()=>setSelected(null)}>← CAMBIAR CAMPEÓN</button>
+              <button type="button" className="dl-champion-change" onClick={()=>setSelected(null)}>{browse?"← VER CAMPEONES":"← CAMBIAR CAMPEÓN"}</button>
             </div>
           </div>
         )}
