@@ -14,6 +14,9 @@ import {
 } from "./deckLibraryStorage";
 import type { LibraryDeck } from "./deckLibraryStorage";
 import ThemeToggle from "./ThemeToggle";
+import { starterDeckLabel } from "./profileStatistics";
+import { summarizeHistory } from "./persistence";
+import type { MatchRecord } from "./persistence";
 import "./deck-library.css";
 import "./deck-game-layout.css";
 import "./deck-identity.css";
@@ -34,13 +37,10 @@ type Editor = {
 };
 type Props = {
   onBack: () => void;
+  history?: MatchRecord[];
   onPlay: (deck: DeckDefinition, opponentId: string, difficulty: AIDifficulty) => void;
 };
 
-function starterLabel(championId: string): string {
-  const champion = champions[championId];
-  return factionLabels[champion.faction] + " — " + championShortName(champion.name);
-}
 
 /**
  * The same deck object is used for compact tiles and the selected-loadout view.
@@ -73,7 +73,7 @@ function DeckTile({deck, active, starter, favorite, onSelect, onFavorite}:{
   onSelect:()=>void; onFavorite?:()=>void;
 }) {
   const champ = champions[deck.championId];
-  const displayName = starter ? starterLabel(deck.championId) : deck.name;
+  const displayName = starter ? starterDeckLabel(deck.championId) : deck.name;
   return <article className={"dl-deck-tile-wrap theme-" + champ.faction + (active?" is-active":"")}>
     <button type="button" className="dl-deck-tile" onClick={onSelect}
       aria-pressed={active} aria-label={displayName}>
@@ -120,7 +120,7 @@ function DeckCardPicker({card,selected,canAdd,onToggle,onPreview}:{
   </button>;
 }
 
-export default function DeckLibrary({onBack,onPlay}:Props) {
+export default function DeckLibrary({onBack,onPlay,history=[]}:Props) {
   const [decks,setDecks] = useState<LibraryDeck[]>(readDeckLibrary);
   const [selected,setSelected] = useState<DeckSelection>(() => {
     const current = readDeckLibrary();
@@ -145,6 +145,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
     : starterDecks.find(d => d.championId === selected.slice(8)) ?? starterDecks[0];
   const savedCurrent = decks.find(d => d.id === current.id);
   const currentChampion = champions[current.championId];
+  const record=summarizeHistory(history.filter(match=>match.deckId===current.id&&match.mode!=="tutorial"));
 
   function persist(next: LibraryDeck[], notice: string):boolean {
     if (!writeDeckLibrary(next)) {
@@ -396,11 +397,11 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
       <section className="dl-lib-collection" aria-label="Seleccionar mazo">
         <div className="dl-lib-deck-tabs" role="tablist" aria-label="Tipo de mazo">
           <button type="button" role="tab" aria-selected={deckView==="saved"}
-            className={deckView==="saved"?"is-selected":""} onClick={()=>setDeckView("saved")}>
+            className={deckView==="saved"?"is-selected":""} onClick={()=>{setDeckView("saved");if(decks.length&&!selected.startsWith("saved:"))selectDeck("saved:"+(decks.find(d=>d.favorite)??decks[0]).id);}}>
             MIS MAZOS <span>{decks.length}</span>
           </button>
           <button type="button" role="tab" aria-selected={deckView==="starter"}
-            className={deckView==="starter"?"is-selected":""} onClick={()=>setDeckView("starter")}>
+            className={deckView==="starter"?"is-selected":""} onClick={()=>{setDeckView("starter");if(!selected.startsWith("starter:"))selectDeck(initialSelection);}}>
             MAZOS INICIALES <span>9</span>
           </button>
           <span className="dl-lib-deck-count">{decks.length}/{DECK_LIBRARY_LIMIT} GUARDADOS</span>
@@ -441,11 +442,14 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
         <span className="dl-lib-eyebrow">MAZO SELECCIONADO</span>
         <div className="dl-lib-inspector-art"><DeckObjectArt deck={current} large/></div>
         <div className="dl-lib-inspector-content">
-          <h2>{savedCurrent ? current.name : starterLabel(current.championId)}</h2>
+          <h2>{savedCurrent ? current.name : starterDeckLabel(current.championId)}</h2>
           {savedCurrent && <p>{championShortName(currentChampion.name)}</p>}
+          {record.total>0&&<div className="dl-deck-record" aria-label="Estadísticas del mazo">
+            <span>{record.total} P</span><span>{record.wins} V</span><span>{record.winRate}%</span>
+          </div>}
           <div className="dl-lib-match-settings">
             <label>RIVAL
-              <select value={rival} onChange={e=>setRival(e.target.value)}>
+              <select value={rival===current.championId?"random":rival} onChange={e=>setRival(e.target.value)}>
                 <option value="random">Aleatorio</option>
                 {championIds.filter(id=>id!==current.championId).map(id=>
                   <option key={id} value={id}>{championShortName(champions[id].name)}</option>)}
@@ -469,6 +473,7 @@ export default function DeckLibrary({onBack,onPlay}:Props) {
         </div>
         <div className="dl-lib-inspector-footer">
           <button className="dl-lib-primary dl-lib-play" type="button"
+            disabled={(deckView==="saved"&&!savedCurrent)||(deckView==="starter"&&!!savedCurrent)}
             onClick={()=>onPlay(current,rival===current.championId?"random":rival,difficulty)}>
             JUGAR CON ESTE MAZO <span>↗</span>
           </button>
