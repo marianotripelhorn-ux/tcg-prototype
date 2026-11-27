@@ -13,6 +13,7 @@ import { avatarCards } from "./playerAvatar";
 import { difficultyLabel,unlockedChampions,nextUnlock } from "./soloProgression";
 import type { SoloProgression } from "./soloProgression";
 import { starterDeckLabel } from "./profileStatistics";
+import { resetLocalProfile } from "./resetLocalProfile";
 import "./player-profile.css";
 
 const resultLabels={win:"VICTORIA",loss:"DERROTA",draw:"EMPATE"} as const;
@@ -29,6 +30,8 @@ export default function PlayerProfile({playerName,playerAvatar,onAvatarChange,hi
   playerName:string;playerAvatar:string;onAvatarChange:(id:string)=>void;history:MatchRecord[];onNameChange:(next:string)=>void;onBack:()=>void;onPlay:()=>void;
 }) {
   const [tab,setTab]=useState<Tab>("history");
+  const [resetOpen,setResetOpen]=useState(false);
+  const [resetError,setResetError]=useState(false);
   const [name,setName]=useState(playerName===DEFAULT_PLAYER_NAME?"":playerName);
   const [decks]=useState(readDeckLibrary);
   const stats=useMemo(()=>profileStatistics(history,decks),[history,decks]);
@@ -42,7 +45,19 @@ export default function PlayerProfile({playerName,playerAvatar,onAvatarChange,hi
       <span className="dl-profile-wordmark">DAGGERLIGHT</span>
       <ThemeToggle compact/>
     </header>
-    <section className="dl-profile-heading"><h1>MI PERFIL</h1><button type="button" onClick={onPlay}>JUGAR ↗</button></section>
+    <section className="dl-profile-heading"><h1>MI PERFIL</h1><div className="dl-profile-heading-actions"><button type="button" className="dl-profile-reset" aria-expanded={resetOpen} onClick={()=>{setResetOpen(true);setResetError(false);}}>REINICIAR PERFIL</button><button type="button" onClick={onPlay}>JUGAR ↗</button></div></section>
+    {resetOpen&&<section className="dl-profile-reset-overlay" role="dialog" aria-modal="true" aria-labelledby="dl-profile-reset-title" onKeyDown={e=>{if(e.key==="Escape")setResetOpen(false);}}>
+      <div className="dl-profile-reset-panel">
+        <h2 id="dl-profile-reset-title">¿Reiniciar perfil?</h2>
+        <p>Se eliminarán tu nombre, avatar, mazos personalizados, historial, desbloqueos y partidas guardadas de este navegador. Volverás al inicio con dos mazos.</p>
+        <p>Las versiones que comparten estos datos locales también pueden perder su progreso. Se conservará tu configuración de sonido y apariencia. Esta acción no se puede deshacer.</p>
+        {resetError&&<p role="alert">No se pudo reiniciar el perfil. Revisá los permisos de almacenamiento del navegador.</p>}
+        <div className="dl-profile-reset-actions">
+          <button type="button" autoFocus onClick={()=>setResetOpen(false)}>CANCELAR</button>
+          <button type="button" onClick={()=>{if(resetLocalProfile())window.location.reload();else setResetError(true);}}>CONFIRMAR REINICIO</button>
+        </div>
+      </div>
+    </section>}
     <div className="dl-profile-layout">
       <aside className="dl-profile-identity">
         <div className="dl-profile-avatar">
