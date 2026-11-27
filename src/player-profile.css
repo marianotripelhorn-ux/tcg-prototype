@@ -97,3 +97,16 @@
   .dl-profile-row-name small{font-size:9px}
   .dl-profile-footnote{font-size:8px}
 }
+
+/* Reset uses the same flat menu blocks, without a new ornamental treatment. */
+.dl-profile-heading-actions{display:flex;align-items:center;gap:6px}
+.dl-profile-heading .dl-profile-reset{background:#292929;color:#f4eadb}
+.dl-profile-reset-overlay{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;background:#090909e8;padding:16px}
+.dl-profile-reset-panel{box-sizing:border-box;width:min(100%,440px);max-height:90dvh;overflow:auto;background:#f4eadb;color:#191919;padding:22px;display:grid;gap:12px}
+.dl-profile-reset-panel h2{margin:0;font-size:24px;font-weight:900;line-height:1.15;color:#191919}
+.dl-profile-reset-panel p{margin:0;font-size:13px;line-height:1.5;color:#191919}
+.dl-profile-reset-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.dl-profile-reset-actions button{min-height:40px;border:0;border-radius:0;padding:10px 12px;font:inherit;font-size:11px;font-weight:800;background:#191919;color:#f4eadb;cursor:pointer}
+.dl-profile-reset-actions button:first-child{background:#d9cdb9;color:#191919}
+.dl-profile-reset-actions button:hover{background:#d3b787;color:#191919}
+@media(max-width:720px){.dl-profile-heading-actions{gap:4px}.dl-profile-heading-actions button{padding:7px 8px;font-size:9px;min-height:32px}.dl-profile-reset-panel{padding:16px}}
