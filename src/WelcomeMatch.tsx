@@ -3,6 +3,9 @@ import { cardSpriteBackground } from "./cardArtwork";
 import { championBackgroundUrl } from "./championArtwork";
 import { byId } from "./data";
 import ThemeToggle from "./ThemeToggle";
+import PlayerAvatar from "./PlayerAvatar";
+import { avatarCards } from "./playerAvatar";
+import { DEFAULT_PLAYER_NAME } from "./playerProfile";
 import "./welcome-match.css";
 
 const base = import.meta.env.BASE_URL;
@@ -14,9 +17,11 @@ const cardStyle = cardArt && {
 };
 
 export function WelcomeMatch({
-  playerName, onNameChange, onPlay, onSkip,
+  playerName, onNameChange, playerAvatar, onAvatarChange, onPlay, onSkip,
 }: {
   playerName: string;
+  playerAvatar:string;
+  onAvatarChange:(id:string)=>void;
   onNameChange: (name: string) => void;
   onPlay: () => void;
   onSkip: () => void;
@@ -31,19 +36,22 @@ export function WelcomeMatch({
     </header>
     <section className="dl-welcome-main" aria-labelledby="welcome-title">
       <div className="dl-welcome-copy">
-        <h1 id="welcome-title">Jugá tu primer duelo</h1>
-        <p>Elegí una carta, ubicála en el tablero y descubrí cómo cambia su Poder. Te acompañamos durante la primera ronda.</p>
+        <h1 id="welcome-title">CREÁ TU PERFIL</h1>
+        
         <form onSubmit={event => { event.preventDefault(); onPlay(); }}>
           <label className="dl-welcome-name" htmlFor="welcome-player-name">Tu nombre de jugador</label>
           <input
             className="dl-welcome-input"
             id="welcome-player-name"
-            value={playerName}
+            value={playerName===DEFAULT_PLAYER_NAME?"":playerName}
             onChange={event => onNameChange(event.currentTarget.value)}
-            placeholder="¿Cómo te llamás?"
             maxLength={20}
             autoComplete="nickname"
           />
+          <section className="dl-avatar-picker-section dl-welcome-avatars" aria-label="Elegir avatar">
+            <span className="dl-avatar-picker-label">AVATAR</span>
+            <div className="dl-avatar-picker">{avatarCards.map(card=><button key={card.id} type="button" title={card.name} aria-label={card.name} aria-pressed={playerAvatar===card.id} onClick={()=>onAvatarChange(card.id)}><PlayerAvatar id={card.id}/></button>)}</div>
+          </section>
           <div className="dl-welcome-actions">
             <button type="submit" className="primary-button">EMPEZAR PARTIDA GUIADA</button>
             <button type="button" className="secondary-button" onClick={onSkip}>SALTAR TUTORIAL</button>
