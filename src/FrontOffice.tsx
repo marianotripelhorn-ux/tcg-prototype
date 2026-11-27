@@ -210,7 +210,7 @@ export function ChampionPicker({onBack,onPlay,onGallery,mode="standard"}:Champio
   const [faction,setFaction]=useState<Faction>("red");
   const [selected,setSelected]=useState<string|null>(null);
   const [opponent,setOpponent]=useState("random");
-  const [difficulty,setDifficulty]=useState<AIDifficulty>("normal");
+  const [difficulty,setDifficulty]=useState<AIDifficulty>("easy");
   const activeChampions=Object.values(champions).filter(c=>c.faction===faction);
   const chosen=selected?champions[selected]:null;
 
@@ -295,9 +295,8 @@ export function ChampionPicker({onBack,onPlay,onGallery,mode="standard"}:Champio
             {!browse && <label>
               <span>DIFICULTAD</span>
               <select value={difficulty} onChange={e=>setDifficulty(e.target.value as AIDifficulty)}>
-                <option value="easy">FÁCIL</option>
-                <option value="normal">NORMAL</option>
-                <option value="hard">DIFÍCIL</option>
+                <option value="easy">NORMAL</option>
+                <option value="normal">DIFÍCIL</option>
               </select>
             </label>}
             <button type="button" className="dl-champion-start"
