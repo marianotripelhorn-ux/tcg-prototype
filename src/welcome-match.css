@@ -200,3 +200,36 @@
 @media (max-width: 380px) {
   .dl-welcome .dl-welcome-actions { flex-direction: column; align-items: stretch; }
 }
+
+/* Solo onboarding follows the flat identity of the deck and profile screens. */
+:root .dl-welcome {
+  --dl-welcome-page:#191919;--dl-welcome-paper:#090909;
+  --dl-welcome-text:#f4eadb;--dl-welcome-muted:#b9ae9c;
+  --dl-welcome-field:#292929;--dl-welcome-focus:#d3b787;
+  --dl-welcome-on-accent:#191919;--dl-welcome-accent:#f4eadb;
+  box-sizing:border-box;background:#191919!important;
+  padding:10px clamp(12px,2vw,28px);min-height:100dvh;
+}
+:root .dl-welcome-main{border:0;box-shadow:none;margin:clamp(10px,3vh,28px) auto 0;background:#090909;min-height:0;}
+:root .dl-welcome-copy{padding:clamp(18px,3vw,44px);gap:18px}
+:root .dl-welcome-copy h1{color:#f4eadb;font:900 clamp(23px,3vw,39px)/1.15 Inter,system-ui,sans-serif;letter-spacing:.03em;max-width:none}
+:root .dl-welcome .dl-welcome-input{border:0;border-radius:0;color:#f4eadb;background:#292929}
+:root .dl-welcome-name{font-size:11px;color:#d3b787;text-transform:uppercase;letter-spacing:.06em}
+.dl-welcome-avatars{margin-top:16px;max-width:410px}
+.dl-welcome-avatars .dl-avatar-picker{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+:root .dl-welcome .dl-welcome-actions button{border:0;border-radius:0;min-height:42px}
+:root .dl-welcome .dl-welcome-actions .primary-button{background:#f4eadb;color:#191919}
+:root .dl-welcome .dl-welcome-actions .secondary-button{background:#292929;color:#f4eadb}
+:root .dl-welcome-art{border:0;background:linear-gradient(#09090945,#09090960),var(--dl-welcome-fabric) center/cover no-repeat,#191919}
+:root .dl-welcome-art::after{display:none}
+:root .dl-opening-guide{border:0;background:#191919;color:#f4eadb;box-shadow:inset 3px 0 #d3b787}
+@media(max-width:760px){
+  :root .dl-welcome-main{margin:8px auto 0}
+  :root .dl-welcome-art{min-height:105px;height:16dvh;max-height:150px}
+  :root .dl-welcome-card{width:clamp(55px,10dvh,100px)}
+  :root .dl-welcome-copy{padding:14px;gap:10px}
+  :root .dl-welcome-copy h1{font-size:25px}
+  .dl-welcome-avatars{margin-top:10px}
+  .dl-welcome-avatars .dl-avatar-picker{max-width:340px}
+  .dl-welcome .dl-welcome-actions{margin-top:12px;gap:6px}
+}
