@@ -10,10 +10,12 @@ import type { MatchRecord } from "./persistence";
 import ThemeToggle from "./ThemeToggle";
 import PlayerAvatar from "./PlayerAvatar";
 import { avatarCards } from "./playerAvatar";
+import { difficultyLabel,unlockedChampions,nextUnlock } from "./soloProgression";
+import type { SoloProgression } from "./soloProgression";
+import { starterDeckLabel } from "./profileStatistics";
 import "./player-profile.css";
 
 const resultLabels={win:"VICTORIA",loss:"DERROTA",draw:"EMPATE"} as const;
-const difficultyLabels={easy:"Fácil",normal:"Normal",hard:"Difícil"} as const;
 type Tab="history"|"decks"|"champions";
 
 function dateLabel(value:string) {
@@ -22,7 +24,8 @@ function dateLabel(value:string) {
 }
 function championName(id:string){return champions[id]?championShortName(champions[id].name):"—";}
 
-export default function PlayerProfile({playerName,playerAvatar,onAvatarChange,history,onNameChange,onBack,onPlay}:{
+export default function PlayerProfile({playerName,playerAvatar,onAvatarChange,history,onNameChange,onBack,onPlay,progression}:{
+  progression:SoloProgression;
   playerName:string;playerAvatar:string;onAvatarChange:(id:string)=>void;history:MatchRecord[];onNameChange:(next:string)=>void;onBack:()=>void;onPlay:()=>void;
 }) {
   const [tab,setTab]=useState<Tab>("history");
@@ -57,6 +60,7 @@ export default function PlayerProfile({playerName,playerAvatar,onAvatarChange,hi
           </div>
         </section>
         {mostPlayed&&<div className="dl-profile-featured"><small>CAMPEÓN MÁS UTILIZADO</small><strong>{mostPlayed.name}</strong></div>}
+        <div className="dl-profile-featured"><small>MAZOS DESBLOQUEADOS</small><strong>{unlockedChampions(progression).length}/9</strong>{nextUnlock(progression)&&<small>Próximo: {starterDeckLabel(nextUnlock(progression)!)}</small>}</div>
         <p className="dl-profile-note">Datos locales de este navegador.</p>
       </aside>
       <section className="dl-profile-main">
@@ -73,7 +77,7 @@ export default function PlayerProfile({playerName,playerAvatar,onAvatarChange,hi
             {stats.recent.map(record=><article className="dl-profile-match" key={record.id}>
               <span className={"dl-profile-result result-"+record.result}>{resultLabels[record.result]}</span>
               <div className="dl-profile-match-deck"><strong>{deckDisplayName(record.deckId,record.deckName,record.championId,decks)}</strong><small>{championName(record.championId)} vs. {championName(record.opponentId)}</small></div>
-              <div className="dl-profile-match-score"><strong>{Number.isFinite(record.finalLife)?record.finalLife:"—"} : {Number.isFinite(record.opponentLife)?record.opponentLife:"—"}</strong><small>{record.mode==="arcade"?"Arcade":"IA"} · {difficultyLabels[record.difficulty]||"—"}</small></div>
+              <div className="dl-profile-match-score"><strong>{Number.isFinite(record.finalLife)?record.finalLife:"—"} : {Number.isFinite(record.opponentLife)?record.opponentLife:"—"}</strong><small>{record.mode==="arcade"?"Arcade":"IA"} · {difficultyLabel(record.difficulty)}</small></div>
               <time>{dateLabel(record.finishedAt)}</time>
             </article>)}
           </div>:<div className="dl-profile-empty">Todavía no hay partidas registradas.</div>)}
