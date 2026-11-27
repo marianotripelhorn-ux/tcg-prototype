@@ -285,3 +285,11 @@
 /* Compact performance strip, only shown after a recorded match. */
 .dl-deck-record{display:flex;gap:5px;margin:7px 0 3px;font-size:10px;font-weight:800;color:#d3b787}
 .dl-deck-record>span{padding:4px 7px;background:#252525}
+
+.dl-next-unlock{display:flex;align-items:center;gap:10px;background:#191919;padding:8px 10px;margin:0 0 8px;flex-shrink:0;font-size:11px;flex-wrap:wrap}
+.dl-next-unlock>span,.dl-unlock-result small{font-size:9px;font-weight:800;color:#d3b787;letter-spacing:.065em}
+.dl-next-unlock strong{color:#f4eadb;font-size:12px}
+.dl-next-unlock small{color:#c4b9aa;font-size:10px}
+.dl-unlock-result{display:grid;gap:5px;background:#191919;color:#f4eadb;padding:12px;margin:8px 0;text-align:left}
+.dl-unlock-result strong{font-size:16px;color:#f4eadb}
+@media(max-width:720px){.dl-next-unlock{gap:5px;padding:6px 8px}.dl-next-unlock small{flex-basis:100%}.dl-next-unlock strong{font-size:11px}}
