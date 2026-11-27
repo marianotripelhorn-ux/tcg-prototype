@@ -15,6 +15,8 @@ import {
 import type { LibraryDeck } from "./deckLibraryStorage";
 import ThemeToggle from "./ThemeToggle";
 import { starterDeckLabel } from "./profileStatistics";
+import { STARTER_ORDER,unlockedChampions,unlockedFactions,deckUnlocked,nextUnlock } from "./soloProgression";
+import type { SoloProgression } from "./soloProgression";
 import { summarizeHistory } from "./persistence";
 import type { MatchRecord } from "./persistence";
 import "./deck-library.css";
@@ -24,7 +26,7 @@ import "./deck-stack-layout.css";
 
 const factions: Faction[] = ["red","blue","white","saints","ivory"];
 const championIds = Object.keys(champions);
-const starterDecks = championIds.map(makeMonoDeckDefinition);
+const starterDecks = STARTER_ORDER.map(makeMonoDeckDefinition);
 const initialSelection = "starter:" + championIds[0];
 
 type DeckSelection = string;
@@ -39,6 +41,7 @@ type Props = {
   onBack: () => void;
   history?: MatchRecord[];
   mode?: "solo"|"arcade";
+  progression: SoloProgression;
   onPlay: (deck: DeckDefinition, opponentId: string, difficulty: AIDifficulty) => void;
 };
 
@@ -121,10 +124,14 @@ function DeckCardPicker({card,selected,canAdd,onToggle,onPreview}:{
   </button>;
 }
 
-export default function DeckLibrary({onBack,onPlay,history=[],mode="solo"}:Props) {
+export default function DeckLibrary({onBack,onPlay,history=[],mode="solo",progression}:Props) {
+  const availableIds=unlockedChampions(progression);
+  const availableFactions=unlockedFactions(progression);
+  const availableStarters=starterDecks.filter(deck=>availableIds.includes(deck.championId));
+  const upcoming=nextUnlock(progression);
   const [decks,setDecks] = useState<LibraryDeck[]>(readDeckLibrary);
   const [selected,setSelected] = useState<DeckSelection>(() => {
-    const current = readDeckLibrary();
+    const current = readDeckLibrary().filter(deck=>deckUnlocked(deck,progression));
     const favored = current.find(d => d.favorite) ?? current[0];
     return favored ? "saved:"+favored.id : initialSelection;
   });
@@ -133,10 +140,10 @@ export default function DeckLibrary({onBack,onPlay,history=[],mode="solo"}:Props
   const [search,setSearch] = useState("");
   const [cardSearch,setCardSearch] = useState("");
   const [rival,setRival] = useState("random");
-  const [difficulty,setDifficulty] = useState<AIDifficulty>("normal");
+  const [difficulty,setDifficulty] = useState<AIDifficulty>("easy");
   const [deleteId,setDeleteId] = useState<string|null>(null);
   const [message,setMessage] = useState("");
-  const [deckView,setDeckView] = useState<"saved"|"starter">(() => readDeckLibrary().length ? "saved" : "starter");
+  const [deckView,setDeckView] = useState<"saved"|"starter">(() => readDeckLibrary().some(deck=>deckUnlocked(deck,progression)) ? "saved" : "starter");
   const [buildTab,setBuildTab] = useState<"cards"|"deck">("cards");
   const [manageOpen,setManageOpen] = useState(false);
   const [previewCard,setPreviewCard] = useState<CardDefinition|null>(null);
@@ -146,6 +153,7 @@ export default function DeckLibrary({onBack,onPlay,history=[],mode="solo"}:Props
     : starterDecks.find(d => d.championId === selected.slice(8)) ?? starterDecks[0];
   const savedCurrent = decks.find(d => d.id === current.id);
   const currentChampion = champions[current.championId];
+  const currentAvailable=deckUnlocked(current,progression);
   const record=summarizeHistory(history.filter(match=>match.deckId===current.id&&match.mode!=="tutorial"));
 
   function persist(next: LibraryDeck[], notice: string):boolean {
@@ -159,7 +167,8 @@ export default function DeckLibrary({onBack,onPlay,history=[],mode="solo"}:Props
   }
 
   function openEditor(deck?:DeckDefinition, existing?:LibraryDeck) {
-    const base=deck??makeMonoDeckDefinition(championIds[0]);
+    if(deck&&!deckUnlocked(deck,progression))return;
+    const base=deck??makeMonoDeckDefinition(availableIds[0]);
     const primary=champions[base.championId].faction;
     const secondary=deck ? validateDeck(base).factions.find(f=>f!==primary)??null : null;
     setEditor({
@@ -188,7 +197,7 @@ export default function DeckLibrary({onBack,onPlay,history=[],mode="solo"}:Props
       championId:editor.championId,
       cardIds:allCards.filter(c=>editor.selectedIds.includes(c.id)).flatMap(c=>[c.id,c.id])
     };
-    if (!deck.name || !validateDeck(deck).valid) {
+    if (!deck.name || !deckUnlocked(deck,progression)) {
       setMessage("Completá el nombre y las 12 cartas válidas antes de guardar.");
       return;
     }
@@ -209,6 +218,7 @@ export default function DeckLibrary({onBack,onPlay,history=[],mode="solo"}:Props
   }
 
   function duplicateDeck(deck:DeckDefinition) {
+    if(!deckUnlocked(deck,progression))return;
     if (decks.length >= DECK_LIBRARY_LIMIT) {
       setMessage("Llegaste al límite de "+DECK_LIBRARY_LIMIT+" mazos.");
       return;
@@ -241,7 +251,7 @@ export default function DeckLibrary({onBack,onPlay,history=[],mode="solo"}:Props
 
   const visibleSaved = decks.filter(d=>(filter==="all"||validateDeck(d).factions.includes(filter)) &&
     (d.name+" "+champions[d.championId].name).toLocaleLowerCase().includes(search.toLocaleLowerCase()));
-  const visibleStarters = starterDecks.filter(d=>(filter==="all"||champions[d.championId].faction===filter) &&
+  const visibleStarters = availableStarters.filter(d=>(filter==="all"||champions[d.championId].faction===filter) &&
     (d.name+" "+champions[d.championId].name).toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   const sortedSaved=[...visibleSaved].sort((a,b)=>Number(b.favorite)-Number(a.favorite));
   const rules=proposedMultifactionRules;
@@ -258,7 +268,7 @@ export default function DeckLibrary({onBack,onPlay,history=[],mode="solo"}:Props
     const pool=allCards.filter(card=>card.faction===champ.faction||card.faction===editor.secondary);
     const visiblePool=pool.filter(card=>(card.name+" "+card.studioId+" "+card.text)
       .toLocaleLowerCase().includes(cardSearch.toLocaleLowerCase()));
-    const canSave=Boolean(cleanDeckName(editor.name)) && validation.valid;
+    const canSave=Boolean(cleanDeckName(editor.name)) && validation.valid && deckUnlocked(recipe,progression);
     function changeChampion(id:string) {
       setEditor({...activeEditor,championId:id,secondary:null,selectedIds:[]});
       setCardSearch("");
@@ -304,13 +314,13 @@ export default function DeckLibrary({onBack,onPlay,history=[],mode="solo"}:Props
             <div className="dl-build-choices">
               <label>CAMPEÓN
                 <select value={editor.championId} onChange={e=>changeChampion(e.target.value)}>
-                  {championIds.map(id=><option key={id} value={id}>{championShortName(champions[id].name)}</option>)}
+                  {availableIds.map(id=><option key={id} value={id}>{championShortName(champions[id].name)}</option>)}
                 </select>
               </label>
               <label>SEGUNDA FACCIÓN
                 <select value={editor.secondary??""} onChange={e=>changeSecondary(e.target.value)}>
                   <option value="">Solo {factionLabels[champ.faction]}</option>
-                  {factions.filter(f=>f!==champ.faction).map(f=>
+                  {availableFactions.filter(f=>f!==champ.faction).map(f=>
                     <option key={f} value={f}>{factionLabels[f]}</option>)}
                 </select>
               </label>
@@ -403,7 +413,7 @@ export default function DeckLibrary({onBack,onPlay,history=[],mode="solo"}:Props
           </button>
           <button type="button" role="tab" aria-selected={deckView==="starter"}
             className={deckView==="starter"?"is-selected":""} onClick={()=>{setDeckView("starter");if(!selected.startsWith("starter:"))selectDeck(initialSelection);}}>
-            MAZOS INICIALES <span>9</span>
+            MAZOS INICIALES <span>{availableStarters.length}/9</span>
           </button>
           <span className="dl-lib-deck-count">{decks.length}/{DECK_LIBRARY_LIMIT} GUARDADOS</span>
         </div>
@@ -415,12 +425,13 @@ export default function DeckLibrary({onBack,onPlay,history=[],mode="solo"}:Props
           </label>
           <div className="dl-lib-filter" role="group" aria-label="Filtrar mazos por facción">
             <button className={filter==="all"?"is-selected":""} onClick={()=>setFilter("all")} aria-pressed={filter==="all"}>TODOS</button>
-            {factions.map(f=><button key={f} title={factionLabels[f]}
+            {availableFactions.map(f=><button key={f} title={factionLabels[f]}
               className={"theme-"+f+(filter===f?" is-selected":"")}
               aria-label={"Filtrar por "+factionLabels[f]} aria-pressed={filter===f}
               onClick={()=>setFilter(f)}>{factionLabels[f]}</button>)}
           </div>
         </div>
+        {upcoming&&<div className="dl-next-unlock"><span>PRÓXIMO MAZO</span><strong>{starterDeckLabel(upcoming)}</strong><small>Ganá una partida para desbloquearlo.</small></div>}
         <div className="dl-lib-deck-scroll" role="tabpanel" aria-label={deckView==="saved"?"Mazos guardados":"Mazos iniciales"}>
           {deckView==="saved" ?
             sortedSaved.length ? <div className="dl-lib-grid">
@@ -452,15 +463,14 @@ export default function DeckLibrary({onBack,onPlay,history=[],mode="solo"}:Props
             {mode!=="arcade"&&<label>RIVAL
               <select value={rival===current.championId?"random":rival} onChange={e=>setRival(e.target.value)}>
                 <option value="random">Aleatorio</option>
-                {championIds.filter(id=>id!==current.championId).map(id=>
+                {availableIds.filter(id=>id!==current.championId).map(id=>
                   <option key={id} value={id}>{championShortName(champions[id].name)}</option>)}
               </select>
             </label>}
             <label>DIFICULTAD
               <select value={difficulty} onChange={e=>setDifficulty(e.target.value as AIDifficulty)}>
-                <option value="easy">Aprendiz · Fácil</option>
-                <option value="normal">Estratega · Normal</option>
-                <option value="hard">Maestro · Difícil</option>
+                <option value="easy">Normal</option>
+                <option value="normal">Difícil</option>
               </select>
             </label>
           </div>
@@ -474,15 +484,16 @@ export default function DeckLibrary({onBack,onPlay,history=[],mode="solo"}:Props
         </div>
         <div className="dl-lib-inspector-footer">
           <button className="dl-lib-primary dl-lib-play" type="button"
-            disabled={(deckView==="saved"&&!savedCurrent)||(deckView==="starter"&&!!savedCurrent)}
+            disabled={!currentAvailable||(deckView==="saved"&&!savedCurrent)||(deckView==="starter"&&!!savedCurrent)}
             onClick={()=>onPlay(current,rival===current.championId?"random":rival,difficulty)}>
             {mode==="arcade"?"INICIAR ARCADE":"JUGAR CON ESTE MAZO"} <span>↗</span>
           </button>
           <div className={"dl-lib-inspector-actions"+(manageOpen?" is-open":"")}>
-            <button type="button" onClick={()=>openEditor(current,savedCurrent)}>
+            {!currentAvailable&&<p className="dl-lib-feedback">Mazo bloqueado hasta desbloquear sus facciones y Campeón.</p>}
+            <button type="button" disabled={!currentAvailable} onClick={()=>openEditor(current,savedCurrent)}>
               {savedCurrent?"EDITAR":"CREAR A PARTIR DE ESTE"}
             </button>
-            {savedCurrent && <button type="button" onClick={()=>duplicateDeck(current)}>DUPLICAR</button>}
+            {savedCurrent && <button type="button" disabled={!currentAvailable} onClick={()=>duplicateDeck(current)}>DUPLICAR</button>}
             {savedCurrent && <button type="button" onClick={()=>setDeleteId(current.id)}>ELIMINAR</button>}
           </div>
           <button type="button" className="dl-lib-manage-trigger" aria-label="Gestionar mazo"
