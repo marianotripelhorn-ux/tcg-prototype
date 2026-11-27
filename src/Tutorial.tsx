@@ -38,7 +38,7 @@ export default function Tutorial({ onClose, onPlay, inGame }: TutorialProps) {
     <div className="tutorial-overlay" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
       <section className="tutorial-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorial-title" aria-describedby="tutorial-description">
         <div className="tutorial-top">
-          <span className="tutorial-brand"><span aria-hidden="true">✦</span> DAGGERLIGHT <b>ACADEMIA</b></span>
+          <span className="tutorial-brand">DAGGERLIGHT <b>ACADEMIA</b></span>
           <button className="tutorial-close" type="button" onClick={onClose} aria-label="Cerrar tutorial">×</button>
         </div>
 
@@ -119,10 +119,9 @@ export default function Tutorial({ onClose, onPlay, inGame }: TutorialProps) {
           )}
           {step === 7 && (
             <div className="tutorial-ready">
-              <span className="tutorial-ready-icon" aria-hidden="true">✦</span>
               <strong>{inGame?"SEGUÍ JUGANDO":"TU PRIMERA PARTIDA: MAJESTAD CARMESÍ"}</strong>
               <p>En la partida, tocá una carta para leerla y seleccionarla. Después tocá una posición resaltada o arrastrá la carta directamente allí.</p>
-              <div className="tutorial-ready-pills"><span>{inGame?"SIN MANÁ":"DIFICULTAD FÁCIL"}</span><span>{inGame?"SIN POSICIONES PROHIBIDAS":"RIVAL ALEATORIO"}</span><span>AYUDA SIEMPRE DISPONIBLE</span></div>
+
             </div>
           )}
         </div>
