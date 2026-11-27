@@ -35,6 +35,7 @@ import PhysicalTable from "./PhysicalTable";
 import DeckLibrary from "./DeckLibrary";
 import PlayerProfile from "./PlayerProfile";
 import { readAvatar,writeAvatar } from "./playerAvatar";
+import { readProgression,writeProgression,creditVictory,nextUnlock,unlockedChampions,deckUnlocked,difficultyLabel,newMatchDifficulty } from "./soloProgression";
 import { starterDeckLabel } from "./profileStatistics";
 import { makeMonoDeckDefinition } from "./engine/decks";
 import type { DeckDefinition } from "./engine/decks";
@@ -665,7 +666,7 @@ export default function App() {
   const championIds=Object.keys(champions);
   const [playerChampion,setPlayerChampion]=useState("dextral");
   const [opponentChampion,setOpponentChampion]=useState("random");
-  const [aiDifficulty,setAiDifficulty]=useState<AIDifficulty>("normal");
+  const [aiDifficulty,setAiDifficulty]=useState<AIDifficulty>("easy");
   const [screen,setScreen]=useState<"home"|"champions"|"arcade"|"collection"|"table"|"decklab"|"multiplayer"|"playtest"|"profile">("home");
   const [settingsOpen,setSettingsOpen]=useState(false);
   const [preferences,setPreferences]=useState<GamePreferences>(readPreferences);
@@ -698,6 +699,10 @@ export default function App() {
   const [matchMeta,setMatchMeta]=useState<SavedMatch|null>(null);
   const [currentDeck,setCurrentDeck]=useState<DeckDefinition|null>(null);
   const [history,setHistory]=useState(()=>readMatchHistory());
+  const [progression,setProgression]=useState(()=>readProgression(readMatchHistory()));
+  const progressionRef=useRef(progression);
+  const [unlockedNow,setUnlockedNow]=useState<string|null>(null);
+  useEffect(()=>{writeProgression(progressionRef.current);},[]);
   const [analyticsConsent,setTelemetryOn]=useState(()=>analyticsOptedIn());
   const [selectedIndex,setSelectedIndex]=useState<number|null>(null);
   const [inspection,setInspection]=useState<Inspection|null>(null);
@@ -845,6 +850,16 @@ export default function App() {
         writeArcadeRun(after);
       }
       const record=completedMatch(updated);
+      if(record){
+        const previous=progressionRef.current;
+        const advanced=creditVictory(previous,record);
+        if(advanced!==previous){
+          progressionRef.current=advanced;
+          writeProgression(advanced);
+          setProgression(advanced);
+          setUnlockedNow(nextUnlock(previous));
+        }
+      }
       if(record && appendMatchHistory(record)){
         saveAiMatch(updated,record);
         setHistory(readMatchHistory());
@@ -893,6 +908,8 @@ export default function App() {
   function startWithChampion(championId:string, rivalSelection:string, difficulty:AIDifficulty=aiDifficulty,
     deck?:DeckDefinition|null, fromArcade=false, guided=false) {
     setGuidedOpening(guided);
+    setUnlockedNow(null);
+    difficulty=newMatchDifficulty(difficulty);
     if(!fromArcade){
       setArcadeRun(null);
       writeArcadeRun(null);
@@ -902,8 +919,9 @@ export default function App() {
     clearQuieroDecision();
     finishingMatch.current=false;
     setMotion(null);
-    const opponent = rivalSelection==="random"
-      ? championIds.filter(id=>id!==championId)[Math.floor(Math.random()*(championIds.length-1))]
+    const rivals=(fromArcade||guided?championIds:unlockedChampions(progressionRef.current)).filter(id=>id!==championId);
+    const opponent = rivalSelection==="random"||!rivals.includes(rivalSelection)
+      ? rivals[Math.floor(Math.random()*rivals.length)]
       : rivalSelection;
     setPlayerChampion(championId);
     setOpponentChampion(rivalSelection);
@@ -944,7 +962,7 @@ export default function App() {
   }
 
   function startArcade(championId:string,difficulty:AIDifficulty,deck?:DeckDefinition){
-    const run=newArcadeRun(championId,difficulty,Math.random,deck);
+    const run=newArcadeRun(championId,newMatchDifficulty(difficulty),Math.random,deck);
     writeArcadeRun(run);
     setArcadeRun(run);
     startWithChampion(championId,run.opponents[0],difficulty,run.deck,true);
@@ -1216,7 +1234,8 @@ export default function App() {
 
   if (!game&&!welcomeSeen&&!savedMatch&&!arcadeRun&&history.length===0) {
     return <WelcomeMatch playerName={playerName} onNameChange={setPlayerName}
-      onPlay={startGuidedOpening} onSkip={dismissWelcome}/>;
+      playerAvatar={playerAvatar} onAvatarChange={id=>setPlayerAvatar(writeAvatar(id))}
+      onPlay={startGuidedOpening} onSkip={()=>{dismissWelcome();setScreen("decklab");}}/>;
   }
 
   if (!game) {
@@ -1251,9 +1270,9 @@ export default function App() {
           onPlay={()=>setScreen("decklab")}
           onGallery={()=>setScreen("collection")}
         />}
-        {screen==="arcade" && <DeckLibrary mode="arcade" history={history}
+        {screen==="arcade" && <DeckLibrary mode="arcade" history={history} progression={progression}
           onBack={()=>setScreen("home")}
-          onPlay={(deck,_rival,difficulty)=>startArcade(deck.championId,difficulty,deck)}/>}
+          onPlay={(deck,_rival,difficulty)=>{if(deckUnlocked(deck,progressionRef.current))startArcade(deck.championId,difficulty,deck);}}/>}
         {screen==="collection" && <CardCollection
           onBack={()=>setScreen("home")}
           onPlay={()=>setScreen("decklab")}
@@ -1261,10 +1280,10 @@ export default function App() {
         {screen==="table" && <PhysicalTable onBack={()=>setScreen("home")}/> }
         {screen==="multiplayer" && <Multiplayer onBack={()=>setScreen("home")} playerName={playerName}/>} 
         {screen==="playtest" && <PlaytestHub onBack={()=>setScreen("home")}/>}
-        {screen==="profile" && <PlayerProfile playerName={playerName} playerAvatar={playerAvatar} onAvatarChange={id=>setPlayerAvatar(writeAvatar(id))} history={history}
+        {screen==="profile" && <PlayerProfile progression={progression} playerName={playerName} playerAvatar={playerAvatar} onAvatarChange={id=>setPlayerAvatar(writeAvatar(id))} history={history}
           onNameChange={next=>setPlayerName(writePlayerName(next)||DEFAULT_PLAYER_NAME)}
           onBack={()=>setScreen("home")} onPlay={()=>setScreen("decklab")}/> }
-        {screen==="decklab" && <DeckLibrary history={history} onBack={()=>setScreen("home")} onPlay={(deck,rival,difficulty)=>startWithChampion(deck.championId,rival,difficulty,deck)}/> }
+        {screen==="decklab" && <DeckLibrary history={history} progression={progression} onBack={()=>setScreen("home")} onPlay={(deck,rival,difficulty)=>{if(deckUnlocked(deck,progressionRef.current))startWithChampion(deck.championId,rival,difficulty,deck);}}/> }
         {tutorialOpen && <Tutorial
           inGame={false}
           onClose={()=>setTutorialOpen(false)}
@@ -1383,7 +1402,7 @@ export default function App() {
                 window.history.replaceState(null,"",url.toString());
               }}>{boardRedesign?"CLÁSICO":"HÍBRIDO"}</button>
             <span className="game-difficulty-label" title="Dificultad de la IA">
-              {game.aiDifficulty==="easy"?"FÁCIL":game.aiDifficulty==="hard"?"DIFÍCIL":"NORMAL"}
+              {difficultyLabel(game.aiDifficulty).toUpperCase()}
             </span>
             <ThemeToggle compact/>
             {boardRedesign&&<button type="button" className="duel-sfx-toggle"
@@ -1890,17 +1909,16 @@ export default function App() {
                   ? "ARCADE · "+(arcadeRun.index+1)+"/"+arcadeRun.opponents.length : "FIN DE PARTIDA"}
                 title={arcadeRun?.status==="complete"?"TODOS DERROTADOS":
                   game.winner==="player"?"VICTORIA":game.winner==="opponent"?"DERROTA":"EMPATE"}
-                onContinue={()=>{clearFinalTimer();setFinalStep("feedback");}}/>
+                onContinue={()=>{clearFinalTimer();setFinalStep(matchMeta?.mode==="tutorial"||!analyticsConsent?"actions":"feedback");}}/>
             ) : (
               <div className={"match-conclusion-ceremony match-final-"+game.winner} role="status" aria-live="polite">
-                <span className="match-conclusion-symbol" aria-hidden="true">{game.winner==="player"?"✦":game.winner==="opponent"?"◇":"◈"}</span>
                 <span className="match-conclusion-kicker">{arcadeRun
                   ? arcadeRun.status==="complete"?"ARCADE COMPLETADO"
                     : `ARCADE · ${arcadeRun.index+1}/${arcadeRun.opponents.length}`
                   : "FIN DE PARTIDA"}</span>
                 <strong>{arcadeRun?.status==="complete"?"TODOS DERROTADOS":game.winner==="player"?"VICTORIA":game.winner==="opponent"?"DERROTA":"EMPATE"}</strong>
                 <span className="match-conclusion-score">{game.player.life} — {game.opponent.life} VIDA</span>
-                <button type="button" className="match-conclusion-continue" onClick={()=>{clearFinalTimer();setFinalStep("feedback");}}>CONTINUAR →</button>
+                <button type="button" className="match-conclusion-continue" onClick={()=>{clearFinalTimer();setFinalStep(matchMeta?.mode==="tutorial"||!analyticsConsent?"actions":"feedback");}}>CONTINUAR →</button>
               </div>
             )) : finalStep==="feedback"&&matchMeta ? (
               <MatchFeedback
@@ -1915,7 +1933,11 @@ export default function App() {
               <div className="decision-card match-postgame" role="group" aria-label="Opciones después de la partida">
                 <span>{arcadeRun?"MODO ARCADE":"PARTIDA FINALIZADA"}</span>
                 <strong>{arcadeRun?.status==="complete"?"ARCADE COMPLETADO":game.winner==="player"?"GANASTE":game.winner==="opponent"?"GANÓ LA IA":"EMPATE"}</strong>
-                {arcadeRun ? <>
+                {unlockedNow&&<div className="dl-unlock-result" role="status"><small>MAZO DESBLOQUEADO</small><strong>{starterDeckLabel(unlockedNow)}</strong></div>}
+                {matchMeta?.mode==="tutorial" ? <>
+                  <p>Partida guiada finalizada.</p>
+                  <div className="match-postgame-actions"><button className="secondary-button" onClick={()=>goToMenu("home")}>MENÚ</button><button className="primary-button" onClick={()=>goToMenu("decklab")}>ELEGIR MAZO</button></div>
+                </> : arcadeRun ? <>
                   <p>Derrotaste {arcadeRun.victories.length} de {arcadeRun.opponents.length} rivales.
                     {arcadeRun.status==="active"?" Prepará el siguiente enfrentamiento.":arcadeRun.status==="lost"?" Tu racha terminó.":" ¡Conquistaste el Arcade!"}</p>
                   <div className="arcade-progress-dots" aria-label="Progreso arcade">
