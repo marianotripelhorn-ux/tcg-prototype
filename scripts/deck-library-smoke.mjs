@@ -273,6 +273,30 @@ try {
   await page.locator(".app-shell.board-redesign-v1").waitFor({timeout:12000});
   const matchIdentity=await page.evaluate(()=>JSON.parse(localStorage.getItem("daggerlight-match-save-v1")||"null")?.deckIdentity);
   assert.equal(matchIdentity?.name,"La Última Vigilia","The exact selected custom deck is stored with the new match");
+  // Verify a real profile reset, using the same browser's accumulated data.
+  await page.reload({waitUntil:"domcontentloaded"});
+  await page.locator(".splash-start").waitFor({state:"attached"});
+  await page.locator(".splash-start").evaluate(el=>el.click());
+  await page.locator(".action-profile").waitFor({state:"visible",timeout:15000});
+  await page.locator(".action-profile").click();
+  await page.locator(".dl-profile-reset").click();
+  await page.getByRole("button",{name:"CANCELAR",exact:true}).click();
+  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem("daggerlight-deck-library-v1")||"[]").length),2);
+  await page.evaluate(()=>localStorage.setItem("daggerlight-settings-v1",JSON.stringify({volume:42,audioEnabled:true,motion:"standard"})));
+  await page.locator(".dl-profile-reset").click();
+  await page.screenshot({path:"/tmp/daggerlight-deck-reset-mobile.png",fullPage:true});
+  await page.getByRole("button",{name:"CONFIRMAR REINICIO",exact:true}).click();
+  await page.locator(".splash-start").waitFor({state:"attached"});
+  await page.locator(".splash-start").evaluate(el=>el.click());
+  await page.locator(".dl-welcome").waitFor({timeout:15000});
+  assert.equal(await page.locator("#welcome-player-name").inputValue(),"");
+  assert.equal(await page.evaluate(()=>localStorage.getItem("daggerlight-match-history-v1")),null);
+  assert.equal(await page.evaluate(()=>localStorage.getItem("daggerlight-deck-library-v1")),null);
+  assert.equal(await page.evaluate(()=>localStorage.getItem("daggerlight-match-save-v1")),null);
+  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem("daggerlight-settings-v1")).volume),42);
+  await page.getByRole("button",{name:"SALTAR TUTORIAL",exact:true}).click();
+  await page.locator(".dl-lib-banner").waitFor({timeout:15000});
+  assert.equal(await page.locator(".dl-deck-tile").count(),2,"Reset restores exactly two starters");
   assert.deepEqual(errors,[],"Deck library should not throw browser errors");
   console.log("PASS: library, two-faction rules, save/duplicate/edit/favorite, reload, mobile and match");
 } finally { await browser.close(); }
